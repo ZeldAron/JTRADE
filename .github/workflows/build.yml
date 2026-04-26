@@ -1,0 +1,155 @@
+name: Build JTRADE
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-windows:
+    name: Windows EXE
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build EXE
+        shell: python
+        run: |
+          import subprocess, sys, os, shutil, textwrap
+          from pathlib import Path
+
+          ROOT = Path(".")
+          BUILD = Path("_build_win")
+          DIST  = Path("_dist_win")
+          BUILD.mkdir(exist_ok=True)
+          DIST.mkdir(exist_ok=True)
+
+          launcher = BUILD / "_launcher.py"
+          launcher.write_text(textwrap.dedent("""
+              import sys, os, time, socket, threading, webbrowser
+              import http.server, socketserver
+
+              if getattr(sys, 'frozen', False):
+                  BASE = os.path.dirname(sys.executable)
+              else:
+                  BASE = os.path.dirname(os.path.abspath(__file__))
+
+              PORT = 8765
+
+              def port_free(p):
+                  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                      return s.connect_ex(('127.0.0.1', p)) != 0
+
+              class Handler(http.server.SimpleHTTPRequestHandler):
+                  def __init__(self, *args, **kwargs):
+                      super().__init__(*args, directory=BASE, **kwargs)
+                  def log_message(self, *a): pass
+
+              if port_free(PORT):
+                  def serve():
+                      with socketserver.TCPServer(('127.0.0.1', PORT), Handler) as h:
+                          h.serve_forever()
+                  threading.Thread(target=serve, daemon=True).start()
+                  time.sleep(0.7)
+
+              webbrowser.open(f'http://localhost:{PORT}')
+              try:
+                  while True: time.sleep(1)
+              except (KeyboardInterrupt, SystemExit): pass
+          """))
+
+          web = ["index.html", "js", "css", "GUIDE.md", "JTRADE_Guide.pdf"]
+          add_data = []
+          for item in web:
+              p = ROOT / item
+              if p.exists():
+                  add_data += ["--add-data", f"{p};."]
+
+          cmd = [
+              sys.executable, "-m", "PyInstaller",
+              "--name", "JTRADE",
+              "--distpath", str(DIST),
+              "--workpath", str(BUILD / "work"),
+              "--specpath", str(BUILD),
+              "--onedir", "--noconsole", "--clean",
+              *add_data,
+              str(launcher),
+          ]
+          subprocess.run(cmd, check=True)
+
+          # Copie fichiers web à côté du .exe
+          dist_app = DIST / "JTRADE"
+          for item in web:
+              src = ROOT / item
+              dst = dist_app / item
+              if not src.exists(): continue
+              if src.is_dir():
+                  if dst.exists(): shutil.rmtree(dst)
+                  shutil.copytree(src, dst)
+              else:
+                  shutil.copy2(src, dst)
+
+          print("Build OK :", dist_app)
+
+      - name: Create installer with Inno Setup
+        run: |
+          $iss = @"
+          [Setup]
+          AppName=JTRADE
+          AppVersion=0.5.0
+          AppPublisher=JTRADE
+          DefaultDirName={autopf}\JTRADE
+          DefaultGroupName=JTRADE
+          OutputBaseFilename=JTRADE_Setup
+          OutputDir=.
+          Compression=lzma2
+          SolidCompression=yes
+          PrivilegesRequired=lowest
+
+          [Files]
+          Source: "_dist_win\JTRADE\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+
+          [Icons]
+          Name: "{group}\JTRADE"; Filename: "{app}\JTRADE.exe"
+          Name: "{group}\Désinstaller JTRADE"; Filename: "{uninstallexe}"
+          Name: "{commondesktop}\JTRADE"; Filename: "{app}\JTRADE.exe"; Tasks: desktopicon
+
+          [Tasks]
+          Name: desktopicon; Description: "Créer un raccourci sur le bureau"; Flags: unchecked
+
+          [Run]
+          Filename: "{app}\JTRADE.exe"; Description: "Lancer JTRADE"; Flags: postinstall nowait skipifsilent
+          "@
+          $iss | Out-File -FilePath setup.iss -Encoding utf8
+          iscc setup.iss
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: JTRADE-Windows
+          path: |
+            JTRADE_Setup.exe
+          retention-days: 30
+
+  build-macos:
+    name: macOS DMG
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build DMG
+        run: python3 build_mac.py
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: JTRADE-macOS
+          path: JTRADE.dmg
+          retention-days: 30

@@ -1,0 +1,6 @@
+_build_mac/
+_build_win/
+_dist_win/
+__pycache__/
+*.pyc
+*.spec

@@ -1,0 +1,95 @@
+// ─── APP ──────────────────────────────────────────────────────────────────────
+// Point d'entrée : routing, événements globaux, init (appelé après auth)
+
+function initApp() {
+  const $ = id => document.getElementById(id);
+
+  // ── ROUTING ────────────────────────────────────────────────────────────────
+  const PAGE_TITLES = {
+    journal:   'Journal',
+    dashboard: 'Dashboard',
+    analytics: 'Analytics',
+    goals:     'Objectifs & Récompenses',
+    calendar:  'Calendrier',
+    micro:     'Micro-Entrepreneur',
+    settings:  'Réglages',
+  };
+
+  let currentPage = 'journal';
+
+  function switchPage(page) {
+    document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.querySelector(`[data-page="${page}"]`).classList.add('active');
+    $('topbarTitle').textContent = PAGE_TITLES[page] || page;
+    $('searchWrap').style.display = page === 'journal' ? 'flex' : 'none';
+    currentPage = page;
+    if (page === 'dashboard') UI.renderDashboard();
+    if (page === 'analytics') UI.renderAnalytics();
+    if (page === 'goals')     UI.renderGoals();
+    if (page === 'calendar')  UI.renderCalendar();
+    if (page === 'micro')     UI.renderMicro();
+  }
+
+  document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+    el.addEventListener('click', () => switchPage(el.dataset.page));
+  });
+
+  // ── JOURNAL FILTERS ────────────────────────────────────────────────────────
+  $('listFilters').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    document.querySelectorAll('#listFilters .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    UI.setFilter(chip.dataset.filter);
+  });
+
+  // ── SEARCH ─────────────────────────────────────────────────────────────────
+  $('searchInput').addEventListener('input', () => UI.renderList());
+
+  // ── NEW TRADE BUTTON ───────────────────────────────────────────────────────
+  $('btnNewTrade').addEventListener('click', () => {
+    Modal.open(null, saved => {
+      UI.selectTrade(saved.id);
+      UI.updateStats();
+      UI.renderList();
+    });
+  });
+
+  // ── KEYBOARD SHORTCUTS ─────────────────────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+      e.preventDefault();
+      $('btnNewTrade').click();
+    }
+    if (e.key === 'Escape') Modal.close();
+  });
+
+  // ── LOGOUT ─────────────────────────────────────────────────────────────────
+  $('btnLogout').addEventListener('click', () => {
+    Auth.logout();
+    location.reload();
+  });
+
+  // ── INIT ───────────────────────────────────────────────────────────────────
+  Modal.init();
+  UI.initSettings();
+  UI.renderList();
+  UI.updateStats();
+
+  const first = Store.getTrades()[0];
+  if (first) UI.selectTrade(first.id);
+
+  // ── AUTO-REFRESH EOD ───────────────────────────────────────────────────────
+  // Re-rend les pages actives à minuit pour mettre à jour le plancher trailing
+  let lastDate = new Date().toISOString().split('T')[0];
+  setInterval(() => {
+    const nowDate = new Date().toISOString().split('T')[0];
+    if (nowDate !== lastDate) {
+      lastDate = nowDate;
+      if (currentPage === 'goals')     UI.renderGoals();
+      if (currentPage === 'dashboard') UI.renderDashboard();
+    }
+  }, 60_000); // vérifie chaque minute
+}
