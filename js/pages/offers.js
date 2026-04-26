@@ -4,22 +4,23 @@ UI.renderOffers = function () {
   const el = document.getElementById('offersContent');
   const plan = Store.getPlanInfo();
   const isPro = plan.plan === 'pro';
+  const t = k => i18n.t(k);
 
   el.innerHTML = `
     <div class="offers-wrap">
       <div class="offers-header">
-        <h1>Choisissez votre offre</h1>
-        <p>Tous vos trades et données restent stockés localement — aucun compte en ligne requis.</p>
+        <h1>${t('off.title')}</h1>
+        <p>${t('off.sub')}</p>
       </div>
 
       <div class="offers-cards">
 
         <!-- BASIC -->
         <div class="offer-card ${!isPro ? 'offer-current' : ''}">
-          <div class="offer-badge-current" style="opacity:${!isPro ? 1 : 0}">Plan actuel</div>
+          <div class="offer-badge-current" style="opacity:${!isPro ? 1 : 0}">${t('off.current')}</div>
           <div class="offer-name">Basic</div>
-          <div class="offer-price">Gratuit</div>
-          <div class="offer-price-sub">pour toujours</div>
+          <div class="offer-price">${t('off.free')}</div>
+          <div class="offer-price-sub">${t('off.forever')}</div>
           <ul class="offer-features">
             <li class="ok">Journal de trading illimité</li>
             <li class="ok">Dashboard &amp; Analytics</li>
@@ -31,16 +32,16 @@ UI.renderOffers = function () {
             <li class="limit">1 analyse IA par jour</li>
             <li class="no">Groupes de comptes</li>
           </ul>
-          ${!isPro ? '<div class="offer-cta offer-cta-current">Votre plan actuel</div>' : ''}
+          ${!isPro ? `<div class="offer-cta offer-cta-current">${t('off.cta.cur')}</div>` : ''}
         </div>
 
         <!-- PRO -->
         <div class="offer-card offer-pro ${isPro ? 'offer-current' : ''}">
           <div class="offer-badge-pro">PRO</div>
-          <div class="offer-badge-current" style="opacity:${isPro ? 1 : 0}">Plan actuel</div>
+          <div class="offer-badge-current" style="opacity:${isPro ? 1 : 0}">${t('off.current')}</div>
           <div class="offer-name">Pro</div>
-          <div class="offer-price" id="offerProPrice">${isPro ? 'Actif' : 'Code requis'}</div>
-          <div class="offer-price-sub">${isPro ? 'activé le ' + new Date(plan.activatedAt).toLocaleDateString('fr-FR') : 'entrez votre code ci-dessous'}</div>
+          <div class="offer-price">${isPro ? t('off.active') : t('off.code')}</div>
+          <div class="offer-price-sub">${isPro ? t('off.activated') + new Date(plan.activatedAt).toLocaleDateString('fr-FR') : t('off.code.hint')}</div>
           <ul class="offer-features">
             <li class="ok">Tout le plan Basic</li>
             <li class="ok"><strong>Comptes illimités</strong></li>
@@ -51,11 +52,11 @@ UI.renderOffers = function () {
           </ul>
 
           ${isPro
-            ? `<div class="offer-cta offer-cta-current">Actif ✓</div>`
+            ? `<div class="offer-cta offer-cta-current">${t('off.cta.act')}</div>`
             : `<div class="offer-activate">
                 <input type="text" id="proCodeInput" class="pro-code-input"
-                  placeholder="JTRADE-PRO-XXXX" autocomplete="off" spellcheck="false" />
-                <button class="offer-cta offer-cta-pro" id="btnActivatePro">Activer Pro</button>
+                  placeholder="${t('off.ph')}" autocomplete="off" spellcheck="false" />
+                <button class="offer-cta offer-cta-pro" id="btnActivatePro">${t('off.activate')}</button>
                 <div class="pro-code-error" id="proCodeError"></div>
               </div>`
           }
@@ -64,19 +65,10 @@ UI.renderOffers = function () {
       </div>
 
       <div class="offers-faq">
-        <h3>Questions fréquentes</h3>
-        <div class="faq-item">
-          <b>Où sont stockées mes données ?</b>
-          <p>Dans votre navigateur (localStorage). Rien n'est envoyé sur un serveur.</p>
-        </div>
-        <div class="faq-item">
-          <b>Le plan Pro est-il lié à un appareil ?</b>
-          <p>Oui, le code active le plan sur le navigateur où vous l'entrez. Sur un autre appareil, saisissez à nouveau le code.</p>
-        </div>
-        <div class="faq-item">
-          <b>Comment obtenir un code Pro ?</b>
-          <p>Contactez-nous pour recevoir votre code d'activation.</p>
-        </div>
+        <h3>${t('off.faq.title')}</h3>
+        <div class="faq-item"><b>${t('off.faq.1q')}</b><p>${t('off.faq.1a')}</p></div>
+        <div class="faq-item"><b>${t('off.faq.2q')}</b><p>${t('off.faq.2a')}</p></div>
+        <div class="faq-item"><b>${t('off.faq.3q')}</b><p>${t('off.faq.3a')}</p></div>
       </div>
     </div>
   `;
@@ -85,13 +77,13 @@ UI.renderOffers = function () {
     document.getElementById('btnActivatePro').addEventListener('click', () => {
       const code  = document.getElementById('proCodeInput').value;
       const error = document.getElementById('proCodeError');
-      if (!code.trim()) { error.textContent = 'Entrez votre code d\'activation.'; return; }
+      if (!code.trim()) { error.textContent = i18n.t('off.err.empty'); return; }
       const ok = Store.activatePro(code);
       if (ok) {
-        UI.toast('Plan Pro activé ! Rechargement…');
+        UI.toast(i18n.t('off.ok'));
         setTimeout(() => location.reload(), 1200);
       } else {
-        error.textContent = 'Code invalide. Vérifiez votre code ou contactez le support.';
+        error.textContent = i18n.t('off.err.inv');
       }
     });
 
