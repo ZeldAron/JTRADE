@@ -12,6 +12,7 @@ function initApp() {
     goals:     'Objectifs & Récompenses',
     calendar:  'Calendrier',
     micro:     'Micro-Entrepreneur',
+    offers:    'Offres',
     settings:  'Réglages',
   };
 
@@ -30,6 +31,7 @@ function initApp() {
     if (page === 'goals')     UI.renderGoals();
     if (page === 'calendar')  UI.renderCalendar();
     if (page === 'micro')     UI.renderMicro();
+    if (page === 'offers')    UI.renderOffers();
   }
 
   document.querySelectorAll('.nav-item[data-page]').forEach(el => {
@@ -73,6 +75,14 @@ function initApp() {
   });
 
   // ── INIT ───────────────────────────────────────────────────────────────────
+  // Badge plan dans la sidebar
+  const planBadge = $('planBadge');
+  if (planBadge) {
+    const isPro = Store.isPro();
+    planBadge.textContent = isPro ? 'PRO' : 'BASIC';
+    planBadge.className   = 'plan-badge ' + (isPro ? 'plan-pro' : 'plan-basic');
+  }
+
   Modal.init();
   UI.initSettings();
   UI.renderList();

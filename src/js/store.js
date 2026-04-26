@@ -10,6 +10,8 @@ const Store = (() => {
   let MY_ACCOUNTS_KEY = 'jtrade_default_v2_my_accounts';
   let SPREADS_KEY     = 'jtrade_default_v3_spreads_usd';
   let GROUPS_KEY      = 'jtrade_default_v1_groups';
+  let PLAN_KEY        = 'jtrade_default_plan';
+  let AI_USAGE_KEY    = 'jtrade_default_ai_usage';
 
   const DEFAULT_SETTINGS = {
     capital:    50000,
@@ -43,6 +45,8 @@ const Store = (() => {
     MY_ACCOUNTS_KEY = `jtrade_${uid}_v2_my_accounts`;
     SPREADS_KEY     = `jtrade_${uid}_v3_spreads_usd`;
     GROUPS_KEY      = `jtrade_${uid}_v1_groups`;
+    PLAN_KEY        = `jtrade_${uid}_plan`;
+    AI_USAGE_KEY    = `jtrade_${uid}_ai_usage`;
 
     // Réinitialise l'état
     trades       = [];
@@ -211,6 +215,51 @@ const Store = (() => {
     localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
   }
 
+  // ── Plan (Basic / Pro) ───────────────────────────────────────────────────────
+  // Codes d'activation valides — à étendre lors du vrai lancement commercial
+  const PRO_CODES = ['JTRADE-PRO-2026'];
+
+  function getPlanInfo() {
+    try { return JSON.parse(localStorage.getItem(PLAN_KEY)) || { plan: 'basic' }; }
+    catch { return { plan: 'basic' }; }
+  }
+
+  function isPro() { return getPlanInfo().plan === 'pro'; }
+
+  function activatePro(code) {
+    if (!PRO_CODES.includes(code.trim().toUpperCase())) return false;
+    localStorage.setItem(PLAN_KEY, JSON.stringify({
+      plan: 'pro', activatedAt: Date.now(), code: code.trim().toUpperCase(),
+    }));
+    return true;
+  }
+
+  function getAIUsage() {
+    try { return JSON.parse(localStorage.getItem(AI_USAGE_KEY)) || { date: '', count: 0 }; }
+    catch { return { date: '', count: 0 }; }
+  }
+
+  function canAnalyzeToday() {
+    if (isPro()) return true;
+    const today = new Date().toISOString().split('T')[0];
+    const u = getAIUsage();
+    return u.date !== today || u.count < 1;
+  }
+
+  function recordAnalysis() {
+    const today = new Date().toISOString().split('T')[0];
+    const u = getAIUsage();
+    localStorage.setItem(AI_USAGE_KEY, JSON.stringify({
+      date:  today,
+      count: u.date === today ? u.count + 1 : 1,
+    }));
+  }
+
+  function canAddAccount() {
+    if (isPro()) return true;
+    return myAccounts.length < 1;
+  }
+
   // ── Agrégats ─────────────────────────────────────────────────────────────────
   function getStats() {
     const closed   = trades.filter(t => t.outcome === 'win' || t.outcome === 'loss');
@@ -244,5 +293,6 @@ const Store = (() => {
     getSpreads, updateSpreads,
     getGroups, getGroupById, addGroup, updateGroup, deleteGroup,
     getStats,
+    getPlanInfo, isPro, activatePro, canAnalyzeToday, recordAnalysis, canAddAccount,
   };
 })();
