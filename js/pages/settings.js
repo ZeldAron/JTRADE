@@ -108,6 +108,11 @@
         </div>`;
 
       $('btnAddMyAccount').addEventListener('click', () => {
+        if (!Store.canAddAccount()) {
+          UI.toast('Limite Basic : 1 compte de trading. Passez Pro pour en ajouter plus.', true);
+          setTimeout(() => document.querySelector('[data-page="offers"]').click(), 1500);
+          return;
+        }
         $('maFormTitle').textContent = 'Nouveau compte';
         $('maEditId').value = '';
         $('maName').value = ''; $('maStatus').value = 'evaluation';

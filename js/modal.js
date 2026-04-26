@@ -187,6 +187,21 @@ const Modal = (() => {
     try {
       if (!groqKey) throw new Error('Configure ta clé Groq dans Réglages → Intelligence Artificielle');
 
+      if (!Store.canAnalyzeToday()) {
+        statusEl.innerHTML = `<span style="color:var(--red)">Limite atteinte — 1 analyse/jour en Basic.</span>
+          <span style="color:var(--muted)"> <a href="#" id="goOffersLink" style="color:var(--accent)">Passer Pro →</a></span>`;
+        const lk = document.getElementById('goOffersLink');
+        if (lk) lk.addEventListener('click', e => {
+          e.preventDefault();
+          Modal.close();
+          document.querySelector('[data-page="offers"]').click();
+        });
+        $('wBtnNext2').disabled = false;
+        retryBtn.style.display = 'none';
+        return;
+      }
+
+      Store.recordAnalysis();
       const result = await analyzeWithGroq(capturedImage, groqKey);
       let { entry, sl, tp1 } = result;
       entry = entry || null; sl = sl || null; tp1 = tp1 || null;
