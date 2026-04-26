@@ -494,6 +494,7 @@
   <script src="js/pages/calendar.js"></script>
   <script src="js/pages/micro.js"></script>
   <script src="js/pages/offers.js"></script>
+  <script src="js/contact.js"></script>
   <script src="js/app.js"></script>
 
   <script>
@@ -529,6 +530,7 @@
       ls.style.opacity    = '0';
       setTimeout(() => { ls.style.display = 'none'; }, 450);
       initApp();
+      Contact.init();
     }
 
     // Déjà connecté → lancement direct avec animation courte
