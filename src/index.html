@@ -89,50 +89,50 @@
     <nav class="nav">
       <div class="nav-item active" data-page="journal">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
-        Journal
+        <span data-i18n="nav.journal">Journal</span>
       </div>
       <div class="nav-item" data-page="dashboard">
         <svg viewBox="0 0 24 24"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/><rect x="17" y="3" width="4" height="18"/></svg>
-        Dashboard
+        <span data-i18n="nav.dashboard">Dashboard</span>
       </div>
       <div class="nav-item" data-page="analytics">
         <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Analytics
+        <span data-i18n="nav.analytics">Analytics</span>
       </div>
       <div class="nav-item" data-page="goals">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-        Objectifs
+        <span data-i18n="nav.goals">Objectifs</span>
       </div>
       <div class="nav-item" data-page="calendar">
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Calendrier
+        <span data-i18n="nav.calendar">Calendrier</span>
       </div>
       <div class="nav-item" data-page="micro">
         <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        Micro
+        <span data-i18n="nav.micro">Micro</span>
       </div>
       <div class="nav-divider"></div>
       <div class="nav-item" data-page="settings">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Réglages
+        <span data-i18n="nav.settings">Réglages</span>
       </div>
       <div class="nav-item nav-item-offers" data-page="offers">
         <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Offres
+        <span data-i18n="nav.offers">Offres</span>
       </div>
     </nav>
 
     <div class="sidebar-stats">
       <div class="stat-row">
-        <span class="stat-label">P&L total</span>
+        <span class="stat-label" data-i18n="sidebar.pnl">P&L total</span>
         <span class="stat-val" id="statPnL">—</span>
       </div>
       <div class="stat-row">
-        <span class="stat-label">Win rate</span>
+        <span class="stat-label" data-i18n="sidebar.wr">Win rate</span>
         <span class="stat-val" id="statWR">—</span>
       </div>
       <div class="stat-row">
-        <span class="stat-label">Trades</span>
+        <span class="stat-label" data-i18n="sidebar.trades">Trades</span>
         <span class="stat-val" id="statCount">0</span>
       </div>
     </div>
@@ -258,24 +258,10 @@
         </div>
 
         <div class="settings-section">
-          <h3>Défauts</h3>
+          <h3 data-i18n="set.lang">Langue</h3>
           <div class="settings-row">
-            <label>Capital par défaut ($)</label>
-            <input class="form-input" type="number" id="setCapital" value="50000">
-          </div>
-          <div class="settings-row">
-            <label>Contrats par défaut</label>
-            <input class="form-input" type="number" id="setContracts" value="1">
-          </div>
-          <div class="settings-row">
-            <label>Instrument par défaut</label>
-            <select class="form-input" id="setInstrument">
-              <option>MES1</option><option>ES1</option><option>MNQ1</option><option>NQ1</option>
-            </select>
-          </div>
-          <div class="settings-row" style="margin-top:12px;border-top:none">
-            <span></span>
-            <button class="btn-primary" id="btnSaveSettings">Sauvegarder</button>
+            <label data-i18n="set.lang">Langue</label>
+            <button class="btn-ghost" id="btnToggleLang" data-i18n="set.lang.btn">Switch to English</button>
           </div>
         </div>
         <div class="settings-section">
@@ -482,6 +468,7 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/store.js"></script>
   <script src="js/calc.js"></script>

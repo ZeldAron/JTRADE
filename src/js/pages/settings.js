@@ -158,10 +158,10 @@
         const editId = $('maEditId').value;
         if (editId) {
           Store.updateMyAccount(editId, data);
-          UI.toast('Compte mis à jour');
+          UI.toast(i18n.t('set.acc.updated'));
         } else {
           Store.addMyAccount(data);
-          UI.toast('Compte ajouté');
+          UI.toast(i18n.t('set.acc.added'));
         }
         render();
       });
@@ -192,7 +192,7 @@
           if (!acc || !confirm(`Supprimer le compte "${acc.name}" ?`)) return;
           Store.deleteMyAccount(btn.dataset.maDel);
           render();
-          UI.toast('Compte supprimé');
+          UI.toast(i18n.t('set.acc.deleted'));
         });
       });
     }
@@ -305,7 +305,7 @@
         data[instr] = Math.max(0, parseFloat($(`spread-${instr}`).value) || 0);
       });
       Store.updateSpreads(data);
-      UI.toast('Spreads sauvegardés');
+      UI.toast(i18n.t('set.sp.saved'));
     });
   }
 
@@ -391,10 +391,10 @@
         const editId = $('grpEditId').value;
         if (editId) {
           Store.updateGroup(editId, { name, accountIds });
-          UI.toast('Groupe mis à jour');
+          UI.toast(i18n.t('set.grp.updated'));
         } else {
           Store.addGroup({ name, accountIds });
-          UI.toast('Groupe créé');
+          UI.toast(i18n.t('set.grp.added'));
         }
         render();
       });
@@ -420,7 +420,7 @@
           if (!g || !confirm(`Supprimer le groupe "${g.name}" ?`)) return;
           Store.deleteGroup(btn.dataset.grpDel);
           render();
-          UI.toast('Groupe supprimé');
+          UI.toast(i18n.t('set.grp.deleted'));
         });
       });
     }
@@ -441,26 +441,14 @@
       const key = $('setGroqKey').value.trim();
       Store.updateSettings({ groqKey: key });
       const st = $('groqKeyStatus');
-      st.textContent = key ? '✓ Clé Groq sauvegardée — analyse IA active' : 'Clé effacée';
+      st.textContent = key ? i18n.t('set.groq.saved') : i18n.t('set.groq.cleared');
       st.style.color = key ? 'var(--green)' : 'var(--muted)';
     });
     if (s.groqKey) {
-      $('groqKeyStatus').textContent = '✓ Clé Groq configurée — analyse IA active';
+      $('groqKeyStatus').textContent = i18n.t('set.groq.ok');
       $('groqKeyStatus').style.color = 'var(--green)';
     }
 
-    $('setCapital').value    = s.capital;
-    $('setContracts').value  = s.contracts;
-    $('setInstrument').value = s.instrument;
-
-    $('btnSaveSettings').addEventListener('click', () => {
-      Store.updateSettings({
-        capital:    parseFloat($('setCapital').value)  || 50000,
-        contracts:  parseInt($('setContracts').value)  || 1,
-        instrument: $('setInstrument').value,
-      });
-      UI.toast('Réglages sauvegardés');
-    });
 
     $('btnExport').addEventListener('click', () => {
       const blob = new Blob([Store.exportJSON()], { type: 'application/json' });
@@ -499,7 +487,7 @@
       UI.renderList();
       UI.renderDetail();
       UI.updateStats();
-      UI.toast('Données effacées');
+      UI.toast(i18n.t('set.clear.done'));
     });
   };
 })();

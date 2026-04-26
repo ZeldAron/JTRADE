@@ -5,15 +5,15 @@ function initApp() {
   const $ = id => document.getElementById(id);
 
   // ── ROUTING ────────────────────────────────────────────────────────────────
-  const PAGE_TITLES = {
-    journal:   'Journal',
-    dashboard: 'Dashboard',
-    analytics: 'Analytics',
-    goals:     'Objectifs & Récompenses',
-    calendar:  'Calendrier',
-    micro:     'Micro-Entrepreneur',
-    offers:    'Offres',
-    settings:  'Réglages',
+  const PAGE_KEYS = {
+    journal:   'page.journal',
+    dashboard: 'page.dashboard',
+    analytics: 'page.analytics',
+    goals:     'page.goals',
+    calendar:  'page.calendar',
+    micro:     'page.micro',
+    offers:    'page.offers',
+    settings:  'page.settings',
   };
 
   let currentPage = 'journal';
@@ -23,7 +23,7 @@ function initApp() {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.getElementById('page-' + page).classList.add('active');
     document.querySelector(`[data-page="${page}"]`).classList.add('active');
-    $('topbarTitle').textContent = PAGE_TITLES[page] || page;
+    $('topbarTitle').textContent = i18n.t(PAGE_KEYS[page] || page);
     $('searchWrap').style.display = page === 'journal' ? 'flex' : 'none';
     currentPage = page;
     if (page === 'dashboard') UI.renderDashboard();
@@ -75,6 +75,15 @@ function initApp() {
   });
 
   // ── INIT ───────────────────────────────────────────────────────────────────
+  // Applique les traductions statiques
+  i18n.apply();
+
+  // Bouton langue dans Settings
+  document.getElementById('btnToggleLang').addEventListener('click', () => {
+    i18n.setLang(i18n.getLang() === 'fr' ? 'en' : 'fr');
+    location.reload();
+  });
+
   // Badge plan dans la sidebar
   const planBadge = $('planBadge');
   if (planBadge) {
