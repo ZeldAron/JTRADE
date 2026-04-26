@@ -2299,7 +2299,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 .faq-item p { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
 
 /* ── Contact widget ────────────────────────────────────────────────────────── */
-#contactWidget { position: fixed; bottom: 24px; right: 24px; z-index: 1000; }
+#contactWidget { position: fixed; bottom: 24px; right: 24px; z-index: 9999; }
 
 .contact-bubble {
   width: 52px; height: 52px;
