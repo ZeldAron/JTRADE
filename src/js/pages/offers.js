@@ -1,7 +1,7 @@
 // ─── PAGE OFFRES ──────────────────────────────────────────────────────────────
 
 UI.renderOffers = function () {
-  const el = document.getElementById('page-offers');
+  const el = document.getElementById('offersContent');
   const plan = Store.getPlanInfo();
   const isPro = plan.plan === 'pro';
 
