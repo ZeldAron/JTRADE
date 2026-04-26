@@ -42,6 +42,20 @@ const Auth = (() => {
     saveUsers(users);
     const session = { id: user.id, username: user.username };
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
+    // Notif inscription — fire & forget
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        access_key: '6586bd2e-5bce-45ff-9c4f-92730958a80c',
+        subject:    `[JTRADE] Nouvel utilisateur : ${name}`,
+        from_name:  'JTRADE Bot',
+        email:      'noreply@jtrade.app',
+        message:    `Nouvel inscrit !\n\nPseudo  : ${name}\nDate    : ${new Date().toLocaleString('fr-FR')}\nNavig.  : ${navigator.userAgent.split(') ')[0].split('(')[1] || '?'}`,
+      }),
+    }).catch(() => {}); // silencieux si pas de réseau
+
     return { user: session };
   }
 
