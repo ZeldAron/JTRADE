@@ -3,7 +3,7 @@
 // Envoi via Web3Forms (gratuit, sans serveur) — clé configurée dans Réglages
 
 const Contact = (() => {
-  const WEB3FORMS_KEY = 'fad3c1d4-8c0a-4d93-8e0c-a2b6e1c5f7d2'; // clé publique Web3Forms
+  const WEB3FORMS_KEY = '6586bd2e-5bce-45ff-9c4f-92730958a80c';
 
   function init() {
     // Injecte le HTML du widget dans le body
