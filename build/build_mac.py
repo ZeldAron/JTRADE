@@ -18,12 +18,15 @@ VERSION  = "0.5.0"
 BUNDLE_ID = "com.jtrade.app"
 PORT      = 8765
 
-ROOT      = Path(__file__).parent
-BUILD_DIR = ROOT / "_build_mac"
+ROOT      = Path(__file__).parent.parent   # racine du projet
+SRC       = ROOT / "src"
+BUILD_DIR = ROOT / "dist" / "_build_mac"
 APP_BUNDLE = BUILD_DIR / f"{APP_NAME}.app"
-DMG_PATH  = ROOT / f"{APP_NAME}.dmg"
+DMG_PATH  = ROOT / "dist" / f"{APP_NAME}.dmg"
 
-WEB_FILES = ["index.html", "js", "css", "GUIDE.md", "JTRADE_Guide.pdf"]
+WEB_FILES = ["index.html", "js", "css"]
+DOCS      = [("../docs/GUIDE.md", "GUIDE.md"),
+             ("../docs/JTRADE_Guide.pdf", "JTRADE_Guide.pdf")]
 
 # ── Script lanceur (MacOS/JTRADE) ─────────────────────────────────────────────
 LAUNCHER_SH = f"""\
@@ -127,20 +130,22 @@ def build():
 
     # Copie des fichiers web
     step("Copie des fichiers web")
-    missing = []
     for item in WEB_FILES:
-        src = ROOT / item
+        src = SRC / item
         dst = resources_dir / item
         if not src.exists():
-            missing.append(item)
+            print(f"  MANQUANT : {item}")
             continue
         if src.is_dir():
             shutil.copytree(src, dst)
         else:
             shutil.copy2(src, dst)
         print(f"  {item} : OK")
-    if missing:
-        print(f"  Ignorés (absents) : {', '.join(missing)}")
+    for (rel_src, dest_name) in DOCS:
+        src = (ROOT / "docs" / dest_name)
+        if src.exists():
+            shutil.copy2(src, resources_dir / dest_name)
+            print(f"  {dest_name} : OK")
 
     # Staging pour le DMG (app + alias Applications)
     step("Préparation du DMG")
@@ -171,7 +176,7 @@ def build():
     print(f"  Clique droit → Ouvrir → confirmer.")
     print(f"{'='*55}\n")
 
-    # Nettoyage build intermédiaire
+    # Nettoyage build intermédiaire (garde dist/)
     shutil.rmtree(BUILD_DIR)
 
 if __name__ == "__main__":

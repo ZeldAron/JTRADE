@@ -25,11 +25,13 @@ jobs:
           import subprocess, sys, os, shutil, textwrap
           from pathlib import Path
 
-          ROOT = Path(".")
-          BUILD = Path("_build_win")
-          DIST  = Path("_dist_win")
-          BUILD.mkdir(exist_ok=True)
-          DIST.mkdir(exist_ok=True)
+          ROOT  = Path(".")
+          SRC   = ROOT / "src"
+          DOCS  = ROOT / "docs"
+          BUILD = ROOT / "dist" / "_build_win"
+          DIST  = ROOT / "dist" / "_dist_win"
+          BUILD.mkdir(parents=True, exist_ok=True)
+          DIST.mkdir(parents=True, exist_ok=True)
 
           launcher = BUILD / "_launcher.py"
           launcher.write_text(textwrap.dedent("""
@@ -65,41 +67,46 @@ jobs:
               except (KeyboardInterrupt, SystemExit): pass
           """))
 
-          web = ["index.html", "js", "css", "GUIDE.md", "JTRADE_Guide.pdf"]
+          web  = ["index.html", "js", "css"]
+          docs = ["GUIDE.md", "JTRADE_Guide.pdf"]
           add_data = []
           for item in web:
-              p = ROOT / item
-              if p.exists():
-                  add_data += ["--add-data", f"{p};."]
+              p = SRC / item
+              if p.exists(): add_data += ["--add-data", f"{p};."]
+          for doc in docs:
+              p = DOCS / doc
+              if p.exists(): add_data += ["--add-data", f"{p};."]
 
-          cmd = [
+          subprocess.run([
               sys.executable, "-m", "PyInstaller",
               "--name", "JTRADE",
               "--distpath", str(DIST),
               "--workpath", str(BUILD / "work"),
               "--specpath", str(BUILD),
               "--onedir", "--noconsole", "--clean",
-              *add_data,
-              str(launcher),
-          ]
-          subprocess.run(cmd, check=True)
+              *add_data, str(launcher),
+          ], check=True)
 
           # Copie fichiers web à côté du .exe
-          dist_app = DIST / "JTRADE"
+          app_dir = DIST / "JTRADE"
           for item in web:
-              src = ROOT / item
-              dst = dist_app / item
+              src, dst = SRC / item, app_dir / item
               if not src.exists(): continue
               if src.is_dir():
                   if dst.exists(): shutil.rmtree(dst)
                   shutil.copytree(src, dst)
               else:
                   shutil.copy2(src, dst)
+          for doc in docs:
+              src = DOCS / doc
+              if src.exists(): shutil.copy2(src, app_dir / doc)
 
-          print("Build OK :", dist_app)
+          print("Build OK:", app_dir)
 
       - name: Create installer with Inno Setup
+        shell: powershell
         run: |
+          $appDir = (Resolve-Path "dist\_dist_win\JTRADE").Path
           $iss = @"
           [Setup]
           AppName=JTRADE
@@ -108,34 +115,33 @@ jobs:
           DefaultDirName={autopf}\JTRADE
           DefaultGroupName=JTRADE
           OutputBaseFilename=JTRADE_Setup
-          OutputDir=.
+          OutputDir=dist
           Compression=lzma2
           SolidCompression=yes
           PrivilegesRequired=lowest
 
           [Files]
-          Source: "_dist_win\JTRADE\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+          Source: "$appDir\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 
           [Icons]
           Name: "{group}\JTRADE"; Filename: "{app}\JTRADE.exe"
-          Name: "{group}\Désinstaller JTRADE"; Filename: "{uninstallexe}"
+          Name: "{group}\Desinstaller JTRADE"; Filename: "{uninstallexe}"
           Name: "{commondesktop}\JTRADE"; Filename: "{app}\JTRADE.exe"; Tasks: desktopicon
 
           [Tasks]
-          Name: desktopicon; Description: "Créer un raccourci sur le bureau"; Flags: unchecked
+          Name: desktopicon; Description: "Creer un raccourci sur le bureau"; Flags: unchecked
 
           [Run]
           Filename: "{app}\JTRADE.exe"; Description: "Lancer JTRADE"; Flags: postinstall nowait skipifsilent
           "@
-          $iss | Out-File -FilePath setup.iss -Encoding utf8
+          $iss | Out-File -FilePath "setup.iss" -Encoding utf8
           iscc setup.iss
 
-      - name: Upload artifacts
+      - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
           name: JTRADE-Windows
-          path: |
-            JTRADE_Setup.exe
+          path: dist/JTRADE_Setup.exe
           retention-days: 30
 
   build-macos:
@@ -145,11 +151,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build DMG
-        run: python3 build_mac.py
+        run: python3 build/build_mac.py
 
-      - name: Upload artifacts
+      - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
           name: JTRADE-macOS
-          path: JTRADE.dmg
+          path: dist/JTRADE.dmg
           retention-days: 30

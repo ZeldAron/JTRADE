@@ -1,6 +1,7 @@
-_build_mac/
-_build_win/
-_dist_win/
+dist/
 __pycache__/
 *.pyc
 *.spec
+.DS_Store
+.claude/
+build/make_guide.py

@@ -26,14 +26,17 @@ PUBLISHER   = "JTRADE"
 PORT        = 8765
 ICON_NAME   = "jtrade.ico"   # optionnel — place un .ico ici pour l'icône
 
-ROOT        = Path(__file__).parent
-BUILD_DIR   = ROOT / "_build_win"
-DIST_DIR    = ROOT / "_dist_win"
+ROOT        = Path(__file__).parent.parent   # racine du projet
+SRC         = ROOT / "src"
+BUILD_DIR   = ROOT / "dist" / "_build_win"
+DIST_DIR    = ROOT / "dist" / "_dist_win"
 LAUNCHER_PY = BUILD_DIR / "_launcher.py"
 SPEC_FILE   = BUILD_DIR / "jtrade.spec"
-SETUP_EXE   = ROOT / f"{APP_NAME}_Setup.exe"
+SETUP_EXE   = ROOT / "dist" / f"{APP_NAME}_Setup.exe"
+ICON_PATH   = ROOT / "build" / ICON_NAME
 
-WEB_FILES   = ["index.html", "js", "css", "GUIDE.md", "JTRADE_Guide.pdf"]
+WEB_FILES   = ["index.html", "js", "css"]
+DOCS        = ["GUIDE.md", "JTRADE_Guide.pdf"]
 
 # ── Code source du lanceur (embarqué dans le .exe) ───────────────────────────
 LAUNCHER_CODE = f"""\
@@ -172,27 +175,27 @@ def build():
 
     # Icône (optionnel)
     icon_arg = []
-    icon_path = ROOT / ICON_NAME
-    if icon_path.exists():
-        icon_arg = ["--icon", str(icon_path)]
-        print(f"  Icône : {icon_path}")
+    if ICON_PATH.exists():
+        icon_arg = ["--icon", str(ICON_PATH)]
+        print(f"  Icône : {ICON_PATH}")
     else:
-        print(f"  Icône : aucune (place {ICON_NAME} dans le dossier pour en ajouter une)")
+        print(f"  Icône : aucune (place {ICON_NAME} dans build/ pour en ajouter une)")
 
     # PyInstaller — bundle onedir (plus rapide au démarrage que onefile)
     step("PyInstaller — création du bundle")
     add_data = []
     for item in WEB_FILES:
-        src = ROOT / item
+        src = SRC / item
         if not src.exists():
             print(f"  Ignoré (absent) : {item}")
             continue
-        # Syntaxe Windows : "source;dest_dans_bundle"
         add_data += ["--add-data", f"{src};."]
-        if src.is_dir():
-            # Pour les dossiers, PyInstaller copie le contenu
-            pass
         print(f"  Inclus : {item}")
+    for doc in DOCS:
+        src = ROOT / "docs" / doc
+        if src.exists():
+            add_data += ["--add-data", f"{src};."]
+            print(f"  Inclus : {doc}")
 
     pyinstaller_cmd = [
         sys.executable, "-m", "PyInstaller",
@@ -217,7 +220,7 @@ def build():
     # Copie des fichiers web à côté du .exe (nécessaire pour onedir)
     step("Copie des fichiers web dans le bundle")
     for item in WEB_FILES:
-        src = ROOT / item
+        src = SRC / item
         dst = dist_app_dir / item
         if not src.exists():
             continue
@@ -228,6 +231,11 @@ def build():
         else:
             shutil.copy2(src, dst)
         print(f"  {item} : OK")
+    for doc in DOCS:
+        src = ROOT / "docs" / doc
+        if src.exists():
+            shutil.copy2(src, dist_app_dir / doc)
+            print(f"  {doc} : OK")
 
     # Inno Setup
     step("Création de l'installateur (Inno Setup)")
@@ -264,12 +272,12 @@ def build():
   en compressant en .zip — l'utilisateur décompresse et double-clique
   sur JTRADE.exe.
 """)
-        # Créer un zip en fallback
-        zip_path = ROOT / f"{APP_NAME}_Windows"
+        # Créer un zip en fallback dans dist/
+        zip_path = ROOT / "dist" / f"{APP_NAME}_Windows"
         shutil.make_archive(str(zip_path), 'zip', str(DIST_DIR))
         print(f"  Zip créé : {zip_path}.zip")
 
-    # Nettoyage
+    # Nettoyage dossiers intermédiaires (garde dist/)
     shutil.rmtree(BUILD_DIR)
     shutil.rmtree(DIST_DIR)
 
