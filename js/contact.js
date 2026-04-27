@@ -36,12 +36,12 @@ const Contact = (() => {
     const label   = document.getElementById('cSendLabel');
 
     error.textContent = '';
-    if (!name)                       { error.textContent = 'Entrez votre nom.'; return; }
-    if (!email || !email.includes('@')) { error.textContent = 'Email invalide.'; return; }
-    if (!message)                    { error.textContent = 'Le message est vide.'; return; }
+    if (!name)                         { error.textContent = i18n.t('contact.err.name');  return; }
+    if (!email || !email.includes('@')) { error.textContent = i18n.t('contact.err.email'); return; }
+    if (!message)                      { error.textContent = i18n.t('contact.err.msg');   return; }
 
-    btn.disabled     = true;
-    label.textContent = 'Envoi…';
+    btn.disabled      = true;
+    label.textContent = i18n.t('contact.sending');
 
     try {
       const plan = (() => { try { return Store.isPro() ? 'Pro' : 'Basic'; } catch { return '?'; } })();
@@ -62,12 +62,12 @@ const Contact = (() => {
         document.getElementById('contactForm').style.display    = 'none';
         document.getElementById('contactSuccess').style.display = 'flex';
       } else {
-        throw new Error(data.message || 'Erreur serveur');
+        throw new Error(data.message || i18n.t('contact.err.server'));
       }
     } catch (e) {
-      error.textContent = 'Envoi échoué : ' + e.message;
+      error.textContent = i18n.t('contact.err.send') + e.message;
       btn.disabled      = false;
-      label.textContent = 'Envoyer';
+      label.textContent = i18n.t('contact.send');
     }
   }
 

@@ -32,10 +32,10 @@ const Auth = (() => {
 
   async function register(username, password) {
     const name = username.trim();
-    if (!name || !password) return { error: 'Champs requis' };
+    if (!name || !password) return { error: i18n.t('auth.err.required') };
     const users = getUsers();
     if (users.find(u => u.username.toLowerCase() === name.toLowerCase()))
-      return { error: 'Identifiant déjà utilisé' };
+      return { error: i18n.t('auth.err.taken') };
     const hash = await sha256(password);
     const user = { id: 'u' + Date.now(), username: name, passwordHash: hash };
     users.push(user);

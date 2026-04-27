@@ -11,13 +11,11 @@ const UI = (() => {
 
   // Shared constants (exposed for page files)
   const OB_CLASS = { win:'ob-win', loss:'ob-loss', be:'ob-be', open:'ob-open' };
-  const OB_LABEL = { win:'Win',   loss:'Loss',     be:'B/E',  open:'Open'    };
-  const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin',
-                     'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const OB_LABEL = { win: i18n.t('ob.win'), loss: i18n.t('ob.loss'), be: i18n.t('ob.be'), open: i18n.t('ob.open') };
   const MICRO_RATES = {
-    bnc:          { cotis: 24.6, cfp: 0.2, vl: 2.2, abat: 34, label: 'BNC — Profession libérale' },
-    bic_services: { cotis: 21.2, cfp: 0.3, vl: 1.7, abat: 50, label: 'BIC Services — Prestations' },
-    bic_vente:    { cotis: 12.3, cfp: 0.1, vl: 1.0, abat: 71, label: 'BIC Vente — Achat-revente' },
+    bnc:          { cotis: 24.6, cfp: 0.2, vl: 2.2, abat: 34, labelKey: 'micro.bnc.label' },
+    bic_services: { cotis: 21.2, cfp: 0.3, vl: 1.7, abat: 50, labelKey: 'micro.bic.services.label' },
+    bic_vente:    { cotis: 12.3, cfp: 0.1, vl: 1.0, abat: 71, labelKey: 'micro.bic.vente.label' },
   };
 
   // ── Shared helpers (exposed on UI for page files) ───────────────────────────
@@ -92,7 +90,7 @@ const UI = (() => {
     const filtered = getFiltered();
 
     if (!filtered.length) {
-      const msg = Store.getTrades().length ? 'Aucun résultat' : 'Aucun trade —\ncommence !';
+      const msg = Store.getTrades().length ? i18n.t('ui.no.results') : i18n.t('ui.no.trades');
       list.innerHTML = `
         <div class="empty-list">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
@@ -109,7 +107,7 @@ const UI = (() => {
       const c       = Calc.trade(t);
       const dc      = t.direction === 'long' ? 'var(--green)' : 'var(--red)';
       const rrC     = Calc.rrColor(c.rr);
-      const date    = new Date(t.date).toLocaleDateString('fr-FR', {
+      const date    = new Date(t.date).toLocaleDateString(i18n.locale(), {
         day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'
       });
       const pnlHtml = c.pnl !== null && !c.estimated
@@ -159,41 +157,43 @@ const UI = (() => {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
           </svg>
-          <p>Sélectionne un trade</p>
+          <p>${i18n.t('ui.select.trade')}</p>
         </div>`;
       return;
     }
 
     const c    = Calc.trade(t);
-    const date = new Date(t.date).toLocaleDateString('fr-FR', {
+    const date = new Date(t.date).toLocaleDateString(i18n.locale(), {
       weekday:'long', day:'numeric', month:'long', year:'numeric',
       hour:'2-digit', minute:'2-digit'
     });
 
     const apexClass = c.riskPct <= 1.5 ? 'apex-ok' : c.riskPct <= 2 ? 'apex-warn' : 'apex-err';
     const apexMsg   = c.riskPct <= 1.5
-      ? `Conforme Apex — risque ${c.riskPct.toFixed(2)}% du capital`
+      ? i18n.t('ui.apex.ok',   { pct: c.riskPct.toFixed(2) })
       : c.riskPct <= 2
-        ? `Proche limite Apex — risque ${c.riskPct.toFixed(2)}%`
-        : `Dépasse limite Apex 2% — risque ${c.riskPct.toFixed(2)}%`;
+        ? i18n.t('ui.apex.warn', { pct: c.riskPct.toFixed(2) })
+        : i18n.t('ui.apex.err',  { pct: c.riskPct.toFixed(2) });
 
     const tpCards = buildTpCards(t, c);
     const pnlCard = c.netPnl !== null
       ? `<div class="metric-card">
-           <div class="mc-label">${c.estimated ? 'P&L Potentiel' : 'P&L Net'}</div>
+           <div class="mc-label">${c.estimated ? i18n.t('ui.pnl.potential') : i18n.t('ui.pnl.net')}</div>
            <div class="mc-val" style="color:${Calc.pnlColor(c.netPnl)}">${c.estimated ? '~' : ''}${Calc.formatPnL(c.netPnl)}</div>
-           <div class="mc-sub">${c.estimated ? 'Estimé si TP atteint' : 'Brut ' + Calc.formatPnL(c.pnl) + ' · Comm. -$' + c.commFees.toFixed(2) + ' · Spread -$' + c.spreadFees.toFixed(2)}</div>
+           <div class="mc-sub">${c.estimated ? i18n.t('ui.pnl.estimated') : i18n.t('ui.gross') + ' ' + Calc.formatPnL(c.pnl) + ' · Comm. -$' + c.commFees.toFixed(2) + ' · Spread -$' + c.spreadFees.toFixed(2)}</div>
          </div>`
       : '';
 
     const infoCard = (t.setup || t.notes || t.apex)
       ? `<div class="info-card">
-           <h4>Analyse</h4>
-           ${t.apex  ? `<div class="info-row"><span class="info-key">Compte Apex</span><span class="info-val">${escHtml(t.apex)}</span></div>` : ''}
-           ${t.setup ? `<div class="info-row"><span class="info-key">Setup</span><span class="info-val">${escHtml(t.setup)}</span></div>` : ''}
-           ${t.notes ? `<div class="info-row"><span class="info-key">Notes</span><span class="info-val">${escHtml(t.notes)}</span></div>` : ''}
+           <h4>${i18n.t('ui.analysis')}</h4>
+           ${t.apex  ? `<div class="info-row"><span class="info-key">${i18n.t('ui.apex.account')}</span><span class="info-val">${escHtml(t.apex)}</span></div>` : ''}
+           ${t.setup ? `<div class="info-row"><span class="info-key">${i18n.t('ui.setup')}</span><span class="info-val">${escHtml(t.setup)}</span></div>` : ''}
+           ${t.notes ? `<div class="info-row"><span class="info-key">${i18n.t('ui.notes')}</span><span class="info-val">${escHtml(t.notes)}</span></div>` : ''}
          </div>`
       : '';
+
+    const contractLabel = t.contracts > 1 ? i18n.t('ui.contracts') : i18n.t('ui.contract');
 
     panel.innerHTML = `
       <div class="detail-content">
@@ -207,8 +207,8 @@ const UI = (() => {
             <div class="detail-date">${date}</div>
           </div>
           <div class="detail-actions">
-            <button class="btn-ghost" id="detailBtnEdit">Modifier</button>
-            <button class="btn-ghost btn-danger" id="detailBtnDelete">Supprimer</button>
+            <button class="btn-ghost" id="detailBtnEdit">${i18n.t('btn.edit')}</button>
+            <button class="btn-ghost btn-danger" id="detailBtnDelete">${i18n.t('btn.delete')}</button>
           </div>
         </div>
 
@@ -219,12 +219,12 @@ const UI = (() => {
             <div class="mc-sub">${Calc.rrLabel(c.rr)}</div>
           </div>
           <div class="metric-card">
-            <div class="mc-label">Risk $</div>
+            <div class="mc-label">${i18n.t('ui.risk.usd')}</div>
             <div class="mc-val" style="color:var(--red)">-$${c.riskUSD.toFixed(0)}</div>
             <div class="mc-sub">${c.riskTicks} ticks</div>
           </div>
           <div class="metric-card">
-            <div class="mc-label">Reward $</div>
+            <div class="mc-label">${i18n.t('ui.reward.usd')}</div>
             <div class="mc-val" style="color:var(--green)">+$${c.rewardUSD.toFixed(0)}</div>
             <div class="mc-sub">${c.rewardTicks} ticks</div>
           </div>
@@ -255,7 +255,7 @@ const UI = (() => {
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
           ${apexMsg}
-          <span class="apex-right">${t.contracts} contrat${t.contracts > 1 ? 's' : ''} · $${c.pv}/pt</span>
+          <span class="apex-right">${t.contracts} ${contractLabel} · $${c.pv}/pt</span>
         </div>
 
         ${infoCard}
@@ -269,13 +269,13 @@ const UI = (() => {
     });
 
     $('detailBtnDelete').addEventListener('click', () => {
-      if (!confirm('Supprimer ce trade ?')) return;
+      if (!confirm(i18n.t('confirm.trade.delete'))) return;
       Store.deleteTrade(t.id);
       selectedId = Store.getTrades()[0]?.id || null;
       renderList();
       renderDetail();
       updateStats();
-      toast('Trade supprimé');
+      toast(i18n.t('ui.trade.deleted'));
     });
   }
 
@@ -298,7 +298,7 @@ const UI = (() => {
     toast, updateStats, renderList, selectTrade, renderDetail,
     // Shared utilities exposed for js/pages/*.js
     escHtml, localDay, statsForTrades,
-    OB_CLASS, OB_LABEL, MONTHS_FR, MICRO_RATES,
+    OB_CLASS, OB_LABEL, MICRO_RATES,
     setFilter: (f) => { currentFilter = f; renderList(); },
     get selectedId()  { return selectedId; },
     set selectedId(v) { selectedId = v; },
