@@ -207,65 +207,45 @@
 
     el.innerHTML = `
       <div class="settings-section settings-section--wide">
-        <h3>${t('set.apex.title')}</h3>
-        <div class="accounts-grid">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <h3 style="margin:0">${t('set.apex.section')}</h3>
+          <span style="font-size:10px;background:var(--border);color:var(--muted);padding:2px 8px;border-radius:99px;letter-spacing:0.06em">🔒 ${t('set.apex.locked')}</span>
+        </div>
+        <div class="accounts-grid" style="margin-top:14px">
           ${accounts.map(a => `
-            <div class="account-card" data-id="${a.id}">
+            <div class="account-card" style="opacity:0.92">
               <div class="ac-header">
-                <input class="ac-name" type="text" value="${UI.escHtml(a.name)}" data-field="name">
+                <span class="ac-name" style="font-weight:700;font-size:13px">${UI.escHtml(a.name)}</span>
                 <span class="ac-badge">EOD</span>
               </div>
               <div class="ac-field">
                 <span class="ac-label">${t('set.acc.capital')}</span>
-                <input class="ac-input" type="number" value="${a.capital}" data-field="capital">
+                <span class="ac-input" style="background:transparent;border:none;color:var(--text);font-family:'Geist Mono',monospace;font-size:12px">$${Number(a.capital).toLocaleString()}</span>
               </div>
               <div class="ac-field">
                 <span class="ac-label">${t('set.acc.target')}</span>
-                <input class="ac-input" type="number" value="${a.profitTarget}" data-field="profitTarget">
+                <span class="ac-input" style="background:transparent;border:none;color:var(--green);font-family:'Geist Mono',monospace;font-size:12px">+$${Number(a.profitTarget).toLocaleString()}</span>
               </div>
               <div class="ac-field">
                 <span class="ac-label">${t('set.acc.drawdown')}</span>
-                <input class="ac-input" type="number" value="${a.maxDrawdown}" data-field="maxDrawdown">
+                <span class="ac-input" style="background:transparent;border:none;color:var(--red);font-family:'Geist Mono',monospace;font-size:12px">-$${Number(a.maxDrawdown).toLocaleString()}</span>
               </div>
               <div class="ac-field">
                 <span class="ac-label">${t('set.acc.daily')}</span>
-                <input class="ac-input" type="number" value="${a.dailyLossLimit}" data-field="dailyLossLimit">
+                <span class="ac-input" style="background:transparent;border:none;color:var(--red);font-family:'Geist Mono',monospace;font-size:12px">-$${Number(a.dailyLossLimit).toLocaleString()}</span>
               </div>
               <div class="ac-field">
                 <span class="ac-label">${t('set.acc.contracts')}</span>
-                <input class="ac-input" type="number" value="${a.maxContracts}" data-field="maxContracts">
+                <span class="ac-input" style="background:transparent;border:none;color:var(--text);font-family:'Geist Mono',monospace;font-size:12px">${a.maxContracts}</span>
               </div>
               <div class="ac-field">
                 <span class="ac-label">${t('set.acc.fee')}</span>
-                <input class="ac-input" type="number" step="0.01" value="${(a.feePerSide || 2.14).toFixed(2)}" data-field="feePerSide">
+                <span class="ac-input" style="background:transparent;border:none;color:var(--text);font-family:'Geist Mono',monospace;font-size:12px">$${(a.feePerSide || 2.14).toFixed(2)}</span>
               </div>
             </div>
           `).join('')}
         </div>
-        <div class="settings-save-row">
-          <button class="btn-primary" id="btnSaveAccounts">${t('btn.save')}</button>
-        </div>
       </div>`;
-
-    $('btnSaveAccounts').addEventListener('click', () => {
-      const cards   = el.querySelectorAll('.account-card');
-      const updated = Array.from(cards).map(card => {
-        const orig = accounts.find(a => a.id === card.dataset.id);
-        const get  = field => card.querySelector(`[data-field="${field}"]`).value;
-        return {
-          id:             card.dataset.id,
-          name:           get('name').trim()              || orig.name,
-          capital:        parseFloat(get('capital'))      || orig.capital,
-          profitTarget:   parseFloat(get('profitTarget')) || orig.profitTarget,
-          maxDrawdown:    parseFloat(get('maxDrawdown'))  || orig.maxDrawdown,
-          dailyLossLimit: parseFloat(get('dailyLossLimit')) || orig.dailyLossLimit,
-          maxContracts:   parseInt(get('maxContracts'))   || orig.maxContracts,
-          feePerSide:     parseFloat(get('feePerSide'))   || orig.feePerSide || 2.14,
-        };
-      });
-      Store.updateAccountTypes(updated);
-      UI.toast(t('set.acc.saved'));
-    });
   }
 
   function renderSpreadsSettings() {
