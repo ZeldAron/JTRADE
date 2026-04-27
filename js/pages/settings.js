@@ -452,7 +452,7 @@
       const blob = new Blob([Store.exportJSON()], { type: 'application/json' });
       const a    = document.createElement('a');
       a.href     = URL.createObjectURL(blob);
-      a.download = 'jtrade-' + new Date().toISOString().split('T')[0] + '.json';
+      a.download = 'zeldtrade-' + new Date().toISOString().split('T')[0] + '.json';
       a.click();
       UI.toast(t('set.export.done'));
     });

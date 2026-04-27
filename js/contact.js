@@ -50,7 +50,7 @@ const Contact = (() => {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
           access_key: WEB3FORMS_KEY,
-          subject:    `[JTRADE] Message de ${name}`,
+          subject:    `[ZeldTrade] Message de ${name}`,
           from_name:  name,
           email,
           message,
