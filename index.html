@@ -232,58 +232,75 @@
       <div class="dash-page">
         <div class="page-title" data-i18n="page.settings">Réglages</div>
 
-        <!-- Groupes de trading (rendu par JS) -->
-        <div id="settingsGroups"></div>
+        <!-- Onglets settings -->
+        <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap">
+          <button class="chip active" data-settings-tab="accounts" data-i18n="set.tab.accounts">Mes Comptes</button>
+          <button class="chip" data-settings-tab="apex" data-i18n="set.tab.apex">Apex</button>
+          <button class="chip" data-settings-tab="spreads" data-i18n="set.tab.spreads">Spreads</button>
+          <button class="chip" data-settings-tab="general" data-i18n="set.tab.general">Général</button>
+        </div>
 
-        <!-- Mes Comptes personnels (rendu par JS) -->
-        <div id="settingsMyAccounts"></div>
+        <!-- Onglet : Mes Comptes -->
+        <div data-settings-pane="accounts">
+          <div id="settingsGroups"></div>
+          <div id="settingsMyAccounts"></div>
+        </div>
 
-        <!-- Presets Apex EOD (rendu par JS) -->
-        <div id="settingsAccountTypes"></div>
+        <!-- Onglet : Apex -->
+        <div data-settings-pane="apex" style="display:none">
+          <div id="settingsAccountTypes"></div>
+        </div>
 
-        <!-- Spreads par instrument (rendu par JS) -->
-        <div id="settingsSpreads"></div>
+        <!-- Onglet : Spreads -->
+        <div data-settings-pane="spreads" style="display:none">
+          <div id="settingsSpreads"></div>
+        </div>
 
-        <div class="settings-section">
-          <h3 data-i18n="set.ai">Intelligence Artificielle</h3>
-          <div class="settings-row" style="background:var(--green-dim);border-radius:8px;padding:10px 14px;flex-direction:column;align-items:flex-start;gap:6px">
-            <div style="font-size:13px;font-weight:600;color:var(--green)" data-i18n="set.groq.title">★ Groq Vision (gratuit)</div>
-            <div style="font-size:11px;color:var(--muted)" data-i18n="set.groq.link" data-i18n-html="1">Clé gratuite sur <b>console.groq.com</b> → "API Keys" → "Create API key"</div>
-            <div style="display:flex;gap:8px;width:100%">
-              <input type="password" class="form-input" id="setGroqKey" placeholder="gsk_..." style="flex:1;font-family:monospace;font-size:12px">
-              <button class="btn-primary" id="btnSaveGroq" style="white-space:nowrap" data-i18n="set.groq.save">Sauvegarder</button>
+        <!-- Onglet : Général -->
+        <div data-settings-pane="general" style="display:none">
+          <div class="settings-section">
+            <h3 data-i18n="set.ai">Intelligence Artificielle</h3>
+            <div class="settings-row" style="background:var(--green-dim);border-radius:8px;padding:10px 14px;flex-direction:column;align-items:flex-start;gap:6px">
+              <div style="font-size:13px;font-weight:600;color:var(--green)" data-i18n="set.groq.title">★ Groq Vision (gratuit)</div>
+              <div style="font-size:11px;color:var(--muted)" data-i18n="set.groq.link" data-i18n-html="1">Clé gratuite sur <b>console.groq.com</b> → "API Keys" → "Create API key"</div>
+              <div style="display:flex;gap:8px;width:100%">
+                <input type="password" class="form-input" id="setGroqKey" placeholder="gsk_..." style="flex:1;font-family:monospace;font-size:12px">
+                <button class="btn-primary" id="btnSaveGroq" style="white-space:nowrap" data-i18n="set.groq.save">Sauvegarder</button>
+              </div>
+              <span id="groqKeyStatus" style="font-size:11px;color:var(--muted)"></span>
             </div>
-            <span id="groqKeyStatus" style="font-size:11px;color:var(--muted)"></span>
           </div>
-        </div>
 
-        <div class="settings-section">
-          <h3 data-i18n="set.lang">Langue</h3>
-          <div class="settings-row">
-            <label data-i18n="set.lang">Langue</label>
-            <button class="btn-ghost" id="btnToggleLang" data-i18n="set.lang.btn">Switch to English</button>
+          <div class="settings-section">
+            <h3 data-i18n="set.lang">Langue</h3>
+            <div class="settings-row">
+              <label data-i18n="set.lang">Langue</label>
+              <button class="btn-ghost" id="btnToggleLang" data-i18n="set.lang.btn">Switch to English</button>
+            </div>
           </div>
-        </div>
-        <div class="settings-section">
-          <h3 data-i18n="set.data">Données</h3>
-          <div class="settings-row">
-            <label data-i18n="set.export">Exporter (JSON)</label>
-            <button class="btn-ghost" id="btnExport" data-i18n="set.export.btn">Exporter</button>
+
+          <div class="settings-section">
+            <h3 data-i18n="set.data">Données</h3>
+            <div class="settings-row">
+              <label data-i18n="set.export">Exporter (JSON)</label>
+              <button class="btn-ghost" id="btnExport" data-i18n="set.export.btn">Exporter</button>
+            </div>
+            <div class="settings-row">
+              <label data-i18n="set.import">Importer</label>
+              <button class="btn-ghost" id="btnImport" data-i18n="set.import.btn">Importer</button>
+            </div>
+            <input type="file" id="importFile" accept=".json" style="display:none">
+            <div class="settings-row">
+              <label data-i18n="set.clear">Effacer toutes les données</label>
+              <button class="btn-ghost btn-danger" id="btnClearAll" data-i18n="set.clear.btn">Effacer</button>
+            </div>
           </div>
-          <div class="settings-row">
-            <label data-i18n="set.import">Importer</label>
-            <button class="btn-ghost" id="btnImport" data-i18n="set.import.btn">Importer</button>
+
+          <div class="settings-section">
+            <h3 data-i18n="set.about">À propos</h3>
+            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.6.5</span></div>
+            <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
           </div>
-          <input type="file" id="importFile" accept=".json" style="display:none">
-          <div class="settings-row">
-            <label data-i18n="set.clear">Effacer toutes les données</label>
-            <button class="btn-ghost btn-danger" id="btnClearAll" data-i18n="set.clear.btn">Effacer</button>
-          </div>
-        </div>
-        <div class="settings-section">
-          <h3 data-i18n="set.about">À propos</h3>
-          <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.6.5</span></div>
-          <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
         </div>
       </div>
     </div>
