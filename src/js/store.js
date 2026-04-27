@@ -217,7 +217,7 @@ const Store = (() => {
 
   // ── Plan (Basic / Pro) ───────────────────────────────────────────────────────
   // Codes d'activation valides — à étendre lors du vrai lancement commercial
-  const PRO_CODES = ['JTRADE-PRO-2026'];
+  const PRO_CODES = ['ZELDTRADE-PRO-2026', 'JTRADE-PRO-2026'];
 
   function getPlanInfo() {
     try { return JSON.parse(localStorage.getItem(PLAN_KEY)) || { plan: 'basic' }; }

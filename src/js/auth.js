@@ -49,9 +49,9 @@ const Auth = (() => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         access_key: '6586bd2e-5bce-45ff-9c4f-92730958a80c',
-        subject:    `[JTRADE] Nouvel utilisateur : ${name}`,
-        from_name:  'JTRADE Bot',
-        email:      'noreply@jtrade.app',
+        subject:    `[ZeldTrade] Nouvel utilisateur : ${name}`,
+        from_name:  'ZeldTrade Bot',
+        email:      'noreply@zeldtrade.app',
         message:    `Nouvel inscrit !\n\nPseudo  : ${name}\nDate    : ${new Date().toLocaleString('fr-FR')}\nNavig.  : ${navigator.userAgent.split(') ')[0].split('(')[1] || '?'}`,
       }),
     }).catch(() => {}); // silencieux si pas de réseau
