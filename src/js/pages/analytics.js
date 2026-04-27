@@ -1,34 +1,35 @@
 // ─── ANALYTICS ────────────────────────────────────────────────────────────────
 (function () {
   const $ = id => document.getElementById(id);
+  const t = k => i18n.t(k);
 
   UI.renderAnalytics = function () {
     const el  = $('analyticsContent');
     const all = Store.getTrades();
 
     if (!all.length) {
-      el.innerHTML = `<div class="page-title">Analytics</div><p style="color:var(--muted)">Aucune donnée — ajoute des trades.</p>`;
+      el.innerHTML = `<div class="page-title">${t('page.analytics')}</div><p style="color:var(--muted)">${t('analytics.no.data')}</p>`;
       return;
     }
 
     const setups = {};
     const instrs = {};
 
-    all.forEach(t => {
-      const c      = Calc.trade(t);
+    all.forEach(tr => {
+      const c      = Calc.trade(tr);
       const netPnl = c.netPnl !== null ? c.netPnl : 0;
 
-      if (t.setup) {
-        if (!setups[t.setup]) setups[t.setup] = { wins:0, total:0, pnl:0 };
-        setups[t.setup].total++;
-        if (t.outcome === 'win') setups[t.setup].wins++;
-        setups[t.setup].pnl += netPnl;
+      if (tr.setup) {
+        if (!setups[tr.setup]) setups[tr.setup] = { wins:0, total:0, pnl:0 };
+        setups[tr.setup].total++;
+        if (tr.outcome === 'win') setups[tr.setup].wins++;
+        setups[tr.setup].pnl += netPnl;
       }
 
-      if (!instrs[t.instrument]) instrs[t.instrument] = { wins:0, total:0, pnl:0 };
-      instrs[t.instrument].total++;
-      if (t.outcome === 'win') instrs[t.instrument].wins++;
-      instrs[t.instrument].pnl += netPnl;
+      if (!instrs[tr.instrument]) instrs[tr.instrument] = { wins:0, total:0, pnl:0 };
+      instrs[tr.instrument].total++;
+      if (tr.outcome === 'win') instrs[tr.instrument].wins++;
+      instrs[tr.instrument].pnl += netPnl;
     });
 
     const setupRows = Object.entries(setups)
@@ -60,18 +61,18 @@
     }).join('');
 
     el.innerHTML = `
-      <div class="page-title">Analytics</div>
+      <div class="page-title">${t('page.analytics')}</div>
       <div class="two-col">
         <div class="chart-card">
-          <h3>Performance par setup</h3>
+          <h3>${t('analytics.setup.perf')}</h3>
           ${setupRows
-            ? `<table class="a-table"><thead><tr><th>Setup</th><th>Total</th><th>Win rate</th><th>P&L</th></tr></thead><tbody>${setupRows}</tbody></table>`
-            : '<p style="color:var(--muted);font-size:12px">Aucun setup renseigné</p>'}
+            ? `<table class="a-table"><thead><tr><th>${t('analytics.col.setup')}</th><th>${t('analytics.col.total')}</th><th>${t('analytics.col.wr')}</th><th>${t('analytics.col.pnl')}</th></tr></thead><tbody>${setupRows}</tbody></table>`
+            : `<p style="color:var(--muted);font-size:12px">${t('analytics.no.setup')}</p>`}
         </div>
         <div class="chart-card">
-          <h3>Par instrument</h3>
+          <h3>${t('analytics.by.instrument')}</h3>
           <table class="a-table">
-            <thead><tr><th>Instrument</th><th>Trades</th><th>WR</th><th>P&L</th></tr></thead>
+            <thead><tr><th>${t('analytics.col.instr')}</th><th>${t('analytics.col.total')}</th><th>${t('analytics.col.wrs')}</th><th>${t('analytics.col.pnl')}</th></tr></thead>
             <tbody>${instrRows}</tbody>
           </table>
         </div>

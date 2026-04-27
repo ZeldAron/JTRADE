@@ -23,7 +23,7 @@
           </svg>
         </div>
         <div class="login-title">JTRADE</div>
-        <div class="login-subtitle">Journal de trading</div>
+        <div class="login-subtitle" data-i18n="auth.subtitle">Journal de trading</div>
       </div>
 
       <!-- Formulaire connexion -->
@@ -35,8 +35,8 @@
             placeholder="Mot de passe" autocomplete="current-password" required>
         </div>
         <div class="login-error" id="loginError"></div>
-        <button type="submit" class="login-btn">Se connecter</button>
-        <div class="login-switch">Pas de compte ? <span id="showRegister">Créer un compte</span></div>
+        <button type="submit" class="login-btn" data-i18n="auth.login.btn">Se connecter</button>
+        <div class="login-switch"><span data-i18n="auth.no.account">Pas de compte ?</span> <span id="showRegister" data-i18n="auth.register">Créer un compte</span></div>
       </form>
 
       <!-- Formulaire inscription -->
@@ -50,8 +50,8 @@
             placeholder="Confirmer le mot de passe" autocomplete="new-password" required>
         </div>
         <div class="login-error" id="registerError"></div>
-        <button type="submit" class="login-btn">Créer le compte</button>
-        <div class="login-switch"><span id="showLogin">← Retour à la connexion</span></div>
+        <button type="submit" class="login-btn" data-i18n="auth.create.btn">Créer le compte</button>
+        <div class="login-switch"><span id="showLogin" data-i18n="auth.back.login">← Retour à la connexion</span></div>
       </form>
     </div>
 
@@ -143,7 +143,7 @@
         <span class="user-pill-name" id="userPillName">—</span>
         <span class="plan-badge" id="planBadge">BASIC</span>
       </div>
-      <button class="user-logout-btn" id="btnLogout" title="Se déconnecter">
+      <button class="user-logout-btn" id="btnLogout" title="Log out">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
           <polyline points="16 17 21 12 16 7"/>
@@ -157,7 +157,7 @@
         <line x1="12" y1="5" x2="12" y2="19"/>
         <line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
-      Nouveau trade
+      <span data-i18n="btn.newtrade">Nouveau trade</span>
     </button>
   </aside>
 
@@ -178,11 +178,11 @@
       <div class="journal-layout">
         <div class="trade-list">
           <div class="list-filters" id="listFilters">
-            <button class="chip active" data-filter="all">Tous</button>
-            <button class="chip" data-filter="win">Win</button>
-            <button class="chip" data-filter="loss">Loss</button>
-            <button class="chip" data-filter="be">B/E</button>
-            <button class="chip" data-filter="open">Open</button>
+            <button class="chip active" data-filter="all" data-i18n="filter.all">Tous</button>
+            <button class="chip" data-filter="win" data-i18n="filter.win">Win</button>
+            <button class="chip" data-filter="loss" data-i18n="filter.loss">Loss</button>
+            <button class="chip" data-filter="be" data-i18n="filter.be">B/E</button>
+            <button class="chip" data-filter="open" data-i18n="filter.open">Open</button>
           </div>
           <div class="list-body" id="tradeList"></div>
         </div>
@@ -191,7 +191,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
               <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
             </svg>
-            <p>Sélectionne un trade</p>
+            <p data-i18n="ui.select.trade">Sélectionne un trade</p>
           </div>
         </div>
       </div>
@@ -230,7 +230,7 @@
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="dash-page">
-        <div class="page-title">Réglages</div>
+        <div class="page-title" data-i18n="page.settings">Réglages</div>
 
         <!-- Groupes de trading (rendu par JS) -->
         <div id="settingsGroups"></div>
@@ -245,13 +245,13 @@
         <div id="settingsSpreads"></div>
 
         <div class="settings-section">
-          <h3>Intelligence Artificielle</h3>
+          <h3 data-i18n="set.ai">Intelligence Artificielle</h3>
           <div class="settings-row" style="background:var(--green-dim);border-radius:8px;padding:10px 14px;flex-direction:column;align-items:flex-start;gap:6px">
-            <div style="font-size:13px;font-weight:600;color:var(--green)">★ Groq Vision (gratuit)</div>
-            <div style="font-size:11px;color:var(--muted)">Clé gratuite sur <b>console.groq.com</b> → "API Keys" → "Create API key"</div>
+            <div style="font-size:13px;font-weight:600;color:var(--green)" data-i18n="set.groq.title">★ Groq Vision (gratuit)</div>
+            <div style="font-size:11px;color:var(--muted)" data-i18n="set.groq.link" data-i18n-html="1">Clé gratuite sur <b>console.groq.com</b> → "API Keys" → "Create API key"</div>
             <div style="display:flex;gap:8px;width:100%">
               <input type="password" class="form-input" id="setGroqKey" placeholder="gsk_..." style="flex:1;font-family:monospace;font-size:12px">
-              <button class="btn-primary" id="btnSaveGroq" style="white-space:nowrap">Sauvegarder</button>
+              <button class="btn-primary" id="btnSaveGroq" style="white-space:nowrap" data-i18n="set.groq.save">Sauvegarder</button>
             </div>
             <span id="groqKeyStatus" style="font-size:11px;color:var(--muted)"></span>
           </div>
@@ -265,25 +265,25 @@
           </div>
         </div>
         <div class="settings-section">
-          <h3>Données</h3>
+          <h3 data-i18n="set.data">Données</h3>
           <div class="settings-row">
-            <label>Exporter (JSON)</label>
-            <button class="btn-ghost" id="btnExport">Exporter</button>
+            <label data-i18n="set.export">Exporter (JSON)</label>
+            <button class="btn-ghost" id="btnExport" data-i18n="set.export.btn">Exporter</button>
           </div>
           <div class="settings-row">
-            <label>Importer</label>
-            <button class="btn-ghost" id="btnImport">Importer</button>
+            <label data-i18n="set.import">Importer</label>
+            <button class="btn-ghost" id="btnImport" data-i18n="set.import.btn">Importer</button>
           </div>
           <input type="file" id="importFile" accept=".json" style="display:none">
           <div class="settings-row">
-            <label>Effacer toutes les données</label>
-            <button class="btn-ghost btn-danger" id="btnClearAll">Effacer</button>
+            <label data-i18n="set.clear">Effacer toutes les données</label>
+            <button class="btn-ghost btn-danger" id="btnClearAll" data-i18n="set.clear.btn">Effacer</button>
           </div>
         </div>
         <div class="settings-section">
-          <h3>À propos</h3>
-          <div class="settings-row"><label>Version</label><span style="color:var(--muted);font-size:12px">0.5.0</span></div>
-          <div class="settings-row"><label>Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
+          <h3 data-i18n="set.about">À propos</h3>
+          <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.6.3</span></div>
+          <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
         </div>
       </div>
     </div>
@@ -311,7 +311,7 @@
 
       <!-- ── ÉTAPE 1 : Direction ──────────────────────────────────────────── -->
       <div class="wiz-pane" id="wp1">
-        <div class="wiz-pane-title">Direction du trade</div>
+        <div class="wiz-pane-title" data-i18n="wiz.step1">Direction du trade</div>
         <div class="dir-choice">
           <button class="dir-btn" id="wBtnLong">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -331,7 +331,7 @@
       <!-- ── ÉTAPE 2 : Screenshot ────────────────────────────────────────── -->
       <div class="wiz-pane" id="wp2" style="display:none">
         <div class="wiz-pane-title">
-          Trade <span id="wDirBadge" class="wiz-dir-badge">LONG</span> — capture d'écran
+          Trade <span id="wDirBadge" class="wiz-dir-badge">LONG</span> <span data-i18n="wiz.step2.sfx">— capture d'écran</span>
           <span id="groqStatusBadge" style="margin-left:auto;font-size:10px;color:var(--muted)"></span>
         </div>
 
@@ -341,7 +341,7 @@
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted)">
               <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
             </svg>
-            <span style="font-size:13px;color:var(--muted)">Cliquer ou coller <kbd>⌘V</kbd></span>
+            <span style="font-size:13px;color:var(--muted)" data-i18n="wiz.drop" data-i18n-html="1">Cliquer ou coller <kbd>⌘V</kbd></span>
           </div>
           <div id="wImagePreview" style="display:none;position:relative;width:100%">
             <img id="wPreviewImg" alt="capture" style="max-width:100%;max-height:200px;border-radius:8px;display:block;margin:0 auto">
@@ -359,21 +359,21 @@
         <div id="wAnalysisResult" class="wiz-analysis-pills" style="display:none"></div>
 
         <div class="wiz-nav">
-          <button class="btn-ghost" id="wBtnBack1">← Retour</button>
+          <button class="btn-ghost" id="wBtnBack1" data-i18n="wiz.back">← Retour</button>
           <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn-ghost" id="wBtnRetry" style="display:none">↺ Réanalyser</button>
-            <button class="btn-primary" id="wBtnNext2">Continuer →</button>
+            <button class="btn-ghost" id="wBtnRetry" style="display:none" data-i18n="wiz.retry">↺ Réanalyser</button>
+            <button class="btn-primary" id="wBtnNext2" data-i18n="wiz.next">Continuer →</button>
           </div>
         </div>
       </div>
 
       <!-- ── ÉTAPE 3 : Détails + calcul ─────────────────────────────────── -->
       <div class="wiz-pane" id="wp3" style="display:none">
-        <div class="wiz-pane-title">Confirmer le trade</div>
+        <div class="wiz-pane-title" data-i18n="wiz.confirm">Confirmer le trade</div>
 
         <div class="form-grid form-grid-3" style="margin-bottom:12px">
           <div class="form-field" style="grid-column:span 2">
-            <label class="form-label">Date du trade</label>
+            <label class="form-label" data-i18n="wiz.date">Date du trade</label>
             <input class="form-input" type="date" id="wTradeDate">
           </div>
         </div>
@@ -390,7 +390,7 @@
             <input class="form-input mono" type="number" id="wContracts" value="1" min="1">
           </div>
           <div class="form-field">
-            <label class="form-label">Compte</label>
+            <label class="form-label" data-i18n="wiz.account.lbl">Compte</label>
             <select class="form-input" id="wApex"><option value="">— Compte —</option></select>
           </div>
         </div>
@@ -415,13 +415,13 @@
           <div class="lc-stat"><span class="lc-stat-label">Risk $</span><span class="lc-stat-val" style="color:var(--red)" id="lcRisk">—</span></div>
           <div class="lc-stat"><span class="lc-stat-label">Reward $</span><span class="lc-stat-val" style="color:var(--green)" id="lcReward">—</span></div>
           <div class="lc-stat"><span class="lc-stat-label">Risk %</span><span class="lc-stat-val" id="lcRiskPct">—</span></div>
-          <div class="lc-stat"><span class="lc-stat-label">Frais A/R</span><span class="lc-stat-val" style="color:var(--amber)" id="lcFees">—</span></div>
+          <div class="lc-stat"><span class="lc-stat-label" data-i18n="wiz.fees">Frais A/R</span><span class="lc-stat-val" style="color:var(--amber)" id="lcFees">—</span></div>
           <div class="lc-stat"><span class="lc-stat-label">Net reward</span><span class="lc-stat-val" id="lcNet">—</span></div>
           <span id="lcApexWarn" style="display:none;font-size:11px;color:var(--red)">⚠ Hors limite</span>
         </div>
 
         <!-- Champs optionnels (dépliables) -->
-        <button class="wiz-opt-toggle" id="wOptToggle">+ Setup / Notes / Résultat</button>
+        <button class="wiz-opt-toggle" id="wOptToggle" data-i18n="wiz.setup">+ Setup / Notes / Résultat</button>
         <div id="wOptFields" style="display:none;margin-top:10px">
           <div class="form-grid form-grid-2" style="margin-bottom:8px">
             <div class="form-field">
@@ -443,22 +443,22 @@
           </div>
           <div class="form-grid form-grid-2">
             <div class="form-field">
-              <label class="form-label">Résultat</label>
+              <label class="form-label" data-i18n="wiz.result">Résultat</label>
               <select class="form-input" id="wOutcome">
-                <option value="open">Open</option><option value="win">Win</option>
-                <option value="loss">Loss</option><option value="be">B/E</option>
+                <option value="open" data-i18n="wiz.outcome.open">Open</option><option value="win" data-i18n="wiz.outcome.win">Win</option>
+                <option value="loss" data-i18n="wiz.outcome.loss">Loss</option><option value="be" data-i18n="wiz.outcome.be">B/E</option>
               </select>
             </div>
             <div class="form-field" id="wExitField" style="display:none">
-              <label class="form-label">Prix de sortie</label>
+              <label class="form-label" data-i18n="wiz.exit.price">Prix de sortie</label>
               <input class="form-input mono" type="text" inputmode="decimal" id="wExit" placeholder="0.00" autocomplete="off">
             </div>
           </div>
         </div>
 
         <div class="wiz-nav" style="margin-top:16px">
-          <button class="btn-ghost" id="wBtnBack2">← Retour</button>
-          <button class="btn-primary" id="wBtnSave">Enregistrer</button>
+          <button class="btn-ghost" id="wBtnBack2" data-i18n="wiz.back">← Retour</button>
+          <button class="btn-primary" id="wBtnSave" data-i18n="wiz.save">Enregistrer</button>
         </div>
       </div>
 
@@ -491,6 +491,7 @@
     const ls = $('loginScreen');
     const lc = $('loginCard');
     const ll = $('loginLoader');
+    i18n.apply();
 
     function showLoader(username) {
       lc.style.display = 'none';
@@ -536,7 +537,7 @@
       const password = $('loginPassword').value;
       const user = await Auth.login(username, password);
       if (!user) {
-        $('loginError').textContent = 'Identifiant ou mot de passe incorrect.';
+        $('loginError').textContent = i18n.t('auth.err.login');
         return;
       }
       showLoader(user.username);
@@ -551,11 +552,11 @@
       const password = $('regPassword').value;
       const confirm  = $('regPasswordConfirm').value;
       if (password !== confirm) {
-        $('registerError').textContent = 'Les mots de passe ne correspondent pas.';
+        $('registerError').textContent = i18n.t('auth.err.mismatch');
         return;
       }
       if (password.length < 4) {
-        $('registerError').textContent = 'Mot de passe trop court (4 caractères min).';
+        $('registerError').textContent = i18n.t('auth.err.short');
         return;
       }
       const result = await Auth.register(username, password);
@@ -593,7 +594,7 @@
           <div class="contact-avatar">J</div>
           <div>
             <div class="contact-name">JTRADE Support</div>
-            <div class="contact-status"><span class="contact-online-dot"></span> En ligne</div>
+            <div class="contact-status"><span class="contact-online-dot"></span> Online</div>
           </div>
         </div>
         <button class="contact-close" id="contactClose">
@@ -603,30 +604,30 @@
         </button>
       </div>
       <div class="contact-body">
-        <div class="contact-intro">Bonjour 👋 Une question ? Un bug ? On vous répond rapidement.</div>
+        <div class="contact-intro" data-i18n="contact.intro">Bonjour 👋 Une question ? Un bug ? On vous répond rapidement.</div>
         <div class="contact-form" id="contactForm">
           <div class="contact-field">
-            <label>Votre nom</label>
+            <label data-i18n="contact.name">Votre nom</label>
             <input type="text" id="cName" placeholder="Aaron" autocomplete="name" />
           </div>
           <div class="contact-field">
-            <label>Votre email</label>
+            <label data-i18n="contact.email">Votre email</label>
             <input type="email" id="cEmail" placeholder="vous@email.com" autocomplete="email" />
           </div>
           <div class="contact-field">
-            <label>Message</label>
+            <label data-i18n="contact.msg">Message</label>
             <textarea id="cMessage" rows="4" placeholder="Décrivez votre question ou problème…"></textarea>
           </div>
           <div class="contact-error" id="cError"></div>
           <button class="contact-send" id="cSend">
-            <span id="cSendLabel">Envoyer</span>
+            <span id="cSendLabel" data-i18n="contact.send">Envoyer</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
         <div class="contact-success" id="contactSuccess" style="display:none">
           <div class="contact-success-icon">✓</div>
-          <div class="contact-success-title">Message envoyé !</div>
-          <div class="contact-success-sub">On vous répond dans les plus brefs délais.</div>
+          <div class="contact-success-title" data-i18n="contact.ok.title">Message envoyé !</div>
+          <div class="contact-success-sub" data-i18n="contact.ok.sub">On vous répond dans les plus brefs délais.</div>
         </div>
       </div>
     </div>

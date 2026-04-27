@@ -1,6 +1,7 @@
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
 (function () {
   const $ = id => document.getElementById(id);
+  const t = k => i18n.t(k);
 
   let dashFilter = null;
   let pnlChart   = null;
@@ -37,8 +38,8 @@
     const s         = UI.statsForTrades(trades);
     const today     = new Date().toISOString().split('T')[0];
     const todayLoss = trades
-      .filter(t => t.date.startsWith(today) && t.outcome === 'loss')
-      .reduce((sum, t) => sum + Math.abs(Calc.trade(t).netPnl || 0), 0);
+      .filter(tr => tr.date.startsWith(today) && tr.outcome === 'loss')
+      .reduce((sum, tr) => sum + Math.abs(Calc.trade(tr).netPnl || 0), 0);
 
     const ddPct     = acc.maxDrawdown    ? Math.min(100, (Math.abs(Math.min(0, s.totalPnL)) / acc.maxDrawdown) * 100) : 0;
     const dailyPct  = acc.dailyLossLimit ? Math.min(100, (todayLoss / acc.dailyLossLimit) * 100) : 0;
@@ -59,14 +60,14 @@
         </span>
       </div>
       <div class="dac-kpis">
-        <div class="dac-kpi"><div class="dac-kpi-val">${s.winRate !== null ? s.winRate.toFixed(0) + '%' : '—'}</div><div class="dac-kpi-lbl">Win Rate</div></div>
-        <div class="dac-kpi"><div class="dac-kpi-val">${s.avgRR.toFixed(2)}R</div><div class="dac-kpi-lbl">R:R moy.</div></div>
-        <div class="dac-kpi"><div class="dac-kpi-val">${s.total}</div><div class="dac-kpi-lbl">Trades</div></div>
-        <div class="dac-kpi"><div class="dac-kpi-val">${s.open}</div><div class="dac-kpi-lbl">Ouverts</div></div>
+        <div class="dac-kpi"><div class="dac-kpi-val">${s.winRate !== null ? s.winRate.toFixed(0) + '%' : '—'}</div><div class="dac-kpi-lbl">${t('dash.win.rate')}</div></div>
+        <div class="dac-kpi"><div class="dac-kpi-val">${s.avgRR.toFixed(2)}R</div><div class="dac-kpi-lbl">${t('dash.avg.rr')}</div></div>
+        <div class="dac-kpi"><div class="dac-kpi-val">${s.total}</div><div class="dac-kpi-lbl">${t('dash.trades')}</div></div>
+        <div class="dac-kpi"><div class="dac-kpi-val">${s.open}</div><div class="dac-kpi-lbl">${t('dash.open')}</div></div>
       </div>
-      ${acc.profitTarget   ? progressBar(targetPct, 'var(--green)', 'Objectif profit',  '+$' + Math.max(0, s.totalPnL).toFixed(0) + ' / $' + acc.profitTarget) : ''}
-      ${acc.maxDrawdown    ? progressBar(ddPct,      'var(--amber)', 'Drawdown utilisé', '$' + Math.abs(Math.min(0, s.totalPnL)).toFixed(0) + ' / $' + acc.maxDrawdown) : ''}
-      ${acc.dailyLossLimit ? progressBar(dailyPct,   'var(--red)',   'Perte jour',       '$' + todayLoss.toFixed(0) + ' / $' + acc.dailyLossLimit) : ''}
+      ${acc.profitTarget   ? progressBar(targetPct, 'var(--green)', t('dash.profit.target'), '+$' + Math.max(0, s.totalPnL).toFixed(0) + ' / $' + acc.profitTarget) : ''}
+      ${acc.maxDrawdown    ? progressBar(ddPct,      'var(--amber)', t('dash.drawdown.used'), '$' + Math.abs(Math.min(0, s.totalPnL)).toFixed(0) + ' / $' + acc.maxDrawdown) : ''}
+      ${acc.dailyLossLimit ? progressBar(dailyPct,   'var(--red)',   t('dash.daily.loss'),   '$' + todayLoss.toFixed(0) + ' / $' + acc.dailyLossLimit) : ''}
     </div>`;
   }
 
@@ -75,9 +76,9 @@
     if (!canvas) return;
 
     const byDay = {};
-    trades.forEach(t => {
-      const d = UI.localDay(t.date);
-      byDay[d] = (byDay[d] || 0) + (Calc.trade(t).netPnl || 0);
+    trades.forEach(tr => {
+      const d = UI.localDay(tr.date);
+      byDay[d] = (byDay[d] || 0) + (Calc.trade(tr).netPnl || 0);
     });
     const days = Object.keys(byDay).sort();
     if (!days.length) { canvas.style.display = 'none'; return; }
@@ -172,9 +173,9 @@
     const s      = UI.statsForTrades(trades);
 
     const currentVal = dashFilter || 'all';
-    let opts = `<option value="all"${currentVal==='all'?' selected':''}>Tous les comptes</option>`;
+    let opts = `<option value="all"${currentVal==='all'?' selected':''}>${t('dash.all.accounts')}</option>`;
     if (accs.length) {
-      opts += `<optgroup label="── Comptes ──">`;
+      opts += `<optgroup label="${t('dash.accounts.grp')}">`;
       opts += accs.map(a => {
         const v = 'acc:' + a.name;
         return `<option value="${UI.escHtml(v)}"${currentVal===v?' selected':''}>${UI.escHtml(a.name)}</option>`;
@@ -182,7 +183,7 @@
       opts += `</optgroup>`;
     }
     if (grps.length) {
-      opts += `<optgroup label="── Groupes ──">`;
+      opts += `<optgroup label="${t('dash.groups.grp')}">`;
       opts += grps.map(g => {
         const v = 'grp:' + g.id;
         return `<option value="${UI.escHtml(v)}"${currentVal===v?' selected':''}>${UI.escHtml(g.name)}</option>`;
@@ -199,55 +200,55 @@
       const accName = dashFilter.slice(4);
       const acc     = accs.find(a => a.name === accName);
       if (acc) body = accountCard(acc, trades);
-      body += `<div class="chart-card"><h3>Courbe P&L</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div></div>`;
+      body += `<div class="chart-card"><h3>${t('dash.pnl.curve')}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div></div>`;
     } else if (dashFilter && dashFilter.startsWith('grp:')) {
       const grp  = Store.getGroupById(dashFilter.slice(4));
       const kpis = `<div class="kpi-grid">
-        ${kpiCard('P&L Net', (s.totalPnL>=0?'+':'-')+'$'+Math.abs(s.totalPnL).toFixed(0), s.total+' trades', s.totalPnL>=0?'var(--green)':'var(--red)')}
-        ${kpiCard('Win Rate', s.winRate!==null ? s.winRate.toFixed(0)+'%' : '—', s.wins+'W · '+s.losses+'L', (s.winRate||0)>=50?'var(--green)':'var(--red)')}
-        ${kpiCard('R:R Moyen', s.avgRR.toFixed(2)+'R', 'groupe', s.avgRR>=1.5?'var(--green)':'var(--amber)')}
-        ${kpiCard('Ouverts', s.open.toString(), 'en cours', 'var(--blue)')}
+        ${kpiCard(t('ui.pnl.net'), (s.totalPnL>=0?'+':'-')+'$'+Math.abs(s.totalPnL).toFixed(0), s.total+' trades', s.totalPnL>=0?'var(--green)':'var(--red)')}
+        ${kpiCard(t('dash.win.rate'), s.winRate!==null ? s.winRate.toFixed(0)+'%' : '—', s.wins+'W · '+s.losses+'L', (s.winRate||0)>=50?'var(--green)':'var(--red)')}
+        ${kpiCard(t('dash.avg.rr'), s.avgRR.toFixed(2)+'R', t('dash.group'), s.avgRR>=1.5?'var(--green)':'var(--amber)')}
+        ${kpiCard(t('dash.open'), s.open.toString(), t('dash.in.progress'), 'var(--blue)')}
       </div>`;
       body = kpis;
-      body += `<div class="chart-card"><h3>Courbe P&L — ${UI.escHtml(grp?.name||'Groupe')}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div></div>`;
+      body += `<div class="chart-card"><h3>${t('dash.pnl.group', { name: grp?.name || '' })}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div></div>`;
       if (grp && grp.accountIds && grp.accountIds.length) {
         body += `<div class="dash-group-accounts">`;
         grp.accountIds.forEach(accId => {
           const acc = Store.getMyAccountById(accId);
           if (!acc) return;
-          body += accountCard(acc, trades.filter(t => t.apex === acc.name));
+          body += accountCard(acc, trades.filter(tr => tr.apex === acc.name));
         });
         body += `</div>`;
       }
     } else {
       const kpis = `<div class="kpi-grid">
-        ${kpiCard('P&L Net', (s.totalPnL>=0?'+':'-')+'$'+Math.abs(s.totalPnL).toFixed(0), s.total+' trades', s.totalPnL>=0?'var(--green)':'var(--red)')}
-        ${kpiCard('Win Rate', s.winRate!==null ? s.winRate.toFixed(0)+'%' : '—', s.wins+'W · '+s.losses+'L', (s.winRate||0)>=50?'var(--green)':'var(--red)')}
-        ${kpiCard('R:R Moyen', s.avgRR.toFixed(2)+'R', 'tous trades', s.avgRR>=1.5?'var(--green)':'var(--amber)')}
-        ${kpiCard('Ouverts', s.open.toString(), 'en cours', 'var(--blue)')}
+        ${kpiCard(t('ui.pnl.net'), (s.totalPnL>=0?'+':'-')+'$'+Math.abs(s.totalPnL).toFixed(0), s.total+' trades', s.totalPnL>=0?'var(--green)':'var(--red)')}
+        ${kpiCard(t('dash.win.rate'), s.winRate!==null ? s.winRate.toFixed(0)+'%' : '—', s.wins+'W · '+s.losses+'L', (s.winRate||0)>=50?'var(--green)':'var(--red)')}
+        ${kpiCard(t('dash.avg.rr'), s.avgRR.toFixed(2)+'R', t('dash.all.trades'), s.avgRR>=1.5?'var(--green)':'var(--amber)')}
+        ${kpiCard(t('dash.open'), s.open.toString(), t('dash.in.progress'), 'var(--blue)')}
       </div>`;
       body = kpis;
-      body += `<div class="chart-card"><h3>Courbe P&L cumulé</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div></div>`;
+      body += `<div class="chart-card"><h3>${t('dash.pnl.cumul')}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div></div>`;
       if (accs.length) {
         body += `<div class="dash-group-accounts">`;
         accs.forEach(acc => {
-          body += accountCard(acc, all.filter(t => t.apex === acc.name));
+          body += accountCard(acc, all.filter(tr => tr.apex === acc.name));
         });
         body += `</div>`;
       }
     }
 
     if (trades.length) {
-      body += `<div class="chart-card"><h3>Trades récents</h3><div id="recentRows">` +
-        trades.slice(0, 6).map(t => {
-          const c    = Calc.trade(t);
-          const date = new Date(t.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-          const dirC = t.direction === 'long' ? 'var(--green)' : 'var(--red)';
+      body += `<div class="chart-card"><h3>${t('dash.recent.trades')}</h3><div id="recentRows">` +
+        trades.slice(0, 6).map(tr => {
+          const c    = Calc.trade(tr);
+          const date = new Date(tr.date).toLocaleDateString(i18n.locale(), { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+          const dirC = tr.direction === 'long' ? 'var(--green)' : 'var(--red)';
           return `<div class="recent-row">
             <div class="recent-bar" style="background:${dirC}"></div>
-            <span class="recent-instr">${t.instrument}</span>
-            <span class="recent-dir" style="color:${dirC}">${t.direction.toUpperCase()}</span>
-            ${t.apex ? `<span class="recent-date" style="color:var(--muted)">${UI.escHtml(t.apex)}</span>` : ''}
+            <span class="recent-instr">${tr.instrument}</span>
+            <span class="recent-dir" style="color:${dirC}">${tr.direction.toUpperCase()}</span>
+            ${tr.apex ? `<span class="recent-date" style="color:var(--muted)">${UI.escHtml(tr.apex)}</span>` : ''}
             <span class="recent-date">${date}</span>
             <span class="recent-rr" style="color:${Calc.rrColor(c.rr)}">${c.rr.toFixed(2)}R</span>
             ${c.pnl!==null ? `<span class="recent-pnl" style="color:${Calc.pnlColor(c.pnl)}">${Calc.formatPnL(c.pnl)}</span>` : ''}

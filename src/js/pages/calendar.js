@@ -1,6 +1,7 @@
 // ─── CALENDAR ─────────────────────────────────────────────────────────────────
 (function () {
   const $ = id => document.getElementById(id);
+  const t = k => i18n.t(k);
 
   let calYear         = new Date().getFullYear();
   let calMonth        = new Date().getMonth();
@@ -11,21 +12,27 @@
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
 
+  function getMonths() {
+    return t('cal.months').split(',');
+  }
+
+  function getDays() {
+    return t('cal.days').split(',');
+  }
+
   function buildByDate(trades) {
     const byDate = {};
-    trades.forEach(t => {
-      const d = UI.localDay(t.date);
+    trades.forEach(tr => {
+      const d = UI.localDay(tr.date);
       if (!d) return;
       if (!byDate[d]) byDate[d] = { trades: [], pnl: 0, wins: 0, losses: 0, be: 0, open: 0 };
-      const c = Calc.trade(t);
-      // Inclut le P&L des trades fermés (win/loss/be) même sans exitPrice explicite
-      // Exclut seulement les trades ouverts dont l'issue est inconnue
-      if (t.outcome !== 'open') byDate[d].pnl += (c.netPnl || 0);
-      byDate[d].trades.push(t);
-      if      (t.outcome === 'win')  byDate[d].wins++;
-      else if (t.outcome === 'loss') byDate[d].losses++;
-      else if (t.outcome === 'be')   byDate[d].be++;
-      else if (t.outcome === 'open') byDate[d].open++;
+      const c = Calc.trade(tr);
+      if (tr.outcome !== 'open') byDate[d].pnl += (c.netPnl || 0);
+      byDate[d].trades.push(tr);
+      if      (tr.outcome === 'win')  byDate[d].wins++;
+      else if (tr.outcome === 'loss') byDate[d].losses++;
+      else if (tr.outcome === 'be')   byDate[d].be++;
+      else if (tr.outcome === 'open') byDate[d].open++;
     });
     return byDate;
   }
@@ -33,7 +40,7 @@
   function buildGrid(byDate, today) {
     const firstDay = new Date(calYear, calMonth, 1);
     const lastDay  = new Date(calYear, calMonth + 1, 0);
-    const startOff = (firstDay.getDay() + 6) % 7; // lundi = 0
+    const startOff = (firstDay.getDay() + 6) % 7; // Monday = 0
 
     let grid = '';
     for (let i = 0; i < startOff; i++)
@@ -65,7 +72,7 @@
         if (hasClosed) {
           inner += `<div class="cal-pnl" style="color:${pnlColor}">${data.pnl >= 0 ? '+' : ''}$${Math.abs(data.pnl).toFixed(0)}</div>`;
         } else if (data.open) {
-          inner += `<div class="cal-pnl" style="color:var(--muted)">open</div>`;
+          inner += `<div class="cal-pnl" style="color:var(--muted)">${t('cal.open')}</div>`;
         }
         const wl = [];
         if (data.wins)   wl.push(data.wins   + 'W');
@@ -101,7 +108,7 @@
 
     const rows = tradingDays.map(([ds, data]) => {
       const [y, m, day] = ds.split('-').map(Number);
-      const label = new Date(y, m - 1, day).toLocaleDateString('fr-FR', {
+      const label = new Date(y, m - 1, day).toLocaleDateString(i18n.locale(), {
         weekday: 'short', day: 'numeric', month: 'short'
       });
 
@@ -111,7 +118,7 @@
       const pnlStr    = hasClosed ? `${pnl >= 0 ? '+' : ''}$${Math.abs(pnl).toFixed(0)}` : '—';
 
       const avgRR = data.trades.length
-        ? (data.trades.reduce((s, t) => s + Calc.trade(t).rr, 0) / data.trades.length).toFixed(2) + 'R'
+        ? (data.trades.reduce((s, tr) => s + Calc.trade(tr).rr, 0) / data.trades.length).toFixed(2) + 'R'
         : '—';
 
       const badges = [
@@ -121,27 +128,29 @@
         data.open   ? `<span class="cal-badge cal-badge--o">${data.open} open</span>` : '',
       ].filter(Boolean).join('');
 
+      const tradeLabel = data.trades.length > 1 ? t('ui.trades') : t('ui.trade');
       const isSel = calSelectedDate === ds;
       return `<div class="cal-sum-row${isSel ? ' cal-sum-row--sel' : ''}" data-date="${ds}">
         <span class="cal-sum-date">${label}</span>
-        <span class="cal-sum-count">${data.trades.length} trade${data.trades.length > 1 ? 's' : ''}</span>
+        <span class="cal-sum-count">${data.trades.length} ${tradeLabel}</span>
         <span class="cal-sum-badges">${badges}</span>
         <span class="cal-sum-rr">${avgRR}</span>
         <span class="cal-sum-pnl" style="color:${pc}">${pnlStr}</span>
       </div>`;
     }).join('');
 
+    const dayLabel = tradingDays.length > 1 ? t('ui.days') : t('ui.day');
     return `
       <div class="cal-summary">
         <div class="cal-summary-header">
-          <span class="cal-summary-title">Récap du mois</span>
+          <span class="cal-summary-title">${t('cal.recap')}</span>
           <div class="cal-summary-meta">
-            <span>${tradingDays.length} jour${tradingDays.length > 1 ? 's' : ''} · ${monthTotal} trades · ${monthWins}W ${monthLoss}L</span>
+            <span>${tradingDays.length} ${dayLabel} · ${monthTotal} ${t('ui.trades')} · ${monthWins}W ${monthLoss}L</span>
             <span style="font-family:'Geist Mono',monospace;font-weight:700;font-size:14px;color:${pnlColor}">${monthPnL >= 0 ? '+' : ''}$${Math.abs(monthPnL).toFixed(0)}</span>
           </div>
         </div>
         <div class="cal-sum-head">
-          <span>Date</span><span>Trades</span><span>Résultat</span><span>R:R moy</span><span style="text-align:right">P&L net</span>
+          <span>${t('cal.col.date')}</span><span>${t('cal.col.trades')}</span><span>${t('cal.col.result')}</span><span>${t('cal.col.rr')}</span><span style="text-align:right">${t('cal.col.pnl')}</span>
         </div>
         ${rows}
       </div>`;
@@ -149,34 +158,34 @@
 
   function buildDetail(byDate) {
     if (!calSelectedDate || !byDate[calSelectedDate]) return '';
-    const OB_LABEL = UI.OB_LABEL;
     const data     = byDate[calSelectedDate];
     const [y, m, day] = calSelectedDate.split('-').map(Number);
-    const dateLabel = new Date(y, m - 1, day).toLocaleDateString('fr-FR', {
+    const dateLabel = new Date(y, m - 1, day).toLocaleDateString(i18n.locale(), {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
     const pc = data.pnl >= 0 ? 'var(--green)' : 'var(--red)';
 
-    const tradeRows = data.trades.map(t => {
-      const c      = Calc.trade(t);
+    const tradeRows = data.trades.map(tr => {
+      const c      = Calc.trade(tr);
       const pnlTxt = c.estimated
         ? `~$${Math.abs(c.netPnl || 0).toFixed(0)}`
         : `${(c.netPnl || 0) >= 0 ? '+' : ''}$${Math.abs(c.netPnl || 0).toFixed(0)}`;
       return `<div class="cdt-row">
-        <span class="ob ob-${t.outcome} ob-sm">${OB_LABEL[t.outcome] || t.outcome}</span>
-        <span class="cdt-inst">${UI.escHtml(t.instrument)} ${t.direction}</span>
-        <span class="cdt-setup">${UI.escHtml(t.setup || '—')}</span>
+        <span class="ob ob-${tr.outcome} ob-sm">${i18n.t('ob.' + tr.outcome)}</span>
+        <span class="cdt-inst">${UI.escHtml(tr.instrument)} ${tr.direction}</span>
+        <span class="cdt-setup">${UI.escHtml(tr.setup || '—')}</span>
         <span class="cdt-pnl-val" style="color:${(c.netPnl || 0) >= 0 ? 'var(--green)' : 'var(--red)'}">${pnlTxt}</span>
         <span class="cdt-rr">R:R ${c.rr.toFixed(2)}</span>
       </div>`;
     }).join('');
 
+    const tradeLabel = data.trades.length > 1 ? t('ui.trades') : t('ui.trade');
     return `
       <div class="cal-day-trades">
         <div class="cdt-header">
           <span class="cdt-date">${dateLabel}</span>
           <span class="cdt-pnl" style="color:${pc}">
-            ${data.pnl >= 0 ? '+' : ''}$${Math.abs(data.pnl).toFixed(0)} net · ${data.trades.length} trade${data.trades.length > 1 ? 's' : ''}
+            ${data.pnl >= 0 ? '+' : ''}$${Math.abs(data.pnl).toFixed(0)} net · ${data.trades.length} ${tradeLabel}
           </span>
         </div>
         ${tradeRows}
@@ -190,9 +199,11 @@
     const today  = localToday();
     const trades = Store.getTrades();
     const byDate = buildByDate(trades);
+    const months = getMonths();
+    const days   = getDays();
 
     el.innerHTML = `
-      <div class="page-title">Calendrier</div>
+      <div class="page-title">${t('page.calendar')}</div>
 
       <div class="cal-nav-row">
         <button class="cal-nav-btn" id="calPrev">
@@ -200,7 +211,7 @@
             <polyline points="15 18 9 12 15 6"/>
           </svg>
         </button>
-        <div class="cal-month-label">${UI.MONTHS_FR[calMonth]} ${calYear}</div>
+        <div class="cal-month-label">${months[calMonth]} ${calYear}</div>
         <button class="cal-nav-btn" id="calNext">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="9 18 15 12 9 6"/>
@@ -209,7 +220,7 @@
       </div>
 
       <div class="cal-grid">
-        ${['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map((h, i) =>
+        ${days.map((h, i) =>
           `<div class="cal-head ${i >= 5 ? 'cal-head--we' : ''}">${h}</div>`).join('')}
         ${buildGrid(byDate, today)}
       </div>

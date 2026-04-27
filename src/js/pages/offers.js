@@ -22,15 +22,15 @@ UI.renderOffers = function () {
           <div class="offer-price">${t('off.free')}</div>
           <div class="offer-price-sub">${t('off.forever')}</div>
           <ul class="offer-features">
-            <li class="ok">Journal de trading illimité</li>
-            <li class="ok">Dashboard &amp; Analytics</li>
-            <li class="ok">Suivi objectifs Apex</li>
-            <li class="ok">Export / Import JSON</li>
-            <li class="ok">Calendrier</li>
-            <li class="ok">Simulateur micro-entrepreneur</li>
-            <li class="limit">1 compte de trading</li>
-            <li class="limit">1 analyse IA par jour</li>
-            <li class="no">Groupes de comptes</li>
+            <li class="ok">${t('off.basic.f1')}</li>
+            <li class="ok">${t('off.basic.f2')}</li>
+            <li class="ok">${t('off.basic.f3')}</li>
+            <li class="ok">${t('off.basic.f4')}</li>
+            <li class="ok">${t('off.basic.f5')}</li>
+            <li class="ok">${t('off.basic.f6')}</li>
+            <li class="limit">${t('off.basic.f7')}</li>
+            <li class="limit">${t('off.basic.f8')}</li>
+            <li class="no">${t('off.basic.f9')}</li>
           </ul>
           ${!isPro ? `<div class="offer-cta offer-cta-current">${t('off.cta.cur')}</div>` : ''}
         </div>
@@ -41,14 +41,14 @@ UI.renderOffers = function () {
           <div class="offer-badge-current" style="opacity:${isPro ? 1 : 0}">${t('off.current')}</div>
           <div class="offer-name">Pro</div>
           <div class="offer-price">${isPro ? t('off.active') : t('off.code')}</div>
-          <div class="offer-price-sub">${isPro ? t('off.activated') + new Date(plan.activatedAt).toLocaleDateString('fr-FR') : t('off.code.hint')}</div>
+          <div class="offer-price-sub">${isPro ? t('off.activated') + new Date(plan.activatedAt).toLocaleDateString(i18n.locale()) : t('off.code.hint')}</div>
           <ul class="offer-features">
-            <li class="ok">Tout le plan Basic</li>
-            <li class="ok"><strong>Comptes illimités</strong></li>
-            <li class="ok"><strong>Analyses IA illimitées</strong></li>
-            <li class="ok"><strong>Groupes de comptes</strong></li>
-            <li class="ok">Support prioritaire</li>
-            <li class="ok">Accès aux futures fonctionnalités</li>
+            <li class="ok">${t('off.pro.f1')}</li>
+            <li class="ok"><strong>${t('off.pro.f2')}</strong></li>
+            <li class="ok"><strong>${t('off.pro.f3')}</strong></li>
+            <li class="ok"><strong>${t('off.pro.f4')}</strong></li>
+            <li class="ok">${t('off.pro.f5')}</li>
+            <li class="ok">${t('off.pro.f6')}</li>
           </ul>
 
           ${isPro

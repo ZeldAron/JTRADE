@@ -1,6 +1,7 @@
 // ─── GOALS & REWARDS ──────────────────────────────────────────────────────────
 (function () {
   const $ = id => document.getElementById(id);
+  const t = (k, v) => i18n.t(k, v);
 
   function goalBar(label, current, max, color) {
     const pct = max > 0 ? Math.min(100, (current / max) * 100) : 0;
@@ -28,16 +29,16 @@
     const profit = Math.max(0, s.totalPnL);
 
     const todayLoss = accTrades
-      .filter(t => t.date.startsWith(today) && t.outcome === 'loss')
-      .reduce((sum, t) => sum + Math.abs(Calc.trade(t).netPnl || 0), 0);
+      .filter(tr => tr.date.startsWith(today) && tr.outcome === 'loss')
+      .reduce((sum, tr) => sum + Math.abs(Calc.trade(tr).netPnl || 0), 0);
 
-    const days   = new Set(accTrades.map(t => UI.localDay(t.date))).size;
+    const days   = new Set(accTrades.map(tr => UI.localDay(tr.date))).size;
     const minDays = 5;
 
     const byDay = {};
-    accTrades.forEach(t => {
-      const d = UI.localDay(t.date);
-      byDay[d] = (byDay[d] || 0) + (Calc.trade(t).netPnl || 0);
+    accTrades.forEach(tr => {
+      const d = UI.localDay(tr.date);
+      byDay[d] = (byDay[d] || 0) + (Calc.trade(tr).netPnl || 0);
     });
     const bestDay = Math.max(0, ...Object.values(byDay), 0);
     const maxDay  = profit > 0 ? profit * 0.30 : 0;
@@ -50,10 +51,13 @@
     const allOk     = targetMet && ddOk && dailyOk && daysOk && consOk;
 
     const statusHtml = allOk
-      ? `<div class="goal-status goal-status--pass">🏆 Objectif atteint — Prêt à passer en compte Funded !</div>`
+      ? `<div class="goal-status goal-status--pass">${t('goals.pass')}</div>`
       : targetMet
-        ? `<div class="goal-status goal-status--almost">✓ Profit atteint — vérifier les autres règles</div>`
-        : `<div class="goal-status goal-status--eval">En cours d'évaluation</div>`;
+        ? `<div class="goal-status goal-status--almost">${t('goals.almost')}</div>`
+        : `<div class="goal-status goal-status--eval">${t('goals.eval.status')}</div>`;
+
+    const daysLabel  = days > 1 ? t('ui.days') : t('ui.day');
+    const mDaysLabel = minDays > 1 ? t('ui.days') : t('ui.day');
 
     return `<div class="goal-card">
       <div class="goal-card-header">
@@ -61,15 +65,15 @@
         <span class="goal-pnl" style="color:${s.totalPnL>=0?'var(--green)':'var(--red)'}">${s.totalPnL>=0?'+':'-'}$${Math.abs(s.totalPnL).toFixed(0)}</span>
       </div>
       <div class="goal-rules">
-        ${acc.profitTarget   ? goalBar('Objectif de profit',   profit,    acc.profitTarget,   'var(--green)') : ''}
-        ${acc.maxDrawdown    ? goalBar('Drawdown max utilisé', ddUsed,    acc.maxDrawdown,    'var(--amber)') : ''}
-        ${acc.dailyLossLimit ? goalBar('Perte du jour',        todayLoss, acc.dailyLossLimit, 'var(--red)')   : ''}
+        ${acc.profitTarget   ? goalBar(t('goals.profit.target'),   profit,    acc.profitTarget,   'var(--green)') : ''}
+        ${acc.maxDrawdown    ? goalBar(t('goals.drawdown.used'),   ddUsed,    acc.maxDrawdown,    'var(--amber)') : ''}
+        ${acc.dailyLossLimit ? goalBar(t('goals.daily.loss'),      todayLoss, acc.dailyLossLimit, 'var(--red)')   : ''}
       </div>
       <div class="goal-rules">
-        ${goalRuleRow('Jours tradés minimum', `${days} / ${minDays} jours`, daysOk ? 'ok' : 'pending')}
-        ${maxDay > 0 ? goalRuleRow('Consistance (max 30%/jour)', `+$${bestDay.toFixed(0)} meilleur jour`, consOk ? 'ok' : 'warn') : ''}
-        ${goalRuleRow('Drawdown respecté',    ddOk    ? '✓ OK' : `✗ Dépassé (-$${ddUsed.toFixed(0)})`,     ddOk    ? 'ok' : 'warn')}
-        ${goalRuleRow('Loss limit respectée', dailyOk ? '✓ OK' : `✗ Dépassée ($${todayLoss.toFixed(0)})`,  dailyOk ? 'ok' : 'warn')}
+        ${goalRuleRow(t('goals.days.min'), `${days} / ${minDays} ${t('ui.days')}`, daysOk ? 'ok' : 'pending')}
+        ${maxDay > 0 ? goalRuleRow(t('goals.consistency'), `+$${bestDay.toFixed(0)} best`, consOk ? 'ok' : 'warn') : ''}
+        ${goalRuleRow(t('goals.drawdown.ok'), ddOk ? '✓ OK' : `✗ -$${ddUsed.toFixed(0)}`, ddOk ? 'ok' : 'warn')}
+        ${goalRuleRow(t('goals.daily.ok'),   dailyOk ? '✓ OK' : `✗ $${todayLoss.toFixed(0)}`, dailyOk ? 'ok' : 'warn')}
       </div>
       ${statusHtml}
     </div>`;
@@ -97,36 +101,37 @@
     const consistBar   = profit > 0
       ? `<div class="goal-progress">
            <div class="gp-header">
-             <span class="gp-label">Meilleur jour / Profit total (limite 50%)</span>
+             <span class="gp-label">${t('goals.best.day.ratio')}</span>
              <span class="gp-value" style="color:${consistCol}">${consistScore.toFixed(0)}% ${consistOk ? '✓' : '✗'}</span>
            </div>
            <div class="gp-track" style="position:relative">
              <div class="gp-fill" style="width:${consistBarW}%;background:${consistCol}"></div>
              <div style="position:absolute;top:0;left:50%;width:1px;height:100%;background:rgba(255,255,255,0.2)"></div>
            </div>
-           <div style="font-size:10px;color:var(--muted);margin-top:4px">Meilleur jour : +$${bestDay.toFixed(0)} · Profit total : +$${profit.toFixed(0)}</div>
+           <div style="font-size:10px;color:var(--muted);margin-top:4px">${t('goals.best.day.detail', { best: bestDay.toFixed(0), total: profit.toFixed(0) })}</div>
          </div>`
-      : `<div style="font-size:11px;color:var(--muted);padding:6px 0">Pas encore de données de profit</div>`;
+      : `<div style="font-size:11px;color:var(--muted);padding:6px 0">${t('goals.no.profit.data')}</div>`;
 
     const month       = today.slice(0, 7);
-    const monthTrades = accTrades.filter(t => t.date.startsWith(month));
+    const monthTrades = accTrades.filter(tr => tr.date.startsWith(month));
     const monthStats  = UI.statsForTrades(monthTrades);
-    const monthDays   = new Set(monthTrades.map(t => UI.localDay(t.date))).size;
+    const monthDays   = new Set(monthTrades.map(tr => UI.localDay(tr.date))).size;
     const monthlyGoal = acc.profitTarget ? Math.round(acc.profitTarget * 0.5) : 0;
 
     const todayLoss = accTrades
-      .filter(t => t.date.startsWith(today))
-      .reduce((sum, t) => {
-        const c = Calc.trade(t);
+      .filter(tr => tr.date.startsWith(today))
+      .reduce((sum, tr) => {
+        const c = Calc.trade(tr);
         return c.netPnl < 0 ? sum + Math.abs(c.netPnl) : sum;
       }, 0);
 
-    const totalDays   = new Set(accTrades.map(t => UI.localDay(t.date))).size;
+    const totalDays   = new Set(accTrades.map(tr => UI.localDay(tr.date))).size;
     const payoutReady = totalDays >= 5 && profit > 0 && safetyReached;
     const dailyOk     = !acc.dailyLossLimit || todayLoss < acc.dailyLossLimit;
 
     const ddBarW   = Math.min(100, drawdownUsedPct);
     const ddBarCol = drawdownUsedPct >= 75 ? 'var(--red)' : drawdownUsedPct >= 50 ? 'var(--amber)' : 'var(--green)';
+    const monthDayLabel = monthDays > 1 ? t('ui.days') : t('ui.day');
 
     return `<div class="goal-card">
       <div class="goal-card-header">
@@ -137,95 +142,98 @@
       <div class="floor-panel ${safetyReached ? 'floor-panel--safe' : ''}">
         <div class="floor-panel-top">
           <div class="floor-main">
-            <span class="floor-label">Plancher actuel</span>
+            <span class="floor-label">${t('goals.floor.current')}</span>
             <span class="floor-value" style="color:${floorColor}">$${floor.toLocaleString('fr-FR')}</span>
           </div>
           <div class="floor-balance">
-            <span class="floor-label">Solde EOD max atteint</span>
+            <span class="floor-label">${t('goals.hwm')}</span>
             <span class="floor-hwm">$${hwm.toLocaleString('fr-FR')}</span>
           </div>
         </div>
         <div class="floor-margin-row">
-          <span style="font-size:11px;color:var(--muted)">Marge restante avant plancher</span>
+          <span style="font-size:11px;color:var(--muted)">${t('goals.floor.margin')}</span>
           <span style="font-size:13px;font-weight:700;color:${floorColor}">$${Math.max(0, distanceToFloor).toLocaleString('fr-FR')}</span>
         </div>
         <div class="gp-track" style="margin-top:6px;position:relative">
           <div class="gp-fill" style="width:${ddBarW}%;background:${ddBarCol}"></div>
         </div>
         <div style="font-size:10px;color:var(--muted);margin-top:4px;display:flex;justify-content:space-between">
-          <span>Drawdown utilisé : $${Math.max(0, fl.drawdownConsumed).toFixed(0)} / $${drawdown}</span>
-          <span>Capital initial : $${startBalance.toLocaleString('fr-FR')}</span>
+          <span>${t('goals.drawdown.label')} : $${Math.max(0, fl.drawdownConsumed).toFixed(0)} / $${drawdown}</span>
+          <span>${t('goals.start.capital')} : $${startBalance.toLocaleString('fr-FR')}</span>
         </div>
         ${safetyReached
-          ? `<div class="floor-safe-badge">🛡 Safety Net atteint — plancher verrouillé à $${startBalance.toLocaleString('fr-FR')}</div>`
-          : `<div style="font-size:10px;color:var(--muted);margin-top:6px">🔄 Mis à jour chaque soir à l'EOD · Safety Net dans <strong style="color:var(--text)">$${safetyLeft.toFixed(0)}</strong></div>`
+          ? `<div class="floor-safe-badge">${t('goals.safety.locked', { amt: startBalance.toLocaleString('fr-FR') })}</div>`
+          : `<div style="font-size:10px;color:var(--muted);margin-top:6px">${t('goals.safety.progress', { amt: safetyLeft.toFixed(0) })}</div>`
         }
       </div>
 
-      <div class="goal-section-label">🛡 Priorité #1 — Safety Net ($${safetyNet.toLocaleString('fr-FR')})</div>
+      <div class="goal-section-label">${t('goals.safety.priority')} ($${safetyNet.toLocaleString('fr-FR')})</div>
       <div class="goal-rules">
-        ${goalBar('Progression vers le Safety Net', profit, safetyNet, 'var(--green)')}
+        ${goalBar(t('goals.profit.target'), profit, safetyNet, 'var(--green)')}
       </div>
       ${safetyReached
-        ? `<div class="goal-status goal-status--pass" style="margin-bottom:16px">🛡 Safety Net atteint — capital de départ protégé !</div>`
-        : `<div class="goal-info-row">Il reste <strong>$${safetyLeft.toFixed(0)}</strong> à gagner pour verrouiller le plancher à $${startBalance.toLocaleString('fr-FR')}</div>`
+        ? `<div class="goal-status goal-status--pass" style="margin-bottom:16px">${t('goals.safety.reached')}</div>`
+        : `<div class="goal-info-row">${t('goals.safety.left', { left: safetyLeft.toFixed(0), floor: startBalance.toLocaleString('fr-FR') })}</div>`
       }
 
-      <div class="goal-section-label">📊 Score de consistance (funded uniquement)</div>
+      <div class="goal-section-label">${t('goals.consistency.score')}</div>
       <div class="goal-rules">${consistBar}</div>
       <div class="goal-rules">
-        ${goalRuleRow('Règle 50%', consistOk ? `✓ Conforme (${consistScore.toFixed(0)}%)` : `✗ Violation — meilleur jour trop élevé (${consistScore.toFixed(0)}%)`, consistOk ? 'ok' : 'warn')}
+        ${goalRuleRow(t('goals.rule.50'), consistOk
+          ? t('goals.rule.50.ok', { pct: consistScore.toFixed(0) })
+          : t('goals.rule.50.fail', { pct: consistScore.toFixed(0) }),
+          consistOk ? 'ok' : 'warn')}
       </div>
 
-      <div class="goal-section-label">📅 Ce mois — ${month}</div>
+      <div class="goal-section-label">${t('goals.this.month')} ${month}</div>
       <div class="goal-rules">
-        ${monthlyGoal ? goalBar('Objectif mensuel (50% du target)', Math.max(0, monthStats.totalPnL), monthlyGoal, 'var(--green)') : ''}
-        ${acc.dailyLossLimit ? goalBar('Perte du jour', todayLoss, acc.dailyLossLimit, 'var(--red)') : ''}
+        ${monthlyGoal ? goalBar(t('goals.monthly.target'), Math.max(0, monthStats.totalPnL), monthlyGoal, 'var(--green)') : ''}
+        ${acc.dailyLossLimit ? goalBar(t('goals.daily.loss'), todayLoss, acc.dailyLossLimit, 'var(--red)') : ''}
       </div>
       <div class="goal-rules">
-        ${goalRuleRow('Jours tradés ce mois', `${monthDays} jour${monthDays>1?'s':''}`, monthDays > 0 ? 'ok' : 'pending')}
-        ${goalRuleRow('P&L du mois', monthStats.totalPnL >= 0 ? `+$${monthStats.totalPnL.toFixed(0)}` : `-$${Math.abs(monthStats.totalPnL).toFixed(0)}`, monthStats.totalPnL >= 0 ? 'ok' : 'warn')}
+        ${goalRuleRow(t('goals.days.traded.month'), `${monthDays} ${monthDayLabel}`, monthDays > 0 ? 'ok' : 'pending')}
+        ${goalRuleRow(t('goals.month.pnl'), monthStats.totalPnL >= 0 ? `+$${monthStats.totalPnL.toFixed(0)}` : `-$${Math.abs(monthStats.totalPnL).toFixed(0)}`, monthStats.totalPnL >= 0 ? 'ok' : 'warn')}
       </div>
 
-      <div class="goal-section-label">🔒 Protection & Retrait</div>
+      <div class="goal-section-label">${t('goals.protection')}</div>
       <div class="goal-rules">
-        ${goalRuleRow('Loss limit du jour', dailyOk ? '✓ OK' : '✗ Limite atteinte', dailyOk ? 'ok' : 'warn')}
-        ${goalRuleRow('Payout', payoutReady ? '✓ Éligible' : `${totalDays}/5 jours · Safety Net ${safetyReached ? '✓' : '✗'}`, payoutReady ? 'ok' : 'pending')}
+        ${goalRuleRow(t('goals.daily.limit.ok'), dailyOk ? '✓ OK' : '✗', dailyOk ? 'ok' : 'warn')}
+        ${goalRuleRow(t('goals.payout'), payoutReady ? '✓' : `${totalDays}/5 ${t('ui.days')} · Safety Net ${safetyReached ? '✓' : '✗'}`, payoutReady ? 'ok' : 'pending')}
       </div>
-      ${payoutReady ? `<div class="goal-status goal-status--pass">💰 Éligible au retrait — contacte Apex !</div>` : ''}
+      ${payoutReady ? `<div class="goal-status goal-status--pass">${t('goals.payout.eligible')}</div>` : ''}
     </div>`;
   }
 
   function achievementsCard(trades) {
-    const closed = trades.filter(t => t.outcome === 'win' || t.outcome === 'loss');
+    const closed = trades.filter(tr => tr.outcome === 'win' || tr.outcome === 'loss');
     const s      = UI.statsForTrades(trades);
 
     let maxConsec = 0, consec = 0;
-    [...trades].reverse().forEach(t => {
-      if (t.outcome === 'win')       { consec++; maxConsec = Math.max(maxConsec, consec); }
-      else if (t.outcome === 'loss') { consec = 0; }
+    [...trades].reverse().forEach(tr => {
+      if (tr.outcome === 'win')       { consec++; maxConsec = Math.max(maxConsec, consec); }
+      else if (tr.outcome === 'loss') { consec = 0; }
     });
 
     const badges = [
-      { icon:'🎯', label:'Premier trade',        desc:'Loguer son premier trade',               done: trades.length >= 1 },
-      { icon:'📊', label:'5 trades',             desc:'Loguer 5 trades',                        done: trades.length >= 5 },
-      { icon:'📈', label:'10 trades',            desc:'Loguer 10 trades',                       done: trades.length >= 10 },
-      { icon:'💰', label:'Rentable',             desc:'P&L total positif',                      done: s.totalPnL > 0 },
-      { icon:'⚡', label:'R:R solide',           desc:'R:R moyen ≥ 1.5',                       done: s.avgRR >= 1.5 },
-      { icon:'🚀', label:'R:R excellent',        desc:'R:R moyen ≥ 2.0',                       done: s.avgRR >= 2.0 },
-      { icon:'🎖', label:'Win Rate 60%',         desc:'60%+ sur 10 trades min.',               done: closed.length >= 10 && (s.winRate || 0) >= 60 },
-      { icon:'🏅', label:'Win Rate 70%',         desc:'70%+ sur 10 trades min.',               done: closed.length >= 10 && (s.winRate || 0) >= 70 },
-      { icon:'🔥', label:'3 wins consécutifs',   desc:'3 trades gagnants d\'affilée',           done: maxConsec >= 3 },
-      { icon:'💥', label:'5 wins consécutifs',   desc:'5 trades gagnants d\'affilée',           done: maxConsec >= 5 },
-      { icon:'🛡', label:'Discipliné',           desc:'Chaque trade a un setup noté',           done: trades.length >= 5 && trades.every(t => t.setup && t.setup.trim()) },
-      { icon:'📅', label:'Semaine complète',     desc:'5 jours tradés en une semaine',          done: (() => { const days = new Set(trades.map(t => UI.localDay(t.date))); return days.size >= 5; })() },
+      { icon:'🎯', label:t('ach.first.label'),       desc:t('ach.first.desc'),       done: trades.length >= 1 },
+      { icon:'📊', label:t('ach.5.label'),            desc:t('ach.5.desc'),            done: trades.length >= 5 },
+      { icon:'📈', label:t('ach.10.label'),           desc:t('ach.10.desc'),           done: trades.length >= 10 },
+      { icon:'💰', label:t('ach.profitable.label'),   desc:t('ach.profitable.desc'),   done: s.totalPnL > 0 },
+      { icon:'⚡', label:t('ach.rr1.label'),          desc:t('ach.rr1.desc'),          done: s.avgRR >= 1.5 },
+      { icon:'🚀', label:t('ach.rr2.label'),          desc:t('ach.rr2.desc'),          done: s.avgRR >= 2.0 },
+      { icon:'🎖', label:t('ach.wr60.label'),         desc:t('ach.wr60.desc'),         done: closed.length >= 10 && (s.winRate || 0) >= 60 },
+      { icon:'🏅', label:t('ach.wr70.label'),         desc:t('ach.wr70.desc'),         done: closed.length >= 10 && (s.winRate || 0) >= 70 },
+      { icon:'🔥', label:t('ach.streak3.label'),      desc:t('ach.streak3.desc'),      done: maxConsec >= 3 },
+      { icon:'💥', label:t('ach.streak5.label'),      desc:t('ach.streak5.desc'),      done: maxConsec >= 5 },
+      { icon:'🛡', label:t('ach.disciplined.label'),  desc:t('ach.disciplined.desc'),  done: trades.length >= 5 && trades.every(tr => tr.setup && tr.setup.trim()) },
+      { icon:'📅', label:t('ach.week.label'),         desc:t('ach.week.desc'),         done: (() => { const days = new Set(trades.map(tr => UI.localDay(tr.date))); return days.size >= 5; })() },
     ];
 
     const done = badges.filter(b => b.done).length;
     return `<div class="goal-card">
       <div class="goal-card-header" style="margin-bottom:18px">
-        <span style="font-size:14px;font-weight:700">🏆 Récompenses</span>
-        <span style="font-size:12px;color:var(--muted)">${done} / ${badges.length} obtenus</span>
+        <span style="font-size:14px;font-weight:700">${t('goals.achievements')}</span>
+        <span style="font-size:12px;color:var(--muted)">${done} / ${badges.length} ${t('goals.obtained')}</span>
       </div>
       <div class="achievements-grid">
         ${badges.map(b => `
@@ -245,11 +253,11 @@
     const today  = new Date().toISOString().split('T')[0];
 
     if (!accs.length) {
-      el.innerHTML = `<div class="page-title">Objectifs & Récompenses</div>
+      el.innerHTML = `<div class="page-title">${t('page.goals')}</div>
         <div class="goal-card" style="text-align:center;padding:48px 24px">
           <div style="font-size:32px;margin-bottom:12px">🎯</div>
-          <p style="color:var(--muted);margin-bottom:4px">Aucun compte configuré.</p>
-          <p style="font-size:12px;color:var(--muted2)">Crée tes comptes dans <strong style="color:var(--text)">Réglages → Mes Comptes</strong>.</p>
+          <p style="color:var(--muted);margin-bottom:4px">${t('goals.no.accounts')}</p>
+          <p style="font-size:12px;color:var(--muted2)">${t('goals.no.accounts.hint')}</p>
         </div>`;
       return;
     }
@@ -257,19 +265,19 @@
     const evalAccs   = accs.filter(a => a.status !== 'funded');
     const fundedAccs = accs.filter(a => a.status === 'funded');
 
-    let html = '<div class="page-title">Objectifs & Récompenses</div>';
+    let html = `<div class="page-title">${t('page.goals')}</div>`;
 
     if (evalAccs.length) {
-      html += `<div class="goal-section-title">Comptes en Évaluation</div>`;
+      html += `<div class="goal-section-title">${t('goals.eval.accounts')}</div>`;
       evalAccs.forEach(acc => {
-        html += evalCard(acc, trades.filter(t => t.apex === acc.name), today);
+        html += evalCard(acc, trades.filter(tr => tr.apex === acc.name), today);
       });
     }
 
     if (fundedAccs.length) {
-      html += `<div class="goal-section-title">Comptes Funded (PA)</div>`;
+      html += `<div class="goal-section-title">${t('goals.funded.accounts')}</div>`;
       fundedAccs.forEach(acc => {
-        html += fundedCard(acc, trades.filter(t => t.apex === acc.name), today);
+        html += fundedCard(acc, trades.filter(tr => tr.apex === acc.name), today);
       });
     }
 

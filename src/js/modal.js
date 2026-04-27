@@ -39,7 +39,7 @@ const Modal = (() => {
     const groqBadge = $('groqStatusBadge');
     if (groqBadge) {
       const hasKey = !!(Store.getSettings().groqKey);
-      groqBadge.textContent = hasKey ? '● Groq actif' : '⚠ Clé Groq manquante';
+      groqBadge.textContent = hasKey ? i18n.t('modal.groq.active') : i18n.t('modal.groq.missing');
       groqBadge.style.color = hasKey ? 'var(--green)' : 'var(--amber)';
     }
     setTimeout(() => $('wDropZone').focus?.(), 150);
@@ -135,7 +135,7 @@ const Modal = (() => {
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         const msg = err.error?.message || '';
-        if (res.status === 401) throw new Error('Clé Groq invalide — vérifie dans Réglages');
+        if (res.status === 401) throw new Error(i18n.t('modal.groq.invalid'));
         if (msg.includes('not found') || msg.includes('decommissioned')) continue;
         throw new Error('Groq : ' + msg);
       }
@@ -167,7 +167,7 @@ const Modal = (() => {
       } catch { continue; }
     }
 
-    throw new Error('Groq : aucun modèle vision disponible ou réponse invalide');
+    throw new Error(i18n.t('modal.groq.nomodel'));
   }
 
   async function analyzeImage() {
@@ -179,17 +179,17 @@ const Modal = (() => {
     const textHint = ($('wTextHint').value || '').trim();
 
     statusEl.style.display  = 'block';
-    statusEl.innerHTML      = '<span style="color:var(--muted)">Analyse Groq…</span>';
+    statusEl.innerHTML      = `<span style="color:var(--muted)">${i18n.t('modal.groq.analyzing')}</span>`;
     $('wBtnNext2').disabled = true;
     $('wAnalysisResult').style.display = 'none';
     retryBtn.style.display  = 'none';
 
     try {
-      if (!groqKey) throw new Error('Configure ta clé Groq dans Réglages → Intelligence Artificielle');
+      if (!groqKey) throw new Error(i18n.t('modal.groq.configure'));
 
       if (!Store.canAnalyzeToday()) {
-        statusEl.innerHTML = `<span style="color:var(--red)">Limite atteinte — 1 analyse/jour en Basic.</span>
-          <span style="color:var(--muted)"> <a href="#" id="goOffersLink" style="color:var(--accent)">Passer Pro →</a></span>`;
+        statusEl.innerHTML = `<span style="color:var(--red)">${i18n.t('err.limit.ai')}</span>
+          <span style="color:var(--muted)"> <a href="#" id="goOffersLink" style="color:var(--accent)">${i18n.t('err.limit.ai.cta')}</a></span>`;
         const lk = document.getElementById('goOffersLink');
         if (lk) lk.addEventListener('click', e => {
           e.preventDefault();
@@ -220,9 +220,9 @@ const Modal = (() => {
         const hint = parseTextHint(textHint);
         if (hint) {
           parsedTrade = hint;
-          statusEl.innerHTML = '<span style="color:var(--amber)">⚠ Image illisible — niveaux issus du texte</span>';
+          statusEl.innerHTML = `<span style="color:var(--amber)">${i18n.t('modal.img.unreadable')}</span>`;
         } else {
-          throw new Error('Groq n\'a rien trouvé — recadre le screenshot directement sur le dialogue TradingView');
+          throw new Error(i18n.t('modal.groq.notfound'));
         }
       } else {
         parsedTrade = { entry, sl, tp1, tp2: null, tp3: null, instrument: null, contracts: 1 };
@@ -233,8 +233,8 @@ const Modal = (() => {
           if (direction === 'short' && parsedTrade.sl < parsedTrade.entry)
             [parsedTrade.sl, parsedTrade.tp1] = [parsedTrade.tp1, parsedTrade.sl];
         }
-        const missing = (!entry || !sl || !tp1) ? ' <span style="color:var(--amber)">(compléter en étape 3)</span>' : '';
-        statusEl.innerHTML = `<span style="color:var(--green)">✓ Niveaux détectés</span>${missing} <span style="color:var(--muted);font-size:10px">via Groq</span>`;
+        const missing = (!entry || !sl || !tp1) ? ` <span style="color:var(--amber)">${i18n.t('modal.complete.step3')}</span>` : '';
+        statusEl.innerHTML = `<span style="color:var(--green)">${i18n.t('modal.levels.detected')}</span>${missing} <span style="color:var(--muted);font-size:10px">via Groq</span>`;
       }
 
       const f = v => (v && v !== 0) ? `<b>${v}</b>` : '<span style="color:var(--red)">✗</span>';
@@ -250,7 +250,7 @@ const Modal = (() => {
       retryBtn.style.display  = 'inline-flex';
 
     } catch (e) {
-      statusEl.innerHTML      = `<span style="color:var(--red)">✗ ${e.message || 'Erreur inconnue'}</span>`;
+      statusEl.innerHTML      = `<span style="color:var(--red)">✗ ${e.message || i18n.t('modal.unknown.error')}</span>`;
       $('wBtnNext2').disabled = false;
       retryBtn.style.display  = 'inline-flex';
     }
@@ -262,7 +262,7 @@ const Modal = (() => {
     const grps     = Store.getGroups();
     const sel      = $('wApex');
 
-    let html = '<option value="">— Compte —</option>';
+    let html = `<option value="">${i18n.t('modal.account.ph')}</option>`;
     if (accounts.length) {
       html += accounts.map(a => {
         const badge = STATUS_LABEL[a.status] || '?';
@@ -278,7 +278,7 @@ const Modal = (() => {
       html += '</optgroup>';
     }
     if (!accounts.length && !grps.length)
-      html += '<option value="" disabled>Configurer dans Réglages</option>';
+      html += `<option value="" disabled>${i18n.t('modal.configure.settings')}</option>`;
     sel.innerHTML = html;
     sel.value = currentVal || '';
   }
@@ -330,10 +330,10 @@ const Modal = (() => {
     const warnEl  = $('lcApexWarn');
     const account = Store.getMyAccountByName($('wApex').value);
     if (account) {
-      warnEl.textContent   = `⚠ Dépasse la loss limit/jour (${account.name})`;
+      warnEl.textContent   = i18n.t('modal.warn.daily', { name: account.name });
       warnEl.style.display = c.riskUSD > account.dailyLossLimit ? 'inline' : 'none';
     } else {
-      warnEl.textContent   = '⚠ Hors limite Apex';
+      warnEl.textContent   = i18n.t('modal.warn.apex');
       warnEl.style.display = c.riskPct > 2 ? 'inline' : 'none';
     }
   }
@@ -352,7 +352,7 @@ const Modal = (() => {
 
     clearImage();
     $('wOptFields').style.display  = 'none';
-    $('wOptToggle').textContent    = '+ Setup / Notes / Résultat';
+    $('wOptToggle').textContent    = i18n.t('wiz.setup');
     $('wExitField').style.display  = 'none';
     $('wOutcome').value            = 'open';
     $('wSetup').value              = '';
@@ -423,7 +423,7 @@ const Modal = (() => {
     const entry = parseFloat($('wEntry').value);
     const sl    = parseFloat($('wSL').value);
     const tp1   = parseFloat($('wTP1').value);
-    if (!entry || !sl || !tp1) { UI.toast('Entry, SL et TP1 sont requis', true); return; }
+    if (!entry || !sl || !tp1) { UI.toast(i18n.t('modal.required'), true); return; }
 
     const data = {
       instrument: $('wInstr').value,
@@ -446,7 +446,7 @@ const Modal = (() => {
     let saved;
     if (editingId) {
       saved = Store.updateTrade(editingId, data);
-      UI.toast('Trade modifié');
+      UI.toast(i18n.t('modal.trade.updated'));
     } else if (data.apex && data.apex.startsWith('grp:')) {
       // Sauvegarde sur tous les comptes du groupe
       const groupId = data.apex.slice(4);
@@ -465,14 +465,14 @@ const Modal = (() => {
           });
         }).filter(Boolean);
         saved = trades[0];
-        UI.toast(`Trade enregistré sur ${trades.length} compte(s) — groupe "${grp.name}"`);
+        UI.toast(i18n.t('modal.trade.group', { n: trades.length, name: grp.name }));
       } else {
-        UI.toast('Groupe vide — configurez les comptes dans Réglages', true);
+        UI.toast(i18n.t('modal.group.empty'), true);
         return;
       }
     } else {
       saved = Store.addTrade(data);
-      UI.toast('Trade enregistré');
+      UI.toast(i18n.t('modal.trade.saved'));
     }
     close();
     if (onSaved) onSaved(saved);
@@ -587,7 +587,7 @@ const Modal = (() => {
     $('wOptToggle').addEventListener('click', () => {
       const open = $('wOptFields').style.display !== 'none';
       $('wOptFields').style.display = open ? 'none' : '';
-      $('wOptToggle').textContent   = open ? '+ Setup / Notes / Résultat' : '− Setup / Notes / Résultat';
+      $('wOptToggle').textContent   = open ? i18n.t('wiz.setup') : i18n.t('wiz.setup.close');
     });
 
     // Fermeture
