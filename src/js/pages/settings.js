@@ -413,6 +413,16 @@
     renderAccountTypesSettings();
     renderSpreadsSettings();
 
+    // Tab switching
+    document.querySelectorAll('[data-settings-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-settings-tab]').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('[data-settings-pane]').forEach(p => { p.style.display = 'none'; });
+        btn.classList.add('active');
+        document.querySelector(`[data-settings-pane="${btn.dataset.settingsTab}"]`).style.display = '';
+      });
+    });
+
     const s = Store.getSettings();
 
     $('setGroqKey').value = s.groqKey || '';
