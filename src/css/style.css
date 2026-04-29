@@ -76,7 +76,7 @@ body {
   justify-content: center;
   flex-shrink: 0;
 }
-.logo-mark svg { width: 14px; height: 14px; }
+.logo-mark svg { width: 14px; height: 14px; stroke: white; }
 
 .logo-text {
   font-family: 'Geist Mono', monospace;
@@ -1210,7 +1210,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.lp-nav-logo-mark svg { width: 17px; height: 17px; }
+.lp-nav-logo-mark svg { width: 17px; height: 17px; stroke: white; }
 .lp-nav-actions { display: flex; gap: 10px; align-items: center; }
 .lp-nav-btn { padding: 7px 16px !important; font-size: 13px !important; }
 
@@ -1435,7 +1435,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   justify-content: center;
   box-shadow: 0 8px 24px rgba(0,229,160,0.3);
 }
-.login-logo-mark svg { width: 30px; height: 30px; stroke: #0e1220; }
+.login-logo-mark svg { width: 30px; height: 30px; stroke: white; }
 
 .login-title {
   font-size: 20px;
