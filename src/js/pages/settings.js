@@ -201,51 +201,96 @@
     render();
   }
 
-  function renderAccountTypesSettings() {
-    const el       = $('settingsAccountTypes');
-    const accounts = Store.getAccountTypes();
+  function renderPropFirmsSettings() {
+    const el = $('settingsPropFirms');
+    if (!el) return;
 
-    el.innerHTML = `
-      <div class="settings-section settings-section--wide">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-          <h3 style="margin:0">${t('set.apex.section')}</h3>
-          <span style="font-size:10px;background:var(--border);color:var(--muted);padding:2px 8px;border-radius:99px;letter-spacing:0.06em">🔒 ${t('set.apex.locked')}</span>
+    const firms      = Store.getPropFirms();
+    const FIRM_ORDER = ['apex', 'topstep', 'ftmo', 'lucid'];
+
+    function ddBadge(type) {
+      if (!type) return '';
+      const lc = type.toLowerCase();
+      if (lc.includes('statique') || lc.includes('static'))
+        return `<span class="ac-badge" style="background:var(--border);color:var(--muted)">STATIC</span>`;
+      if (lc.includes('intraday'))
+        return `<span class="ac-badge" style="background:rgba(255,160,50,0.15);color:#f0a030">INTRA</span>`;
+      return `<span class="ac-badge">EOD</span>`;
+    }
+
+    function mono(val, color) {
+      return `<span style="font-family:'Geist Mono',monospace;font-size:12px;${color ? 'color:' + color : ''}">${val}</span>`;
+    }
+
+    function renderCards(key) {
+      const firm = firms[key];
+      if (!firm) return `<p style="color:var(--muted);font-size:12px">—</p>`;
+      return `<div class="accounts-grid">${firm.accounts.map(a => `
+        <div class="account-card">
+          <div class="ac-header">
+            <span class="ac-name" style="font-weight:700;font-size:13px">${a.size}</span>
+            ${ddBadge(a.drawdownType)}
+          </div>
+          <div class="ac-field">
+            <span class="ac-label">${t('set.pf.capital')}</span>
+            ${mono('$' + Number(a.capital).toLocaleString('fr-FR'))}
+          </div>
+          <div class="ac-field">
+            <span class="ac-label">${t('set.pf.target')}</span>
+            ${mono('+$' + Number(a.profitTarget).toLocaleString('fr-FR'), 'var(--green)')}
+          </div>
+          <div class="ac-field">
+            <span class="ac-label">${t('set.pf.drawdown')}</span>
+            ${mono('-$' + Number(a.maxDrawdown).toLocaleString('fr-FR'), 'var(--red)')}
+          </div>
+          <div class="ac-field">
+            <span class="ac-label">${t('set.pf.daily')}</span>
+            ${a.dailyLossLimit
+              ? mono('-$' + Number(a.dailyLossLimit).toLocaleString('fr-FR'), 'var(--red)')
+              : mono('—', 'var(--muted)')}
+          </div>
+          <div class="ac-field">
+            <span class="ac-label">${t('set.pf.dd.type')}</span>
+            <span style="font-size:10px;color:var(--muted2);text-align:right;max-width:55%;line-height:1.3">${a.drawdownType}</span>
+          </div>
+          <div class="ac-field">
+            <span class="ac-label">${t('set.pf.min.days')}</span>
+            ${mono(a.minTradingDays || '0')}
+          </div>
+          <div class="ac-field">
+            <span class="ac-label">${t('set.pf.consistency')}</span>
+            <span style="font-size:10px;color:var(--muted2);text-align:right;max-width:55%;line-height:1.3">${a.consistency}</span>
+          </div>
+          <div class="ac-field" style="align-items:flex-start">
+            <span class="ac-label" style="padding-top:2px">${t('set.pf.payout')}</span>
+            <span style="font-size:10px;color:var(--muted2);text-align:right;max-width:58%;line-height:1.4">${a.payoutConditions}</span>
+          </div>
         </div>
-        <div class="accounts-grid" style="margin-top:14px">
-          ${accounts.map(a => `
-            <div class="account-card" style="opacity:0.92">
-              <div class="ac-header">
-                <span class="ac-name" style="font-weight:700;font-size:13px">${UI.escHtml(a.name)}</span>
-                <span class="ac-badge">EOD</span>
-              </div>
-              <div class="ac-field">
-                <span class="ac-label">${t('set.acc.capital')}</span>
-                <span class="ac-input" style="background:transparent;border:none;color:var(--text);font-family:'Geist Mono',monospace;font-size:12px">$${Number(a.capital).toLocaleString()}</span>
-              </div>
-              <div class="ac-field">
-                <span class="ac-label">${t('set.acc.target')}</span>
-                <span class="ac-input" style="background:transparent;border:none;color:var(--green);font-family:'Geist Mono',monospace;font-size:12px">+$${Number(a.profitTarget).toLocaleString()}</span>
-              </div>
-              <div class="ac-field">
-                <span class="ac-label">${t('set.acc.drawdown')}</span>
-                <span class="ac-input" style="background:transparent;border:none;color:var(--red);font-family:'Geist Mono',monospace;font-size:12px">-$${Number(a.maxDrawdown).toLocaleString()}</span>
-              </div>
-              <div class="ac-field">
-                <span class="ac-label">${t('set.acc.daily')}</span>
-                <span class="ac-input" style="background:transparent;border:none;color:var(--red);font-family:'Geist Mono',monospace;font-size:12px">-$${Number(a.dailyLossLimit).toLocaleString()}</span>
-              </div>
-              <div class="ac-field">
-                <span class="ac-label">${t('set.acc.contracts')}</span>
-                <span class="ac-input" style="background:transparent;border:none;color:var(--text);font-family:'Geist Mono',monospace;font-size:12px">${a.maxContracts}</span>
-              </div>
-              <div class="ac-field">
-                <span class="ac-label">${t('set.acc.fee')}</span>
-                <span class="ac-input" style="background:transparent;border:none;color:var(--text);font-family:'Geist Mono',monospace;font-size:12px">$${(a.feePerSide || 2.14).toFixed(2)}</span>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>`;
+      `).join('')}</div>`;
+    }
+
+    function render(activeKey) {
+      const tabs = FIRM_ORDER
+        .filter(k => firms[k])
+        .map(k => `<button class="chip${activeKey === k ? ' active' : ''}" data-pf-tab="${k}">${firms[k].name}</button>`)
+        .join('');
+
+      el.innerHTML = `
+        <div class="settings-section settings-section--wide">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <h3 style="margin:0">${t('set.pf.title')}</h3>
+            <span style="font-size:10px;background:var(--border);color:var(--muted);padding:2px 8px;border-radius:99px;letter-spacing:0.06em">🔒 ${t('set.apex.locked')}</span>
+          </div>
+          <div style="display:flex;gap:6px;margin:14px 0;flex-wrap:wrap">${tabs}</div>
+          ${renderCards(activeKey)}
+        </div>`;
+
+      el.querySelectorAll('[data-pf-tab]').forEach(btn => {
+        btn.addEventListener('click', () => render(btn.dataset.pfTab));
+      });
+    }
+
+    render(FIRM_ORDER.find(k => firms[k]) || 'apex');
   }
 
   function renderSpreadsSettings() {
@@ -410,7 +455,7 @@
   UI.initSettings = function () {
     try { renderGroupsSettings(); } catch(e) { console.error('[Settings] groups render error:', e); }
     renderMyAccountsSettings();
-    renderAccountTypesSettings();
+    renderPropFirmsSettings();
     renderSpreadsSettings();
 
     // Tab switching

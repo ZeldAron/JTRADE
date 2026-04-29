@@ -27,6 +27,44 @@ const Store = (() => {
     { id: 'apex-150k', name: 'Apex $150K', capital: 150000, profitTarget: 9000,  maxDrawdown: 4000, dailyLossLimit: 2000, maxContracts: 12, feePerSide: 2.14 },
   ];
 
+  const DEFAULT_PROP_FIRMS = {
+    apex: {
+      name: 'Apex Funding',
+      accounts: [
+        { id: 'apex-25k',  size: '25K',  capital: 25000,  profitTarget: 1500,  maxDrawdown: 1000, dailyLossLimit: 500,  drawdownType: 'Trailing EOD', consistency: '≤50% meilleure journée', minTradingDays: 0, payoutConditions: '90/10 split — aucun min de jours' },
+        { id: 'apex-50k',  size: '50K',  capital: 50000,  profitTarget: 3000,  maxDrawdown: 2000, dailyLossLimit: 1000, drawdownType: 'Trailing EOD', consistency: '≤50% meilleure journée', minTradingDays: 0, payoutConditions: '90/10 split — aucun min de jours' },
+        { id: 'apex-100k', size: '100K', capital: 100000, profitTarget: 6000,  maxDrawdown: 3000, dailyLossLimit: 1500, drawdownType: 'Trailing EOD', consistency: '≤50% meilleure journée', minTradingDays: 0, payoutConditions: '90/10 split — aucun min de jours' },
+        { id: 'apex-150k', size: '150K', capital: 150000, profitTarget: 9000,  maxDrawdown: 4000, dailyLossLimit: 2000, drawdownType: 'Trailing EOD', consistency: '≤50% meilleure journée', minTradingDays: 0, payoutConditions: '90/10 split — aucun min de jours' },
+      ]
+    },
+    topstep: {
+      name: 'Topstep',
+      accounts: [
+        { id: 'topstep-50k',  size: '50K',  capital: 50000,  profitTarget: 3000, maxDrawdown: 2000, dailyLossLimit: 0, drawdownType: 'Trailing EOD', consistency: '≤50% PT (PT ajusté si dépassé)', minTradingDays: 0, payoutConditions: '100% premier $10K, puis 90/10 — 5j gagnants min, plafond $5K/demande' },
+        { id: 'topstep-100k', size: '100K', capital: 100000, profitTarget: 6000, maxDrawdown: 3000, dailyLossLimit: 0, drawdownType: 'Trailing EOD', consistency: '≤50% PT (PT ajusté si dépassé)', minTradingDays: 0, payoutConditions: '100% premier $10K, puis 90/10 — 5j gagnants min, plafond $5K/demande' },
+        { id: 'topstep-150k', size: '150K', capital: 150000, profitTarget: 9000, maxDrawdown: 4500, dailyLossLimit: 0, drawdownType: 'Trailing EOD', consistency: '≤50% PT (PT ajusté si dépassé)', minTradingDays: 0, payoutConditions: '100% premier $10K, puis 90/10 — 5j gagnants min, plafond $5K/demande' },
+      ]
+    },
+    ftmo: {
+      name: 'FTMO (CFD/Forex)',
+      accounts: [
+        { id: 'ftmo-25k',  size: '25K',  capital: 25000,  profitTarget: 2500,  maxDrawdown: 2500,  dailyLossLimit: 1250,  drawdownType: 'Statique (2-Step)', consistency: 'Aucune (plan 2-Step)', minTradingDays: 4, payoutConditions: '80-90% split (scaling) — 30j attente funded, fee remboursé au 1er payout' },
+        { id: 'ftmo-50k',  size: '50K',  capital: 50000,  profitTarget: 5000,  maxDrawdown: 5000,  dailyLossLimit: 2500,  drawdownType: 'Statique (2-Step)', consistency: 'Aucune (plan 2-Step)', minTradingDays: 4, payoutConditions: '80-90% split (scaling) — 30j attente funded, fee remboursé au 1er payout' },
+        { id: 'ftmo-100k', size: '100K', capital: 100000, profitTarget: 10000, maxDrawdown: 10000, dailyLossLimit: 5000,  drawdownType: 'Statique (2-Step)', consistency: 'Aucune (plan 2-Step)', minTradingDays: 4, payoutConditions: '80-90% split (scaling) — 30j attente funded, fee remboursé au 1er payout' },
+        { id: 'ftmo-200k', size: '200K', capital: 200000, profitTarget: 20000, maxDrawdown: 20000, dailyLossLimit: 10000, drawdownType: 'Statique (2-Step)', consistency: 'Aucune (plan 2-Step)', minTradingDays: 4, payoutConditions: '80-90% split (scaling) — 30j attente funded, fee remboursé au 1er payout' },
+      ]
+    },
+    lucid: {
+      name: 'Lucid Trading',
+      accounts: [
+        { id: 'lucid-25k',  size: '25K',  capital: 25000,  profitTarget: 1500, maxDrawdown: 1500, dailyLossLimit: 300,  drawdownType: 'Trailing EOD', consistency: 'Aucune (eval) — ≤40% meilleure j. (funded)', minTradingDays: 5, payoutConditions: '100% premier $10K, puis 90/10 — 5j min requis' },
+        { id: 'lucid-50k',  size: '50K',  capital: 50000,  profitTarget: 3000, maxDrawdown: 3000, dailyLossLimit: 600,  drawdownType: 'Trailing EOD', consistency: 'Aucune (eval) — ≤40% meilleure j. (funded)', minTradingDays: 5, payoutConditions: '100% premier $10K, puis 90/10 — 5j min requis' },
+        { id: 'lucid-100k', size: '100K', capital: 100000, profitTarget: 6000, maxDrawdown: 4500, dailyLossLimit: 1200, drawdownType: 'Trailing EOD', consistency: 'Aucune (eval) — ≤40% meilleure j. (funded)', minTradingDays: 5, payoutConditions: '100% premier $10K, puis 90/10 — 5j min requis' },
+        { id: 'lucid-150k', size: '150K', capital: 150000, profitTarget: 9000, maxDrawdown: 4500, dailyLossLimit: 2700, drawdownType: 'Trailing EOD', consistency: 'Aucune (eval) — ≤40% meilleure j. (funded)', minTradingDays: 5, payoutConditions: '100% premier $10K, puis 90/10 — 5j min requis' },
+      ]
+    }
+  };
+
   const DEFAULT_SPREADS = { MES1: 1.04, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00 };
 
   let trades       = [];
@@ -158,6 +196,10 @@ const Store = (() => {
     accountTypes = arr;
     localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accountTypes));
   }
+
+  // ── Prop Firms (reference data) ──────────────────────────────────────────────
+  function getPropFirms()          { return DEFAULT_PROP_FIRMS; }
+  function getPropFirmByKey(key)   { return DEFAULT_PROP_FIRMS[key] || null; }
 
   // ── Mes comptes (instances personnelles) ─────────────────────────────────────
   function getMyAccounts()          { return myAccounts.map(a => ({ ...a })); }
@@ -292,6 +334,7 @@ const Store = (() => {
     addMyAccount, updateMyAccount, deleteMyAccount,
     getSpreads, updateSpreads,
     getGroups, getGroupById, addGroup, updateGroup, deleteGroup,
+    getPropFirms, getPropFirmByKey,
     getStats,
     getPlanInfo, isPro, activatePro, canAnalyzeToday, recordAnalysis, canAddAccount,
   };
