@@ -1,82 +1,73 @@
-// ─── AUTH ─────────────────────────────────────────────────────────────────────
-// Session localStorage avec expiry 30 min d'inactivité
+// ─── AUTH (Firebase) ──────────────────────────────────────────────────────────
 
 const Auth = (() => {
-  const USERS_KEY   = 'jtrade_auth_users';
-  const SESSION_KEY = 'ztrade_session_v2';   // localStorage + lastActivity
-  const IDLE_MS     = 30 * 60 * 1000;        // 30 minutes
-
-  async function sha256(str) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  function getUsers() {
-    try { return JSON.parse(localStorage.getItem(USERS_KEY)) || []; } catch { return []; }
-  }
-  function saveUsers(list) { localStorage.setItem(USERS_KEY, JSON.stringify(list)); }
-
-  function getSession() {
-    try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; }
-  }
 
   function getCurrentUser() {
-    const s = getSession();
-    if (!s) return null;
-    if (Date.now() - (s.lastActivity || 0) > IDLE_MS) {
-      localStorage.removeItem(SESSION_KEY);
+    return _fbAuth.currentUser
+      ? { id: _fbAuth.currentUser.uid, username: _fbAuth.currentUser.displayName || _fbAuth.currentUser.email.split('@')[0] }
+      : null;
+  }
+
+  // Appelé par l'app pour attendre que Firebase confirme la session
+  function onAuthReady(cb) {
+    _fbAuth.onAuthStateChanged(user => {
+      cb(user ? { id: user.uid, username: user.displayName || user.email.split('@')[0] } : null);
+    });
+  }
+
+  async function login(email, password) {
+    try {
+      const cred = await _fbAuth.signInWithEmailAndPassword(email, password);
+      const user  = cred.user;
+      return { id: user.uid, username: user.displayName || user.email.split('@')[0] };
+    } catch (e) {
       return null;
     }
-    return { id: s.id, username: s.username };
   }
 
-  function touchSession() {
-    const s = getSession();
-    if (!s) return;
-    s.lastActivity = Date.now();
-    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
-  }
-
-  async function login(username, password) {
-    const hash = await sha256(password);
-    const user = getUsers().find(u =>
-      u.username.toLowerCase() === username.toLowerCase() && u.passwordHash === hash
-    );
-    if (!user) return null;
-    const session = { id: user.id, username: user.username, lastActivity: Date.now() };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    return { id: session.id, username: session.username };
-  }
-
-  async function register(username, password) {
+  async function register(username, password, email) {
     const name = username.trim();
-    if (!name || !password) return { error: i18n.t('auth.err.required') };
-    const users = getUsers();
-    if (users.find(u => u.username.toLowerCase() === name.toLowerCase()))
-      return { error: i18n.t('auth.err.taken') };
-    const hash = await sha256(password);
-    const user = { id: 'u' + Date.now(), username: name, passwordHash: hash };
-    users.push(user);
-    saveUsers(users);
-    const session = { id: user.id, username: user.username, lastActivity: Date.now() };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    if (!name || !password || !email) return { error: i18n.t('auth.err.required') };
+    try {
+      const cred = await _fbAuth.createUserWithEmailAndPassword(email, password);
+      await cred.user.updateProfile({ displayName: name });
 
-    fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        access_key: '6586bd2e-5bce-45ff-9c4f-92730958a80c',
-        subject:    `[ZeldTrade] Nouvel utilisateur : ${name}`,
-        from_name:  'ZeldTrade Bot',
-        email:      'noreply@zeldtrade.app',
-        message:    `Nouvel inscrit !\n\nPseudo  : ${name}\nDate    : ${new Date().toLocaleString('fr-FR')}\nNavig.  : ${navigator.userAgent.split(') ')[0].split('(')[1] || '?'}`,
-      }),
-    }).catch(() => {});
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_key: '6586bd2e-5bce-45ff-9c4f-92730958a80c',
+          subject:    `[ZeldTrade] Nouvel utilisateur : ${name}`,
+          from_name:  'ZeldTrade Bot',
+          email:      'noreply@zeldtrade.app',
+          message:    `Nouvel inscrit !\n\nPseudo  : ${name}\nEmail   : ${email}\nDate    : ${new Date().toLocaleString('fr-FR')}`,
+        }),
+      }).catch(() => {});
 
-    return { user: { id: session.id, username: session.username } };
+      return { user: { id: cred.user.uid, username: name } };
+    } catch (e) {
+      if (e.code === 'auth/email-already-in-use') return { error: i18n.t('auth.err.taken') };
+      if (e.code === 'auth/invalid-email')        return { error: i18n.t('auth.err.email') };
+      if (e.code === 'auth/weak-password')        return { error: i18n.t('auth.err.weak') };
+      return { error: e.message };
+    }
   }
 
-  function logout() { localStorage.removeItem(SESSION_KEY); }
+  async function resetPassword(email) {
+    try {
+      await _fbAuth.sendPasswordResetEmail(email);
+      return { ok: true };
+    } catch (e) {
+      return { error: e.message };
+    }
+  }
 
-  return { login, register, logout, getCurrentUser, touchSession };
+  function logout() {
+    return _fbAuth.signOut();
+  }
+
+  // Compat shim — plus utilisé mais évite les erreurs si appelé ailleurs
+  function touchSession() {}
+
+  return { login, register, logout, getCurrentUser, onAuthReady, resetPassword, touchSession };
 })();

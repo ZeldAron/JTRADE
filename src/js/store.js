@@ -1,131 +1,65 @@
 // ─── STORE ───────────────────────────────────────────────────────────────────
-// Gestion des données : trades + settings, persistance localStorage
-// Clés préfixées par userId pour isoler chaque session utilisateur
+// Persistance double : localStorage (rapide) + Firestore (cross-device)
 
 const Store = (() => {
-  // Clés dynamiques, initialisées par initForUser()
-  let TRADES_KEY      = 'jtrade_default_v2_trades';
-  let SETTINGS_KEY    = 'jtrade_default_v2_settings';
-  let ACCOUNTS_KEY    = 'jtrade_default_v2_accounts';
-  let MY_ACCOUNTS_KEY = 'jtrade_default_v2_my_accounts';
-  let SPREADS_KEY          = 'jtrade_default_v3_spreads_usd';
-  let SPREADS_BY_FIRM_KEY  = 'jtrade_default_v1_spreads_by_firm';
-  let GROUPS_KEY      = 'jtrade_default_v1_groups';
-  let PLAN_KEY        = 'jtrade_default_plan';
-  let AI_USAGE_KEY    = 'jtrade_default_ai_usage';
 
-  const DEFAULT_SETTINGS = {
-    capital:    50000,
-    contracts:  1,
-    instrument: 'MES1',
-    groqKey:    '',
-  };
+  // ── Données statiques (presets, référence) ───────────────────────────────────
+  const DEFAULT_SETTINGS = { capital: 50000, contracts: 1, instrument: 'MES1', groqKey: '' };
 
   const DEFAULT_ACCOUNT_TYPES = [
-    // Apex (Rithmic $1.99/side tout compris)
-    { id: 'apex-25k',  firmKey: 'apex', name: 'Apex $25K',       capital:  25000, profitTarget:  1500, maxDrawdown:  1000, dailyLossLimit:   500, maxContracts:  4, feePerSide: 1.99 },
-    { id: 'apex-50k',  firmKey: 'apex', name: 'Apex $50K',       capital:  50000, profitTarget:  3000, maxDrawdown:  2000, dailyLossLimit:  1000, maxContracts:  6, feePerSide: 1.99 },
-    { id: 'apex-100k', firmKey: 'apex', name: 'Apex $100K',      capital: 100000, profitTarget:  6000, maxDrawdown:  3000, dailyLossLimit:  1500, maxContracts:  8, feePerSide: 1.99 },
-    { id: 'apex-150k', firmKey: 'apex', name: 'Apex $150K',      capital: 150000, profitTarget:  9000, maxDrawdown:  4000, dailyLossLimit:  2000, maxContracts: 12, feePerSide: 1.99 },
-    // Topstep ($1.90/side minis)
-    { id: 'topstep-50k',  firmKey: 'topstep', name: 'Topstep $50K',  capital:  50000, profitTarget:  3000, maxDrawdown:  2000, dailyLossLimit:     0, maxContracts:  5, feePerSide: 1.90 },
-    { id: 'topstep-100k', firmKey: 'topstep', name: 'Topstep $100K', capital: 100000, profitTarget:  6000, maxDrawdown:  3000, dailyLossLimit:     0, maxContracts: 10, feePerSide: 1.90 },
-    { id: 'topstep-150k', firmKey: 'topstep', name: 'Topstep $150K', capital: 150000, profitTarget:  9000, maxDrawdown:  4500, dailyLossLimit:     0, maxContracts: 15, feePerSide: 1.90 },
-    // FTMO CFD ($3/side forex & métaux ; 0 indices)
-    { id: 'ftmo-25k',  firmKey: 'ftmo', name: 'FTMO $25K',       capital:  25000, profitTarget:  2500, maxDrawdown:  2500, dailyLossLimit:  1250, maxContracts:  2, feePerSide: 3.00 },
-    { id: 'ftmo-50k',  firmKey: 'ftmo', name: 'FTMO $50K',       capital:  50000, profitTarget:  5000, maxDrawdown:  5000, dailyLossLimit:  2500, maxContracts:  3, feePerSide: 3.00 },
-    { id: 'ftmo-100k', firmKey: 'ftmo', name: 'FTMO $100K',      capital: 100000, profitTarget: 10000, maxDrawdown: 10000, dailyLossLimit:  5000, maxContracts:  5, feePerSide: 3.00 },
-    { id: 'ftmo-200k', firmKey: 'ftmo', name: 'FTMO $200K',      capital: 200000, profitTarget: 20000, maxDrawdown: 20000, dailyLossLimit: 10000, maxContracts: 10, feePerSide: 3.00 },
-    // Lucid ($1.75/side minis)
-    { id: 'lucid-25k',  firmKey: 'lucid', name: 'Lucid $25K',    capital:  25000, profitTarget:  1500, maxDrawdown:  1500, dailyLossLimit:   300, maxContracts:  3, feePerSide: 1.75 },
-    { id: 'lucid-50k',  firmKey: 'lucid', name: 'Lucid $50K',    capital:  50000, profitTarget:  3000, maxDrawdown:  3000, dailyLossLimit:   600, maxContracts:  5, feePerSide: 1.75 },
-    { id: 'lucid-100k', firmKey: 'lucid', name: 'Lucid $100K',   capital: 100000, profitTarget:  6000, maxDrawdown:  4500, dailyLossLimit:  1200, maxContracts: 10, feePerSide: 1.75 },
-    { id: 'lucid-150k', firmKey: 'lucid', name: 'Lucid $150K',   capital: 150000, profitTarget:  9000, maxDrawdown:  4500, dailyLossLimit:  2700, maxContracts: 15, feePerSide: 1.75 },
+    { id: 'apex-25k',     firmKey: 'apex',    name: 'Apex $25K',      capital:  25000, profitTarget:  1500, maxDrawdown:  1000, dailyLossLimit:   500, maxContracts:  4, feePerSide: 1.99 },
+    { id: 'apex-50k',     firmKey: 'apex',    name: 'Apex $50K',      capital:  50000, profitTarget:  3000, maxDrawdown:  2000, dailyLossLimit:  1000, maxContracts:  6, feePerSide: 1.99 },
+    { id: 'apex-100k',    firmKey: 'apex',    name: 'Apex $100K',     capital: 100000, profitTarget:  6000, maxDrawdown:  3000, dailyLossLimit:  1500, maxContracts:  8, feePerSide: 1.99 },
+    { id: 'apex-150k',    firmKey: 'apex',    name: 'Apex $150K',     capital: 150000, profitTarget:  9000, maxDrawdown:  4000, dailyLossLimit:  2000, maxContracts: 12, feePerSide: 1.99 },
+    { id: 'topstep-50k',  firmKey: 'topstep', name: 'Topstep $50K',   capital:  50000, profitTarget:  3000, maxDrawdown:  2000, dailyLossLimit:     0, maxContracts:  5, feePerSide: 1.90 },
+    { id: 'topstep-100k', firmKey: 'topstep', name: 'Topstep $100K',  capital: 100000, profitTarget:  6000, maxDrawdown:  3000, dailyLossLimit:     0, maxContracts: 10, feePerSide: 1.90 },
+    { id: 'topstep-150k', firmKey: 'topstep', name: 'Topstep $150K',  capital: 150000, profitTarget:  9000, maxDrawdown:  4500, dailyLossLimit:     0, maxContracts: 15, feePerSide: 1.90 },
+    { id: 'ftmo-25k',     firmKey: 'ftmo',    name: 'FTMO $25K',      capital:  25000, profitTarget:  2500, maxDrawdown:  2500, dailyLossLimit:  1250, maxContracts:  2, feePerSide: 3.00 },
+    { id: 'ftmo-50k',     firmKey: 'ftmo',    name: 'FTMO $50K',      capital:  50000, profitTarget:  5000, maxDrawdown:  5000, dailyLossLimit:  2500, maxContracts:  3, feePerSide: 3.00 },
+    { id: 'ftmo-100k',    firmKey: 'ftmo',    name: 'FTMO $100K',     capital: 100000, profitTarget: 10000, maxDrawdown: 10000, dailyLossLimit:  5000, maxContracts:  5, feePerSide: 3.00 },
+    { id: 'ftmo-200k',    firmKey: 'ftmo',    name: 'FTMO $200K',     capital: 200000, profitTarget: 20000, maxDrawdown: 20000, dailyLossLimit: 10000, maxContracts: 10, feePerSide: 3.00 },
+    { id: 'lucid-25k',    firmKey: 'lucid',   name: 'Lucid $25K',     capital:  25000, profitTarget:  1500, maxDrawdown:  1500, dailyLossLimit:   300, maxContracts:  3, feePerSide: 1.75 },
+    { id: 'lucid-50k',    firmKey: 'lucid',   name: 'Lucid $50K',     capital:  50000, profitTarget:  3000, maxDrawdown:  3000, dailyLossLimit:   600, maxContracts:  5, feePerSide: 1.75 },
+    { id: 'lucid-100k',   firmKey: 'lucid',   name: 'Lucid $100K',    capital: 100000, profitTarget:  6000, maxDrawdown:  4500, dailyLossLimit:  1200, maxContracts: 10, feePerSide: 1.75 },
+    { id: 'lucid-150k',   firmKey: 'lucid',   name: 'Lucid $150K',    capital: 150000, profitTarget:  9000, maxDrawdown:  4500, dailyLossLimit:  2700, maxContracts: 15, feePerSide: 1.75 },
   ];
 
   const DEFAULT_PROP_FIRMS = {
-    apex: {
-      name: 'Apex Funding',
-      accounts: [
-        { id: 'apex-25k',  size: '25K',  capital: 25000,  profitTarget: 1500,  maxDrawdown: 1000, dailyLossLimit: 500,  drawdownType: 'Trailing EOD', consistency: '≤50% meilleure journée', minTradingDays: 0, payoutConditions: '90/10 split — aucun min de jours' },
-        { id: 'apex-50k',  size: '50K',  capital: 50000,  profitTarget: 3000,  maxDrawdown: 2000, dailyLossLimit: 1000, drawdownType: 'Trailing EOD', consistency: '≤50% meilleure journée', minTradingDays: 0, payoutConditions: '90/10 split — aucun min de jours' },
-        { id: 'apex-100k', size: '100K', capital: 100000, profitTarget: 6000,  maxDrawdown: 3000, dailyLossLimit: 1500, drawdownType: 'Trailing EOD', consistency: '≤50% meilleure journée', minTradingDays: 0, payoutConditions: '90/10 split — aucun min de jours' },
-        { id: 'apex-150k', size: '150K', capital: 150000, profitTarget: 9000,  maxDrawdown: 4000, dailyLossLimit: 2000, drawdownType: 'Trailing EOD', consistency: '≤50% meilleure journée', minTradingDays: 0, payoutConditions: '90/10 split — aucun min de jours' },
-      ]
-    },
-    topstep: {
-      name: 'Topstep',
-      accounts: [
-        { id: 'topstep-50k',  size: '50K',  capital: 50000,  profitTarget: 3000, maxDrawdown: 2000, dailyLossLimit: 0, drawdownType: 'Trailing EOD', consistency: '≤50% PT (PT ajusté si dépassé)', minTradingDays: 0, payoutConditions: '100% premier $10K, puis 90/10 — 5j gagnants min, plafond $5K/demande' },
-        { id: 'topstep-100k', size: '100K', capital: 100000, profitTarget: 6000, maxDrawdown: 3000, dailyLossLimit: 0, drawdownType: 'Trailing EOD', consistency: '≤50% PT (PT ajusté si dépassé)', minTradingDays: 0, payoutConditions: '100% premier $10K, puis 90/10 — 5j gagnants min, plafond $5K/demande' },
-        { id: 'topstep-150k', size: '150K', capital: 150000, profitTarget: 9000, maxDrawdown: 4500, dailyLossLimit: 0, drawdownType: 'Trailing EOD', consistency: '≤50% PT (PT ajusté si dépassé)', minTradingDays: 0, payoutConditions: '100% premier $10K, puis 90/10 — 5j gagnants min, plafond $5K/demande' },
-      ]
-    },
-    ftmo: {
-      name: 'FTMO (CFD/Forex)',
-      accounts: [
-        { id: 'ftmo-25k',  size: '25K',  capital: 25000,  profitTarget: 2500,  maxDrawdown: 2500,  dailyLossLimit: 1250,  drawdownType: 'Statique (2-Step)', consistency: 'Aucune (plan 2-Step)', minTradingDays: 4, payoutConditions: '80-90% split (scaling) — 30j attente funded, fee remboursé au 1er payout' },
-        { id: 'ftmo-50k',  size: '50K',  capital: 50000,  profitTarget: 5000,  maxDrawdown: 5000,  dailyLossLimit: 2500,  drawdownType: 'Statique (2-Step)', consistency: 'Aucune (plan 2-Step)', minTradingDays: 4, payoutConditions: '80-90% split (scaling) — 30j attente funded, fee remboursé au 1er payout' },
-        { id: 'ftmo-100k', size: '100K', capital: 100000, profitTarget: 10000, maxDrawdown: 10000, dailyLossLimit: 5000,  drawdownType: 'Statique (2-Step)', consistency: 'Aucune (plan 2-Step)', minTradingDays: 4, payoutConditions: '80-90% split (scaling) — 30j attente funded, fee remboursé au 1er payout' },
-        { id: 'ftmo-200k', size: '200K', capital: 200000, profitTarget: 20000, maxDrawdown: 20000, dailyLossLimit: 10000, drawdownType: 'Statique (2-Step)', consistency: 'Aucune (plan 2-Step)', minTradingDays: 4, payoutConditions: '80-90% split (scaling) — 30j attente funded, fee remboursé au 1er payout' },
-      ]
-    },
-    lucid: {
-      name: 'Lucid Trading',
-      accounts: [
-        { id: 'lucid-25k',  size: '25K',  capital: 25000,  profitTarget: 1500, maxDrawdown: 1500, dailyLossLimit: 300,  drawdownType: 'Trailing EOD', consistency: 'Aucune (eval) — ≤40% meilleure j. (funded)', minTradingDays: 5, payoutConditions: '100% premier $10K, puis 90/10 — 5j min requis' },
-        { id: 'lucid-50k',  size: '50K',  capital: 50000,  profitTarget: 3000, maxDrawdown: 3000, dailyLossLimit: 600,  drawdownType: 'Trailing EOD', consistency: 'Aucune (eval) — ≤40% meilleure j. (funded)', minTradingDays: 5, payoutConditions: '100% premier $10K, puis 90/10 — 5j min requis' },
-        { id: 'lucid-100k', size: '100K', capital: 100000, profitTarget: 6000, maxDrawdown: 4500, dailyLossLimit: 1200, drawdownType: 'Trailing EOD', consistency: 'Aucune (eval) — ≤40% meilleure j. (funded)', minTradingDays: 5, payoutConditions: '100% premier $10K, puis 90/10 — 5j min requis' },
-        { id: 'lucid-150k', size: '150K', capital: 150000, profitTarget: 9000, maxDrawdown: 4500, dailyLossLimit: 2700, drawdownType: 'Trailing EOD', consistency: 'Aucune (eval) — ≤40% meilleure j. (funded)', minTradingDays: 5, payoutConditions: '100% premier $10K, puis 90/10 — 5j min requis' },
-      ]
-    }
+    apex:    { name: 'Apex Funding',    accounts: [
+      { id:'apex-25k',     size:'25K',  capital:25000,  profitTarget:1500,  maxDrawdown:1000, dailyLossLimit:500,  drawdownType:'Trailing EOD', consistency:'≤50% meilleure journée',              minTradingDays:0, payoutConditions:'90/10 split — aucun min de jours' },
+      { id:'apex-50k',     size:'50K',  capital:50000,  profitTarget:3000,  maxDrawdown:2000, dailyLossLimit:1000, drawdownType:'Trailing EOD', consistency:'≤50% meilleure journée',              minTradingDays:0, payoutConditions:'90/10 split — aucun min de jours' },
+      { id:'apex-100k',    size:'100K', capital:100000, profitTarget:6000,  maxDrawdown:3000, dailyLossLimit:1500, drawdownType:'Trailing EOD', consistency:'≤50% meilleure journée',              minTradingDays:0, payoutConditions:'90/10 split — aucun min de jours' },
+      { id:'apex-150k',    size:'150K', capital:150000, profitTarget:9000,  maxDrawdown:4000, dailyLossLimit:2000, drawdownType:'Trailing EOD', consistency:'≤50% meilleure journée',              minTradingDays:0, payoutConditions:'90/10 split — aucun min de jours' },
+    ]},
+    topstep: { name: 'Topstep',         accounts: [
+      { id:'topstep-50k',  size:'50K',  capital:50000,  profitTarget:3000,  maxDrawdown:2000, dailyLossLimit:0,    drawdownType:'Trailing EOD', consistency:'≤50% PT (PT ajusté si dépassé)',    minTradingDays:0, payoutConditions:'100% premier $10K, puis 90/10 — 5j gagnants min' },
+      { id:'topstep-100k', size:'100K', capital:100000, profitTarget:6000,  maxDrawdown:3000, dailyLossLimit:0,    drawdownType:'Trailing EOD', consistency:'≤50% PT (PT ajusté si dépassé)',    minTradingDays:0, payoutConditions:'100% premier $10K, puis 90/10 — 5j gagnants min' },
+      { id:'topstep-150k', size:'150K', capital:150000, profitTarget:9000,  maxDrawdown:4500, dailyLossLimit:0,    drawdownType:'Trailing EOD', consistency:'≤50% PT (PT ajusté si dépassé)',    minTradingDays:0, payoutConditions:'100% premier $10K, puis 90/10 — 5j gagnants min' },
+    ]},
+    ftmo:    { name: 'FTMO (CFD/Forex)', accounts: [
+      { id:'ftmo-25k',     size:'25K',  capital:25000,  profitTarget:2500,  maxDrawdown:2500,  dailyLossLimit:1250,  drawdownType:'Statique (2-Step)', consistency:'Aucune', minTradingDays:4, payoutConditions:'80-90% split — fee remboursé au 1er payout' },
+      { id:'ftmo-50k',     size:'50K',  capital:50000,  profitTarget:5000,  maxDrawdown:5000,  dailyLossLimit:2500,  drawdownType:'Statique (2-Step)', consistency:'Aucune', minTradingDays:4, payoutConditions:'80-90% split — fee remboursé au 1er payout' },
+      { id:'ftmo-100k',    size:'100K', capital:100000, profitTarget:10000, maxDrawdown:10000, dailyLossLimit:5000,  drawdownType:'Statique (2-Step)', consistency:'Aucune', minTradingDays:4, payoutConditions:'80-90% split — fee remboursé au 1er payout' },
+      { id:'ftmo-200k',    size:'200K', capital:200000, profitTarget:20000, maxDrawdown:20000, dailyLossLimit:10000, drawdownType:'Statique (2-Step)', consistency:'Aucune', minTradingDays:4, payoutConditions:'80-90% split — fee remboursé au 1er payout' },
+    ]},
+    lucid:   { name: 'Lucid Trading',   accounts: [
+      { id:'lucid-25k',    size:'25K',  capital:25000,  profitTarget:1500, maxDrawdown:1500, dailyLossLimit:300,  drawdownType:'Trailing EOD', consistency:'≤40% meilleure j. (funded)', minTradingDays:5, payoutConditions:'100% premier $10K, puis 90/10 — 5j min' },
+      { id:'lucid-50k',    size:'50K',  capital:50000,  profitTarget:3000, maxDrawdown:3000, dailyLossLimit:600,  drawdownType:'Trailing EOD', consistency:'≤40% meilleure j. (funded)', minTradingDays:5, payoutConditions:'100% premier $10K, puis 90/10 — 5j min' },
+      { id:'lucid-100k',   size:'100K', capital:100000, profitTarget:6000, maxDrawdown:4500, dailyLossLimit:1200, drawdownType:'Trailing EOD', consistency:'≤40% meilleure j. (funded)', minTradingDays:5, payoutConditions:'100% premier $10K, puis 90/10 — 5j min' },
+      { id:'lucid-150k',   size:'150K', capital:150000, profitTarget:9000, maxDrawdown:4500, dailyLossLimit:2700, drawdownType:'Trailing EOD', consistency:'≤40% meilleure j. (funded)', minTradingDays:5, payoutConditions:'100% premier $10K, puis 90/10 — 5j min' },
+    ]},
   };
 
-  const DEFAULT_SPREADS = {
-    MES1: 1.25, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00,
-    MYM1: 0.50, YM1:  5.00, M2K1: 0.50, RTY1: 5.00,
-    MGC1: 1.00, GC1: 10.00, MCL1: 1.00, CL1: 10.00,
-  };
-
-  // Instruments les plus tradés + spread 1-tick officiel CME/CBOT/NYMEX (USD/side)
+  const DEFAULT_SPREADS = { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,MCL1:1.00,CL1:10.00 };
   const DEFAULT_SPREADS_BY_FIRM = {
-    // Apex : full CME futures — indices, métaux, énergie
-    apex: {
-      MES1: 1.25, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00,   // S&P 500 & Nasdaq
-      MYM1: 0.50, YM1:  5.00, M2K1: 0.50, RTY1: 5.00,  // Dow Jones & Russell 2000
-      MGC1: 1.00, GC1: 10.00,                            // Gold (micro & full)
-      MCL1: 1.00, CL1: 10.00,                            // Crude Oil (micro & full)
-    },
-    // Topstep : idem Apex + ZN (T-Note 10 ans, populaire chez Topstep)
-    topstep: {
-      MES1: 1.25, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00,
-      MYM1: 0.50, YM1:  5.00, M2K1: 0.50, RTY1: 5.00,
-      MGC1: 1.00, GC1: 10.00,
-      MCL1: 1.00, CL1: 10.00,
-      ZN1: 15.63,                                        // 10-Year T-Note (0.5 tick = $15.625)
-    },
-    // FTMO : CFD/Forex uniquement — indices, métaux, forex, énergie
-    ftmo: {
-      'US500':  0.50,   // S&P 500 CFD (~0.5 pt spread/lot)
-      'US100':  1.50,   // Nasdaq 100 CFD
-      'US30':   2.50,   // Dow Jones CFD
-      'GER40':  1.50,   // DAX 40 CFD
-      'UK100':  1.00,   // FTSE 100 CFD
-      'XAUUSD': 0.35,   // Or CFD (USD/oz)
-      'EURUSD': 1.00,   // Forex (pip = 1$ par 0.1 lot)
-      'GBPUSD': 1.20,
-      'USDJPY': 0.80,
-      'USOIL':  3.00,   // WTI Oil CFD
-    },
-    // Lucid : futures CME — indices + commodities (sélection plus resserrée)
-    lucid: {
-      MES1: 1.25, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00,
-      MYM1: 0.50, YM1:  5.00, M2K1: 0.50, RTY1: 5.00,
-      MGC1: 1.00, GC1: 10.00,
-      MCL1: 1.00, CL1: 10.00,
-    },
+    apex:    { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,MCL1:1.00,CL1:10.00 },
+    topstep: { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,MCL1:1.00,CL1:10.00,ZN1:15.63 },
+    ftmo:    { US500:0.50,US100:1.50,US30:2.50,GER40:1.50,UK100:1.00,XAUUSD:0.35,EURUSD:1.00,GBPUSD:1.20,USDJPY:0.80,USOIL:3.00 },
+    lucid:   { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,MCL1:1.00,CL1:10.00 },
   };
 
+  // ── État en mémoire ──────────────────────────────────────────────────────────
+  let _uid          = 'default';
   let trades        = [];
   let settings      = { ...DEFAULT_SETTINGS };
   let accountTypes  = DEFAULT_ACCOUNT_TYPES.map(a => ({ ...a }));
@@ -134,20 +68,36 @@ const Store = (() => {
   let spreadsByFirm = Object.fromEntries(Object.keys(DEFAULT_SPREADS_BY_FIRM).map(k => [k, { ...DEFAULT_SPREADS_BY_FIRM[k] }]));
   let groups        = [];
 
-  // ── Initialisation par utilisateur ──────────────────────────────────────────
-  function initForUser(userId) {
-    const uid = userId || 'default';
-    TRADES_KEY      = `jtrade_${uid}_v2_trades`;
-    SETTINGS_KEY    = `jtrade_${uid}_v2_settings`;
-    ACCOUNTS_KEY    = `jtrade_${uid}_v2_accounts`;
-    MY_ACCOUNTS_KEY = `jtrade_${uid}_v2_my_accounts`;
-    SPREADS_KEY          = `jtrade_${uid}_v3_spreads_usd`;
-    SPREADS_BY_FIRM_KEY  = `jtrade_${uid}_v1_spreads_by_firm`;
-    GROUPS_KEY           = `jtrade_${uid}_v1_groups`;
-    PLAN_KEY        = `jtrade_${uid}_plan`;
-    AI_USAGE_KEY    = `jtrade_${uid}_ai_usage`;
+  // ── Clés localStorage (cache local) ─────────────────────────────────────────
+  const lk = () => ({
+    trades:       `ztrade_${_uid}_trades`,
+    settings:     `ztrade_${_uid}_settings`,
+    myAccounts:   `ztrade_${_uid}_myAccounts`,
+    spreadsByFirm:`ztrade_${_uid}_spreadsByFirm`,
+    groups:       `ztrade_${_uid}_groups`,
+    plan:         `ztrade_${_uid}_plan`,
+    aiUsage:      `ztrade_${_uid}_aiUsage`,
+  });
 
-    // Réinitialise l'état
+  // ── Helpers Firestore ────────────────────────────────────────────────────────
+  function userDoc(name) {
+    return _fbDb.collection('users').doc(_uid).collection('data').doc(name);
+  }
+
+  function fbSet(name, data) {
+    userDoc(name).set(data).catch(e => console.warn('[Store] Firestore write error', e));
+  }
+
+  function lsSet(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  }
+  function lsGet(key) {
+    try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+  }
+
+  // ── Init & chargement ────────────────────────────────────────────────────────
+  function initForUser(userId) {
+    _uid = userId || 'default';
     trades        = [];
     settings      = { ...DEFAULT_SETTINGS };
     accountTypes  = DEFAULT_ACCOUNT_TYPES.map(a => ({ ...a }));
@@ -155,81 +105,87 @@ const Store = (() => {
     spreads       = { ...DEFAULT_SPREADS };
     spreadsByFirm = Object.fromEntries(Object.keys(DEFAULT_SPREADS_BY_FIRM).map(k => [k, { ...DEFAULT_SPREADS_BY_FIRM[k] }]));
     groups        = [];
-
-    migrateOldData();
-    loadAll();
+    _loadFromLocalStorage();   // affichage immédiat
+    _loadFromFirestore();      // sync cloud en arrière-plan
   }
 
-  // Migration silencieuse des données de l'ancienne version (sans préfixe utilisateur)
-  function migrateOldData() {
-    const OLD = {
-      trades:      'jtrade_v2_trades',
-      settings:    'jtrade_v2_settings',
-      accounts:    'jtrade_v2_accounts',
-      myAccounts:  'jtrade_v2_my_accounts',
-      spreads:     'jtrade_v3_spreads_usd',
-    };
-    if (!localStorage.getItem(TRADES_KEY) && localStorage.getItem(OLD.trades))
-      localStorage.setItem(TRADES_KEY, localStorage.getItem(OLD.trades));
-    if (!localStorage.getItem(SETTINGS_KEY) && localStorage.getItem(OLD.settings))
-      localStorage.setItem(SETTINGS_KEY, localStorage.getItem(OLD.settings));
-    if (!localStorage.getItem(ACCOUNTS_KEY) && localStorage.getItem(OLD.accounts))
-      localStorage.setItem(ACCOUNTS_KEY, localStorage.getItem(OLD.accounts));
-    if (!localStorage.getItem(MY_ACCOUNTS_KEY) && localStorage.getItem(OLD.myAccounts))
-      localStorage.setItem(MY_ACCOUNTS_KEY, localStorage.getItem(OLD.myAccounts));
-    if (!localStorage.getItem(SPREADS_KEY) && localStorage.getItem(OLD.spreads))
-      localStorage.setItem(SPREADS_KEY, localStorage.getItem(OLD.spreads));
+  function _loadFromLocalStorage() {
+    const k = lk();
+    const t  = lsGet(k.trades);
+    const s  = lsGet(k.settings);
+    const ma = lsGet(k.myAccounts);
+    const spf = lsGet(k.spreadsByFirm);
+    const g  = lsGet(k.groups);
+    if (t)   trades       = t;
+    if (s)   settings     = { ...DEFAULT_SETTINGS, ...s };
+    if (ma)  myAccounts   = ma;
+    if (spf) Object.keys(DEFAULT_SPREADS_BY_FIRM).forEach(fk => {
+      if (spf[fk]) spreadsByFirm[fk] = { ...DEFAULT_SPREADS_BY_FIRM[fk], ...spf[fk] };
+    });
+    if (g)   groups = g;
+    // Merge nouveaux presets si absents
+    _mergeAccountTypeDefaults();
   }
 
-  // ── Persistence ─────────────────────────────────────────────────────────────
-  function loadAll() {
+  async function _loadFromFirestore() {
     try {
-      const t  = localStorage.getItem(TRADES_KEY);
-      const s  = localStorage.getItem(SETTINGS_KEY);
-      const a  = localStorage.getItem(ACCOUNTS_KEY);
-      const ma = localStorage.getItem(MY_ACCOUNTS_KEY);
-      const sp  = localStorage.getItem(SPREADS_KEY);
-      const spf = localStorage.getItem(SPREADS_BY_FIRM_KEY);
-      const g   = localStorage.getItem(GROUPS_KEY);
-      if (t)   trades       = JSON.parse(t);
-      if (s)   settings     = { ...DEFAULT_SETTINGS, ...JSON.parse(s) };
-      if (a) {
-        const stored = JSON.parse(a);
-        const defaultById = Object.fromEntries(DEFAULT_ACCOUNT_TYPES.map(d => [d.id, d]));
-        const storedIds = new Set(stored.map(x => x.id));
-        // Patch existing entries that are missing firmKey
-        const patched = stored.map(x => x.firmKey ? x : { ...x, ...(defaultById[x.id] ? { firmKey: defaultById[x.id].firmKey } : { firmKey: x.id.split('-')[0] }) });
-        // Append any new defaults not yet in storage
-        DEFAULT_ACCOUNT_TYPES.forEach(def => { if (!storedIds.has(def.id)) patched.push(def); });
-        accountTypes = patched;
-      }
-      if (ma)  myAccounts   = JSON.parse(ma);
-      if (sp)  spreads      = { ...DEFAULT_SPREADS, ...JSON.parse(sp) };
-      if (spf) {
-        const parsed = JSON.parse(spf);
-        Object.keys(DEFAULT_SPREADS_BY_FIRM).forEach(k => {
-          spreadsByFirm[k] = { ...DEFAULT_SPREADS_BY_FIRM[k], ...(parsed[k] || {}) };
+      const [tSnap, sSnap, maSnap, spfSnap, gSnap] = await Promise.all([
+        userDoc('trades').get(),
+        userDoc('settings').get(),
+        userDoc('myAccounts').get(),
+        userDoc('spreadsByFirm').get(),
+        userDoc('groups').get(),
+      ]);
+      let changed = false;
+      if (tSnap.exists)   { trades      = tSnap.data().items  || [];  changed = true; }
+      if (sSnap.exists)   { settings    = { ...DEFAULT_SETTINGS, ...sSnap.data() }; changed = true; }
+      if (maSnap.exists)  { myAccounts  = maSnap.data().items || [];  changed = true; }
+      if (spfSnap.exists) {
+        const d = spfSnap.data();
+        Object.keys(DEFAULT_SPREADS_BY_FIRM).forEach(fk => {
+          if (d[fk]) spreadsByFirm[fk] = { ...DEFAULT_SPREADS_BY_FIRM[fk], ...d[fk] };
         });
+        changed = true;
       }
-      if (g)   groups = JSON.parse(g);
-      if (settings.ollamaModel === 'llama3.2') settings.ollamaModel = 'llava';
+      if (gSnap.exists)   { groups = gSnap.data().items || []; changed = true; }
+
+      if (changed) {
+        // Mettre à jour le cache local avec les données cloud
+        const k = lk();
+        lsSet(k.trades,        trades);
+        lsSet(k.settings,      settings);
+        lsSet(k.myAccounts,    myAccounts);
+        lsSet(k.spreadsByFirm, spreadsByFirm);
+        lsSet(k.groups,        groups);
+        // Notifier l'app pour re-render si nécessaire
+        window.dispatchEvent(new CustomEvent('store:synced'));
+      }
     } catch (e) {
-      console.error('[Store] load error', e);
+      console.warn('[Store] Firestore read error (mode hors-ligne ?)', e);
     }
   }
 
-  function saveTrades()   { localStorage.setItem(TRADES_KEY,   JSON.stringify(trades));   }
-  function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+  function _mergeAccountTypeDefaults() {
+    const defaultById = Object.fromEntries(DEFAULT_ACCOUNT_TYPES.map(d => [d.id, d]));
+    const storedIds   = new Set(accountTypes.map(x => x.id));
+    accountTypes = accountTypes.map(x => x.firmKey ? x : { ...x, firmKey: (defaultById[x.id]?.firmKey || x.id.split('-')[0]) });
+    DEFAULT_ACCOUNT_TYPES.forEach(def => { if (!storedIds.has(def.id)) accountTypes.push(def); });
+  }
 
-  // ── Trades CRUD ──────────────────────────────────────────────────────────────
-  function getTrades()        { return trades; }
-  function getTradeById(id)   { return trades.find(t => t.id === id) || null; }
+  // ── Trades ───────────────────────────────────────────────────────────────────
+  function getTrades()      { return trades; }
+  function getTradeById(id) { return trades.find(t => t.id === id) || null; }
+
+  function _saveTrades() {
+    lsSet(lk().trades, trades);
+    fbSet('trades', { items: trades });
+  }
 
   function addTrade(trade) {
     const t = { ...trade, id: Date.now().toString() };
     if (!t.date) t.date = new Date().toISOString();
     trades.unshift(t);
-    saveTrades();
+    _saveTrades();
     return t;
   }
 
@@ -237,191 +193,142 @@ const Store = (() => {
     const idx = trades.findIndex(t => t.id === id);
     if (idx < 0) return null;
     trades[idx] = { ...trades[idx], ...data };
-    saveTrades();
+    _saveTrades();
     return trades[idx];
   }
 
   function deleteTrade(id) {
     trades = trades.filter(t => t.id !== id);
-    saveTrades();
+    _saveTrades();
   }
 
-  function importTrades(arr) {
-    trades = [...arr, ...trades];
-    saveTrades();
-  }
-
-  function clearTrades() {
-    trades = [];
-    saveTrades();
-  }
-
-  function exportJSON() {
-    return JSON.stringify(trades, null, 2);
-  }
+  function importTrades(arr) { trades = [...arr, ...trades]; _saveTrades(); }
+  function clearTrades()     { trades = []; _saveTrades(); }
+  function exportJSON()      { return JSON.stringify(trades, null, 2); }
 
   // ── Settings ─────────────────────────────────────────────────────────────────
   function getSettings()        { return { ...settings }; }
   function updateSettings(data) {
     settings = { ...settings, ...data };
-    saveSettings();
+    lsSet(lk().settings, settings);
+    fbSet('settings', settings);
   }
 
-  // ── Account types (presets) ──────────────────────────────────────────────────
-  function getAccountTypes()       { return accountTypes.map(a => ({ ...a })); }
-  function getAccountByName(name)  { return accountTypes.find(a => a.name === name) || null; }
-  function updateAccountTypes(arr) {
-    accountTypes = arr;
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accountTypes));
-  }
+  // ── Account types (presets statiques) ────────────────────────────────────────
+  function getAccountTypes()      { return accountTypes.map(a => ({ ...a })); }
+  function getAccountByName(name) { return accountTypes.find(a => a.name === name) || null; }
+  function updateAccountTypes(arr){ accountTypes = arr; }
 
-  // ── Prop Firms (reference data) ──────────────────────────────────────────────
-  function getPropFirms()          { return DEFAULT_PROP_FIRMS; }
-  function getPropFirmByKey(key)   { return DEFAULT_PROP_FIRMS[key] || null; }
+  // ── Prop Firms ───────────────────────────────────────────────────────────────
+  function getPropFirms()        { return DEFAULT_PROP_FIRMS; }
+  function getPropFirmByKey(key) { return DEFAULT_PROP_FIRMS[key] || null; }
 
-  // ── Mes comptes (instances personnelles) ─────────────────────────────────────
+  // ── Mes comptes ───────────────────────────────────────────────────────────────
   function getMyAccounts()          { return myAccounts.map(a => ({ ...a })); }
   function getMyAccountById(id)     { return myAccounts.find(a => a.id === id) || null; }
   function getMyAccountByName(name) { return myAccounts.find(a => a.name === name) || null; }
 
-  function addMyAccount(data) {
-    const acc = { ...data, id: 'acc-' + Date.now() };
-    myAccounts.push(acc);
-    localStorage.setItem(MY_ACCOUNTS_KEY, JSON.stringify(myAccounts));
-    return acc;
+  function _saveMyAccounts() {
+    lsSet(lk().myAccounts, myAccounts);
+    fbSet('myAccounts', { items: myAccounts });
   }
 
+  function addMyAccount(data)      { const a = { ...data, id: 'acc-' + Date.now() }; myAccounts.push(a);               _saveMyAccounts(); return a; }
   function updateMyAccount(id, data) {
-    const idx = myAccounts.findIndex(a => a.id === id);
-    if (idx < 0) return null;
-    myAccounts[idx] = { ...myAccounts[idx], ...data };
-    localStorage.setItem(MY_ACCOUNTS_KEY, JSON.stringify(myAccounts));
-    return myAccounts[idx];
+    const i = myAccounts.findIndex(a => a.id === id);
+    if (i < 0) return null;
+    myAccounts[i] = { ...myAccounts[i], ...data };
+    _saveMyAccounts();
+    return myAccounts[i];
   }
+  function deleteMyAccount(id) { myAccounts = myAccounts.filter(a => a.id !== id); _saveMyAccounts(); }
 
-  function deleteMyAccount(id) {
-    myAccounts = myAccounts.filter(a => a.id !== id);
-    localStorage.setItem(MY_ACCOUNTS_KEY, JSON.stringify(myAccounts));
-  }
+  // ── Spreads ───────────────────────────────────────────────────────────────────
+  function getSpreads()          { return { ...spreads }; }
+  function updateSpreads(data)   { spreads = { ...spreads, ...data }; }
 
-  // ── Spreads ──────────────────────────────────────────────────────────────────
-  function getSpreads()        { return { ...spreads }; }
-  function updateSpreads(data) {
-    spreads = { ...spreads, ...data };
-    localStorage.setItem(SPREADS_KEY, JSON.stringify(spreads));
-  }
-
-  function getSpreadsByFirm(key)       { return { ...(spreadsByFirm[key] || DEFAULT_SPREADS) }; }
-  function getAllSpreadsByFirm()        { return JSON.parse(JSON.stringify(spreadsByFirm)); }
+  function getSpreadsByFirm(key) { return { ...(spreadsByFirm[key] || DEFAULT_SPREADS) }; }
+  function getAllSpreadsByFirm()  { return JSON.parse(JSON.stringify(spreadsByFirm)); }
   function updateSpreadsByFirm(key, data) {
     spreadsByFirm[key] = { ...(spreadsByFirm[key] || DEFAULT_SPREADS), ...data };
-    localStorage.setItem(SPREADS_BY_FIRM_KEY, JSON.stringify(spreadsByFirm));
+    lsSet(lk().spreadsByFirm, spreadsByFirm);
+    fbSet('spreadsByFirm', spreadsByFirm);
   }
 
-  // ── Groupes de trading ───────────────────────────────────────────────────────
-  function getGroups()        { return groups.map(g => ({ ...g })); }
-  function getGroupById(id)   { return groups.find(g => g.id === id) || null; }
+  // ── Groupes ───────────────────────────────────────────────────────────────────
+  function getGroups()      { return groups.map(g => ({ ...g })); }
+  function getGroupById(id) { return groups.find(g => g.id === id) || null; }
 
-  function addGroup(data) {
-    const g = { ...data, id: 'grp-' + Date.now() };
-    groups.push(g);
-    localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
-    return g;
+  function _saveGroups() {
+    lsSet(lk().groups, groups);
+    fbSet('groups', { items: groups });
   }
 
+  function addGroup(data)      { const g = { ...data, id: 'grp-' + Date.now() }; groups.push(g); _saveGroups(); return g; }
   function updateGroup(id, data) {
-    const idx = groups.findIndex(g => g.id === id);
-    if (idx < 0) return null;
-    groups[idx] = { ...groups[idx], ...data };
-    localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
-    return groups[idx];
+    const i = groups.findIndex(g => g.id === id);
+    if (i < 0) return null;
+    groups[i] = { ...groups[i], ...data };
+    _saveGroups();
+    return groups[i];
   }
+  function deleteGroup(id) { groups = groups.filter(g => g.id !== id); _saveGroups(); }
 
-  function deleteGroup(id) {
-    groups = groups.filter(g => g.id !== id);
-    localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
-  }
-
-  // ── Plan (Basic / Pro) ───────────────────────────────────────────────────────
-  // Codes d'activation valides — à étendre lors du vrai lancement commercial
+  // ── Plan ─────────────────────────────────────────────────────────────────────
   const PRO_CODES = ['ZELDTRADE-PRO-2026', 'JTRADE-PRO-2026'];
 
-  function getPlanInfo() {
-    try { return JSON.parse(localStorage.getItem(PLAN_KEY)) || { plan: 'basic' }; }
-    catch { return { plan: 'basic' }; }
-  }
-
-  function isPro() { return getPlanInfo().plan === 'pro'; }
-
+  function getPlanInfo() { return lsGet(lk().plan) || { plan: 'basic' }; }
+  function isPro()       { return getPlanInfo().plan === 'pro'; }
   function activatePro(code) {
     if (!PRO_CODES.includes(code.trim().toUpperCase())) return false;
-    localStorage.setItem(PLAN_KEY, JSON.stringify({
-      plan: 'pro', activatedAt: Date.now(), code: code.trim().toUpperCase(),
-    }));
+    const info = { plan: 'pro', activatedAt: Date.now(), code: code.trim().toUpperCase() };
+    lsSet(lk().plan, info);
+    fbSet('plan', info);
     return true;
   }
 
-  function getAIUsage() {
-    try { return JSON.parse(localStorage.getItem(AI_USAGE_KEY)) || { date: '', count: 0 }; }
-    catch { return { date: '', count: 0 }; }
-  }
-
+  // ── IA usage ─────────────────────────────────────────────────────────────────
+  function getAIUsage()      { return lsGet(lk().aiUsage) || { date: '', count: 0 }; }
   function canAnalyzeToday() {
     if (isPro()) return true;
     const today = new Date().toISOString().split('T')[0];
     const u = getAIUsage();
     return u.date !== today || u.count < 1;
   }
-
   function recordAnalysis() {
     const today = new Date().toISOString().split('T')[0];
     const u = getAIUsage();
-    localStorage.setItem(AI_USAGE_KEY, JSON.stringify({
-      date:  today,
-      count: u.date === today ? u.count + 1 : 1,
-    }));
+    lsSet(lk().aiUsage, { date: today, count: u.date === today ? u.count + 1 : 1 });
   }
 
-  function canAddAccount() {
-    if (isPro()) return true;
-    return myAccounts.length < 1;
-  }
+  function canAddAccount() { return isPro() || myAccounts.length < 1; }
 
-  // ── Agrégats ─────────────────────────────────────────────────────────────────
+  // ── Stats ─────────────────────────────────────────────────────────────────────
   function getStats() {
-    const closed   = trades.filter(t => t.outcome === 'win' || t.outcome === 'loss');
-    const wins     = closed.filter(t => t.outcome === 'win');
-    const totalPnL = trades.reduce((s, t) => {
-      const c = Calc.trade(t);
-      return s + (c.netPnl !== null ? c.netPnl : 0);
-    }, 0);
-    const winRate = closed.length ? (wins.length / closed.length) * 100 : null;
-    const avgRR   = trades.length
-      ? trades.reduce((s, t) => s + Calc.trade(t).rr, 0) / trades.length
-      : 0;
+    const closed = trades.filter(t => t.outcome === 'win' || t.outcome === 'loss');
+    const wins   = closed.filter(t => t.outcome === 'win');
+    const totalPnL = trades.reduce((s, t) => { const c = Calc.trade(t); return s + (c.netPnl !== null ? c.netPnl : 0); }, 0);
     return {
-      totalPnL, winRate, avgRR,
-      total:  trades.length,
-      open:   trades.filter(t => t.outcome === 'open').length,
-      wins:   wins.length,
-      losses: closed.length - wins.length,
+      totalPnL,
+      winRate: closed.length ? (wins.length / closed.length) * 100 : null,
+      avgRR:   trades.length ? trades.reduce((s, t) => s + Calc.trade(t).rr, 0) / trades.length : 0,
+      total:   trades.length,
+      open:    trades.filter(t => t.outcome === 'open').length,
+      wins:    wins.length,
+      losses:  closed.length - wins.length,
     };
   }
 
   return {
     initForUser,
-    getTrades, getTradeById,
-    addTrade, updateTrade, deleteTrade,
-    importTrades, clearTrades, exportJSON,
+    getTrades, getTradeById, addTrade, updateTrade, deleteTrade, importTrades, clearTrades, exportJSON,
     getSettings, updateSettings,
     getAccountTypes, getAccountByName, updateAccountTypes,
-    getMyAccounts, getMyAccountById, getMyAccountByName,
-    addMyAccount, updateMyAccount, deleteMyAccount,
-    getSpreads, updateSpreads,
-    getSpreadsByFirm, getAllSpreadsByFirm, updateSpreadsByFirm,
-    getGroups, getGroupById, addGroup, updateGroup, deleteGroup,
     getPropFirms, getPropFirmByKey,
-    getStats,
+    getMyAccounts, getMyAccountById, getMyAccountByName, addMyAccount, updateMyAccount, deleteMyAccount,
+    getSpreads, updateSpreads, getSpreadsByFirm, getAllSpreadsByFirm, updateSpreadsByFirm,
+    getGroups, getGroupById, addGroup, updateGroup, deleteGroup,
     getPlanInfo, isPro, activatePro, canAnalyzeToday, recordAnalysis, canAddAccount,
+    getStats,
   };
 })();
