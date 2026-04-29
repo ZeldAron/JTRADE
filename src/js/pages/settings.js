@@ -294,45 +294,62 @@
   }
 
   function renderSpreadsSettings() {
-    const el      = $('settingsSpreads');
-    const spreads = Store.getSpreads();
+    const el         = $('settingsSpreads');
+    if (!el) return;
+    const firms      = Store.getPropFirms();
+    const FIRM_ORDER = ['apex', 'topstep', 'ftmo', 'lucid'];
 
-    const rows = INSTRUMENTS.map(instr => {
-      const val = (spreads[instr] != null ? spreads[instr] : 0).toFixed(2);
-      return `
-        <div class="settings-row">
-          <label style="font-weight:600">${instr}</label>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;color:var(--muted)">$</span>
-            <input class="form-input" type="number" min="0" step="0.01"
-              id="spread-${instr}" value="${val}"
-              style="width:80px;text-align:right;font-family:'Geist Mono',monospace">
-            <span style="font-size:11px;color:var(--muted)">${t('set.spreads.unit')}</span>
+    function renderRows(firmKey) {
+      const sp = Store.getSpreadsByFirm(firmKey);
+      return INSTRUMENTS.map(instr => {
+        const val = (sp[instr] != null ? sp[instr] : 0).toFixed(2);
+        return `
+          <div class="settings-row">
+            <label style="font-weight:600">${instr}</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:11px;color:var(--muted)">$</span>
+              <input class="form-input" type="number" min="0" step="0.01"
+                data-sp-instr="${instr}" value="${val}"
+                style="width:80px;text-align:right;font-family:'Geist Mono',monospace">
+              <span style="font-size:11px;color:var(--muted)">${t('set.spreads.unit')}</span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function render(activeKey) {
+      const tabs = FIRM_ORDER
+        .filter(k => firms[k])
+        .map(k => `<button class="chip${activeKey === k ? ' active' : ''}" data-sp-tab="${k}">${firms[k].name}</button>`)
+        .join('');
+
+      el.innerHTML = `
+        <div class="settings-section" style="max-width:600px">
+          <h3>${t('set.spreads.title')}</h3>
+          <p style="font-size:11px;color:var(--muted);margin-bottom:12px">${t('set.spreads.hint')}</p>
+          <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">${tabs}</div>
+          <div id="spRows">${renderRows(activeKey)}</div>
+          <div class="settings-row" style="margin-top:12px;border-top:none">
+            <span></span>
+            <button class="btn-primary" id="btnSaveSpreads">${t('btn.save')}</button>
           </div>
         </div>`;
-    }).join('');
 
-    el.innerHTML = `
-      <div class="settings-section" style="max-width:600px">
-        <h3>${t('set.spreads.title')}</h3>
-        <p style="font-size:11px;color:var(--muted);margin-bottom:12px">
-          ${t('set.spreads.hint')}
-        </p>
-        ${rows}
-        <div class="settings-row" style="margin-top:12px;border-top:none">
-          <span></span>
-          <button class="btn-primary" id="btnSaveSpreads">${t('btn.save')}</button>
-        </div>
-      </div>`;
-
-    $('btnSaveSpreads').addEventListener('click', () => {
-      const data = {};
-      INSTRUMENTS.forEach(instr => {
-        data[instr] = Math.max(0, parseFloat($(`spread-${instr}`).value) || 0);
+      el.querySelectorAll('[data-sp-tab]').forEach(btn => {
+        btn.addEventListener('click', () => render(btn.dataset.spTab));
       });
-      Store.updateSpreads(data);
-      UI.toast(t('set.sp.saved'));
-    });
+
+      $('btnSaveSpreads').addEventListener('click', () => {
+        const data = {};
+        el.querySelectorAll('[data-sp-instr]').forEach(input => {
+          data[input.dataset.spInstr] = Math.max(0, parseFloat(input.value) || 0);
+        });
+        Store.updateSpreadsByFirm(activeKey, data);
+        UI.toast(t('set.sp.saved'));
+      });
+    }
+
+    render(FIRM_ORDER.find(k => firms[k]) || 'apex');
   }
 
   function renderGroupsSettings() {

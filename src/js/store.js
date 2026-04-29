@@ -8,7 +8,8 @@ const Store = (() => {
   let SETTINGS_KEY    = 'jtrade_default_v2_settings';
   let ACCOUNTS_KEY    = 'jtrade_default_v2_accounts';
   let MY_ACCOUNTS_KEY = 'jtrade_default_v2_my_accounts';
-  let SPREADS_KEY     = 'jtrade_default_v3_spreads_usd';
+  let SPREADS_KEY          = 'jtrade_default_v3_spreads_usd';
+  let SPREADS_BY_FIRM_KEY  = 'jtrade_default_v1_spreads_by_firm';
   let GROUPS_KEY      = 'jtrade_default_v1_groups';
   let PLAN_KEY        = 'jtrade_default_plan';
   let AI_USAGE_KEY    = 'jtrade_default_ai_usage';
@@ -67,12 +68,20 @@ const Store = (() => {
 
   const DEFAULT_SPREADS = { MES1: 1.04, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00 };
 
-  let trades       = [];
-  let settings     = { ...DEFAULT_SETTINGS };
-  let accountTypes = DEFAULT_ACCOUNT_TYPES.map(a => ({ ...a }));
-  let myAccounts   = [];
-  let spreads      = { ...DEFAULT_SPREADS };
-  let groups       = [];
+  const DEFAULT_SPREADS_BY_FIRM = {
+    apex:    { MES1: 1.04, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00 },
+    topstep: { MES1: 1.04, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00 },
+    ftmo:    { MES1: 2.00, ES1: 25.00, MNQ1: 1.00, NQ1: 10.00 },
+    lucid:   { MES1: 1.04, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00 },
+  };
+
+  let trades        = [];
+  let settings      = { ...DEFAULT_SETTINGS };
+  let accountTypes  = DEFAULT_ACCOUNT_TYPES.map(a => ({ ...a }));
+  let myAccounts    = [];
+  let spreads       = { ...DEFAULT_SPREADS };
+  let spreadsByFirm = Object.fromEntries(Object.keys(DEFAULT_SPREADS_BY_FIRM).map(k => [k, { ...DEFAULT_SPREADS_BY_FIRM[k] }]));
+  let groups        = [];
 
   // ── Initialisation par utilisateur ──────────────────────────────────────────
   function initForUser(userId) {
@@ -81,18 +90,20 @@ const Store = (() => {
     SETTINGS_KEY    = `jtrade_${uid}_v2_settings`;
     ACCOUNTS_KEY    = `jtrade_${uid}_v2_accounts`;
     MY_ACCOUNTS_KEY = `jtrade_${uid}_v2_my_accounts`;
-    SPREADS_KEY     = `jtrade_${uid}_v3_spreads_usd`;
-    GROUPS_KEY      = `jtrade_${uid}_v1_groups`;
+    SPREADS_KEY          = `jtrade_${uid}_v3_spreads_usd`;
+    SPREADS_BY_FIRM_KEY  = `jtrade_${uid}_v1_spreads_by_firm`;
+    GROUPS_KEY           = `jtrade_${uid}_v1_groups`;
     PLAN_KEY        = `jtrade_${uid}_plan`;
     AI_USAGE_KEY    = `jtrade_${uid}_ai_usage`;
 
     // Réinitialise l'état
-    trades       = [];
-    settings     = { ...DEFAULT_SETTINGS };
-    accountTypes = DEFAULT_ACCOUNT_TYPES.map(a => ({ ...a }));
-    myAccounts   = [];
-    spreads      = { ...DEFAULT_SPREADS };
-    groups       = [];
+    trades        = [];
+    settings      = { ...DEFAULT_SETTINGS };
+    accountTypes  = DEFAULT_ACCOUNT_TYPES.map(a => ({ ...a }));
+    myAccounts    = [];
+    spreads       = { ...DEFAULT_SPREADS };
+    spreadsByFirm = Object.fromEntries(Object.keys(DEFAULT_SPREADS_BY_FIRM).map(k => [k, { ...DEFAULT_SPREADS_BY_FIRM[k] }]));
+    groups        = [];
 
     migrateOldData();
     loadAll();
@@ -126,14 +137,21 @@ const Store = (() => {
       const s  = localStorage.getItem(SETTINGS_KEY);
       const a  = localStorage.getItem(ACCOUNTS_KEY);
       const ma = localStorage.getItem(MY_ACCOUNTS_KEY);
-      const sp = localStorage.getItem(SPREADS_KEY);
-      const g  = localStorage.getItem(GROUPS_KEY);
-      if (t)  trades       = JSON.parse(t);
-      if (s)  settings     = { ...DEFAULT_SETTINGS, ...JSON.parse(s) };
-      if (a)  accountTypes = JSON.parse(a);
-      if (ma) myAccounts   = JSON.parse(ma);
-      if (sp) spreads      = { ...DEFAULT_SPREADS, ...JSON.parse(sp) };
-      if (g)  groups       = JSON.parse(g);
+      const sp  = localStorage.getItem(SPREADS_KEY);
+      const spf = localStorage.getItem(SPREADS_BY_FIRM_KEY);
+      const g   = localStorage.getItem(GROUPS_KEY);
+      if (t)   trades       = JSON.parse(t);
+      if (s)   settings     = { ...DEFAULT_SETTINGS, ...JSON.parse(s) };
+      if (a)   accountTypes = JSON.parse(a);
+      if (ma)  myAccounts   = JSON.parse(ma);
+      if (sp)  spreads      = { ...DEFAULT_SPREADS, ...JSON.parse(sp) };
+      if (spf) {
+        const parsed = JSON.parse(spf);
+        Object.keys(DEFAULT_SPREADS_BY_FIRM).forEach(k => {
+          spreadsByFirm[k] = { ...DEFAULT_SPREADS_BY_FIRM[k], ...(parsed[k] || {}) };
+        });
+      }
+      if (g)   groups = JSON.parse(g);
       if (settings.ollamaModel === 'llama3.2') settings.ollamaModel = 'llava';
     } catch (e) {
       console.error('[Store] load error', e);
@@ -231,6 +249,13 @@ const Store = (() => {
   function updateSpreads(data) {
     spreads = { ...spreads, ...data };
     localStorage.setItem(SPREADS_KEY, JSON.stringify(spreads));
+  }
+
+  function getSpreadsByFirm(key)       { return { ...(spreadsByFirm[key] || DEFAULT_SPREADS) }; }
+  function getAllSpreadsByFirm()        { return JSON.parse(JSON.stringify(spreadsByFirm)); }
+  function updateSpreadsByFirm(key, data) {
+    spreadsByFirm[key] = { ...(spreadsByFirm[key] || DEFAULT_SPREADS), ...data };
+    localStorage.setItem(SPREADS_BY_FIRM_KEY, JSON.stringify(spreadsByFirm));
   }
 
   // ── Groupes de trading ───────────────────────────────────────────────────────
@@ -333,6 +358,7 @@ const Store = (() => {
     getMyAccounts, getMyAccountById, getMyAccountByName,
     addMyAccount, updateMyAccount, deleteMyAccount,
     getSpreads, updateSpreads,
+    getSpreadsByFirm, getAllSpreadsByFirm, updateSpreadsByFirm,
     getGroups, getGroupById, addGroup, updateGroup, deleteGroup,
     getPropFirms, getPropFirmByKey,
     getStats,
