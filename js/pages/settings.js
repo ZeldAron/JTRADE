@@ -453,10 +453,10 @@
   }
 
   UI.initSettings = function () {
-    try { renderGroupsSettings(); } catch(e) { console.error('[Settings] groups render error:', e); }
-    renderMyAccountsSettings();
-    renderPropFirmsSettings();
-    renderSpreadsSettings();
+    try { renderGroupsSettings(); }    catch(e) { console.error('[Settings] groups error:', e); }
+    try { renderMyAccountsSettings(); } catch(e) { console.error('[Settings] accounts error:', e); }
+    try { renderPropFirmsSettings(); }  catch(e) { console.error('[Settings] propfirms error:', e); }
+    try { renderSpreadsSettings(); }    catch(e) { console.error('[Settings] spreads error:', e); }
 
     // Tab switching
     document.querySelectorAll('[data-settings-tab]').forEach(btn => {
