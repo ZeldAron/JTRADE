@@ -129,12 +129,13 @@ const Store = (() => {
 
   async function _loadFromFirestore() {
     try {
-      const [tSnap, sSnap, maSnap, spfSnap, gSnap] = await Promise.all([
+      const [tSnap, sSnap, maSnap, spfSnap, gSnap, planSnap] = await Promise.all([
         userDoc('trades').get(),
         userDoc('settings').get(),
         userDoc('myAccounts').get(),
         userDoc('spreadsByFirm').get(),
         userDoc('groups').get(),
+        userDoc('plan').get(),
       ]);
       let changed = false;
       if (tSnap.exists)   { trades      = tSnap.data().items  || [];  changed = true; }
@@ -148,16 +149,15 @@ const Store = (() => {
         changed = true;
       }
       if (gSnap.exists)   { groups = gSnap.data().items || []; changed = true; }
+      if (planSnap.exists) { lsSet(lk().plan, planSnap.data()); changed = true; }
 
       if (changed) {
-        // Mettre à jour le cache local avec les données cloud
         const k = lk();
         lsSet(k.trades,        trades);
         lsSet(k.settings,      settings);
         lsSet(k.myAccounts,    myAccounts);
         lsSet(k.spreadsByFirm, spreadsByFirm);
         lsSet(k.groups,        groups);
-        // Notifier l'app pour re-render si nécessaire
         window.dispatchEvent(new CustomEvent('store:synced'));
       }
     } catch (e) {
