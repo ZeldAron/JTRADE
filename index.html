@@ -10,68 +10,169 @@
 </head>
 <body>
 
-  <!-- ══ LOGIN SCREEN ══════════════════════════════════════════════════════════ -->
-  <div id="loginScreen" class="login-screen">
+  <!-- ══ LANDING PAGE ═════════════════════════════════════════════════════════ -->
+  <div id="landingScreen" class="lp-screen">
 
-    <!-- Carte connexion / inscription -->
-    <div class="login-card" id="loginCard">
-      <div class="login-logo">
-        <div class="logo-mark login-logo-mark">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Navbar -->
+    <nav class="lp-nav">
+      <div class="lp-nav-logo">
+        <div class="lp-nav-logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0e1220" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
             <polyline points="16 7 22 7 22 13"/>
           </svg>
         </div>
-        <div class="login-title">ZeldTrade</div>
-        <div class="login-subtitle" data-i18n="auth.subtitle">Journal de trading</div>
+        ZeldTrade
       </div>
+      <div class="lp-nav-actions">
+        <button class="btn-ghost lp-nav-btn" id="btnNavLogin">Se connecter</button>
+        <button class="lp-cta-btn lp-cta-primary" id="btnNavRegister">Créer un compte</button>
+      </div>
+    </nav>
 
-      <!-- Formulaire connexion -->
-      <form id="loginFormEl" autocomplete="on">
-        <div class="login-fields">
-          <input type="text" class="form-input" id="loginUsername"
-            placeholder="Identifiant" autocomplete="username" required>
-          <input type="password" class="form-input" id="loginPassword"
-            placeholder="Mot de passe" autocomplete="current-password" required>
-        </div>
-        <div class="login-error" id="loginError"></div>
-        <button type="submit" class="login-btn" data-i18n="auth.login.btn">Se connecter</button>
-        <div class="login-switch"><span data-i18n="auth.no.account">Pas de compte ?</span> <span id="showRegister" data-i18n="auth.register">Créer un compte</span></div>
-      </form>
+    <!-- Hero -->
+    <section class="lp-hero">
+      <div class="lp-hero-tag">Journal de trading · Prop Firm</div>
+      <h1>Maîtrise ta<br><span>Prop Firm.</span></h1>
+      <p>Suis tes performances, respecte les règles d'évaluation et analyse chaque trade — tout en un seul endroit.</p>
+      <div class="lp-cta-group">
+        <button class="lp-cta-btn lp-cta-primary" id="btnHeroCta">Commencer gratuitement →</button>
+        <button class="lp-cta-btn lp-cta-ghost" id="btnHeroLogin">Se connecter</button>
+      </div>
+    </section>
 
-      <!-- Formulaire inscription -->
-      <form id="registerFormEl" autocomplete="on" style="display:none">
-        <div class="login-fields">
-          <input type="text" class="form-input" id="regUsername"
-            placeholder="Identifiant" autocomplete="username" required>
-          <input type="password" class="form-input" id="regPassword"
-            placeholder="Mot de passe" autocomplete="new-password" required>
-          <input type="password" class="form-input" id="regPasswordConfirm"
-            placeholder="Confirmer le mot de passe" autocomplete="new-password" required>
+    <!-- Features -->
+    <section class="lp-features">
+      <div class="lp-section-title">Fonctionnalités</div>
+      <div class="lp-feat-grid">
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon">📒</div>
+          <h3>Journal complet</h3>
+          <p>Enregistre chaque trade avec PnL net, commissions, spreads et notes.</p>
         </div>
-        <div class="login-error" id="registerError"></div>
-        <button type="submit" class="login-btn" data-i18n="auth.create.btn">Créer le compte</button>
-        <div class="login-switch"><span id="showLogin" data-i18n="auth.back.login">← Retour à la connexion</span></div>
-      </form>
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon">🎯</div>
+          <h3>Suivi Prop Firm</h3>
+          <p>Règles d'évaluation Apex, Topstep, FTMO, Lucid — toujours à portée de main.</p>
+        </div>
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon">📈</div>
+          <h3>Analytics avancées</h3>
+          <p>Win rate, expectancy, drawdown réel et courbe de capital quotidienne.</p>
+        </div>
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon">🤖</div>
+          <h3>IA Vision (PRO)</h3>
+          <p>Analyse automatique de tes screenshots de trades via vision IA Groq.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="lp-pricing">
+      <h2>Tarifs simples</h2>
+      <p class="lp-pricing-sub">Commence gratuitement, passe PRO quand tu es prêt.</p>
+      <div class="lp-plans">
+
+        <div class="lp-plan">
+          <h3>Basic</h3>
+          <div class="lp-price">Gratuit</div>
+          <div class="lp-price-sub">Pour toujours</div>
+          <ul>
+            <li><span class="lp-ok">✓</span> Journal de trading illimité</li>
+            <li><span class="lp-ok">✓</span> Dashboard performances</li>
+            <li><span class="lp-ok">✓</span> 1 compte prop firm</li>
+            <li><span class="lp-ok">✓</span> Règles prop firms intégrées</li>
+            <li class="lp-li-no"><span class="lp-no">✗</span> Analytics avancées</li>
+            <li class="lp-li-no"><span class="lp-no">✗</span> IA Vision</li>
+          </ul>
+          <button class="lp-plan-btn lp-cta-btn lp-cta-ghost" id="btnLandingFree">Créer un compte gratuit</button>
+        </div>
+
+        <div class="lp-plan lp-plan-pro">
+          <div class="lp-plan-badge">PRO</div>
+          <h3>Pro</h3>
+          <div class="lp-price">Code d'accès</div>
+          <div class="lp-price-sub">Accès complet à vie</div>
+          <ul>
+            <li><span class="lp-ok">✓</span> Tout Basic, sans limites</li>
+            <li><span class="lp-ok">✓</span> Comptes illimités</li>
+            <li><span class="lp-ok">✓</span> Analytics complètes</li>
+            <li><span class="lp-ok">✓</span> IA Vision (screenshots)</li>
+            <li><span class="lp-ok">✓</span> Groupes de comptes</li>
+            <li><span class="lp-ok">✓</span> Support prioritaire</li>
+          </ul>
+          <button class="lp-plan-btn lp-cta-btn lp-cta-primary" id="btnLandingPro">Obtenir un code PRO</button>
+        </div>
+
+      </div>
+    </section>
+
+    <footer class="lp-footer">© 2025 ZeldTrade · Tous droits réservés</footer>
+
+  </div>
+
+  <!-- ══ AUTH MODAL ════════════════════════════════════════════════════════════ -->
+  <div id="authModal" class="auth-modal" style="display:none">
+    <div class="auth-modal-backdrop" id="authModalBackdrop"></div>
+    <div class="auth-modal-box">
+      <button class="auth-modal-close" id="authModalClose">✕</button>
+      <div class="login-card" id="loginCard">
+        <div class="login-logo">
+          <div class="logo-mark login-logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+              <polyline points="16 7 22 7 22 13"/>
+            </svg>
+          </div>
+          <div class="login-title">ZeldTrade</div>
+          <div class="login-subtitle" data-i18n="auth.subtitle">Journal de trading</div>
+        </div>
+
+        <form id="loginFormEl" autocomplete="on">
+          <div class="login-fields">
+            <input type="text" class="form-input" id="loginUsername"
+              placeholder="Identifiant" autocomplete="username" required>
+            <input type="password" class="form-input" id="loginPassword"
+              placeholder="Mot de passe" autocomplete="current-password" required>
+          </div>
+          <div class="login-error" id="loginError"></div>
+          <button type="submit" class="login-btn" data-i18n="auth.login.btn">Se connecter</button>
+          <div class="login-switch"><span data-i18n="auth.no.account">Pas de compte ?</span> <span id="showRegister" data-i18n="auth.register">Créer un compte</span></div>
+        </form>
+
+        <form id="registerFormEl" autocomplete="on" style="display:none">
+          <div class="login-fields">
+            <input type="text" class="form-input" id="regUsername"
+              placeholder="Identifiant" autocomplete="username" required>
+            <input type="password" class="form-input" id="regPassword"
+              placeholder="Mot de passe" autocomplete="new-password" required>
+            <input type="password" class="form-input" id="regPasswordConfirm"
+              placeholder="Confirmer le mot de passe" autocomplete="new-password" required>
+          </div>
+          <div class="login-error" id="registerError"></div>
+          <button type="submit" class="login-btn" data-i18n="auth.create.btn">Créer le compte</button>
+          <div class="login-switch"><span id="showLogin" data-i18n="auth.back.login">← Retour à la connexion</span></div>
+        </form>
+      </div>
     </div>
+  </div>
 
-    <!-- Écran de chargement (après auth réussie) -->
-    <div class="login-loader" id="loginLoader">
-      <div class="loader-logo">
-        <div class="logo-mark login-logo-mark">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
-            <polyline points="16 7 22 7 22 13"/>
-          </svg>
-        </div>
-        <div class="login-title">ZeldTrade</div>
-        <div class="loader-user" id="loaderUser"></div>
+  <!-- ══ LOADER (après auth) ════════════════════════════════════════════════════ -->
+  <div id="loginLoader" class="lp-loader" style="display:none">
+    <div class="loader-logo">
+      <div class="logo-mark login-logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+          <polyline points="16 7 22 7 22 13"/>
+        </svg>
       </div>
-      <div class="loader-track">
-        <div class="loader-fill" id="loaderFill"></div>
-      </div>
+      <div class="login-title">ZeldTrade</div>
+      <div class="loader-user" id="loaderUser"></div>
     </div>
-
+    <div class="loader-track">
+      <div class="loader-fill" id="loaderFill"></div>
+    </div>
   </div>
 
   <!-- SIDEBAR -->
@@ -298,7 +399,7 @@
 
           <div class="settings-section">
             <h3 data-i18n="set.about">À propos</h3>
-            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.6.7</span></div>
+            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.7.0</span></div>
             <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
           </div>
         </div>
@@ -504,41 +605,94 @@
   <script>
   // ── Bootstrap auth ──────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
-    const $  = id => document.getElementById(id);
-    const ls = $('loginScreen');
-    const lc = $('loginCard');
-    const ll = $('loginLoader');
+    const $ = id => document.getElementById(id);
     i18n.apply();
 
+    const landing   = $('landingScreen');
+    const authModal = $('authModal');
+    const loader    = $('loginLoader');
+
+    // ── Modal auth ────────────────────────────────────────────────────────────
+    function openModal(mode) {
+      $('loginFormEl').style.display    = mode === 'login'    ? '' : 'none';
+      $('registerFormEl').style.display = mode === 'register' ? '' : 'none';
+      $('loginError').textContent    = '';
+      $('registerError').textContent = '';
+      authModal.style.display = 'flex';
+      setTimeout(() => {
+        const f = mode === 'login' ? $('loginUsername') : $('regUsername');
+        if (f) f.focus();
+      }, 60);
+    }
+    function closeModal() { authModal.style.display = 'none'; }
+
+    $('btnNavLogin').addEventListener('click',    () => openModal('login'));
+    $('btnNavRegister').addEventListener('click', () => openModal('register'));
+    $('btnHeroCta').addEventListener('click',     () => openModal('register'));
+    $('btnHeroLogin').addEventListener('click',   () => openModal('login'));
+    $('btnLandingFree').addEventListener('click', () => openModal('register'));
+    $('btnLandingPro').addEventListener('click',  () => {
+      closeModal();
+      // Ouvre le widget contact pour demander un code PRO
+      setTimeout(() => { const b = $('contactBubble'); if (b) b.click(); }, 100);
+    });
+    $('authModalClose').addEventListener('click',    closeModal);
+    $('authModalBackdrop').addEventListener('click', closeModal);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    // ── Loader ────────────────────────────────────────────────────────────────
     function showLoader(username) {
-      lc.style.display = 'none';
-      ll.style.display = 'flex';
+      closeModal();
+      loader.style.display = 'flex';
       $('loaderUser').textContent = username;
-      // Lance la barre de progression
       const fill = $('loaderFill');
       fill.style.transition = 'none';
       fill.style.width = '0%';
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          fill.style.transition = 'width 1.1s cubic-bezier(0.4,0,0.2,1)';
-          fill.style.width = '100%';
-        });
-      });
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        fill.style.transition = 'width 1.1s cubic-bezier(0.4,0,0.2,1)';
+        fill.style.width = '100%';
+      }));
     }
 
+    // ── Idle timer (30 min) ───────────────────────────────────────────────────
+    const IDLE_MS = 30 * 60 * 1000;
+    let idleTimer;
+
+    function startIdleTimer() {
+      function touch() {
+        Auth.touchSession();
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => {
+          Auth.logout();
+          const banner = document.createElement('div');
+          banner.className = 'session-expired-banner';
+          banner.textContent = 'Session expirée — reconnexion requise';
+          document.body.appendChild(banner);
+          setTimeout(() => location.reload(), 2200);
+        }, IDLE_MS);
+      }
+      ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
+        .forEach(e => document.addEventListener(e, touch, { passive: true, capture: true }));
+      touch();
+    }
+
+    // ── Launch app ────────────────────────────────────────────────────────────
     function launchApp(user) {
       Store.initForUser(user.id);
       $('userPillName').textContent = user.username;
       $('userAvatar').textContent   = user.username[0].toUpperCase();
-      // Fade out et révèle l'app
-      ls.style.transition = 'opacity 0.45s ease';
-      ls.style.opacity    = '0';
-      setTimeout(() => { ls.style.display = 'none'; }, 450);
+      landing.style.transition = 'opacity 0.45s ease';
+      landing.style.opacity    = '0';
+      setTimeout(() => {
+        landing.style.display = 'none';
+        loader.style.display  = 'none';
+      }, 450);
       initApp();
       Contact.init();
+      startIdleTimer();
     }
 
-    // Déjà connecté → lancement direct avec animation courte
+    // ── Session existante valide ──────────────────────────────────────────────
     const existing = Auth.getCurrentUser();
     if (existing) {
       showLoader(existing.username);
@@ -550,13 +704,11 @@
     $('loginFormEl').addEventListener('submit', async e => {
       e.preventDefault();
       $('loginError').textContent = '';
-      const username = $('loginUsername').value.trim();
-      const password = $('loginPassword').value;
-      const user = await Auth.login(username, password);
-      if (!user) {
-        $('loginError').textContent = i18n.t('auth.err.login');
-        return;
-      }
+      const user = await Auth.login(
+        $('loginUsername').value.trim(),
+        $('loginPassword').value
+      );
+      if (!user) { $('loginError').textContent = i18n.t('auth.err.login'); return; }
       showLoader(user.username);
       setTimeout(() => launchApp(user), 1200);
     });
@@ -568,19 +720,10 @@
       const username = $('regUsername').value.trim();
       const password = $('regPassword').value;
       const confirm  = $('regPasswordConfirm').value;
-      if (password !== confirm) {
-        $('registerError').textContent = i18n.t('auth.err.mismatch');
-        return;
-      }
-      if (password.length < 4) {
-        $('registerError').textContent = i18n.t('auth.err.short');
-        return;
-      }
+      if (password !== confirm) { $('registerError').textContent = i18n.t('auth.err.mismatch'); return; }
+      if (password.length < 4)  { $('registerError').textContent = i18n.t('auth.err.short'); return; }
       const result = await Auth.register(username, password);
-      if (result.error) {
-        $('registerError').textContent = result.error;
-        return;
-      }
+      if (result.error) { $('registerError').textContent = result.error; return; }
       showLoader(result.user.username);
       setTimeout(() => launchApp(result.user), 1200);
     });
@@ -589,10 +732,12 @@
     $('showRegister').addEventListener('click', () => {
       $('loginFormEl').style.display    = 'none';
       $('registerFormEl').style.display = '';
+      $('regUsername').focus();
     });
     $('showLogin').addEventListener('click', () => {
       $('registerFormEl').style.display = 'none';
       $('loginFormEl').style.display    = '';
+      $('loginUsername').focus();
     });
   });
   </script>
