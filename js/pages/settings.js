@@ -3,7 +3,20 @@
   const $ = id => document.getElementById(id);
   const t = k => i18n.t(k);
 
-  const INSTRUMENTS  = ['MES1', 'ES1', 'MNQ1', 'NQ1'];
+  const INSTRUMENTS = [
+    'MES1','ES1','MNQ1','NQ1',
+    'MYM1','YM1','M2K1','RTY1',
+    'MGC1','GC1','MCL1','CL1','ZN1',
+  ];
+
+  // Groupes d'instruments par catégorie (pour la sidebar du modal & le label)
+  const INSTR_CATEGORY = {
+    MES1:'Indices Micro', ES1:'Indices Full', MNQ1:'Indices Micro', NQ1:'Indices Full',
+    MYM1:'Indices Micro', YM1:'Indices Full', M2K1:'Indices Micro', RTY1:'Indices Full',
+    MGC1:'Métaux', GC1:'Métaux', MCL1:'Énergie', CL1:'Énergie', ZN1:'Taux',
+    'US500':'Indices CFD','US100':'Indices CFD','US30':'Indices CFD','GER40':'Indices CFD','UK100':'Indices CFD',
+    'XAUUSD':'Métaux CFD','EURUSD':'Forex','GBPUSD':'Forex','USDJPY':'Forex','USOIL':'Énergie CFD',
+  };
   const STATUS_LABEL = { evaluation: 'EVAL', funded: 'PA' };
   const STATUS_BADGE = { evaluation: 'ma-eval', funded: 'ma-funded' };
 
@@ -35,8 +48,17 @@
              ${t('set.acc.empty')}
            </p>`;
 
-      const typeOptions = types.map(tp =>
-        `<option value="${tp.id}">${UI.escHtml(tp.name)}</option>`
+      const FIRM_LABELS = { apex: 'Apex', topstep: 'Topstep', ftmo: 'FTMO', lucid: 'Lucid' };
+      const byFirm = {};
+      types.forEach(tp => {
+        const fk = tp.firmKey || tp.id.split('-')[0] || 'other';
+        if (!byFirm[fk]) byFirm[fk] = [];
+        byFirm[fk].push(tp);
+      });
+      const typeOptions = Object.entries(byFirm).map(([fk, tps]) =>
+        `<optgroup label="${FIRM_LABELS[fk] || fk}">${tps.map(tp =>
+          `<option value="${tp.id}">${UI.escHtml(tp.name)}</option>`
+        ).join('')}</optgroup>`
       ).join('');
 
       el.innerHTML = `
@@ -144,10 +166,12 @@
         const name = $('maName').value.trim();
         if (!name) { UI.toast(t('err.name.required'), true); return; }
 
+        const selType = types.find(tp => tp.id === $('maTypeId').value);
         const data = {
           name,
           status:         $('maStatus').value,
           typeId:         $('maTypeId').value,
+          firmKey:        selType?.firmKey || ($('maTypeId').value.split('-')[0] || ''),
           capital:        parseFloat($('maCapital').value)      || 50000,
           profitTarget:   parseFloat($('maProfitTarget').value) || 0,
           maxDrawdown:    parseFloat($('maMaxDrawdown').value)  || 0,
@@ -300,21 +324,36 @@
     const FIRM_ORDER = ['apex', 'topstep', 'ftmo', 'lucid'];
 
     function renderRows(firmKey) {
-      const sp = Store.getSpreadsByFirm(firmKey);
-      return INSTRUMENTS.map(instr => {
-        const val = (sp[instr] != null ? sp[instr] : 0).toFixed(2);
-        return `
-          <div class="settings-row">
-            <label style="font-weight:600">${instr}</label>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:11px;color:var(--muted)">$</span>
-              <input class="form-input" type="number" min="0" step="0.01"
-                data-sp-instr="${instr}" value="${val}"
-                style="width:80px;text-align:right;font-family:'Geist Mono',monospace">
-              <span style="font-size:11px;color:var(--muted)">${t('set.spreads.unit')}</span>
-            </div>
-          </div>`;
-      }).join('');
+      const sp       = Store.getSpreadsByFirm(firmKey);
+      const instrs   = Object.keys(sp);
+
+      // Grouper par catégorie
+      const groups = {};
+      instrs.forEach(instr => {
+        const cat = INSTR_CATEGORY[instr] || 'Autres';
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(instr);
+      });
+
+      return Object.entries(groups).map(([cat, list]) => `
+        <div style="margin-bottom:4px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted2);padding:10px 0 6px;font-weight:600">${cat}</div>
+          ${list.map(instr => {
+            const val = (sp[instr] != null ? sp[instr] : 0).toFixed(2);
+            return `
+              <div class="settings-row" style="padding:5px 0">
+                <label style="font-weight:600;font-family:'Geist Mono',monospace;font-size:12px">${instr}</label>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:11px;color:var(--muted)">$</span>
+                  <input class="form-input" type="number" min="0" step="0.01"
+                    data-sp-instr="${instr}" value="${val}"
+                    style="width:80px;text-align:right;font-family:'Geist Mono',monospace">
+                  <span style="font-size:11px;color:var(--muted)">/side</span>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`
+      ).join('');
     }
 
     function render(activeKey) {
@@ -324,7 +363,7 @@
         .join('');
 
       el.innerHTML = `
-        <div class="settings-section" style="max-width:600px">
+        <div class="settings-section" style="max-width:560px">
           <h3>${t('set.spreads.title')}</h3>
           <p style="font-size:11px;color:var(--muted);margin-bottom:12px">${t('set.spreads.hint')}</p>
           <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">${tabs}</div>

@@ -22,10 +22,25 @@ const Store = (() => {
   };
 
   const DEFAULT_ACCOUNT_TYPES = [
-    { id: 'apex-25k',  name: 'Apex $25K',  capital: 25000,  profitTarget: 1500,  maxDrawdown: 1000, dailyLossLimit: 500,  maxContracts: 4,  feePerSide: 2.14 },
-    { id: 'apex-50k',  name: 'Apex $50K',  capital: 50000,  profitTarget: 3000,  maxDrawdown: 2000, dailyLossLimit: 1000, maxContracts: 6,  feePerSide: 2.14 },
-    { id: 'apex-100k', name: 'Apex $100K', capital: 100000, profitTarget: 6000,  maxDrawdown: 3000, dailyLossLimit: 1500, maxContracts: 8,  feePerSide: 2.14 },
-    { id: 'apex-150k', name: 'Apex $150K', capital: 150000, profitTarget: 9000,  maxDrawdown: 4000, dailyLossLimit: 2000, maxContracts: 12, feePerSide: 2.14 },
+    // Apex (Rithmic $1.99/side tout compris)
+    { id: 'apex-25k',  firmKey: 'apex', name: 'Apex $25K',       capital:  25000, profitTarget:  1500, maxDrawdown:  1000, dailyLossLimit:   500, maxContracts:  4, feePerSide: 1.99 },
+    { id: 'apex-50k',  firmKey: 'apex', name: 'Apex $50K',       capital:  50000, profitTarget:  3000, maxDrawdown:  2000, dailyLossLimit:  1000, maxContracts:  6, feePerSide: 1.99 },
+    { id: 'apex-100k', firmKey: 'apex', name: 'Apex $100K',      capital: 100000, profitTarget:  6000, maxDrawdown:  3000, dailyLossLimit:  1500, maxContracts:  8, feePerSide: 1.99 },
+    { id: 'apex-150k', firmKey: 'apex', name: 'Apex $150K',      capital: 150000, profitTarget:  9000, maxDrawdown:  4000, dailyLossLimit:  2000, maxContracts: 12, feePerSide: 1.99 },
+    // Topstep ($1.90/side minis)
+    { id: 'topstep-50k',  firmKey: 'topstep', name: 'Topstep $50K',  capital:  50000, profitTarget:  3000, maxDrawdown:  2000, dailyLossLimit:     0, maxContracts:  5, feePerSide: 1.90 },
+    { id: 'topstep-100k', firmKey: 'topstep', name: 'Topstep $100K', capital: 100000, profitTarget:  6000, maxDrawdown:  3000, dailyLossLimit:     0, maxContracts: 10, feePerSide: 1.90 },
+    { id: 'topstep-150k', firmKey: 'topstep', name: 'Topstep $150K', capital: 150000, profitTarget:  9000, maxDrawdown:  4500, dailyLossLimit:     0, maxContracts: 15, feePerSide: 1.90 },
+    // FTMO CFD ($3/side forex & métaux ; 0 indices)
+    { id: 'ftmo-25k',  firmKey: 'ftmo', name: 'FTMO $25K',       capital:  25000, profitTarget:  2500, maxDrawdown:  2500, dailyLossLimit:  1250, maxContracts:  2, feePerSide: 3.00 },
+    { id: 'ftmo-50k',  firmKey: 'ftmo', name: 'FTMO $50K',       capital:  50000, profitTarget:  5000, maxDrawdown:  5000, dailyLossLimit:  2500, maxContracts:  3, feePerSide: 3.00 },
+    { id: 'ftmo-100k', firmKey: 'ftmo', name: 'FTMO $100K',      capital: 100000, profitTarget: 10000, maxDrawdown: 10000, dailyLossLimit:  5000, maxContracts:  5, feePerSide: 3.00 },
+    { id: 'ftmo-200k', firmKey: 'ftmo', name: 'FTMO $200K',      capital: 200000, profitTarget: 20000, maxDrawdown: 20000, dailyLossLimit: 10000, maxContracts: 10, feePerSide: 3.00 },
+    // Lucid ($1.75/side minis)
+    { id: 'lucid-25k',  firmKey: 'lucid', name: 'Lucid $25K',    capital:  25000, profitTarget:  1500, maxDrawdown:  1500, dailyLossLimit:   300, maxContracts:  3, feePerSide: 1.75 },
+    { id: 'lucid-50k',  firmKey: 'lucid', name: 'Lucid $50K',    capital:  50000, profitTarget:  3000, maxDrawdown:  3000, dailyLossLimit:   600, maxContracts:  5, feePerSide: 1.75 },
+    { id: 'lucid-100k', firmKey: 'lucid', name: 'Lucid $100K',   capital: 100000, profitTarget:  6000, maxDrawdown:  4500, dailyLossLimit:  1200, maxContracts: 10, feePerSide: 1.75 },
+    { id: 'lucid-150k', firmKey: 'lucid', name: 'Lucid $150K',   capital: 150000, profitTarget:  9000, maxDrawdown:  4500, dailyLossLimit:  2700, maxContracts: 15, feePerSide: 1.75 },
   ];
 
   const DEFAULT_PROP_FIRMS = {
@@ -66,13 +81,49 @@ const Store = (() => {
     }
   };
 
-  const DEFAULT_SPREADS = { MES1: 1.04, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00 };
+  const DEFAULT_SPREADS = {
+    MES1: 1.25, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00,
+    MYM1: 0.50, YM1:  5.00, M2K1: 0.50, RTY1: 5.00,
+    MGC1: 1.00, GC1: 10.00, MCL1: 1.00, CL1: 10.00,
+  };
 
+  // Instruments les plus tradés + spread 1-tick officiel CME/CBOT/NYMEX (USD/side)
   const DEFAULT_SPREADS_BY_FIRM = {
-    apex:    { MES1: 1.04, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00 },
-    topstep: { MES1: 1.04, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00 },
-    ftmo:    { MES1: 2.00, ES1: 25.00, MNQ1: 1.00, NQ1: 10.00 },
-    lucid:   { MES1: 1.04, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00 },
+    // Apex : full CME futures — indices, métaux, énergie
+    apex: {
+      MES1: 1.25, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00,   // S&P 500 & Nasdaq
+      MYM1: 0.50, YM1:  5.00, M2K1: 0.50, RTY1: 5.00,  // Dow Jones & Russell 2000
+      MGC1: 1.00, GC1: 10.00,                            // Gold (micro & full)
+      MCL1: 1.00, CL1: 10.00,                            // Crude Oil (micro & full)
+    },
+    // Topstep : idem Apex + ZN (T-Note 10 ans, populaire chez Topstep)
+    topstep: {
+      MES1: 1.25, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00,
+      MYM1: 0.50, YM1:  5.00, M2K1: 0.50, RTY1: 5.00,
+      MGC1: 1.00, GC1: 10.00,
+      MCL1: 1.00, CL1: 10.00,
+      ZN1: 15.63,                                        // 10-Year T-Note (0.5 tick = $15.625)
+    },
+    // FTMO : CFD/Forex uniquement — indices, métaux, forex, énergie
+    ftmo: {
+      'US500':  0.50,   // S&P 500 CFD (~0.5 pt spread/lot)
+      'US100':  1.50,   // Nasdaq 100 CFD
+      'US30':   2.50,   // Dow Jones CFD
+      'GER40':  1.50,   // DAX 40 CFD
+      'UK100':  1.00,   // FTSE 100 CFD
+      'XAUUSD': 0.35,   // Or CFD (USD/oz)
+      'EURUSD': 1.00,   // Forex (pip = 1$ par 0.1 lot)
+      'GBPUSD': 1.20,
+      'USDJPY': 0.80,
+      'USOIL':  3.00,   // WTI Oil CFD
+    },
+    // Lucid : futures CME — indices + commodities (sélection plus resserrée)
+    lucid: {
+      MES1: 1.25, ES1: 12.50, MNQ1: 0.50, NQ1: 5.00,
+      MYM1: 0.50, YM1:  5.00, M2K1: 0.50, RTY1: 5.00,
+      MGC1: 1.00, GC1: 10.00,
+      MCL1: 1.00, CL1: 10.00,
+    },
   };
 
   let trades        = [];
@@ -142,7 +193,16 @@ const Store = (() => {
       const g   = localStorage.getItem(GROUPS_KEY);
       if (t)   trades       = JSON.parse(t);
       if (s)   settings     = { ...DEFAULT_SETTINGS, ...JSON.parse(s) };
-      if (a)   accountTypes = JSON.parse(a);
+      if (a) {
+        const stored = JSON.parse(a);
+        const defaultById = Object.fromEntries(DEFAULT_ACCOUNT_TYPES.map(d => [d.id, d]));
+        const storedIds = new Set(stored.map(x => x.id));
+        // Patch existing entries that are missing firmKey
+        const patched = stored.map(x => x.firmKey ? x : { ...x, ...(defaultById[x.id] ? { firmKey: defaultById[x.id].firmKey } : { firmKey: x.id.split('-')[0] }) });
+        // Append any new defaults not yet in storage
+        DEFAULT_ACCOUNT_TYPES.forEach(def => { if (!storedIds.has(def.id)) patched.push(def); });
+        accountTypes = patched;
+      }
       if (ma)  myAccounts   = JSON.parse(ma);
       if (sp)  spreads      = { ...DEFAULT_SPREADS, ...JSON.parse(sp) };
       if (spf) {
