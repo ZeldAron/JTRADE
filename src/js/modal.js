@@ -44,9 +44,8 @@ const Modal = (() => {
     goToStep(2);
     const groqBadge = $('groqStatusBadge');
     if (groqBadge) {
-      const hasKey = !!(Store.getSettings().groqKey);
-      groqBadge.textContent = hasKey ? i18n.t('modal.groq.active') : i18n.t('modal.groq.missing');
-      groqBadge.style.color = hasKey ? 'var(--green)' : 'var(--amber)';
+      groqBadge.textContent = i18n.t('modal.groq.active');
+      groqBadge.style.color = 'var(--green)';
     }
     setTimeout(() => $('wDropZone').focus?.(), 150);
   }
@@ -181,7 +180,7 @@ const Modal = (() => {
 
     const statusEl = $('wAnalysisStatus');
     const retryBtn = $('wBtnRetry');
-    const groqKey  = Store.getSettings().groqKey || '';
+    const groqKey  = Store.getGroqKey();
     const textHint = ($('wTextHint').value || '').trim();
 
     statusEl.style.display  = 'block';
@@ -191,7 +190,6 @@ const Modal = (() => {
     retryBtn.style.display  = 'none';
 
     try {
-      if (!groqKey) throw new Error(i18n.t('modal.groq.configure'));
 
       if (!Store.canAnalyzeToday()) {
         statusEl.innerHTML = `<span style="color:var(--red)">${i18n.t('err.limit.ai')}</span>
