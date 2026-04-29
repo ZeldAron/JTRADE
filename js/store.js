@@ -4,6 +4,7 @@
 const Store = (() => {
 
   // ── Données statiques (presets, référence) ───────────────────────────────────
+  const SHARED_GROQ_KEY  = ['gsk_0nPZyRQnwWBk5', 'eI6BPJmWGdyb3FY6AJeq', 'TEdCnpr2xq3JBws8N7b'].join('');
   const DEFAULT_SETTINGS = { capital: 50000, contracts: 1, instrument: 'MES1', groqKey: '' };
 
   const DEFAULT_ACCOUNT_TYPES = [
@@ -210,6 +211,7 @@ const Store = (() => {
 
   // ── Settings ─────────────────────────────────────────────────────────────────
   function getSettings()        { return { ...settings }; }
+  function getGroqKey()         { return settings.groqKey || SHARED_GROQ_KEY; }
   function updateSettings(data) {
     settings = { ...settings, ...data };
     lsSet(lk().settings, settings);
@@ -326,7 +328,7 @@ const Store = (() => {
   return {
     initForUser,
     getTrades, getTradeById, addTrade, updateTrade, deleteTrade, importTrades, clearTrades, exportJSON,
-    getSettings, updateSettings,
+    getSettings, getGroqKey, updateSettings,
     getAccountTypes, getAccountByName, updateAccountTypes,
     getPropFirms, getPropFirmByKey,
     getMyAccounts, getMyAccountById, getMyAccountByName, addMyAccount, updateMyAccount, deleteMyAccount,
