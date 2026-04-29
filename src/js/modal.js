@@ -10,6 +10,12 @@ const Modal = (() => {
   let capital       = 50000;
   let feePerSide    = 2.14;
   let spreadCost    = 0;
+  let firmKey       = 'apex';
+
+  function getSpreadForInstrument(fk, instr) {
+    const sp = Store.getSpreadsByFirm(fk || 'apex');
+    return sp[instr] != null ? sp[instr] : 0;
+  }
 
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -293,7 +299,7 @@ const Modal = (() => {
     $('wTP1').value   = parsedTrade.tp1   || '';
     $('wTP2').value   = parsedTrade.tp2   || '';
     $('wTP3').value   = parsedTrade.tp3   || '';
-    spreadCost = Store.getSpreads()[$('wInstr').value] || 0;
+    spreadCost = getSpreadForInstrument(firmKey, $('wInstr').value);
     wRecalc();
   }
 
@@ -349,6 +355,7 @@ const Modal = (() => {
     capital       = Store.getSettings().capital || 50000;
     feePerSide    = 2.14;
     spreadCost    = 0;
+    firmKey       = 'apex';
 
     clearImage();
     $('wOptFields').style.display  = 'none';
@@ -391,7 +398,7 @@ const Modal = (() => {
 
       populateApexSelect(t.apex || '');
       const acc = Store.getMyAccountByName(t.apex || '');
-      if (acc) { capital = acc.capital; feePerSide = acc.feePerSide || 2.14; }
+      if (acc) { capital = acc.capital; feePerSide = acc.feePerSide || 2.14; firmKey = acc.firmKey || 'apex'; }
       fillStep3FromParsed();
       goToStep(3);
     } else {
@@ -404,6 +411,7 @@ const Modal = (() => {
       if (defaultAcc) {
         capital    = defaultAcc.capital;
         feePerSide = defaultAcc.feePerSide || 2.14;
+        firmKey    = defaultAcc.firmKey || 'apex';
       }
       goToStep(1);
     }
@@ -460,7 +468,7 @@ const Modal = (() => {
             apex:       acc.name,
             capital:    acc.capital,
             feePerSide: acc.feePerSide || 2.14,
-            spreadCost: Store.getSpreads()[data.instrument] || 0,
+            spreadCost: Store.getSpreadsByFirm(acc.firmKey || 'apex')[data.instrument] || 0,
             groupId,
           });
         }).filter(Boolean);
@@ -547,7 +555,7 @@ const Modal = (() => {
     $('wBtnSave').addEventListener('click',  save);
 
     $('wInstr').addEventListener('change', () => {
-      spreadCost = Store.getSpreads()[$('wInstr').value] || 0;
+      spreadCost = getSpreadForInstrument(firmKey, $('wInstr').value);
       wRecalc();
     });
 
@@ -560,18 +568,22 @@ const Modal = (() => {
           ? Store.getMyAccountById(grp.accountIds[0]) : null;
         capital    = firstAcc ? firstAcc.capital    : (Store.getSettings().capital || 50000);
         feePerSide = firstAcc ? (firstAcc.feePerSide || 2.14) : 2.14;
+        firmKey    = firstAcc?.firmKey || 'apex';
         if (firstAcc) $('wContracts').max = firstAcc.maxContracts;
       } else {
         const acc = Store.getMyAccountByName(val);
         if (acc) {
           capital              = acc.capital;
           feePerSide           = acc.feePerSide || 2.14;
+          firmKey              = acc.firmKey || 'apex';
           $('wContracts').max  = acc.maxContracts;
         } else {
           capital    = Store.getSettings().capital || 50000;
           feePerSide = 2.14;
+          firmKey    = 'apex';
         }
       }
+      spreadCost = getSpreadForInstrument(firmKey, $('wInstr').value);
       wRecalc();
     });
 
