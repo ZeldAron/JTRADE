@@ -129,13 +129,14 @@ const Store = (() => {
 
   async function _loadFromFirestore() {
     try {
-      const [tSnap, sSnap, maSnap, spfSnap, gSnap, planSnap] = await Promise.all([
+      const [tSnap, sSnap, maSnap, spfSnap, gSnap, planSnap, aiSnap] = await Promise.all([
         userDoc('trades').get(),
         userDoc('settings').get(),
         userDoc('myAccounts').get(),
         userDoc('spreadsByFirm').get(),
         userDoc('groups').get(),
         userDoc('plan').get(),
+        userDoc('aiUsage').get(),
       ]);
       let changed = false;
       if (tSnap.exists)   { trades      = tSnap.data().items  || [];  changed = true; }
@@ -149,7 +150,8 @@ const Store = (() => {
         changed = true;
       }
       if (gSnap.exists)   { groups = gSnap.data().items || []; changed = true; }
-      if (planSnap.exists) { lsSet(lk().plan, planSnap.data()); changed = true; }
+      if (planSnap.exists)  { lsSet(lk().plan,    planSnap.data());  changed = true; }
+      if (aiSnap.exists)    { lsSet(lk().aiUsage, aiSnap.data());   changed = true; }
 
       if (changed) {
         const k = lk();
@@ -298,7 +300,9 @@ const Store = (() => {
   function recordAnalysis() {
     const today = new Date().toISOString().split('T')[0];
     const u = getAIUsage();
-    lsSet(lk().aiUsage, { date: today, count: u.date === today ? u.count + 1 : 1 });
+    const next = { date: today, count: u.date === today ? u.count + 1 : 1 };
+    lsSet(lk().aiUsage, next);
+    fbSet('aiUsage', next);
   }
 
   function canAddAccount() { return isPro() || myAccounts.length < 1; }
