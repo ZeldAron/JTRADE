@@ -1,9 +1,10 @@
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
-// Authentification locale, sessions par utilisateur (données isolées)
+// Session localStorage avec expiry 30 min d'inactivité
 
 const Auth = (() => {
   const USERS_KEY   = 'jtrade_auth_users';
-  const SESSION_KEY = 'jtrade_auth_session';
+  const SESSION_KEY = 'ztrade_session_v2';   // localStorage + lastActivity
+  const IDLE_MS     = 30 * 60 * 1000;        // 30 minutes
 
   async function sha256(str) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
@@ -15,8 +16,25 @@ const Auth = (() => {
   }
   function saveUsers(list) { localStorage.setItem(USERS_KEY, JSON.stringify(list)); }
 
+  function getSession() {
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; }
+  }
+
   function getCurrentUser() {
-    try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; }
+    const s = getSession();
+    if (!s) return null;
+    if (Date.now() - (s.lastActivity || 0) > IDLE_MS) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return { id: s.id, username: s.username };
+  }
+
+  function touchSession() {
+    const s = getSession();
+    if (!s) return;
+    s.lastActivity = Date.now();
+    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
   }
 
   async function login(username, password) {
@@ -25,9 +43,9 @@ const Auth = (() => {
       u.username.toLowerCase() === username.toLowerCase() && u.passwordHash === hash
     );
     if (!user) return null;
-    const session = { id: user.id, username: user.username };
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    return session;
+    const session = { id: user.id, username: user.username, lastActivity: Date.now() };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    return { id: session.id, username: session.username };
   }
 
   async function register(username, password) {
@@ -40,10 +58,9 @@ const Auth = (() => {
     const user = { id: 'u' + Date.now(), username: name, passwordHash: hash };
     users.push(user);
     saveUsers(users);
-    const session = { id: user.id, username: user.username };
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    const session = { id: user.id, username: user.username, lastActivity: Date.now() };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 
-    // Notif inscription — fire & forget
     fetch('https://api.web3forms.com/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -54,12 +71,12 @@ const Auth = (() => {
         email:      'noreply@zeldtrade.app',
         message:    `Nouvel inscrit !\n\nPseudo  : ${name}\nDate    : ${new Date().toLocaleString('fr-FR')}\nNavig.  : ${navigator.userAgent.split(') ')[0].split('(')[1] || '?'}`,
       }),
-    }).catch(() => {}); // silencieux si pas de réseau
+    }).catch(() => {});
 
-    return { user: session };
+    return { user: { id: session.id, username: session.username } };
   }
 
-  function logout() { sessionStorage.removeItem(SESSION_KEY); }
+  function logout() { localStorage.removeItem(SESSION_KEY); }
 
-  return { login, register, logout, getCurrentUser };
+  return { login, register, logout, getCurrentUser, touchSession };
 })();
