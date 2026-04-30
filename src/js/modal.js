@@ -241,14 +241,14 @@ const Modal = (() => {
         statusEl.innerHTML = `<span style="color:var(--green)">${i18n.t('modal.levels.detected')}</span>${missing} <span style="color:var(--muted);font-size:10px">via Groq</span>`;
       }
 
-      const f = v => (v && v !== 0) ? `<b>${v}</b>` : '<span style="color:var(--red)">✗</span>';
+      const f = v => { const n = Number(v); return (v !== null && !isNaN(n) && n !== 0) ? `<b>${n}</b>` : '<span style="color:var(--red)">✗</span>'; };
       $('wAnalysisResult').innerHTML =
         `<div class="wpill"><span>Entry</span>${f(parsedTrade.entry)}</div>` +
         `<div class="wpill wpill-sl"><span>SL</span>${f(parsedTrade.sl)}</div>` +
         `<div class="wpill wpill-tp"><span>TP1</span>${f(parsedTrade.tp1)}</div>` +
-        (parsedTrade.tp2 ? `<div class="wpill wpill-tp"><span>TP2</span><b>${parsedTrade.tp2}</b></div>` : '') +
-        (parsedTrade.tp3 ? `<div class="wpill wpill-tp"><span>TP3</span><b>${parsedTrade.tp3}</b></div>` : '') +
-        (parsedTrade.contracts > 1 ? `<div class="wpill"><span>Lots</span><b>${parsedTrade.contracts}</b></div>` : '');
+        (parsedTrade.tp2 ? `<div class="wpill wpill-tp"><span>TP2</span><b>${Number(parsedTrade.tp2)}</b></div>` : '') +
+        (parsedTrade.tp3 ? `<div class="wpill wpill-tp"><span>TP3</span><b>${Number(parsedTrade.tp3)}</b></div>` : '') +
+        (parsedTrade.contracts > 1 ? `<div class="wpill"><span>Lots</span><b>${parseInt(parsedTrade.contracts, 10)}</b></div>` : '');
       $('wAnalysisResult').style.display = 'flex';
       $('wBtnNext2').disabled = false;
       retryBtn.style.display  = 'inline-flex';

@@ -54,7 +54,7 @@
     const instrRows = Object.entries(instrs).map(([name, v]) => {
       const wr = v.total ? v.wins / v.total * 100 : 0;
       return `<tr>
-        <td>${name}</td><td>${v.total}</td>
+        <td>${UI.escHtml(name)}</td><td>${v.total}</td>
         <td style="color:${wr >= 50 ? 'var(--green)' : 'var(--red)'}">${wr.toFixed(0)}%</td>
         <td style="font-family:'Geist Mono';color:${v.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${Calc.formatPnL(v.pnl)}</td>
       </tr>`;

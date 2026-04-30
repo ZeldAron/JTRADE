@@ -172,7 +172,7 @@
         : `${(c.netPnl || 0) >= 0 ? '+' : ''}$${Math.abs(c.netPnl || 0).toFixed(0)}`;
       return `<div class="cdt-row">
         <span class="ob ob-${tr.outcome} ob-sm">${i18n.t('ob.' + tr.outcome)}</span>
-        <span class="cdt-inst">${UI.escHtml(tr.instrument)} ${tr.direction}</span>
+        <span class="cdt-inst">${UI.escHtml(tr.instrument)} ${tr.direction === 'long' ? 'long' : 'short'}</span>
         <span class="cdt-setup">${UI.escHtml(tr.setup || '—')}</span>
         <span class="cdt-pnl-val" style="color:${(c.netPnl || 0) >= 0 ? 'var(--green)' : 'var(--red)'}">${pnlTxt}</span>
         <span class="cdt-rr">R:R ${c.rr.toFixed(2)}</span>
