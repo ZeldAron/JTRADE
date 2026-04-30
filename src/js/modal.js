@@ -149,8 +149,8 @@ const Modal = (() => {
         const err = await res.json().catch(() => ({}));
         const msg = err.error?.message || '';
         if (res.status === 401) throw new Error(i18n.t('modal.groq.invalid'));
-        if (msg.includes('not found') || msg.includes('decommissioned') || msg.includes('does not exist') || msg.includes('do not have access')) continue;
-        throw new Error('Groq : ' + msg);
+        if (res.status === 429) throw new Error('Groq : rate limit — réessaie dans quelques secondes');
+        continue; // modèle indisponible ou absent → essayer le suivant
       }
 
       const data = await res.json();
