@@ -36,10 +36,10 @@ const Auth = (() => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          access_key: '6586bd2e-5bce-45ff-9c4f-92730958a80c',
+          access_key: '465a3d27-6989-4226-8bb1-c5e70e9704c5',
           subject:    `[ZeldTrade] Nouvel utilisateur : ${name}`,
           from_name:  'ZeldTrade Bot',
-          email:      'noreply@zeldtrade.app',
+          email:      'zeldtradepro@gmail.com',
           message:    `Nouvel inscrit !\n\nPseudo  : ${name}\nEmail   : ${email}\nDate    : ${new Date().toLocaleString('fr-FR')}`,
         }),
       }).catch(() => {});

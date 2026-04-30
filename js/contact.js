@@ -1,7 +1,7 @@
 // ─── WIDGET CONTACT ───────────────────────────────────────────────────────────
 
 const Contact = (() => {
-  const WEB3FORMS_KEY = '6586bd2e-5bce-45ff-9c4f-92730958a80c';
+  const WEB3FORMS_KEY = '465a3d27-6989-4226-8bb1-c5e70e9704c5';
 
   function init() {
     const bubble = document.getElementById('contactBubble');
