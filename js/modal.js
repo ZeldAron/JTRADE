@@ -111,20 +111,22 @@ const Modal = (() => {
       `  tp1   = "Prix" inside "NIVEAU DE PROFIT" or "Profit Target" section\n\n` +
 
       `== IF you see an ANNOTATED CHART (drawn lines/zones, no order ticket) ==\n` +
-      `Look at the COLORED ZONES and COLORED BOXES on the right price axis:\n\n` +
-      `  BLUE zone or rectangle on the chart = ENTRY zone\n` +
-      `    → entry = the price label on the right axis at the ${isLong ? 'bottom' : 'top'} edge of the blue zone\n` +
-      `    → also look for a blue colored box on the right axis near this zone\n\n` +
-      `  RED zone, red line, or red box = STOP LOSS zone\n` +
-      `    → sl = the price of the red colored box on the right axis\n` +
-      `    → for ${isLong ? 'LONG' : 'SHORT'}: the red box is ${isLong ? 'BELOW' : 'ABOVE'} the blue entry zone\n\n` +
-      `  TP1 = the ${isLong ? 'highest' : 'lowest'} colored box on the right axis, far ${isLong ? 'above' : 'below'} entry\n` +
-      `    → often a blue or green box at the ${isLong ? 'top' : 'bottom'} of the chart\n\n` +
-      `CRITICAL RULES:\n` +
-      `  - NEVER use the live ticker price (/MGC, /ES, /NQ small label box with current price)\n` +
-      `  - Read ONLY from colored zone edges and colored price boxes on the right axis\n` +
-      `  - Copy each digit exactly — do not round, do not swap digits\n` +
-      `  - For ${isLong ? 'LONG' : 'SHORT'}: sl < entry < tp1 must be true\n\n` +
+      `Follow these steps IN ORDER to find the 3 levels:\n\n` +
+      (isLong
+        ? `STEP A — Find SL: scan the RIGHT AXIS from BOTTOM to TOP. The SL is the LOWEST colored box (red/orange) visible on the right axis. Write down that price.\n\n` +
+          `STEP B — Find ENTRY: now look JUST ABOVE the SL box. The entry is the NEXT colored box immediately above SL (within 1-10 points of the SL). Write down that price.\n` +
+          `  - Entry and SL are always VERY CLOSE together (only a few points apart)\n` +
+          `  - Do NOT pick a colored box from the middle of the chart as entry\n` +
+          `  - The entry box may be blue, white, or any color — it is simply the box immediately above SL\n\n` +
+          `STEP C — Find TP1: scan the right axis for the HIGHEST colored box — it will be FAR above entry (many points higher). This is the profit target.\n\n`
+        : `STEP A — Find SL: scan the RIGHT AXIS from TOP to BOTTOM. The SL is the HIGHEST colored box (red/orange) visible on the right axis.\n\n` +
+          `STEP B — Find ENTRY: look JUST BELOW the SL box. The entry is the NEXT colored box immediately below SL (within 1-10 points).\n\n` +
+          `STEP C — Find TP1: the LOWEST colored box on the right axis, far below entry.\n\n`
+      ) +
+      `ABSOLUTE RULES:\n` +
+      `  - NEVER read the live ticker (/MGC, /ES, /NQ label) as a price level\n` +
+      `  - Copy each digit EXACTLY as written — do not round or transpose\n` +
+      `  - Entry and SL must be very close; TP must be far away\n\n` +
 
       `Respond with ONLY this JSON on one line:\n` +
       `{"entry":0.00,"sl":0.00,"tp1":0.00}\n` +
