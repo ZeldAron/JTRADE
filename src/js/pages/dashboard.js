@@ -155,9 +155,9 @@
           borderColor:          lineColor,
           borderWidth:          2.5,
           pointRadius:          values.map((_, i) => (i === 0 || i === values.length - 1) ? 0 : 4),
-          pointBackgroundColor: sorted.map(tr =>
+          pointBackgroundColor: ['#636366', ...sorted.map(tr =>
             tr.outcome === 'win' ? '#30d158' : tr.outcome === 'loss' ? '#ff5767' : '#636366'
-          ),
+          )],
           tension:              0.35,
           fill:                 true,
           backgroundColor: ctx2 => {
@@ -366,6 +366,11 @@
       UI.renderDashboard();
     });
 
-    try { renderPnlChart('pnlChart', trades); } catch(e) { console.warn('[Chart]', e); }
+    if (typeof Chart === 'undefined') {
+      const ca = $('pnlChart');
+      if (ca) ca.parentElement.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:20px 0">⚠ Chart.js non chargé — recharge la page (Cmd+Shift+R)</p>';
+    } else {
+      try { renderPnlChart('pnlChart', trades); } catch(e) { console.error('[Chart error]', e); }
+    }
   };
 })();
