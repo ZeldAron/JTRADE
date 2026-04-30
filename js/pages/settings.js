@@ -6,14 +6,14 @@
   const INSTRUMENTS = [
     'MES1','ES1','MNQ1','NQ1',
     'MYM1','YM1','M2K1','RTY1',
-    'MGC1','GC1','MCL1','CL1','ZN1',
+    'MGC1','GC1','QO1','MCL1','CL1','ZN1',
   ];
 
   // Groupes d'instruments par catégorie (pour la sidebar du modal & le label)
   const INSTR_CATEGORY = {
     MES1:'Indices Micro', ES1:'Indices Full', MNQ1:'Indices Micro', NQ1:'Indices Full',
     MYM1:'Indices Micro', YM1:'Indices Full', M2K1:'Indices Micro', RTY1:'Indices Full',
-    MGC1:'Métaux', GC1:'Métaux', MCL1:'Énergie', CL1:'Énergie', ZN1:'Taux',
+    MGC1:'Métaux', GC1:'Métaux', QO1:'Métaux', MCL1:'Énergie', CL1:'Énergie', ZN1:'Taux',
     'US500':'Indices CFD','US100':'Indices CFD','US30':'Indices CFD','GER40':'Indices CFD','UK100':'Indices CFD',
     'XAUUSD':'Métaux CFD','EURUSD':'Forex','GBPUSD':'Forex','USDJPY':'Forex','USOIL':'Énergie CFD',
   };

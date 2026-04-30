@@ -2,7 +2,13 @@
 // Calculs R:R, risk, reward, P&L brut/net pour un trade
 
 const Calc = (() => {
-  const POINT_VALUES = { MES1: 5, ES1: 50, MNQ1: 2, NQ1: 20 };
+  const POINT_VALUES = {
+    MES1: 5, ES1: 50, MNQ1: 2, NQ1: 20,
+    MYM1: 0.5, YM1: 5, M2K1: 5, RTY1: 50,
+    MGC1: 10, GC1: 100, QO1: 50,
+    MCL1: 100, CL1: 1000,
+    ZN1: 1000,
+  };
   const TICK_SIZE    = 0.25;
 
   // Règles Apex par taille de compte (EOD)
