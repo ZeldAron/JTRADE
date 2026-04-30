@@ -6,7 +6,7 @@
   <title>ZeldTrade</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=0.8.5">
+  <link rel="stylesheet" href="css/style.css?v=0.8.6">
 </head>
 <body>
 
@@ -431,9 +431,20 @@
             </div>
           </div>
 
+          <div class="settings-section" style="border-color:rgba(255,69,58,0.2)">
+            <h3 data-i18n="set.danger.zone" style="color:var(--red)">Zone de danger</h3>
+            <div class="settings-row">
+              <div>
+                <label data-i18n="set.delete.account">Supprimer mon compte</label>
+                <p style="font-size:11px;color:var(--muted);margin-top:3px" data-i18n="set.delete.account.desc">Supprime définitivement votre compte et toutes vos données.</p>
+              </div>
+              <button class="btn-ghost btn-danger" id="btnDeleteAccount" data-i18n="set.delete.account.btn">Supprimer mon compte</button>
+            </div>
+          </div>
+
           <div class="settings-section">
             <h3 data-i18n="set.about">À propos</h3>
-            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.8.5</span></div>
+            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.8.6</span></div>
             <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
           </div>
         </div>
@@ -623,24 +634,24 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="js/firebase.js?v=0.8.5"></script>
+  <script src="js/firebase.js?v=0.8.6"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script src="js/i18n.js?v=0.8.5"></script>
-  <script src="js/auth.js?v=0.8.5"></script>
-  <script src="js/store.js?v=0.8.5"></script>
-  <script src="js/calc.js?v=0.8.5"></script>
-  <script src="js/modal.js?v=0.8.5"></script>
-  <script src="js/ui.js?v=0.8.5"></script>
-  <script src="js/pages/dashboard.js?v=0.8.5"></script>
-  <script src="js/pages/analytics.js?v=0.8.5"></script>
-  <script src="js/pages/settings.js?v=0.8.5"></script>
-  <script src="js/pages/goals.js?v=0.8.5"></script>
-  <script src="js/pages/calendar.js?v=0.8.5"></script>
-  <script src="js/pages/micro.js?v=0.8.5"></script>
-  <script src="js/pages/offers.js?v=0.8.5"></script>
-  <script src="js/contact.js?v=0.8.5"></script>
-  <script src="js/app.js?v=0.8.5"></script>
+  <script src="js/i18n.js?v=0.8.6"></script>
+  <script src="js/auth.js?v=0.8.6"></script>
+  <script src="js/store.js?v=0.8.6"></script>
+  <script src="js/calc.js?v=0.8.6"></script>
+  <script src="js/modal.js?v=0.8.6"></script>
+  <script src="js/ui.js?v=0.8.6"></script>
+  <script src="js/pages/dashboard.js?v=0.8.6"></script>
+  <script src="js/pages/analytics.js?v=0.8.6"></script>
+  <script src="js/pages/settings.js?v=0.8.6"></script>
+  <script src="js/pages/goals.js?v=0.8.6"></script>
+  <script src="js/pages/calendar.js?v=0.8.6"></script>
+  <script src="js/pages/micro.js?v=0.8.6"></script>
+  <script src="js/pages/offers.js?v=0.8.6"></script>
+  <script src="js/contact.js?v=0.8.6"></script>
+  <script src="js/app.js?v=0.8.6"></script>
 
   <script>
   // ── Bootstrap auth (Firebase) ────────────────────────────────────────────────
@@ -835,6 +846,48 @@
           <div class="contact-success-title" data-i18n="contact.ok.title">Message envoyé !</div>
           <div class="contact-success-sub" data-i18n="contact.ok.sub">On vous répond dans les plus brefs délais.</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SUPPRESSION COMPTE ─────────────────────────────────────────────── -->
+  <div id="deleteAccountOverlay" style="
+    display:none;position:fixed;inset:0;z-index:9100;
+    background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+  ">
+    <div style="
+      background:var(--bg2);border:1px solid rgba(255,69,58,0.25);
+      border-radius:14px;width:420px;max-width:calc(100vw - 40px);
+      padding:28px;box-shadow:0 40px 80px rgba(0,0,0,0.6);
+    ">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <h2 style="font-size:16px;font-weight:700;color:var(--red)" data-i18n="del.modal.title">Supprimer votre compte</h2>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6" data-i18n="del.modal.warn">
+        Cette action est irréversible. Tous vos trades, comptes et données seront définitivement supprimés.
+      </p>
+      <div class="form-field" style="margin-bottom:12px">
+        <label class="form-label" data-i18n="del.modal.email">Votre adresse email</label>
+        <input class="form-input" type="email" id="delEmail" autocomplete="email" placeholder="votre@email.com">
+      </div>
+      <div class="form-field" style="margin-bottom:8px">
+        <label class="form-label" data-i18n="del.modal.pass">Votre mot de passe</label>
+        <input class="form-input" type="password" id="delPassword" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <div id="delError" style="font-size:12px;color:var(--red);min-height:18px;margin-bottom:14px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn-ghost" id="delCancelBtn" data-i18n="del.modal.cancel">Annuler</button>
+        <button id="delConfirmBtn" style="
+          padding:7px 16px;border-radius:var(--r-sm);border:none;
+          background:var(--red);color:#fff;font-family:inherit;
+          font-size:13px;font-weight:700;cursor:pointer;
+          transition:opacity 0.15s;
+        " data-i18n="del.modal.confirm">Supprimer définitivement</button>
       </div>
     </div>
   </div>
