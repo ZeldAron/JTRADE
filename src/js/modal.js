@@ -433,7 +433,7 @@ const Modal = (() => {
 
   // ── Save ────────────────────────────────────────────────────────────────────
   const VALID_OUTCOMES  = new Set(['win', 'loss', 'be', 'open']);
-  const VALID_INSTRS    = new Set(['MES1','ES1','MNQ1','NQ1','MYM1','YM1','M2K1','RTY1','MGC1','GC1','MCL1','CL1','ZN1',
+  const VALID_INSTRS    = new Set(['MES1','ES1','MNQ1','NQ1','MYM1','YM1','M2K1','RTY1','MGC1','GC1','QO1','MCL1','CL1','ZN1',
                                     'US500','US100','US30','GER40','UK100','XAUUSD','EURUSD','GBPUSD','USDJPY','USOIL']);
 
   function save() {
