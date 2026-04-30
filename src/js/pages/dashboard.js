@@ -361,17 +361,25 @@
       UI.renderDashboard();
     });
 
+    const _dbgEl = $('pnlChart');
+    if (_dbgEl) {
+      const _vals = trades.map(tr => (Calc.trade(tr).netPnl || 0).toFixed(2));
+      _dbgEl.parentElement.insertAdjacentHTML('beforebegin',
+        `<p id="chartDbg" style="font-size:10px;color:var(--muted);margin-bottom:4px">
+          Chart=${typeof Chart} · trades=${trades.length} · netPnls=[${_vals.join(', ')}]
+        </p>`);
+    }
+
     if (typeof Chart === 'undefined') {
       const ca = $('pnlChart');
       if (ca) ca.parentElement.innerHTML = '<p style="color:var(--red);font-size:13px;padding:20px 0">⚠ Chart.js non chargé. Recharge avec Cmd+Shift+R.</p>';
     } else {
-      // defer one frame so the browser finishes layout before Chart.js reads dimensions
       requestAnimationFrame(() => {
         try {
           renderPnlChart('pnlChart', trades);
         } catch(e) {
           const ca = $('pnlChart');
-          if (ca) ca.parentElement.innerHTML = '<p style="color:var(--red);font-size:12px;padding:20px 0">⚠ Erreur : ' + String(e).slice(0, 200) + '</p>';
+          if (ca) ca.parentElement.innerHTML = '<p style="color:var(--red);font-size:12px;padding:20px 0">⚠ Erreur : ' + String(e).slice(0, 300) + '</p>';
           console.error('[Chart error]', e);
         }
       });
