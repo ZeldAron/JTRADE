@@ -111,14 +111,19 @@ const Modal = (() => {
       `  tp1   = "Prix" inside "NIVEAU DE PROFIT" or "Profit Target" section\n\n` +
 
       `== IF you see an ANNOTATED CHART (drawn lines/zones, no order ticket) ==\n` +
-      `Focus on the RIGHT SIDE price axis. There are small COLORED BOXES (red, green, blue) next to price numbers.\n` +
-      `  • TP1  = the colored box ${isLong ? 'HIGHEST up' : 'LOWEST down'} on the right axis — this is the profit target\n` +
-      `  • Entry = a colored box or small rectangle ${isLong ? 'near the bottom' : 'near the top'} of the trade zone\n` +
-      `  • SL   = the colored box ${isLong ? 'just BELOW entry' : 'just ABOVE entry'}, the lowest ${isLong ? 'red' : 'green'} level\n\n` +
+      `Look at the COLORED ZONES and COLORED BOXES on the right price axis:\n\n` +
+      `  BLUE zone or rectangle on the chart = ENTRY zone\n` +
+      `    → entry = the price label on the right axis at the ${isLong ? 'bottom' : 'top'} edge of the blue zone\n` +
+      `    → also look for a blue colored box on the right axis near this zone\n\n` +
+      `  RED zone, red line, or red box = STOP LOSS zone\n` +
+      `    → sl = the price of the red colored box on the right axis\n` +
+      `    → for ${isLong ? 'LONG' : 'SHORT'}: the red box is ${isLong ? 'BELOW' : 'ABOVE'} the blue entry zone\n\n` +
+      `  TP1 = the ${isLong ? 'highest' : 'lowest'} colored box on the right axis, far ${isLong ? 'above' : 'below'} entry\n` +
+      `    → often a blue or green box at the ${isLong ? 'top' : 'bottom'} of the chart\n\n` +
       `CRITICAL RULES:\n` +
-      `  - Read price numbers from the RIGHT AXIS colored boxes, NOT from the live ticker (/MGC, /ES, /NQ label)\n` +
-      `  - Read numbers from the BOTTOM of the chart first for ${isLong ? 'LONG' : 'SHORT'} (entry zone is near support)\n` +
-      `  - Copy each digit exactly — do not round or transpose digits\n` +
+      `  - NEVER use the live ticker price (/MGC, /ES, /NQ small label box with current price)\n` +
+      `  - Read ONLY from colored zone edges and colored price boxes on the right axis\n` +
+      `  - Copy each digit exactly — do not round, do not swap digits\n` +
       `  - For ${isLong ? 'LONG' : 'SHORT'}: sl < entry < tp1 must be true\n\n` +
 
       `Respond with ONLY this JSON on one line:\n` +
