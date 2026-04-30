@@ -99,22 +99,32 @@ const Modal = (() => {
   }
 
   // ── Groq Vision API ──────────────────────────────────────────────────────────
-  async function analyzeWithGroq(imageB64, apiKey) {
+  async function analyzeWithGroq(imageB64, apiKey, direction) {
+    const isLong = direction !== 'short';
     const prompt =
-      `You are analyzing a trading chart screenshot. Extract entry, stop loss (SL), and take profit (TP1) price levels.\n\n` +
-      `CASE 1 — TradingView order panel (look for labeled rows):\n` +
-      `  • "Prix d'entrée" or "Entry Price" → entry\n` +
-      `  • Price inside "NIVEAU DE PROFIT" or "Profit Target" → tp1\n` +
-      `  • Price inside "NIVEAU DU STOP" or "Stop Loss" → sl\n\n` +
-      `CASE 2 — Annotated chart (lines, zones, FVG, Fibonacci levels):\n` +
-      `  • Entry: look for a rectangle zone, a line labeled "entry"/"E", or the most prominent horizontal level\n` +
-      `  • SL (Stop Loss): a level below entry for longs (above for shorts), often labeled "SL"/"Stop"/"BE"\n` +
-      `  • TP1 (Take Profit): a level above entry for longs (below for shorts), often labeled "TP"/"Target"/"FVG"\n` +
-      `  • Also check if numbers are written directly on the chart as annotations\n\n` +
-      `Read the numeric price values EXACTLY as shown on the price axis or annotations. Do not estimate.\n` +
-      `Respond ONLY with this JSON on one line, no explanation:\n` +
-      `{"entry":4629.9,"sl":4610.0,"tp1":4680.0}\n` +
-      `Use null for any value not clearly identifiable.`;
+      `You are a trading assistant. Analyze this futures/forex chart screenshot and extract 3 price levels: entry, stop loss (SL), take profit (TP1).\n\n` +
+      `Trade direction: ${isLong ? 'LONG (buy)' : 'SHORT (sell)'}.\n\n` +
+      `=== STEP 1: IDENTIFY CHART TYPE ===\n` +
+      `A) TradingView ORDER PANEL — look for a table/panel with labeled rows:\n` +
+      `   - Row "Prix d'entrée" or "Entry Price" → entry value\n` +
+      `   - Row "Prix" under "NIVEAU DE PROFIT" → tp1 value\n` +
+      `   - Row "Prix" under "NIVEAU DU STOP" → sl value\n\n` +
+      `B) ANNOTATED CHART — no order panel, trade levels are drawn on the chart:\n` +
+      `   - DO NOT use the live price ticker (the small box showing /ES, /MGC, /NQ etc. with the current price)\n` +
+      `   - DO NOT use price axis labels that are just grid lines\n` +
+      `   - LOOK FOR drawn horizontal lines, rectangles, or text labels with prices\n` +
+      `   - Entry: line/zone labeled "E", "Entry", "entrée", or the center of a highlighted entry rectangle\n` +
+      `   - SL: ${isLong ? 'lowest' : 'highest'} labeled level — often labeled "SL", "Stop", below/above entry\n` +
+      `   - TP1: ${isLong ? 'highest' : 'lowest'} labeled level — often labeled "TP", "Target", "FVG", above/below entry\n` +
+      `   - Fibonacci levels (0.382, 0.5, 0.618 etc.) with their price in parentheses can be SL or entry\n` +
+      `   - FVG (Fair Value Gap) levels labeled on the chart can be TP targets\n\n` +
+      `=== STEP 2: READ VALUES ===\n` +
+      `Copy each number EXACTLY as written in the chart annotation (e.g. 4618.4, 4632.0, 4693.6).\n` +
+      `For ${isLong ? 'LONG' : 'SHORT'}: entry must be between sl and tp1.\n\n` +
+      `=== STEP 3: OUTPUT ===\n` +
+      `Respond ONLY with one line of JSON, nothing else:\n` +
+      `{"entry":0.0,"sl":0.0,"tp1":0.0}\n` +
+      `Replace 0.0 with the actual values. Use null if a value is not visible.`;
 
     const GROQ_MODELS = [
       'meta-llama/llama-4-scout-17b-16e-instruct',
@@ -214,7 +224,7 @@ const Modal = (() => {
       }
 
       Store.recordAnalysis();
-      const result = await analyzeWithGroq(capturedImage, groqKey);
+      const result = await analyzeWithGroq(capturedImage, groqKey, direction);
       let { entry, sl, tp1 } = result;
       entry = entry || null; sl = sl || null; tp1 = tp1 || null;
 
