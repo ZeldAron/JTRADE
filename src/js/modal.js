@@ -265,14 +265,26 @@ const Modal = (() => {
         statusEl.innerHTML = `<span style="color:var(--green)">${i18n.t('modal.levels.detected')}</span>${missing} <span style="color:var(--muted);font-size:10px">via Groq</span>`;
       }
 
-      const f = v => { const n = Number(v); return (v !== null && !isNaN(n) && n !== 0) ? `<b>${n}</b>` : '<span style="color:var(--red)">✗</span>'; };
-      $('wAnalysisResult').innerHTML =
-        `<div class="wpill"><span>Entry</span>${f(parsedTrade.entry)}</div>` +
-        `<div class="wpill wpill-sl"><span>SL</span>${f(parsedTrade.sl)}</div>` +
-        `<div class="wpill wpill-tp"><span>TP1</span>${f(parsedTrade.tp1)}</div>` +
-        (parsedTrade.tp2 ? `<div class="wpill wpill-tp"><span>TP2</span><b>${Number(parsedTrade.tp2)}</b></div>` : '') +
-        (parsedTrade.tp3 ? `<div class="wpill wpill-tp"><span>TP3</span><b>${Number(parsedTrade.tp3)}</b></div>` : '') +
-        (parsedTrade.contracts > 1 ? `<div class="wpill"><span>Lots</span><b>${parseInt(parsedTrade.contracts, 10)}</b></div>` : '');
+      function renderEditablePills() {
+        const fv = v => (v !== null && !isNaN(Number(v)) && Number(v) !== 0) ? Number(v) : '';
+        $('wAnalysisResult').innerHTML =
+          `<div class="wpill wpill-edit"><span>Entry</span><input type="number" step="0.1" data-pill="entry" value="${fv(parsedTrade.entry)}" placeholder="—"></div>` +
+          `<div class="wpill wpill-sl wpill-edit"><span>SL</span><input type="number" step="0.1" data-pill="sl" value="${fv(parsedTrade.sl)}" placeholder="—"></div>` +
+          `<div class="wpill wpill-tp wpill-edit"><span>TP1</span><input type="number" step="0.1" data-pill="tp1" value="${fv(parsedTrade.tp1)}" placeholder="—"></div>` +
+          (parsedTrade.tp2 ? `<div class="wpill wpill-tp wpill-edit"><span>TP2</span><input type="number" step="0.1" data-pill="tp2" value="${Number(parsedTrade.tp2)}" placeholder="—"></div>` : '') +
+          (parsedTrade.tp3 ? `<div class="wpill wpill-tp wpill-edit"><span>TP3</span><input type="number" step="0.1" data-pill="tp3" value="${Number(parsedTrade.tp3)}" placeholder="—"></div>` : '');
+        $('wAnalysisResult').querySelectorAll('[data-pill]').forEach(inp => {
+          inp.addEventListener('change', () => {
+            const key = inp.dataset.pill;
+            parsedTrade[key] = parseFloat(inp.value) || null;
+          });
+          inp.addEventListener('input', () => {
+            const key = inp.dataset.pill;
+            parsedTrade[key] = parseFloat(inp.value) || null;
+          });
+        });
+      }
+      renderEditablePills();
       $('wAnalysisResult').style.display = 'flex';
       $('wBtnNext2').disabled = false;
       retryBtn.style.display  = 'inline-flex';
