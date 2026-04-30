@@ -52,6 +52,10 @@ function initApp() {
 
   // ── NEW TRADE BUTTON ───────────────────────────────────────────────────────
   $('btnNewTrade').addEventListener('click', () => {
+    if (!Store.getMyAccounts().length) {
+      UI.toast(i18n.t('err.no.account'), true);
+      return;
+    }
     Modal.open(null, saved => {
       UI.selectTrade(saved.id);
       UI.updateStats();
