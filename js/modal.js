@@ -429,17 +429,27 @@ const Modal = (() => {
   }
 
   // ── Save ────────────────────────────────────────────────────────────────────
+  const VALID_OUTCOMES  = new Set(['win', 'loss', 'be', 'open']);
+  const VALID_INSTRS    = new Set(['MES1','ES1','MNQ1','NQ1','MYM1','YM1','M2K1','RTY1','MGC1','GC1','MCL1','CL1','ZN1',
+                                    'US500','US100','US30','GER40','UK100','XAUUSD','EURUSD','GBPUSD','USDJPY','USOIL']);
+
   function save() {
     const entry = parseFloat($('wEntry').value);
     const sl    = parseFloat($('wSL').value);
     const tp1   = parseFloat($('wTP1').value);
     if (!entry || !sl || !tp1) { UI.toast(i18n.t('modal.required'), true); return; }
 
+    const rawInstr  = $('wInstr').value;
+    const rawOutcome = $('wOutcome').value;
+    const safeDir    = direction === 'long' ? 'long' : 'short';
+    const safeOutcome = VALID_OUTCOMES.has(rawOutcome) ? rawOutcome : 'open';
+    const safeInstr   = VALID_INSTRS.has(rawInstr) ? rawInstr : 'MES1';
+
     const data = {
-      instrument: $('wInstr').value,
-      direction,
+      instrument: safeInstr,
+      direction:  safeDir,
       date:       $('wTradeDate').value || undefined,
-      contracts:  parseInt($('wContracts').value) || 1,
+      contracts:  Math.max(1, Math.min(999, parseInt($('wContracts').value) || 1)),
       capital,
       apex:       $('wApex').value,
       feePerSide,
@@ -447,9 +457,9 @@ const Modal = (() => {
       entry, sl, tp1,
       tp2:        parseFloat($('wTP2').value)  || null,
       tp3:        parseFloat($('wTP3').value)  || null,
-      setup:      $('wSetup').value.trim(),
-      notes:      $('wNotes').value.trim(),
-      outcome:    $('wOutcome').value,
+      setup:      $('wSetup').value.trim().slice(0, 500),
+      notes:      $('wNotes').value.trim().slice(0, 2000),
+      outcome:    safeOutcome,
       exitPrice:  parseFloat($('wExit').value) || null,
     };
 

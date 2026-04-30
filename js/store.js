@@ -184,8 +184,23 @@ const Store = (() => {
     fbSet('trades', { items: trades });
   }
 
+  const DIRS     = new Set(['long', 'short']);
+  const OUTCOMES = new Set(['win', 'loss', 'be', 'open']);
+  function _sanitizeTrade(raw) {
+    return {
+      ...raw,
+      instrument: String(raw.instrument || '').replace(/[^A-Za-z0-9/. _-]/g, '').slice(0, 20) || 'MES1',
+      direction:  DIRS.has(raw.direction)    ? raw.direction : 'long',
+      outcome:    OUTCOMES.has(raw.outcome)  ? raw.outcome   : 'open',
+      contracts:  Math.max(1, Math.min(999, parseInt(raw.contracts) || 1)),
+      setup:      String(raw.setup  || '').slice(0, 500),
+      notes:      String(raw.notes  || '').slice(0, 2000),
+      apex:       String(raw.apex   || '').replace(/[^A-Za-z0-9 _-]/g, '').slice(0, 100),
+    };
+  }
+
   function addTrade(trade) {
-    const t = { ...trade, id: Date.now().toString() };
+    const t = { ..._sanitizeTrade(trade), id: Date.now().toString() };
     if (!t.date) t.date = new Date().toISOString();
     trades.unshift(t);
     _saveTrades();
@@ -195,7 +210,7 @@ const Store = (() => {
   function updateTrade(id, data) {
     const idx = trades.findIndex(t => t.id === id);
     if (idx < 0) return null;
-    trades[idx] = { ...trades[idx], ...data };
+    trades[idx] = { ...trades[idx], ..._sanitizeTrade(data) };
     _saveTrades();
     return trades[idx];
   }
@@ -207,8 +222,6 @@ const Store = (() => {
 
   function importTrades(arr) {
     if (!Array.isArray(arr)) return 0;
-    const DIRS     = new Set(['long', 'short']);
-    const OUTCOMES = new Set(['win', 'loss', 'be', 'open']);
     const sanitized = arr.filter(t => t && typeof t === 'object' &&
       typeof t.instrument === 'string' && t.instrument.trim() &&
       DIRS.has(t.direction) && OUTCOMES.has(t.outcome)
@@ -264,11 +277,20 @@ const Store = (() => {
     fbSet('myAccounts', { items: myAccounts });
   }
 
-  function addMyAccount(data)      { const a = { ...data, id: 'acc-' + Date.now() }; myAccounts.push(a);               _saveMyAccounts(); return a; }
+  function _sanitizeAccountName(name) {
+    return String(name || '').replace(/[<>"'`]/g, '').trim().slice(0, 50);
+  }
+  function addMyAccount(data) {
+    const a = { ...data, name: _sanitizeAccountName(data.name), id: 'acc-' + Date.now() };
+    myAccounts.push(a);
+    _saveMyAccounts();
+    return a;
+  }
   function updateMyAccount(id, data) {
     const i = myAccounts.findIndex(a => a.id === id);
     if (i < 0) return null;
-    myAccounts[i] = { ...myAccounts[i], ...data };
+    const clean = data.name !== undefined ? { ...data, name: _sanitizeAccountName(data.name) } : data;
+    myAccounts[i] = { ...myAccounts[i], ...clean };
     _saveMyAccounts();
     return myAccounts[i];
   }
@@ -295,11 +317,20 @@ const Store = (() => {
     fbSet('groups', { items: groups });
   }
 
-  function addGroup(data)      { const g = { ...data, id: 'grp-' + Date.now() }; groups.push(g); _saveGroups(); return g; }
+  function _sanitizeGroupName(name) {
+    return String(name || '').replace(/[<>"'`]/g, '').trim().slice(0, 50);
+  }
+  function addGroup(data) {
+    const g = { ...data, name: _sanitizeGroupName(data.name), id: 'grp-' + Date.now() };
+    groups.push(g);
+    _saveGroups();
+    return g;
+  }
   function updateGroup(id, data) {
     const i = groups.findIndex(g => g.id === id);
     if (i < 0) return null;
-    groups[i] = { ...groups[i], ...data };
+    const clean = data.name !== undefined ? { ...data, name: _sanitizeGroupName(data.name) } : data;
+    groups[i] = { ...groups[i], ...clean };
     _saveGroups();
     return groups[i];
   }
