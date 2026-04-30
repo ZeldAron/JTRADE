@@ -66,8 +66,34 @@ const Auth = (() => {
     return _fbAuth.signOut();
   }
 
+  async function deleteAccount(email, password) {
+    const user = _fbAuth.currentUser;
+    if (!user) return { error: 'Non connecté' };
+    try {
+      const cred = firebase.auth.EmailAuthProvider.credential(email, password);
+      await user.reauthenticateWithCredential(cred);
+
+      // Supprime toutes les données Firestore de l'utilisateur
+      const dataRef = _fbDb.collection('users').doc(user.uid).collection('data');
+      const snap    = await dataRef.get();
+      await Promise.all(snap.docs.map(d => d.ref.delete()));
+
+      // Supprime le compte Firebase Auth
+      await user.delete();
+      return { ok: true };
+    } catch(e) {
+      if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')
+        return { error: i18n.t('auth.err.login') };
+      if (e.code === 'auth/invalid-email')
+        return { error: i18n.t('auth.err.email') };
+      if (e.code === 'auth/user-mismatch')
+        return { error: i18n.t('auth.err.mismatch') };
+      return { error: e.message };
+    }
+  }
+
   // Compat shim — plus utilisé mais évite les erreurs si appelé ailleurs
   function touchSession() {}
 
-  return { login, register, logout, getCurrentUser, onAuthReady, resetPassword, touchSession };
+  return { login, register, logout, getCurrentUser, onAuthReady, resetPassword, touchSession, deleteAccount };
 })();

@@ -578,5 +578,58 @@
       UI.updateStats();
       UI.toast(t('set.clear.done'));
     });
+
+    // ── Suppression de compte ──────────────────────────────────────────────────
+    const delOverlay    = $('deleteAccountOverlay');
+    const delConfirmBtn = $('delConfirmBtn');
+    const delCancelBtn  = $('delCancelBtn');
+    const delError      = $('delError');
+
+    $('btnDeleteAccount').addEventListener('click', () => {
+      $('delEmail').value    = '';
+      $('delPassword').value = '';
+      delError.textContent   = '';
+      delOverlay.style.display = 'flex';
+      setTimeout(() => $('delEmail').focus(), 50);
+    });
+
+    delCancelBtn.addEventListener('click', () => {
+      delOverlay.style.display = 'none';
+    });
+
+    delOverlay.addEventListener('click', e => {
+      if (e.target === delOverlay) delOverlay.style.display = 'none';
+    });
+
+    delConfirmBtn.addEventListener('click', async () => {
+      const email    = $('delEmail').value.trim();
+      const password = $('delPassword').value;
+      delError.textContent = '';
+
+      if (!email || !password) {
+        delError.textContent = t('auth.err.required');
+        return;
+      }
+
+      delConfirmBtn.disabled   = true;
+      delConfirmBtn.textContent = t('del.modal.deleting');
+
+      const result = await Auth.deleteAccount(email, password);
+
+      if (result.ok) {
+        delOverlay.style.display = 'none';
+        // Firebase signOut se déclenche automatiquement après delete()
+        // mais on force quand même le retour à la landing
+        window.location.reload();
+      } else {
+        delError.textContent     = result.error;
+        delConfirmBtn.disabled   = false;
+        delConfirmBtn.textContent = t('del.modal.confirm');
+      }
+    });
+
+    $('delPassword').addEventListener('keydown', e => {
+      if (e.key === 'Enter') delConfirmBtn.click();
+    });
   };
 })();
