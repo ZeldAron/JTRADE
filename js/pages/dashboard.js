@@ -368,9 +368,15 @@
 
     if (typeof Chart === 'undefined') {
       const ca = $('pnlChart');
-      if (ca) ca.parentElement.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:20px 0">⚠ Chart.js non chargé — recharge la page (Cmd+Shift+R)</p>';
+      if (ca) ca.parentElement.innerHTML = '<p style="color:var(--red);font-size:13px;padding:20px 0">⚠ Chart.js non chargé (CDN bloqué). Recharge avec Cmd+Shift+R.</p>';
     } else {
-      try { renderPnlChart('pnlChart', trades); } catch(e) { console.error('[Chart error]', e); }
+      try {
+        renderPnlChart('pnlChart', trades);
+      } catch(e) {
+        const ca = $('pnlChart');
+        if (ca) ca.parentElement.innerHTML = '<p style="color:var(--red);font-size:12px;padding:20px 0">⚠ Erreur graphique : ' + String(e).slice(0, 120) + '</p>';
+        console.error('[Chart error]', e);
+      }
     }
   };
 })();
