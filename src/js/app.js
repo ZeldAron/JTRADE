@@ -14,6 +14,7 @@ function initApp() {
     micro:     'page.micro',
     offers:    'page.offers',
     settings:  'page.settings',
+    tutorial:  'page.tutorial',
   };
 
   let currentPage = 'journal';

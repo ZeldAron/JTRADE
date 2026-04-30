@@ -2645,3 +2645,109 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 .contact-success-title { font-size: 15px; font-weight: 800; }
 .contact-success-sub { font-size: 12px; color: var(--muted); }
+
+
+/* ── TUTORIAL PAGE ──────────────────────────────────────────────────────── */
+.tuto-card {
+  display: flex;
+  gap: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.tuto-step {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  font-weight: 800;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Geist Mono', monospace;
+}
+.tuto-body { flex: 1; min-width: 0; }
+.tuto-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.tuto-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+.tuto-steps-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.tuto-step-row {
+  display: flex;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.tuto-step-row b { color: var(--text); font-weight: 600; }
+.tuto-step-row em { color: var(--muted); font-style: normal; }
+.tuto-step-row kbd {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 0 5px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+.tuto-arrow { color: var(--accent); font-weight: 700; flex-shrink: 0; }
+.tuto-check { color: var(--green); font-weight: 700; flex-shrink: 0; }
+.tuto-tip {
+  background: var(--bg3);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 10px;
+}
+.tuto-zone-pill {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Geist Mono', monospace;
+}
+.tuto-zone-blue  { background: rgba(30,100,255,.15); color: #6ea4ff; border: 1px solid rgba(30,100,255,.3); }
+.tuto-zone-red   { background: rgba(240,82,79,.15);  color: #f05a4f; border: 1px solid rgba(240,82,79,.3); }
+.tuto-zone-green { background: rgba(45,212,160,.15); color: #2dd4a0; border: 1px solid rgba(45,212,160,.3); }
+.tuto-pages-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+.tuto-page-card {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 12px;
+}
+.tuto-page-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.tuto-page-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.tuto-page-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.tuto-cta { margin-top: 20px; }
+@media (max-width: 500px) {
+  .tuto-card { flex-direction: column; gap: 12px; padding: 16px; }
+  .tuto-pages-grid { grid-template-columns: 1fr; }
+}
