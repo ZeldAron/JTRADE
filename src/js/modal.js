@@ -117,8 +117,10 @@ const Modal = (() => {
       `Use null for any value not clearly identifiable.`;
 
     const GROQ_MODELS = [
-      'meta-llama/llama-4-maverick-17b-128e-instruct',
       'meta-llama/llama-4-scout-17b-16e-instruct',
+      'meta-llama/llama-4-maverick-17b-128e-instruct',
+      'llama-3.2-90b-vision-preview',
+      'llama-3.2-11b-vision-preview',
     ];
 
     for (const model of GROQ_MODELS) {
@@ -147,7 +149,7 @@ const Modal = (() => {
         const err = await res.json().catch(() => ({}));
         const msg = err.error?.message || '';
         if (res.status === 401) throw new Error(i18n.t('modal.groq.invalid'));
-        if (msg.includes('not found') || msg.includes('decommissioned')) continue;
+        if (msg.includes('not found') || msg.includes('decommissioned') || msg.includes('does not exist') || msg.includes('do not have access')) continue;
         throw new Error('Groq : ' + msg);
       }
 
