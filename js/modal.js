@@ -102,29 +102,28 @@ const Modal = (() => {
   async function analyzeWithGroq(imageB64, apiKey, direction) {
     const isLong = direction !== 'short';
     const prompt =
-      `You are a trading assistant. Analyze this futures/forex chart screenshot and extract 3 price levels: entry, stop loss (SL), take profit (TP1).\n\n` +
-      `Trade direction: ${isLong ? 'LONG (buy)' : 'SHORT (sell)'}.\n\n` +
-      `=== STEP 1: IDENTIFY CHART TYPE ===\n` +
-      `A) TradingView ORDER PANEL — look for a table/panel with labeled rows:\n` +
-      `   - Row "Prix d'entrée" or "Entry Price" → entry value\n` +
-      `   - Row "Prix" under "NIVEAU DE PROFIT" → tp1 value\n` +
-      `   - Row "Prix" under "NIVEAU DU STOP" → sl value\n\n` +
-      `B) ANNOTATED CHART — no order panel, trade levels are drawn on the chart:\n` +
-      `   - DO NOT use the live price ticker (the small box showing /ES, /MGC, /NQ etc. with the current price)\n` +
-      `   - DO NOT use price axis labels that are just grid lines\n` +
-      `   - LOOK FOR drawn horizontal lines, rectangles, or text labels with prices\n` +
-      `   - Entry: line/zone labeled "E", "Entry", "entrée", or the center of a highlighted entry rectangle\n` +
-      `   - SL: ${isLong ? 'lowest' : 'highest'} labeled level — often labeled "SL", "Stop", below/above entry\n` +
-      `   - TP1: ${isLong ? 'highest' : 'lowest'} labeled level — often labeled "TP", "Target", "FVG", above/below entry\n` +
-      `   - Fibonacci levels (0.382, 0.5, 0.618 etc.) with their price in parentheses can be SL or entry\n` +
-      `   - FVG (Fair Value Gap) levels labeled on the chart can be TP targets\n\n` +
-      `=== STEP 2: READ VALUES ===\n` +
-      `Copy each number EXACTLY as written in the chart annotation (e.g. 4618.4, 4632.0, 4693.6).\n` +
-      `For ${isLong ? 'LONG' : 'SHORT'}: entry must be between sl and tp1.\n\n` +
-      `=== STEP 3: OUTPUT ===\n` +
-      `Respond ONLY with one line of JSON, nothing else:\n` +
-      `{"entry":0.0,"sl":0.0,"tp1":0.0}\n` +
-      `Replace 0.0 with the actual values. Use null if a value is not visible.`;
+      `You are analyzing a TradingView trading chart. Direction: ${isLong ? 'LONG' : 'SHORT'}.\n` +
+      `Extract exactly 3 price levels: entry, sl (stop loss), tp1 (take profit).\n\n` +
+
+      `== IF you see a TradingView ORDER TICKET panel (a box with rows) ==\n` +
+      `  entry = "Prix d'entrée" or "Entry Price" row\n` +
+      `  sl    = "Prix" inside "NIVEAU DU STOP" or "Stop Loss" section\n` +
+      `  tp1   = "Prix" inside "NIVEAU DE PROFIT" or "Profit Target" section\n\n` +
+
+      `== IF you see an ANNOTATED CHART (drawn lines/zones, no order ticket) ==\n` +
+      `Focus on the RIGHT SIDE price axis. There are small COLORED BOXES (red, green, blue) next to price numbers.\n` +
+      `  • TP1  = the colored box ${isLong ? 'HIGHEST up' : 'LOWEST down'} on the right axis — this is the profit target\n` +
+      `  • Entry = a colored box or small rectangle ${isLong ? 'near the bottom' : 'near the top'} of the trade zone\n` +
+      `  • SL   = the colored box ${isLong ? 'just BELOW entry' : 'just ABOVE entry'}, the lowest ${isLong ? 'red' : 'green'} level\n\n` +
+      `CRITICAL RULES:\n` +
+      `  - Read price numbers from the RIGHT AXIS colored boxes, NOT from the live ticker (/MGC, /ES, /NQ label)\n` +
+      `  - Read numbers from the BOTTOM of the chart first for ${isLong ? 'LONG' : 'SHORT'} (entry zone is near support)\n` +
+      `  - Copy each digit exactly — do not round or transpose digits\n` +
+      `  - For ${isLong ? 'LONG' : 'SHORT'}: sl < entry < tp1 must be true\n\n` +
+
+      `Respond with ONLY this JSON on one line:\n` +
+      `{"entry":0.00,"sl":0.00,"tp1":0.00}\n` +
+      `Use null for values you cannot read with certainty.`;
 
     const GROQ_MODELS = [
       'meta-llama/llama-4-scout-17b-16e-instruct',
