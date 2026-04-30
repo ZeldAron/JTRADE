@@ -74,16 +74,19 @@ UI.renderOffers = function () {
   `;
 
   if (!isPro) {
-    document.getElementById('btnActivatePro').addEventListener('click', () => {
+    document.getElementById('btnActivatePro').addEventListener('click', async () => {
+      const btn   = document.getElementById('btnActivatePro');
       const code  = document.getElementById('proCodeInput').value;
       const error = document.getElementById('proCodeError');
       if (!code.trim()) { error.textContent = i18n.t('off.err.empty'); return; }
-      const ok = Store.activatePro(code);
+      btn.disabled = true;
+      const ok = await Store.activatePro(code);
       if (ok) {
         UI.toast(i18n.t('off.ok'));
         setTimeout(() => location.reload(), 1200);
       } else {
         error.textContent = i18n.t('off.err.inv');
+        btn.disabled = false;
       }
     });
 

@@ -205,7 +205,34 @@ const Store = (() => {
     _saveTrades();
   }
 
-  function importTrades(arr) { trades = [...arr, ...trades]; _saveTrades(); }
+  function importTrades(arr) {
+    if (!Array.isArray(arr)) return 0;
+    const DIRS     = new Set(['long', 'short']);
+    const OUTCOMES = new Set(['win', 'loss', 'be', 'open']);
+    const sanitized = arr.filter(t => t && typeof t === 'object' &&
+      typeof t.instrument === 'string' && t.instrument.trim() &&
+      DIRS.has(t.direction) && OUTCOMES.has(t.outcome)
+    ).map(t => ({
+      id:         String(t.id || Date.now() + Math.random()).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32),
+      date:       /^\d{4}-\d{2}-\d{2}/.test(String(t.date)) ? String(t.date) : new Date().toISOString(),
+      instrument: String(t.instrument).replace(/[^A-Za-z0-9/. _-]/g, '').slice(0, 20),
+      direction:  t.direction,
+      outcome:    t.outcome,
+      entry:      Number(t.entry)     || 0,
+      sl:         Number(t.sl)        || 0,
+      tp1:        Number(t.tp1)       || 0,
+      ...(t.tp2       ? { tp2:       Number(t.tp2) }       : {}),
+      ...(t.tp3       ? { tp3:       Number(t.tp3) }       : {}),
+      ...(t.exitPrice ? { exitPrice: Number(t.exitPrice) } : {}),
+      contracts:  Math.max(1, Math.min(999, parseInt(t.contracts) || 1)),
+      setup:      t.setup  ? String(t.setup).slice(0, 500)  : '',
+      notes:      t.notes  ? String(t.notes).slice(0, 2000) : '',
+      apex:       t.apex   ? String(t.apex).replace(/[^A-Za-z0-9 _-]/g, '').slice(0, 100) : '',
+    }));
+    trades = [...sanitized, ...trades];
+    _saveTrades();
+    return sanitized.length;
+  }
   function clearTrades()     { trades = []; _saveTrades(); }
   function exportJSON()      { return JSON.stringify(trades, null, 2); }
 
@@ -279,13 +306,23 @@ const Store = (() => {
   function deleteGroup(id) { groups = groups.filter(g => g.id !== id); _saveGroups(); }
 
   // ── Plan ─────────────────────────────────────────────────────────────────────
-  const PRO_CODES = ['ZELDTRADE-PRO-2026', 'JTRADE-PRO-2026'];
+  // Codes stockés en SHA-256 uniquement — les codes en clair ne sont jamais dans le bundle
+  const PRO_CODE_HASHES = [
+    '12baec02bac5869abd9c5eb21d2331f618bd76fdc9b66bfeb2d4f2bd7bff6244',
+    '091b4fbecc92c7fc283d9e2e87bcfc718baa19976cf2b48c710711e541884c36',
+  ];
+
+  async function _sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
 
   function getPlanInfo() { return lsGet(lk().plan) || { plan: 'basic' }; }
   function isPro()       { return getPlanInfo().plan === 'pro'; }
-  function activatePro(code) {
-    if (!PRO_CODES.includes(code.trim().toUpperCase())) return false;
-    const info = { plan: 'pro', activatedAt: Date.now(), code: code.trim().toUpperCase() };
+  async function activatePro(code) {
+    const hash = await _sha256(code.trim().toUpperCase());
+    if (!PRO_CODE_HASHES.includes(hash)) return false;
+    const info = { plan: 'pro', activatedAt: Date.now() };
     lsSet(lk().plan, info);
     fbSet('plan', info);
     return true;

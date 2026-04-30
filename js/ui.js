@@ -117,12 +117,13 @@ const UI = (() => {
         ? `<div class="trade-setup">${escHtml(t.setup)}</div>`
         : '';
 
+      const safeDir = t.direction === 'long' ? 'long' : 'short';
       return `<div class="trade-item ${selectedId === t.id ? 'selected' : ''}" data-id="${t.id}">
         <div class="trade-bar" style="background:${dc}"></div>
         <div class="trade-item-body">
           <div class="trade-item-top">
-            <span class="trade-instr">${t.instrument}</span>
-            <span class="dir-badge dir-${t.direction}">${t.direction.toUpperCase()}</span>
+            <span class="trade-instr">${escHtml(t.instrument)}</span>
+            <span class="dir-badge dir-${safeDir}">${safeDir.toUpperCase()}</span>
             <span class="outcome-badge ${OB_CLASS[t.outcome]}">${OB_LABEL[t.outcome]}</span>
           </div>
           <div class="trade-item-meta">
@@ -200,8 +201,8 @@ const UI = (() => {
         <div class="detail-header">
           <div>
             <div class="detail-title-row">
-              <span class="detail-instr">${t.instrument}</span>
-              <span class="dir-badge dir-${t.direction}" style="font-size:12px;padding:3px 9px">${t.direction.toUpperCase()}</span>
+              <span class="detail-instr">${escHtml(t.instrument)}</span>
+              <span class="dir-badge dir-${t.direction === 'long' ? 'long' : 'short'}" style="font-size:12px;padding:3px 9px">${t.direction === 'long' ? 'LONG' : 'SHORT'}</span>
               <span class="outcome-badge ${OB_CLASS[t.outcome]}" style="font-size:11px;padding:3px 9px">${OB_LABEL[t.outcome]}</span>
             </div>
             <div class="detail-date">${date}</div>

@@ -254,7 +254,11 @@ const Modal = (() => {
       retryBtn.style.display  = 'inline-flex';
 
     } catch (e) {
-      statusEl.innerHTML      = `<span style="color:var(--red)">✗ ${e.message || i18n.t('modal.unknown.error')}</span>`;
+      statusEl.innerHTML = '';
+      const _errSpan = document.createElement('span');
+      _errSpan.style.color = 'var(--red)';
+      _errSpan.textContent = '✗ ' + (e.message || i18n.t('modal.unknown.error'));
+      statusEl.appendChild(_errSpan);
       $('wBtnNext2').disabled = false;
       retryBtn.style.display  = 'inline-flex';
     }
