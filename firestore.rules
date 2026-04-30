@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Règle par défaut : tout refuser
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Un utilisateur ne peut lire/écrire QUE ses propres données
+    match /users/{userId}/data/{docName} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId
+                         && docName in ['trades', 'settings', 'myAccounts',
+                                        'spreadsByFirm', 'groups', 'plan', 'aiUsage'];
+
+      // Limite la taille des documents (anti-abus)
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 2 * 1024 * 1024; // 2 MB max
+    }
+  }
+}
