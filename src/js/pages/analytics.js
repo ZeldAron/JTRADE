@@ -3,6 +3,32 @@
   const $ = id => document.getElementById(id);
   const t = k => i18n.t(k);
 
+  // Sessions UTC
+  // Asia    : 00:00–07:00 UTC
+  // London  : 07:00–13:30 UTC
+  // New York: 13:30–20:15 UTC
+  // Other   : 20:15–24:00 UTC
+  const SESSIONS = [
+    { key: 'asia',   label: () => t('analytics.session.asia'),   color: '#0a84ff', from:    0, to:  420 },
+    { key: 'london', label: () => t('analytics.session.london'), color: '#bf5af2', from:  420, to:  810 },
+    { key: 'ny',     label: () => t('analytics.session.ny'),     color: '#30d158', from:  810, to: 1215 },
+    { key: 'other',  label: () => t('analytics.session.other'),  color: '#636366', from: 1215, to: 1440 },
+  ];
+
+  function getSession(dateStr) {
+    if (!dateStr || !dateStr.includes('T')) return null;
+    const d = new Date(dateStr);
+    if (isNaN(d)) return null;
+    const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
+    return SESSIONS.find(s => mins >= s.from && mins < s.to)?.key || 'other';
+  }
+
+  function getUTCHour(dateStr) {
+    if (!dateStr || !dateStr.includes('T')) return null;
+    const d = new Date(dateStr);
+    return isNaN(d) ? null : d.getUTCHours();
+  }
+
   UI.renderAnalytics = function () {
     const el  = $('analyticsContent');
     const all = Store.getTrades();
@@ -12,6 +38,7 @@
       return;
     }
 
+    // ── Setup + Instrument ──────────────────────────────────────────────────
     const setups = {};
     const instrs = {};
 
@@ -60,6 +87,100 @@
       </tr>`;
     }).join('');
 
+    // ── Sessions ─────────────────────────────────────────────────────────────
+    const sessData = {};
+    SESSIONS.forEach(s => { sessData[s.key] = { wins:0, losses:0, total:0, pnl:0, rr:0 }; });
+
+    const timedTrades = all.filter(tr => tr.date && tr.date.includes('T'));
+    timedTrades.forEach(tr => {
+      const sk = getSession(tr.date);
+      if (!sk || !sessData[sk]) return;
+      const c = Calc.trade(tr);
+      sessData[sk].total++;
+      if (tr.outcome === 'win')  sessData[sk].wins++;
+      if (tr.outcome === 'loss') sessData[sk].losses++;
+      sessData[sk].pnl += c.netPnl !== null ? c.netPnl : 0;
+      sessData[sk].rr  += c.rr;
+    });
+
+    const bestSession = timedTrades.length
+      ? SESSIONS.slice().sort((a, b) => {
+          const wa = sessData[a.key].total ? sessData[a.key].wins / sessData[a.key].total : 0;
+          const wb = sessData[b.key].total ? sessData[b.key].wins / sessData[b.key].total : 0;
+          return wb - wa;
+        })[0]
+      : null;
+
+    const sessHtml = timedTrades.length ? `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:4px">
+        ${SESSIONS.map(s => {
+          const d   = sessData[s.key];
+          const wr  = d.total ? d.wins / d.total * 100 : 0;
+          const avr = d.total ? d.rr / d.total : 0;
+          const isBest = bestSession?.key === s.key && d.total > 0;
+          return `
+            <div style="background:var(--surface2);border:1px solid ${isBest ? s.color : 'var(--border)'};border-radius:10px;padding:14px;position:relative;${isBest ? 'box-shadow:0 0 0 1px ' + s.color + '22' : ''}">
+              ${isBest ? `<div style="position:absolute;top:8px;right:10px;font-size:9px;font-weight:700;color:${s.color};letter-spacing:0.08em;text-transform:uppercase">Meilleure</div>` : ''}
+              <div style="font-size:15px;margin-bottom:8px">${s.label()}</div>
+              ${d.total === 0
+                ? `<div style="color:var(--muted);font-size:11px">Aucun trade</div>`
+                : `<div style="font-size:22px;font-weight:700;font-family:'Geist Mono';color:${wr >= 50 ? 'var(--green)' : 'var(--red)'}">${wr.toFixed(0)}%</div>
+                   <div style="font-size:10px;color:var(--muted);margin-bottom:8px">${d.total} trade${d.total > 1 ? 's' : ''} · ${d.wins}W ${d.losses}L</div>
+                   <div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:8px;overflow:hidden">
+                     <div style="height:100%;width:${wr}%;background:${s.color};border-radius:2px;transition:width .4s"></div>
+                   </div>
+                   <div style="display:flex;justify-content:space-between;font-size:11px;font-family:'Geist Mono'">
+                     <span style="color:var(--muted)">${t('analytics.col.avgrr')}</span>
+                     <span style="color:${avr >= 1.5 ? 'var(--green)' : avr >= 1 ? 'var(--amber)' : 'var(--red)'}">${avr.toFixed(2)}R</span>
+                   </div>
+                   <div style="display:flex;justify-content:space-between;font-size:11px;font-family:'Geist Mono';margin-top:4px">
+                     <span style="color:var(--muted)">PnL</span>
+                     <span style="color:${d.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${Calc.formatPnL(d.pnl)}</span>
+                   </div>`
+              }
+            </div>`;
+        }).join('')}
+      </div>` : `<p style="color:var(--muted);font-size:12px;margin-top:8px">${t('analytics.sessions.empty')}</p>`;
+
+    // ── Perf par heure (UTC) ───────────────────────────────────────────────
+    const hourData = {};
+    timedTrades.forEach(tr => {
+      const h = getUTCHour(tr.date);
+      if (h === null) return;
+      if (!hourData[h]) hourData[h] = { wins:0, total:0, pnl:0 };
+      hourData[h].total++;
+      if (tr.outcome === 'win') hourData[h].wins++;
+      const c = Calc.trade(tr);
+      hourData[h].pnl += c.netPnl !== null ? c.netPnl : 0;
+    });
+
+    const activeHours = Object.keys(hourData).map(Number).sort((a, b) => a - b);
+    const maxHourTotal = activeHours.length ? Math.max(...activeHours.map(h => hourData[h].total)) : 1;
+
+    const hoursHtml = activeHours.length ? `
+      <div style="margin-top:4px;overflow-x:auto">
+        <div style="display:flex;align-items:flex-end;gap:6px;min-width:max-content;padding-bottom:4px">
+          ${activeHours.map(h => {
+            const d   = hourData[h];
+            const wr  = d.total ? d.wins / d.total * 100 : 0;
+            const bar = Math.round((d.total / maxHourTotal) * 64);
+            const sess = SESSIONS.find(s => { const m = h * 60; return m >= s.from && m < s.to; });
+            const col  = sess ? sess.color : '#636366';
+            return `
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+                <div style="font-size:9px;font-family:'Geist Mono';color:${wr >= 50 ? 'var(--green)' : 'var(--red)'}">${wr.toFixed(0)}%</div>
+                <div style="width:28px;height:${bar}px;background:${col};border-radius:4px 4px 0 0;opacity:0.85;min-height:4px"></div>
+                <div style="font-size:9px;color:var(--muted);font-family:'Geist Mono'">${String(h).padStart(2,'0')}h</div>
+                <div style="font-size:8px;color:var(--muted2)">${d.total}t</div>
+              </div>`;
+          }).join('')}
+        </div>
+        <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap">
+          ${SESSIONS.map(s => `<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:${s.color};display:inline-block"></span>${s.label()}</span>`).join('')}
+        </div>
+      </div>` : `<p style="color:var(--muted);font-size:12px;margin-top:8px">${t('analytics.sessions.empty')}</p>`;
+
+    // ── Render ────────────────────────────────────────────────────────────
     el.innerHTML = `
       <div class="page-title">${t('page.analytics')}</div>
       <div class="two-col">
@@ -76,6 +197,22 @@
             <tbody>${instrRows}</tbody>
           </table>
         </div>
+      </div>
+
+      <div class="chart-card" style="margin-top:16px">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+          <h3 style="margin:0">${t('analytics.sessions.title')}</h3>
+          <span style="font-size:10px;color:var(--muted)">${t('analytics.sessions.hint')}</span>
+          ${timedTrades.length ? `<span style="font-size:10px;color:var(--muted);margin-left:auto">${timedTrades.length} / ${all.length} trades chronométrés</span>` : ''}
+        </div>
+        ${sessHtml}
+      </div>
+
+      <div class="chart-card" style="margin-top:16px">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">
+          <h3 style="margin:0">${t('analytics.hours.title')}</h3>
+        </div>
+        ${hoursHtml}
       </div>`;
   };
 })();

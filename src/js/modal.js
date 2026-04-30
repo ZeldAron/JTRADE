@@ -368,9 +368,10 @@ const Modal = (() => {
     $('wNotes').value              = '';
     $('wExit').value               = '';
     $('wContracts').value          = Store.getSettings().contracts || 1;
-    // Date par défaut = aujourd'hui (heure locale)
+    // Date + heure par défaut = maintenant (heure locale)
     const nowLocal = new Date();
     $('wTradeDate').value = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth()+1).padStart(2,'0')}-${String(nowLocal.getDate()).padStart(2,'0')}`;
+    $('wTradeTime').value = `${String(nowLocal.getHours()).padStart(2,'0')}:${String(nowLocal.getMinutes()).padStart(2,'0')}`;
 
     if (id) {
       // Mode édition : remplir depuis le trade existant et aller à l'étape 3
@@ -387,9 +388,11 @@ const Modal = (() => {
       $('wNotes').value      = t.notes  || '';
       $('wOutcome').value    = t.outcome;
       $('wExit').value       = t.exitPrice || '';
-      // Pré-remplir la date depuis le trade existant
+      // Pré-remplir la date + heure depuis le trade existant
       const td = t.date ? t.date.slice(0, 10) : $('wTradeDate').value;
+      const tt = t.date && t.date.length > 10 ? t.date.slice(11, 16) : '';
       $('wTradeDate').value  = td;
+      $('wTradeTime').value  = tt;
       if (t.outcome !== 'open') { $('wExitField').style.display = ''; $('wOptFields').style.display = ''; }
 
       // Badge direction
@@ -439,16 +442,20 @@ const Modal = (() => {
     const tp1   = parseFloat($('wTP1').value);
     if (!entry || !sl || !tp1) { UI.toast(i18n.t('modal.required'), true); return; }
 
-    const rawInstr  = $('wInstr').value;
+    const rawInstr   = $('wInstr').value;
     const rawOutcome = $('wOutcome').value;
     const safeDir    = direction === 'long' ? 'long' : 'short';
     const safeOutcome = VALID_OUTCOMES.has(rawOutcome) ? rawOutcome : 'open';
     const safeInstr   = VALID_INSTRS.has(rawInstr) ? rawInstr : 'MES1';
 
+    const dateVal = $('wTradeDate').value;
+    const timeVal = $('wTradeTime').value;
+    const dateStr = dateVal ? (timeVal ? `${dateVal}T${timeVal}:00` : dateVal) : undefined;
+
     const data = {
       instrument: safeInstr,
       direction:  safeDir,
-      date:       $('wTradeDate').value || undefined,
+      date:       dateStr,
       contracts:  Math.max(1, Math.min(999, parseInt($('wContracts').value) || 1)),
       capital,
       apex:       $('wApex').value,
