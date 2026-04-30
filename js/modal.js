@@ -441,6 +441,7 @@ const Modal = (() => {
     const sl    = parseFloat($('wSL').value);
     const tp1   = parseFloat($('wTP1').value);
     if (!entry || !sl || !tp1) { UI.toast(i18n.t('modal.required'), true); return; }
+    if (!$('wApex').value)     { UI.toast(i18n.t('err.no.account.sel'), true); return; }
 
     const rawInstr   = $('wInstr').value;
     const rawOutcome = $('wOutcome').value;
