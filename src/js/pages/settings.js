@@ -165,6 +165,7 @@
       $('maBtnSave').addEventListener('click', () => {
         const name = $('maName').value.trim();
         if (!name) { UI.toast(t('err.name.required'), true); return; }
+        if (name.length > 50) { UI.toast(t('err.name.invalid'), true); return; }
 
         const selType = types.find(tp => tp.id === $('maTypeId').value);
         const data = {
@@ -337,16 +338,17 @@
 
       return Object.entries(groups).map(([cat, list]) => `
         <div style="margin-bottom:4px">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted2);padding:10px 0 6px;font-weight:600">${cat}</div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted2);padding:10px 0 6px;font-weight:600">${UI.escHtml(cat)}</div>
           ${list.map(instr => {
+            const safeInstr = UI.escHtml(instr);
             const val = (sp[instr] != null ? sp[instr] : 0).toFixed(2);
             return `
               <div class="settings-row" style="padding:5px 0">
-                <label style="font-weight:600;font-family:'Geist Mono',monospace;font-size:12px">${instr}</label>
+                <label style="font-weight:600;font-family:'Geist Mono',monospace;font-size:12px">${safeInstr}</label>
                 <div style="display:flex;align-items:center;gap:8px">
                   <span style="font-size:11px;color:var(--muted)">$</span>
                   <input class="form-input" type="number" min="0" step="0.01"
-                    data-sp-instr="${instr}" value="${val}"
+                    data-sp-instr="${safeInstr}" value="${val}"
                     style="width:80px;text-align:right;font-family:'Geist Mono',monospace">
                   <span style="font-size:11px;color:var(--muted)">/side</span>
                 </div>
@@ -404,7 +406,7 @@
             const names = (g.accountIds || [])
               .map(id => accs.find(a => a.id === id))
               .filter(Boolean)
-              .map(a => a.name)
+              .map(a => UI.escHtml(a.name))
               .join(', ');
             return `<div class="grp-row">
               <span class="grp-name">⬡ ${UI.escHtml(g.name)}</span>
@@ -467,6 +469,7 @@
       $('grpBtnSave').addEventListener('click', () => {
         const name = $('grpName').value.trim();
         if (!name) { UI.toast(t('err.grp.name'), true); return; }
+        if (name.length > 50) { UI.toast(t('err.name.invalid'), true); return; }
         const accountIds = Array.from(el.querySelectorAll('.grp-acc-check:checked')).map(cb => cb.value);
         const editId = $('grpEditId').value;
         if (editId) {
@@ -553,6 +556,7 @@
     $('importFile').addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { UI.toast(t('err.file.large'), true); e.target.value = ''; return; }
       const reader = new FileReader();
       reader.onload = ev => {
         try {

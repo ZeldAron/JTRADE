@@ -49,17 +49,17 @@ const Auth = (() => {
       if (e.code === 'auth/email-already-in-use') return { error: i18n.t('auth.err.taken') };
       if (e.code === 'auth/invalid-email')        return { error: i18n.t('auth.err.email') };
       if (e.code === 'auth/weak-password')        return { error: i18n.t('auth.err.weak') };
-      return { error: e.message };
+      return { error: i18n.t('auth.err.unknown') };
     }
   }
 
   async function resetPassword(email) {
     try {
       await _fbAuth.sendPasswordResetEmail(email);
-      return { ok: true };
-    } catch (e) {
-      return { error: e.message };
+    } catch {
+      // Ne pas révéler si l'email existe ou non
     }
+    return { ok: true };
   }
 
   function logout() {
