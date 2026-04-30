@@ -71,56 +71,95 @@
     </div>`;
   }
 
+  function computeEquityStats(trades) {
+    const closed = trades
+      .filter(tr => tr.outcome !== 'open')
+      .map(tr => ({ tr, pnl: Calc.trade(tr).netPnl || 0 }))
+      .sort((a, b) => (a.tr.date || '') < (b.tr.date || '') ? -1 : 1);
+
+    if (!closed.length) return null;
+
+    let cum = 0, peak = 0, maxDD = 0, sumWins = 0, sumLosses = 0;
+    let best = -Infinity, worst = Infinity;
+
+    closed.forEach(({ pnl }) => {
+      cum += pnl;
+      if (cum > peak) peak = cum;
+      const dd = peak - cum;
+      if (dd > maxDD) maxDD = dd;
+      if (pnl > 0) sumWins += pnl;
+      if (pnl < 0) sumLosses += Math.abs(pnl);
+      if (pnl > best)  best  = pnl;
+      if (pnl < worst) worst = pnl;
+    });
+
+    const pf = sumLosses > 0 ? sumWins / sumLosses : (sumWins > 0 ? Infinity : 0);
+    const expectancy = closed.length ? cum / closed.length : 0;
+
+    let streak = 0, streakType = null;
+    for (let i = closed.length - 1; i >= 0; i--) {
+      const o = closed[i].tr.outcome;
+      if (o !== 'win' && o !== 'loss') { if (streak === 0) continue; break; }
+      if (streakType === null) streakType = o;
+      if (o === streakType) streak++;
+      else break;
+    }
+
+    return {
+      maxDD,
+      pf,
+      expectancy,
+      best:  best  === -Infinity ? 0 : best,
+      worst: worst ===  Infinity ? 0 : worst,
+      streak,
+      streakType,
+    };
+  }
+
   function renderPnlChart(containerId, trades) {
     const canvas = $(containerId);
     if (!canvas) return;
 
-    const byDay = {};
-    trades.forEach(tr => {
-      const d = UI.localDay(tr.date);
-      byDay[d] = (byDay[d] || 0) + (Calc.trade(tr).netPnl || 0);
-    });
-    const days = Object.keys(byDay).sort();
-    if (!days.length) { canvas.style.display = 'none'; return; }
+    const closed = trades
+      .map(tr => ({ tr, pnl: Calc.trade(tr).netPnl || 0 }))
+      .sort((a, b) => (a.tr.date || '') < (b.tr.date || '') ? -1 : 1);
+
+    if (!closed.length) { canvas.style.display = 'none'; return; }
     canvas.style.display = '';
 
-    const startDate = new Date(days[0] + 'T12:00:00');
-    startDate.setDate(startDate.getDate() - 1);
-    const startDay = UI.localDay(startDate.toISOString());
-
     let cum = 0;
-    const cumPnL = [
-      { d: startDay, v: 0 },
-      ...days.map(d => { cum += byDay[d]; return { d, v: cum }; }),
-    ];
+    const pts = [{ label: '', cum: 0, pnl: 0, tr: null }];
+    closed.forEach(({ tr, pnl }) => {
+      cum += pnl;
+      pts.push({ label: tr.date ? tr.date.slice(0, 10) : '', cum, pnl, tr });
+    });
 
-    if (cumPnL.length === 2) {
-      const nextDate = new Date(days[days.length - 1] + 'T12:00:00');
-      nextDate.setDate(nextDate.getDate() + 1);
-      cumPnL.push({ d: UI.localDay(nextDate.toISOString()), v: cumPnL[cumPnL.length - 1].v });
-    }
-
-    const isPositive = cumPnL[cumPnL.length - 1].v >= 0;
-    const lineColor  = isPositive ? '#00e5a0' : '#ff5767';
-    const fillStart  = isPositive ? 'rgba(45,212,160,0.18)' : 'rgba(240,82,79,0.15)';
+    const lastCum    = pts[pts.length - 1].cum;
+    const lineColor  = lastCum >= 0 ? '#00e5a0' : '#ff5767';
 
     if (pnlChart) { pnlChart.destroy(); pnlChart = null; }
     const ctx = canvas.getContext('2d');
+
     pnlChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels:   cumPnL.map(p => p.d),
+        labels: pts.map(p => p.label),
         datasets: [{
-          data:                 cumPnL.map(p => p.v),
+          data:                 pts.map(p => p.cum),
           borderColor:          lineColor,
-          borderWidth:          2.5,
-          pointRadius:          cumPnL.map((_, i) => (i === 0 || i === cumPnL.length - 1) ? 0 : 3),
-          pointBackgroundColor: lineColor,
-          tension:              0.35,
-          fill:                 true,
+          borderWidth:          2,
+          pointRadius:          pts.map((_, i) => i === 0 ? 0 : 3.5),
+          pointHoverRadius:     6,
+          pointBackgroundColor: pts.map(p => {
+            if (!p.tr) return '#636366';
+            return p.tr.outcome === 'win' ? '#30d158' : p.tr.outcome === 'loss' ? '#ff5767' : '#636366';
+          }),
+          pointBorderWidth: 0,
+          tension: 0.2,
+          fill: true,
           backgroundColor: ctx2 => {
             const g = ctx2.chart.ctx.createLinearGradient(0, 0, 0, ctx2.chart.height);
-            g.addColorStop(0, fillStart);
+            g.addColorStop(0, lastCum >= 0 ? 'rgba(48,209,88,0.20)' : 'rgba(255,87,103,0.20)');
             g.addColorStop(1, 'rgba(0,0,0,0)');
             return g;
           },
@@ -137,23 +176,94 @@
             borderColor:     'rgba(255,255,255,0.1)',
             borderWidth:     1,
             padding:         10,
-            callbacks: { label: c => ' P&L : ' + Calc.formatPnL(c.parsed.y) },
+            callbacks: {
+              title: items => {
+                const p = pts[items[0]?.dataIndex];
+                if (!p?.tr) return '';
+                const d = p.tr.date ? new Date(p.tr.date) : null;
+                if (!d || isNaN(d)) return p.label;
+                const day = d.toLocaleDateString(i18n.locale(), { day:'2-digit', month:'2-digit' });
+                const tim = p.tr.date.includes('T') ? ' ' + d.toLocaleTimeString(i18n.locale(), { hour:'2-digit', minute:'2-digit' }) : '';
+                return day + tim;
+              },
+              label: items => {
+                const p = pts[items.dataIndex];
+                if (!p?.tr) return null;
+                const instr = String(p.tr.instrument || '').replace(/[^A-Za-z0-9/. _-]/g, '');
+                const dir   = p.tr.direction === 'long' ? '↑' : '↓';
+                const sign  = p.pnl >= 0 ? '+' : '';
+                return [
+                  ` ${instr} ${dir}  ${sign}${Calc.formatPnL(p.pnl)}`,
+                  ` Cumulé : ${Calc.formatPnL(p.cum)}`,
+                ];
+              },
+              labelColor: items => {
+                const p = pts[items.dataIndex];
+                const c = !p?.tr ? '#636366' : p.pnl >= 0 ? '#30d158' : '#ff5767';
+                return { backgroundColor: c, borderColor: c };
+              },
+            },
           },
         },
         scales: {
           x: {
             ticks:  { color:'#55556a', font:{ size:10, family:"'Geist Mono',monospace" }, maxTicksLimit:8, maxRotation:0 },
-            grid:   { display:false },
-            border: { display:false },
+            grid:   { display: false },
+            border: { display: false },
           },
           y: {
             ticks:  { color:'#55556a', font:{ size:10, family:"'Geist Mono',monospace" }, callback: v => '$'+v.toFixed(0) },
-            grid:   { color:'rgba(255,255,255,0.05)' },
-            border: { display:false },
+            grid:   { color: 'rgba(255,255,255,0.05)' },
+            border: { display: false },
           },
         },
       },
     });
+
+    // Stats strip
+    const stats  = computeEquityStats(trades);
+    const statsEl = $('pnlStats');
+    if (!stats || !statsEl) return;
+
+    const isEn  = i18n.getLang() === 'en';
+    const pfStr = stats.pf === Infinity ? '∞' : stats.pf.toFixed(2);
+    const pfCol = stats.pf >= 1.5 ? 'var(--green)' : stats.pf >= 1 ? 'var(--amber)' : 'var(--red)';
+    const streakVal = stats.streak > 0
+      ? `${stats.streakType === 'win' ? '🔥' : '❄️'} ${stats.streak}`
+      : '–';
+    const streakLbl = stats.streakType === 'win'
+      ? (isEn ? 'consec. wins'   : 'W consécutifs')
+      : stats.streakType === 'loss'
+        ? (isEn ? 'consec. losses' : 'L consécutives')
+        : (isEn ? 'Streak'         : 'Série');
+
+    statsEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="text-align:center">
+          <div style="font-size:13px;font-weight:600;font-family:'Geist Mono';color:var(--red)">${stats.maxDD > 0 ? '-$' + stats.maxDD.toFixed(0) : '–'}</div>
+          <div style="font-size:10px;color:var(--muted)">Max Drawdown</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:13px;font-weight:600;font-family:'Geist Mono';color:${pfCol}">${pfStr}</div>
+          <div style="font-size:10px;color:var(--muted)">Profit Factor</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:13px;font-weight:600;font-family:'Geist Mono';color:${stats.expectancy >= 0 ? 'var(--green)' : 'var(--red)'}">${Calc.formatPnL(stats.expectancy)}</div>
+          <div style="font-size:10px;color:var(--muted)">${isEn ? 'Expectancy' : 'Espérance/trade'}</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:13px;font-weight:600;font-family:'Geist Mono';color:var(--green)">${Calc.formatPnL(stats.best)}</div>
+          <div style="font-size:10px;color:var(--muted)">${isEn ? 'Best trade' : 'Meilleur trade'}</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:13px;font-weight:600;font-family:'Geist Mono';color:var(--red)">${Calc.formatPnL(stats.worst)}</div>
+          <div style="font-size:10px;color:var(--muted)">${isEn ? 'Worst trade' : 'Pire trade'}</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:14px;font-weight:600">${streakVal}</div>
+          <div style="font-size:10px;color:var(--muted)">${streakLbl}</div>
+        </div>
+      </div>`;
   }
 
   function kpiCard(label, value, sub, color) {
@@ -200,7 +310,7 @@
       const accName = dashFilter.slice(4);
       const acc     = accs.find(a => a.name === accName);
       if (acc) body = accountCard(acc, trades);
-      body += `<div class="chart-card"><h3>${t('dash.pnl.curve')}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div></div>`;
+      body += `<div class="chart-card"><h3>${t('dash.pnl.curve')}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div><div id="pnlStats"></div></div>`;
     } else if (dashFilter && dashFilter.startsWith('grp:')) {
       const grp  = Store.getGroupById(dashFilter.slice(4));
       const kpis = `<div class="kpi-grid">
@@ -210,7 +320,7 @@
         ${kpiCard(t('dash.open'), s.open.toString(), t('dash.in.progress'), 'var(--blue)')}
       </div>`;
       body = kpis;
-      body += `<div class="chart-card"><h3>${t('dash.pnl.group', { name: UI.escHtml(grp?.name || '') })}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div></div>`;
+      body += `<div class="chart-card"><h3>${t('dash.pnl.group', { name: UI.escHtml(grp?.name || '') })}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div><div id="pnlStats"></div></div>`;
       if (grp && grp.accountIds && grp.accountIds.length) {
         body += `<div class="dash-group-accounts">`;
         grp.accountIds.forEach(accId => {
@@ -228,7 +338,7 @@
         ${kpiCard(t('dash.open'), s.open.toString(), t('dash.in.progress'), 'var(--blue)')}
       </div>`;
       body = kpis;
-      body += `<div class="chart-card"><h3>${t('dash.pnl.cumul')}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div></div>`;
+      body += `<div class="chart-card"><h3>${t('dash.pnl.cumul')}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div><div id="pnlStats"></div></div>`;
       if (accs.length) {
         body += `<div class="dash-group-accounts">`;
         accs.forEach(acc => {
