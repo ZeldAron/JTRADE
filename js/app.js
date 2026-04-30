@@ -101,6 +101,19 @@ function initApp() {
   UI.renderList();
   UI.updateStats();
 
+  // Redirect post-login if a destination was set (ex: landing Pro button)
+  const _goto = sessionStorage.getItem('ztGoto');
+  if (_goto) {
+    sessionStorage.removeItem('ztGoto');
+    switchPage(_goto);
+    if (_goto === 'offers') {
+      setTimeout(() => {
+        const inp = document.getElementById('proCodeInput');
+        if (inp) { inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); inp.focus(); }
+      }, 400);
+    }
+  }
+
   const first = Store.getTrades()[0];
   if (first) UI.selectTrade(first.id);
 
