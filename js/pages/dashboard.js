@@ -120,22 +120,28 @@
     const canvas = $(containerId);
     if (!canvas) return;
 
-    const closed = trades
-      .map(tr => ({ tr, pnl: Calc.trade(tr).netPnl || 0 }))
-      .sort((a, b) => (a.tr.date || '') < (b.tr.date || '') ? -1 : 1);
+    const sorted = trades
+      .slice()
+      .sort((a, b) => (a.date || '') < (b.date || '') ? -1 : 1);
 
-    if (!closed.length) { canvas.style.display = 'none'; return; }
+    if (!sorted.length) { canvas.style.display = 'none'; return; }
     canvas.style.display = '';
 
     let cum = 0;
-    const pts = [{ label: '', cum: 0, pnl: 0, tr: null }];
-    closed.forEach(({ tr, pnl }) => {
+    const labels = [''];
+    const values = [0];
+    const tradePnls = [0];
+    sorted.forEach(tr => {
+      const pnl = Calc.trade(tr).netPnl || 0;
       cum += pnl;
-      pts.push({ label: tr.date ? tr.date.slice(0, 10) : '', cum, pnl, tr });
+      labels.push(tr.date ? tr.date.slice(0, 10) : '');
+      values.push(cum);
+      tradePnls.push(pnl);
     });
 
-    const lastCum    = pts[pts.length - 1].cum;
-    const lineColor  = lastCum >= 0 ? '#00e5a0' : '#ff5767';
+    const isPositive = values[values.length - 1] >= 0;
+    const lineColor  = isPositive ? '#00e5a0' : '#ff5767';
+    const fillStart  = isPositive ? 'rgba(45,212,160,0.18)' : 'rgba(240,82,79,0.15)';
 
     if (pnlChart) { pnlChart.destroy(); pnlChart = null; }
     const ctx = canvas.getContext('2d');
@@ -143,23 +149,20 @@
     pnlChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: pts.map(p => p.label),
+        labels,
         datasets: [{
-          data:                 pts.map(p => p.cum),
+          data:                 values,
           borderColor:          lineColor,
-          borderWidth:          2,
-          pointRadius:          pts.map((_, i) => i === 0 ? 0 : 3.5),
-          pointHoverRadius:     6,
-          pointBackgroundColor: pts.map(p => {
-            if (!p.tr) return '#636366';
-            return p.tr.outcome === 'win' ? '#30d158' : p.tr.outcome === 'loss' ? '#ff5767' : '#636366';
-          }),
-          pointBorderWidth: 0,
-          tension: 0.2,
-          fill: true,
+          borderWidth:          2.5,
+          pointRadius:          values.map((_, i) => (i === 0 || i === values.length - 1) ? 0 : 4),
+          pointBackgroundColor: sorted.map(tr =>
+            tr.outcome === 'win' ? '#30d158' : tr.outcome === 'loss' ? '#ff5767' : '#636366'
+          ),
+          tension:              0.35,
+          fill:                 true,
           backgroundColor: ctx2 => {
             const g = ctx2.chart.ctx.createLinearGradient(0, 0, 0, ctx2.chart.height);
-            g.addColorStop(0, lastCum >= 0 ? 'rgba(48,209,88,0.20)' : 'rgba(255,87,103,0.20)');
+            g.addColorStop(0, fillStart);
             g.addColorStop(1, 'rgba(0,0,0,0)');
             return g;
           },
@@ -177,30 +180,14 @@
             borderWidth:     1,
             padding:         10,
             callbacks: {
-              title: items => {
-                const p = pts[items[0]?.dataIndex];
-                if (!p?.tr) return '';
-                const d = p.tr.date ? new Date(p.tr.date) : null;
-                if (!d || isNaN(d)) return p.label;
-                const day = d.toLocaleDateString(i18n.locale(), { day:'2-digit', month:'2-digit' });
-                const tim = p.tr.date.includes('T') ? ' ' + d.toLocaleTimeString(i18n.locale(), { hour:'2-digit', minute:'2-digit' }) : '';
-                return day + tim;
-              },
-              label: items => {
-                const p = pts[items.dataIndex];
-                if (!p?.tr) return null;
-                const instr = String(p.tr.instrument || '').replace(/[^A-Za-z0-9/. _-]/g, '');
-                const dir   = p.tr.direction === 'long' ? '↑' : '↓';
-                const sign  = p.pnl >= 0 ? '+' : '';
-                return [
-                  ` ${instr} ${dir}  ${sign}${Calc.formatPnL(p.pnl)}`,
-                  ` Cumulé : ${Calc.formatPnL(p.cum)}`,
-                ];
-              },
-              labelColor: items => {
-                const p = pts[items.dataIndex];
-                const c = !p?.tr ? '#636366' : p.pnl >= 0 ? '#30d158' : '#ff5767';
-                return { backgroundColor: c, borderColor: c };
+              label: c => {
+                const i   = c.dataIndex;
+                const cum = Calc.formatPnL(c.parsed.y);
+                if (i === 0) return ' Départ : $0';
+                const tr  = sorted[i - 1];
+                const dir = tr.direction === 'long' ? '↑' : '↓';
+                const pnlSign = tradePnls[i] >= 0 ? '+' : '';
+                return ` ${tr.instrument} ${dir}  ${pnlSign}${Calc.formatPnL(tradePnls[i])}   ∑ ${cum}`;
               },
             },
           },
@@ -221,7 +208,7 @@
     });
 
     // Stats strip
-    const stats  = computeEquityStats(trades);
+    const stats   = computeEquityStats(trades);
     const statsEl = $('pnlStats');
     if (!stats || !statsEl) return;
 
@@ -232,10 +219,10 @@
       ? `${stats.streakType === 'win' ? '🔥' : '❄️'} ${stats.streak}`
       : '–';
     const streakLbl = stats.streakType === 'win'
-      ? (isEn ? 'consec. wins'   : 'W consécutifs')
+      ? (isEn ? 'consec. wins' : 'W consécutifs')
       : stats.streakType === 'loss'
         ? (isEn ? 'consec. losses' : 'L consécutives')
-        : (isEn ? 'Streak'         : 'Série');
+        : (isEn ? 'Streak' : 'Série');
 
     statsEl.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
