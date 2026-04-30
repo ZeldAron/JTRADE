@@ -101,18 +101,24 @@ const Modal = (() => {
   // ── Groq Vision API ──────────────────────────────────────────────────────────
   async function analyzeWithGroq(imageB64, apiKey) {
     const prompt =
-      `Look at this TradingView screenshot. Read these 3 values exactly:\n` +
-      `- "Prix d'entrée" row value → entry\n` +
-      `- "Prix" row inside "NIVEAU DE PROFIT" → tp1\n` +
-      `- "Prix" row inside "NIVEAU DU STOP" → sl\n` +
-      `Respond with ONLY this JSON on a single line, no other text:\n` +
-      `{"entry":7172.50,"sl":7150.50,"tp1":7194.50}\n` +
-      `Replace those numbers with the actual values from the image.`;
+      `You are analyzing a trading chart screenshot. Extract entry, stop loss (SL), and take profit (TP1) price levels.\n\n` +
+      `CASE 1 — TradingView order panel (look for labeled rows):\n` +
+      `  • "Prix d'entrée" or "Entry Price" → entry\n` +
+      `  • Price inside "NIVEAU DE PROFIT" or "Profit Target" → tp1\n` +
+      `  • Price inside "NIVEAU DU STOP" or "Stop Loss" → sl\n\n` +
+      `CASE 2 — Annotated chart (lines, zones, FVG, Fibonacci levels):\n` +
+      `  • Entry: look for a rectangle zone, a line labeled "entry"/"E", or the most prominent horizontal level\n` +
+      `  • SL (Stop Loss): a level below entry for longs (above for shorts), often labeled "SL"/"Stop"/"BE"\n` +
+      `  • TP1 (Take Profit): a level above entry for longs (below for shorts), often labeled "TP"/"Target"/"FVG"\n` +
+      `  • Also check if numbers are written directly on the chart as annotations\n\n` +
+      `Read the numeric price values EXACTLY as shown on the price axis or annotations. Do not estimate.\n` +
+      `Respond ONLY with this JSON on one line, no explanation:\n` +
+      `{"entry":4629.9,"sl":4610.0,"tp1":4680.0}\n` +
+      `Use null for any value not clearly identifiable.`;
 
     const GROQ_MODELS = [
+      'meta-llama/llama-4-maverick-17b-128e-instruct',
       'meta-llama/llama-4-scout-17b-16e-instruct',
-      'llama-3.2-90b-vision-preview',
-      'llama-3.2-11b-vision-preview',
     ];
 
     for (const model of GROQ_MODELS) {
@@ -294,7 +300,7 @@ const Modal = (() => {
   function fillStep3FromParsed() {
     if (!parsedTrade) return;
     const instr = parsedTrade.instrument;
-    if (instr && ['MES1','ES1','MNQ1','NQ1'].includes(instr)) $('wInstr').value = instr;
+    if (instr && VALID_INSTRS.has(instr)) $('wInstr').value = instr;
     if (parsedTrade.contracts > 1) $('wContracts').value = parseInt(parsedTrade.contracts);
     $('wEntry').value = parsedTrade.entry || '';
     $('wSL').value    = parsedTrade.sl    || '';
