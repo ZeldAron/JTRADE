@@ -210,7 +210,7 @@
         ${kpiCard(t('dash.open'), s.open.toString(), t('dash.in.progress'), 'var(--blue)')}
       </div>`;
       body = kpis;
-      body += `<div class="chart-card"><h3>${t('dash.pnl.group', { name: grp?.name || '' })}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div></div>`;
+      body += `<div class="chart-card"><h3>${t('dash.pnl.group', { name: UI.escHtml(grp?.name || '') })}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div></div>`;
       if (grp && grp.accountIds && grp.accountIds.length) {
         body += `<div class="dash-group-accounts">`;
         grp.accountIds.forEach(accId => {
@@ -243,11 +243,12 @@
         trades.slice(0, 6).map(tr => {
           const c    = Calc.trade(tr);
           const date = new Date(tr.date).toLocaleDateString(i18n.locale(), { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-          const dirC = tr.direction === 'long' ? 'var(--green)' : 'var(--red)';
+          const safeDir = tr.direction === 'long' ? 'long' : 'short';
+          const dirC = safeDir === 'long' ? 'var(--green)' : 'var(--red)';
           return `<div class="recent-row">
             <div class="recent-bar" style="background:${dirC}"></div>
-            <span class="recent-instr">${tr.instrument}</span>
-            <span class="recent-dir" style="color:${dirC}">${tr.direction.toUpperCase()}</span>
+            <span class="recent-instr">${UI.escHtml(tr.instrument)}</span>
+            <span class="recent-dir" style="color:${dirC}">${safeDir.toUpperCase()}</span>
             ${tr.apex ? `<span class="recent-date" style="color:var(--muted)">${UI.escHtml(tr.apex)}</span>` : ''}
             <span class="recent-date">${date}</span>
             <span class="recent-rr" style="color:${Calc.rrColor(c.rr)}">${c.rr.toFixed(2)}R</span>

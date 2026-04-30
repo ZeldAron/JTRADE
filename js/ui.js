@@ -240,7 +240,7 @@ const UI = (() => {
           <div class="level-card lc-entry">
             <div class="lc-label">Entry</div>
             <div class="lc-price">${t.entry.toFixed(2)}</div>
-            <div class="lc-ticks">${t.direction.toUpperCase()}</div>
+            <div class="lc-ticks">${(t.direction === 'long' ? 'long' : 'short').toUpperCase()}</div>
           </div>
           <div class="level-card lc-sl">
             <div class="lc-label">SL</div>
