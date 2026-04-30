@@ -110,23 +110,23 @@ const Modal = (() => {
       `  sl    = "Prix" inside "NIVEAU DU STOP" or "Stop Loss" section\n` +
       `  tp1   = "Prix" inside "NIVEAU DE PROFIT" or "Profit Target" section\n\n` +
 
-      `== IF you see an ANNOTATED CHART (drawn lines/zones, no order ticket) ==\n` +
-      `Follow these steps IN ORDER to find the 3 levels:\n\n` +
-      (isLong
-        ? `STEP A — Find SL: scan the RIGHT AXIS from BOTTOM to TOP. The SL is the LOWEST colored box (red/orange) visible on the right axis. Write down that price.\n\n` +
-          `STEP B — Find ENTRY: now look JUST ABOVE the SL box. The entry is the NEXT colored box immediately above SL (within 1-10 points of the SL). Write down that price.\n` +
-          `  - Entry and SL are always VERY CLOSE together (only a few points apart)\n` +
-          `  - Do NOT pick a colored box from the middle of the chart as entry\n` +
-          `  - The entry box may be blue, white, or any color — it is simply the box immediately above SL\n\n` +
-          `STEP C — Find TP1: scan the right axis for the HIGHEST colored box — it will be FAR above entry (many points higher). This is the profit target.\n\n`
-        : `STEP A — Find SL: scan the RIGHT AXIS from TOP to BOTTOM. The SL is the HIGHEST colored box (red/orange) visible on the right axis.\n\n` +
-          `STEP B — Find ENTRY: look JUST BELOW the SL box. The entry is the NEXT colored box immediately below SL (within 1-10 points).\n\n` +
-          `STEP C — Find TP1: the LOWEST colored box on the right axis, far below entry.\n\n`
-      ) +
-      `ABSOLUTE RULES:\n` +
-      `  - NEVER read the live ticker (/MGC, /ES, /NQ label) as a price level\n` +
-      `  - Copy each digit EXACTLY as written — do not round or transpose\n` +
-      `  - Entry and SL must be very close; TP must be far away\n\n` +
+      `== IF you see an ANNOTATED CHART ==\n` +
+      `There are colored ZONES drawn on the chart (rectangles or shaded areas) AND colored price labels on the RIGHT AXIS.\n` +
+      `The colored labels on the right axis are aligned horizontally with the zone boundaries on the chart.\n\n` +
+      `METHOD — match zones to right-axis labels:\n` +
+      `  1. BLUE zone (rectangle or shaded area) = the PROFIT / ENTRY zone\n` +
+      `     → Look at the right axis at the vertical position of the BLUE zone edges\n` +
+      `     → The colored label(s) on the right axis that align with the blue zone = entry price\n\n` +
+      `  2. RED zone or red horizontal line = the STOP LOSS zone\n` +
+      `     → Look at the right axis at the vertical position of the RED zone/line\n` +
+      `     → The red colored label on the right axis that aligns with the red zone = sl price\n\n` +
+      `  3. TP1 = the colored label on the right axis that is ${isLong ? 'HIGHEST (furthest up)' : 'LOWEST (furthest down)'}, far from entry\n` +
+      `     → This is often a blue or green label at the ${isLong ? 'top' : 'bottom'} of the right axis\n\n` +
+      `RULES:\n` +
+      `  - Match zones to axis labels by their VERTICAL POSITION on the chart\n` +
+      `  - NEVER use the live price ticker box (/MGC, /ES, /NQ etc.)\n` +
+      `  - Copy numbers EXACTLY digit by digit from the right axis labels\n` +
+      `  - ${isLong ? 'sl < entry < tp1' : 'tp1 < entry < sl'} must be true\n\n` +
 
       `Respond with ONLY this JSON on one line:\n` +
       `{"entry":0.00,"sl":0.00,"tp1":0.00}\n` +
