@@ -30,12 +30,14 @@
       const listHtml = myAccs.length
         ? myAccs.map(a => {
             const tp = types.find(tp => tp.id === a.typeId) || {};
+            const balance = a.capital + (a.pnlOffset || 0);
+            const balColor = (a.pnlOffset || 0) < 0 ? 'color:var(--red)' : (a.pnlOffset || 0) > 0 ? 'color:var(--green)' : '';
             return `
               <div class="ma-row">
                 <span class="ma-badge ${STATUS_BADGE[a.status] || 'ma-eval'}">${STATUS_LABEL[a.status] || '?'}</span>
                 <span class="ma-name">${UI.escHtml(a.name)}</span>
                 <span class="ma-preset">${UI.escHtml(tp.name || '—')}</span>
-                <span class="ma-stat">$${Number(a.capital).toLocaleString('fr-FR')}</span>
+                <span class="ma-stat" style="${balColor}" title="Capital : $${Number(a.capital).toLocaleString('fr-FR')}">$${Number(balance).toLocaleString('fr-FR')}</span>
                 <span class="ma-stat" style="color:var(--green)">TP +$${a.profitTarget}</span>
                 <span class="ma-stat" style="color:var(--red)">DD -$${a.maxDrawdown}</span>
                 <div class="ma-actions">
