@@ -407,7 +407,7 @@
           renderPnlChart('pnlChart', trades);
         } catch(e) {
           const ca = $('pnlChart');
-          if (ca) ca.parentElement.innerHTML = '<p style="color:var(--red);font-size:12px;padding:20px 0">⚠ Erreur : ' + String(e).slice(0, 300) + '</p>';
+          if (ca) { const p = document.createElement('p'); p.style.cssText = 'color:var(--red);font-size:12px;padding:20px 0'; p.textContent = '⚠ Erreur : ' + String(e).slice(0, 200); ca.parentElement.innerHTML = ''; ca.parentElement.appendChild(p); }
           console.error('[Chart error]', e);
         }
       });

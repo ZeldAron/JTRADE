@@ -10,8 +10,12 @@
     try {
       const res  = await fetch('https://api.frankfurter.app/latest?from=USD&to=EUR');
       const data = await res.json();
-      microEurUsd     = data.rates.EUR;
-      microEurUsdDate = data.date;
+      const rate = data?.rates?.EUR;
+      const date = data?.date;
+      if (typeof rate !== 'number' || !isFinite(rate) || rate <= 0) return null;
+      if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date))  return null;
+      microEurUsd     = rate;
+      microEurUsdDate = date;
       return microEurUsd;
     } catch { return null; }
   }
