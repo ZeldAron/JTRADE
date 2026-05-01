@@ -619,8 +619,13 @@
     $('setGroqKey').value = s.groqKey || '';
     $('btnSaveGroq').addEventListener('click', () => {
       const key = $('setGroqKey').value.trim();
+      const st  = $('groqKeyStatus');
+      if (key && !key.startsWith('gsk_')) {
+        st.textContent = t('set.groq.invalid') || 'Clé invalide (doit commencer par gsk_)';
+        st.style.color = 'var(--red)';
+        return;
+      }
       Store.updateSettings({ groqKey: key });
-      const st = $('groqKeyStatus');
       st.textContent = key ? t('set.groq.saved') : t('set.groq.cleared');
       st.style.color = key ? 'var(--green)' : 'var(--muted)';
     });
