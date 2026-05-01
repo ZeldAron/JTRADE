@@ -93,13 +93,30 @@
               </div>
             </div>
 
-            <div class="form-field" style="margin-bottom:12px">
-              <label class="form-label">${t('set.acc.type')}</label>
-              <select class="form-input" id="maTypeId">
-                <option value="">${t('set.acc.type.ph')}</option>
-                ${typeOptions}
-              </select>
-            </div>
+            ${Store.isPro()
+              ? `<div class="form-field" style="margin-bottom:12px">
+                  <label class="form-label">${t('set.acc.type')}</label>
+                  <select class="form-input" id="maTypeId">
+                    <option value="">${t('set.acc.type.ph')}</option>
+                    ${typeOptions}
+                  </select>
+                </div>`
+              : `<div class="form-field" style="margin-bottom:12px">
+                  <label class="form-label" style="display:flex;align-items:center;gap:6px">
+                    ${t('set.acc.type')}
+                    <span class="plan-badge plan-pro">PRO</span>
+                  </label>
+                  <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border:1.5px solid rgba(124,58,237,0.2);border-radius:8px;cursor:pointer" id="btnUnlockPreset">
+                    <span style="font-size:15px">🔒</span>
+                    <span style="font-size:12px;color:var(--muted);flex:1">${i18n.getLang()==='en'
+                      ? 'Apex, Topstep, FTMO, Lucid presets — Pro only. Fill manually below.'
+                      : 'Presets Apex, Topstep, FTMO, Lucid — Pro uniquement. Remplissez manuellement ci-dessous.'
+                    }</span>
+                    <span style="font-size:10px;font-weight:700;color:#a78bfa;white-space:nowrap">Passer PRO →</span>
+                  </div>
+                  <input type="hidden" id="maTypeId" value="">
+                </div>`
+            }
 
             <div class="form-grid" style="grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
               <div class="form-field">
@@ -180,16 +197,24 @@
         $('maName').focus();
       });
 
-      $('maTypeId').addEventListener('change', () => {
-        const tp = types.find(tp => tp.id === $('maTypeId').value);
-        if (!tp) return;
-        $('maCapital').value      = tp.capital;
-        $('maProfitTarget').value = tp.profitTarget;
-        $('maMaxDrawdown').value  = tp.maxDrawdown;
-        $('maDailyLoss').value    = tp.dailyLossLimit;
-        $('maMaxContracts').value = tp.maxContracts;
-        $('maFeePerSide').value   = (tp.feePerSide || 2.14).toFixed(2);
-      });
+      // Preset auto-fill — Pro only (Basic has a hidden input, not a select)
+      if (Store.isPro()) {
+        $('maTypeId').addEventListener('change', () => {
+          const tp = types.find(tp => tp.id === $('maTypeId').value);
+          if (!tp) return;
+          $('maCapital').value      = tp.capital;
+          $('maProfitTarget').value = tp.profitTarget;
+          $('maMaxDrawdown').value  = tp.maxDrawdown;
+          $('maDailyLoss').value    = tp.dailyLossLimit;
+          $('maMaxContracts').value = tp.maxContracts;
+          $('maFeePerSide').value   = (tp.feePerSide || 2.14).toFixed(2);
+        });
+      } else {
+        const lockPreset = $('btnUnlockPreset');
+        if (lockPreset) lockPreset.addEventListener('click', () => {
+          document.querySelector('[data-page="offers"]').click();
+        });
+      }
 
       $('maBtnCancel').addEventListener('click', () => {
         $('maForm').style.display = 'none';
