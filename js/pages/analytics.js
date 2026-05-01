@@ -78,14 +78,24 @@
         </tr>`;
       }).join('');
 
-    const instrRows = Object.entries(instrs).map(([name, v]) => {
-      const wr = v.total ? v.wins / v.total * 100 : 0;
-      return `<tr>
-        <td>${UI.escHtml(name)}</td><td>${v.total}</td>
-        <td style="color:${wr >= 50 ? 'var(--green)' : 'var(--red)'}">${wr.toFixed(0)}%</td>
-        <td style="font-family:'Geist Mono';color:${v.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${Calc.formatPnL(v.pnl)}</td>
-      </tr>`;
-    }).join('');
+    const instrRows = Object.entries(instrs)
+      .sort((a, b) => b[1].total - a[1].total)
+      .map(([name, v]) => {
+        const wr = v.total ? v.wins / v.total * 100 : 0;
+        return `<tr>
+          <td>${UI.escHtml(name)}</td>
+          <td>${v.total}</td>
+          <td>
+            <div class="wr-bar-wrap">
+              <div class="wr-bar-bg">
+                <div class="wr-bar-fill" style="width:${wr}%;background:${wr >= 50 ? 'var(--green)' : 'var(--red)'}"></div>
+              </div>
+              <span style="font-size:11px;font-family:'Geist Mono';color:${wr >= 50 ? 'var(--green)' : 'var(--red)'};width:32px;text-align:right">${wr.toFixed(0)}%</span>
+            </div>
+          </td>
+          <td style="font-family:'Geist Mono';color:${v.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${Calc.formatPnL(v.pnl)}</td>
+        </tr>`;
+      }).join('');
 
     // ── Sessions ─────────────────────────────────────────────────────────────
     const sessData = {};
@@ -183,36 +193,46 @@
     // ── Render ────────────────────────────────────────────────────────────
     el.innerHTML = `
       <div class="page-title">${t('page.analytics')}</div>
-      <div class="two-col">
-        <div class="chart-card">
-          <h3>${t('analytics.setup.perf')}</h3>
-          ${setupRows
-            ? `<table class="a-table"><thead><tr><th>${t('analytics.col.setup')}</th><th>${t('analytics.col.total')}</th><th>${t('analytics.col.wr')}</th><th>${t('analytics.col.pnl')}</th></tr></thead><tbody>${setupRows}</tbody></table>`
-            : `<p style="color:var(--muted);font-size:12px">${t('analytics.no.setup')}</p>`}
+
+      <div class="page-section">
+        <div class="page-section-hd">
+          <span class="page-section-ttl">${t('analytics.setup.perf')}</span>
+          <span class="page-section-count">${Object.keys(setups).length} setup${Object.keys(setups).length > 1 ? 's' : ''}</span>
         </div>
-        <div class="chart-card">
-          <h3>${t('analytics.by.instrument')}</h3>
-          <table class="a-table">
-            <thead><tr><th>${t('analytics.col.instr')}</th><th>${t('analytics.col.total')}</th><th>${t('analytics.col.wrs')}</th><th>${t('analytics.col.pnl')}</th></tr></thead>
-            <tbody>${instrRows}</tbody>
-          </table>
+        <div class="two-col">
+          <div class="chart-card">
+            ${setupRows
+              ? `<table class="a-table"><thead><tr><th>${t('analytics.col.setup')}</th><th>${t('analytics.col.total')}</th><th>${t('analytics.col.wr')}</th><th>${t('analytics.col.pnl')}</th></tr></thead><tbody>${setupRows}</tbody></table>`
+              : `<p style="color:var(--muted);font-size:12px">${t('analytics.no.setup')}</p>`}
+          </div>
+          <div class="chart-card">
+            <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">${t('analytics.by.instrument')}</div>
+            <table class="a-table">
+              <thead><tr><th>${t('analytics.col.instr')}</th><th>${t('analytics.col.total')}</th><th>${t('analytics.col.wr')}</th><th>${t('analytics.col.pnl')}</th></tr></thead>
+              <tbody>${instrRows}</tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <div class="chart-card" style="margin-top:16px">
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-          <h3 style="margin:0">${t('analytics.sessions.title')}</h3>
-          <span style="font-size:10px;color:var(--muted)">${t('analytics.sessions.hint')}</span>
-          ${timedTrades.length ? `<span style="font-size:10px;color:var(--muted);margin-left:auto">${timedTrades.length} / ${all.length} trades chronométrés</span>` : ''}
+      <div class="page-section">
+        <div class="page-section-hd">
+          <span class="page-section-ttl">${t('analytics.sessions.title')}</span>
+          ${timedTrades.length ? `<span class="page-section-count">${timedTrades.length} / ${all.length} chronométrés</span>` : ''}
         </div>
-        ${sessHtml}
+        <div class="chart-card">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${t('analytics.sessions.hint')}</div>
+          ${sessHtml}
+        </div>
       </div>
 
-      <div class="chart-card" style="margin-top:16px">
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">
-          <h3 style="margin:0">${t('analytics.hours.title')}</h3>
+      <div class="page-section">
+        <div class="page-section-hd">
+          <span class="page-section-ttl">${t('analytics.hours.title')}</span>
         </div>
-        ${hoursHtml}
+        <div class="chart-card">
+          ${hoursHtml}
+        </div>
       </div>`;
   };
 })();
