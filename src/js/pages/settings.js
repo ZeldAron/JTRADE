@@ -573,6 +573,172 @@
       e.target.value = '';
     });
 
+    // ── Import CSV ─────────────────────────────────────────────────────────────
+    const CSV_TEMPLATE = [
+      '# ZeldTrade — Modèle CSV',
+      '# direction : long | short',
+      '# outcome   : win | loss | be | open  (ou laisser vide si pnl renseigné)',
+      '# Si exitPrice OU pnl fourni, outcome est déduit automatiquement',
+      'date,instrument,direction,outcome,entry,sl,tp1,exitPrice,pnl,contracts,account,setup,notes',
+      '2024-01-15 09:30,MES1,long,win,4800.25,4795.00,4810.50,4810.50,,2,Apex-50K,ORB,Bon trade',
+      '2024-01-15 14:00,MNQ1,short,loss,18200.00,18215.00,18160.00,18215.00,,1,Apex-50K,Breakout,,',
+      '2024-01-16 10:15,MES1,long,be,4805.50,4800.00,4815.00,4805.50,,1,Apex-50K,,,',
+    ].join('\n');
+
+    function normalizeCSVDate(str) {
+      str = str.trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+        const d = new Date(str.length <= 10 ? str + 'T12:00:00Z' : str);
+        return isNaN(d) ? null : d.toISOString();
+      }
+      const m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+      if (m) {
+        const d = new Date(`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}T12:00:00Z`);
+        return isNaN(d) ? null : d.toISOString();
+      }
+      const d = new Date(str);
+      return isNaN(d) ? null : d.toISOString();
+    }
+
+    function parseCSVText(text) {
+      const firstLine = text.split('\n').find(l => l.trim() && !l.trim().startsWith('#')) || '';
+      const delim = (firstLine.split(';').length > firstLine.split(',').length) ? ';' : ',';
+
+      function parseLine(line) {
+        const cols = []; let cur = ''; let inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') { inQ = !inQ; }
+          else if (ch === delim && !inQ) { cols.push(cur.trim()); cur = ''; }
+          else { cur += ch; }
+        }
+        cols.push(cur.trim());
+        return cols;
+      }
+
+      const COL_MAP = {
+        date:       ['date','datetime','time','trade date','tradedate','open time','opentime','opened','open date'],
+        instrument: ['instrument','symbol','ticker','contract','asset','market','symbole'],
+        direction:  ['direction','side','type','action','buy/sell','buysell','sens'],
+        outcome:    ['outcome','result','status','résultat','resultat'],
+        entry:      ['entry','entry price','entryprice','open price','openprice','price open','prix entrée','prix entree'],
+        sl:         ['sl','stop','stoploss','stop loss','stop_loss','stop-loss'],
+        tp1:        ['tp1','tp','target','take profit','takeprofit','objectif'],
+        exitPrice:  ['exit','exitprice','exit price','close','close price','closeprice','price close','prix sortie'],
+        pnl:        ['pnl','net pnl','netpnl','p&l','profit','profit/loss','net profit','gain','realised p&l','realized p&l','résultat net','resultat net'],
+        contracts:  ['contracts','qty','quantity','lots','size','volume','nb contracts','nb contrats','contrats','quantité','quantite'],
+        account:    ['account','apex','firm','account name','accountname','compte','nom du compte'],
+        setup:      ['setup','strategy','stratégie','strategie','pattern'],
+        notes:      ['notes','note','comment','comments','description','memo','commentaire'],
+      };
+
+      const lines = text.split('\n').filter(l => l.trim() && !l.trim().startsWith('#'));
+      if (lines.length < 2) return { trades: [], skipped: 0 };
+
+      const headers = parseLine(lines[0]).map(h => h.toLowerCase().replace(/['"]/g,'').trim());
+      const colIdx  = {};
+      for (const [field, aliases] of Object.entries(COL_MAP)) {
+        for (const alias of aliases) {
+          const idx = headers.indexOf(alias);
+          if (idx >= 0 && colIdx[field] === undefined) { colIdx[field] = idx; break; }
+        }
+      }
+
+      const trades  = [];
+      let   skipped = 0;
+      const get = (cols, field) => colIdx[field] !== undefined ? (cols[colIdx[field]] || '').replace(/['"]/g,'').trim() : '';
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const cols = parseLine(line);
+        const gf   = f => get(cols, f);
+
+        const dateISO = normalizeCSVDate(gf('date'));
+        if (!dateISO) { skipped++; continue; }
+
+        const instrument = gf('instrument').toUpperCase();
+        if (!instrument) { skipped++; continue; }
+
+        const dirRaw = gf('direction').toLowerCase().trim();
+        let direction;
+        if (['long','buy','b','l','bto','buy to open','achat'].includes(dirRaw)) direction = 'long';
+        else if (['short','sell','s','sto','sell to open','vente'].includes(dirRaw)) direction = 'short';
+        else { skipped++; continue; }
+
+        const contracts = Math.max(1, Math.min(999, parseInt(gf('contracts')) || 1));
+        const entry     = parseFloat(gf('entry').replace(',','.'))     || null;
+        const sl        = parseFloat(gf('sl').replace(',','.'))        || null;
+        const tp1       = parseFloat(gf('tp1').replace(',','.'))       || null;
+        let   exitPrice = parseFloat(gf('exitPrice').replace(',','.')) || null;
+        const pnlRaw    = parseFloat(gf('pnl').replace(',','.'));
+
+        if (!exitPrice && !isNaN(pnlRaw) && pnlRaw !== 0 && entry) {
+          const pv = Calc.pointValue(instrument);
+          if (pv > 0) {
+            const pts = pnlRaw / (pv * contracts);
+            exitPrice = Math.round((direction === 'long' ? entry + pts : entry - pts) * 10000) / 10000;
+          }
+        }
+
+        const outRaw = gf('outcome').toLowerCase().trim();
+        let outcome;
+        const WIN_WORDS  = ['win','profit','winner','tp','take profit','yes','w','gagné','gagne'];
+        const LOSS_WORDS = ['loss','loser','sl','stop loss','no','l','perdu'];
+        const BE_WORDS   = ['be','breakeven','break even','break-even','neutre','neutral','scratch'];
+        if (WIN_WORDS.includes(outRaw))  outcome = 'win';
+        else if (LOSS_WORDS.includes(outRaw)) outcome = 'loss';
+        else if (BE_WORDS.includes(outRaw))   outcome = 'be';
+        else if (!isNaN(pnlRaw)) {
+          outcome = pnlRaw > 0 ? 'win' : pnlRaw < 0 ? 'loss' : 'be';
+        } else {
+          outcome = exitPrice ? (exitPrice > (entry || 0) ? 'win' : exitPrice < (entry || 0) ? 'loss' : 'be') : 'open';
+        }
+
+        const trade = {
+          date: dateISO, instrument, direction, outcome,
+          entry: entry || 0, sl: sl || 0, tp1: tp1 || 0, contracts,
+          apex:  gf('account'), setup: gf('setup'), notes: gf('notes'),
+        };
+        if (exitPrice) trade.exitPrice = exitPrice;
+
+        trades.push(trade);
+      }
+      return { trades, skipped };
+    }
+
+    $('btnCsvTemplate').addEventListener('click', () => {
+      const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8' });
+      const a    = document.createElement('a');
+      a.href     = URL.createObjectURL(blob);
+      a.download = 'zeldtrade-modele.csv';
+      a.click();
+    });
+
+    $('btnImportCsv').addEventListener('click', () => $('importCsvFile').click());
+
+    $('importCsvFile').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { UI.toast(t('err.file.large'), true); e.target.value = ''; return; }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const { trades, skipped } = parseCSVText(ev.target.result);
+          if (trades.length === 0 && skipped === 0) { UI.toast(t('set.csv.import.err'), true); return; }
+          if (trades.length > 0) {
+            Store.importTrades(trades);
+            UI.renderList();
+            UI.updateStats();
+            UI.toast(t('set.csv.import.done').replace('{n}', trades.length));
+          }
+          if (skipped > 0) setTimeout(() => UI.toast(t('set.csv.import.warn').replace('{n}', skipped), true), trades.length > 0 ? 3200 : 0);
+        } catch (err) { UI.toast(t('set.csv.import.err'), true); }
+      };
+      reader.readAsText(file, 'utf-8');
+      e.target.value = '';
+    });
+
     $('btnClearAll').addEventListener('click', () => {
       if (!confirm(t('set.clear.confirm'))) return;
       Store.clearTrades();
