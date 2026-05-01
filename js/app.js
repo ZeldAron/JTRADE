@@ -117,9 +117,10 @@ function initApp() {
   UI.updateStats();
 
   // Redirect post-login if a destination was set (ex: landing Pro button)
+  const VALID_PAGES = new Set(['journal','dashboard','analytics','goals','calendar','micro','offers','settings','tutorial']);
   const _goto = sessionStorage.getItem('ztGoto');
-  if (_goto) {
-    sessionStorage.removeItem('ztGoto');
+  sessionStorage.removeItem('ztGoto');
+  if (_goto && VALID_PAGES.has(_goto)) {
     switchPage(_goto);
     if (_goto === 'offers') {
       setTimeout(() => {

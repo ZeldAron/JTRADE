@@ -13,7 +13,7 @@ const Auth = (() => {
     _fbDb.collection('userEmails').doc(user.uid).set({
       uid:      user.uid,
       email:    user.email || '',
-      username: user.displayName || '',
+      username: String(user.displayName || '').replace(/[<>"'`]/g, '').trim().slice(0, 50),
       lastSeen: Date.now(),
     }, { merge: true }).catch(() => {});
   }

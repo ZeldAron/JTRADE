@@ -99,7 +99,9 @@ const Store = (() => {
 
   // ── Init & chargement ────────────────────────────────────────────────────────
   function initForUser(userId) {
-    _uid = userId || 'default';
+    _uid      = userId || 'default';
+    _plan     = { plan: 'basic' };
+    _aiUsage  = { date: '', count: 0 };
     trades        = [];
     settings      = { ...DEFAULT_SETTINGS };
     accountTypes  = DEFAULT_ACCOUNT_TYPES.map(a => ({ ...a }));
@@ -107,8 +109,8 @@ const Store = (() => {
     spreads       = { ...DEFAULT_SPREADS };
     spreadsByFirm = Object.fromEntries(Object.keys(DEFAULT_SPREADS_BY_FIRM).map(k => [k, { ...DEFAULT_SPREADS_BY_FIRM[k] }]));
     groups        = [];
-    _loadFromLocalStorage();   // affichage immédiat
-    _loadFromFirestore();      // sync cloud en arrière-plan
+    _loadFromLocalStorage();
+    _loadFromFirestore();
   }
 
   function _loadFromLocalStorage() {
@@ -209,9 +211,13 @@ const Store = (() => {
 
   const DIRS     = new Set(['long', 'short']);
   const OUTCOMES = new Set(['win', 'loss', 'be', 'open']);
+  function _safeNum(v, min, max, def) {
+    const n = parseFloat(v);
+    if (!isFinite(n)) return def;
+    return Math.max(min, Math.min(max, n));
+  }
   function _sanitizeTrade(raw) {
     return {
-      ...raw,
       instrument: String(raw.instrument || '').replace(/[^A-Za-z0-9/. _-]/g, '').slice(0, 20) || 'MES1',
       direction:  DIRS.has(raw.direction)    ? raw.direction : 'long',
       outcome:    OUTCOMES.has(raw.outcome)  ? raw.outcome   : 'open',
@@ -219,6 +225,13 @@ const Store = (() => {
       setup:      String(raw.setup  || '').slice(0, 500),
       notes:      String(raw.notes  || '').slice(0, 2000),
       apex:       String(raw.apex   || '').replace(/[^A-Za-z0-9 _-]/g, '').slice(0, 100),
+      date:       /^\d{4}-\d{2}-\d{2}T[\d:.Z+-]+$/.test(raw.date) ? raw.date : new Date().toISOString(),
+      entry:      raw.entry  != null ? _safeNum(raw.entry,  -1e7, 1e7, null) : null,
+      sl:         raw.sl     != null ? _safeNum(raw.sl,     -1e7, 1e7, null) : null,
+      tp1:        raw.tp1    != null ? _safeNum(raw.tp1,    -1e7, 1e7, null) : null,
+      tp2:        raw.tp2    != null ? _safeNum(raw.tp2,    -1e7, 1e7, null) : null,
+      pnl:        raw.pnl    != null ? _safeNum(raw.pnl,    -1e7, 1e7, null) : null,
+      rr:         raw.rr     != null ? _safeNum(raw.rr,     -100, 100, null) : null,
     };
   }
 
@@ -275,8 +288,17 @@ const Store = (() => {
   // ── Settings ─────────────────────────────────────────────────────────────────
   function getSettings()        { return { ...settings }; }
   function getGroqKey()         { return settings.groqKey || ''; }
+  const SETTINGS_ALLOWED = new Set(['capital','contracts','instrument','groqKey']);
   function updateSettings(data) {
-    settings = { ...settings, ...data };
+    const safe = {};
+    for (const [k, v] of Object.entries(data)) {
+      if (!SETTINGS_ALLOWED.has(k)) continue;
+      if (k === 'capital')    safe.capital    = _safeNum(v, 0, 1e9, 50000);
+      else if (k === 'contracts') safe.contracts = _safeNum(v, 1, 999, 1);
+      else if (k === 'instrument') safe.instrument = String(v).replace(/[^A-Za-z0-9/. _-]/g,'').slice(0,20) || 'MES1';
+      else if (k === 'groqKey') safe.groqKey = String(v || '').slice(0, 200);
+    }
+    settings = { ...settings, ...safe };
     lsSet(lk().settings, settings);
     const { groqKey: _, ...cloudSettings } = settings;
     fbSet('settings', cloudSettings);
@@ -304,8 +326,21 @@ const Store = (() => {
   function _sanitizeAccountName(name) {
     return String(name || '').replace(/[<>"'`]/g, '').trim().slice(0, 50);
   }
+  function _sanitizeAccount(data) {
+    const s = {};
+    if (data.name        !== undefined) s.name           = _sanitizeAccountName(data.name);
+    if (data.firmKey     !== undefined) s.firmKey        = String(data.firmKey || '').replace(/[^a-z0-9_-]/g, '').slice(0, 20);
+    if (data.status      !== undefined) s.status         = ['evaluation','funded'].includes(data.status) ? data.status : 'evaluation';
+    if (data.capital     !== undefined) s.capital        = _safeNum(data.capital,       0, 1e9, 0);
+    if (data.profitTarget!== undefined) s.profitTarget   = _safeNum(data.profitTarget,  0, 1e7, 0);
+    if (data.maxDrawdown !== undefined) s.maxDrawdown    = _safeNum(data.maxDrawdown,   0, 1e7, 0);
+    if (data.dailyLossLimit!==undefined)s.dailyLossLimit = _safeNum(data.dailyLossLimit,0, 1e7, 0);
+    if (data.maxContracts!== undefined) s.maxContracts   = _safeNum(data.maxContracts,  1, 999, 1);
+    if (data.feePerSide  !== undefined) s.feePerSide     = _safeNum(data.feePerSide,    0, 100, 0);
+    return s;
+  }
   function addMyAccount(data) {
-    const a = { ...data, name: _sanitizeAccountName(data.name), id: 'acc-' + Date.now() };
+    const a = { ...data, ..._sanitizeAccount(data), id: 'acc-' + Date.now() };
     myAccounts.push(a);
     _saveMyAccounts();
     return a;
@@ -313,8 +348,7 @@ const Store = (() => {
   function updateMyAccount(id, data) {
     const i = myAccounts.findIndex(a => a.id === id);
     if (i < 0) return null;
-    const clean = data.name !== undefined ? { ...data, name: _sanitizeAccountName(data.name) } : data;
-    myAccounts[i] = { ...myAccounts[i], ...clean };
+    myAccounts[i] = { ...myAccounts[i], ..._sanitizeAccount(data) };
     _saveMyAccounts();
     return myAccounts[i];
   }
@@ -369,14 +403,27 @@ const Store = (() => {
   function getPlanInfo() { return { ..._plan }; }
   function isPro()       { return _plan.plan === 'pro'; }
 
+  let _proAttempts = 0;
+  let _proThrottleUntil = 0;
   async function activatePro(code) {
+    if (Date.now() < _proThrottleUntil) return 'throttled';
     try {
       const normalized = code.trim().toUpperCase().replace(/[-\s]/g, '');
-      const hash       = await _sha256(normalized);
-      const hashDoc    = await _fbDb.collection('proCodeHashes').doc(hash).get();
-      if (!hashDoc.exists) return false;
+      if (!normalized) return false;
+      const hash    = await _sha256(normalized);
+      const hashDoc = await _fbDb.collection('proCodeHashes').doc(hash).get();
+      if (!hashDoc.exists) {
+        _proAttempts++;
+        if (_proAttempts >= 3) { _proThrottleUntil = Date.now() + 60_000; _proAttempts = 0; }
+        return false;
+      }
       const hdata = hashDoc.data();
-      if (hdata.uid !== _uid) return false;
+      if (hdata.uid !== _uid) {
+        _proAttempts++;
+        if (_proAttempts >= 3) { _proThrottleUntil = Date.now() + 60_000; _proAttempts = 0; }
+        return false;
+      }
+      _proAttempts = 0;
       const info = { plan: 'pro', activatedAt: Date.now(), codeHash: hash };
       lsSet(lk().plan, info);
       _plan = { ...info };
