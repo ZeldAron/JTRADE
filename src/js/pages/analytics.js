@@ -75,8 +75,8 @@
     }
 
     // ── Setup + Instrument ──────────────────────────────────────────────────
-    const setups = {};
-    const instrs = {};
+    const setups = Object.create(null);
+    const instrs = Object.create(null);
 
     all.forEach(tr => {
       const c      = Calc.trade(tr);
