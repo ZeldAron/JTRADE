@@ -29,9 +29,45 @@
     return isNaN(d) ? null : d.getUTCHours();
   }
 
+  function goOffers() {
+    document.querySelector('[data-page="offers"]').click();
+  }
+
+  function featureLockSection(title, count, subtitle) {
+    const isEn = i18n.getLang() === 'en';
+    return `<div class="page-section">
+      <div class="page-section-hd">
+        <span class="page-section-ttl">${title}</span>
+        <span class="plan-badge plan-pro" style="margin-left:8px">PRO</span>
+        ${count ? `<span class="page-section-count" style="margin-left:auto">${count}</span>` : ''}
+      </div>
+      <div class="feature-lock-wrap">
+        <div class="feature-lock-placeholder">
+          <div class="feature-lock-placeholder-inner">
+            <div class="feature-lock-placeholder-bar"></div>
+            <div class="feature-lock-placeholder-bar" style="height:90px"></div>
+            <div class="feature-lock-placeholder-bar" style="height:50px"></div>
+            <div class="feature-lock-placeholder-bar" style="height:75px"></div>
+            <div class="feature-lock-placeholder-bar" style="height:40px"></div>
+            <div class="feature-lock-placeholder-bar" style="height:110px"></div>
+            <div class="feature-lock-placeholder-bar" style="height:65px"></div>
+            <div class="feature-lock-placeholder-bar" style="height:85px"></div>
+          </div>
+        </div>
+        <div class="feature-lock-overlay">
+          <div class="feature-lock-icon">🔒</div>
+          <div class="feature-lock-title">${isEn ? 'Pro feature' : 'Fonctionnalité Pro'}</div>
+          <div class="feature-lock-sub">${subtitle}</div>
+          <button class="feature-lock-cta" id="lockCta_${Math.random().toString(36).slice(2,7)}">${isEn ? 'Upgrade to Pro →' : 'Passer PRO →'}</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
   UI.renderAnalytics = function () {
-    const el  = $('analyticsContent');
-    const all = Store.getTrades();
+    const el    = $('analyticsContent');
+    const all   = Store.getTrades();
+    const isPro = Store.isPro();
 
     if (!all.length) {
       el.innerHTML = `<div class="page-title">${t('page.analytics')}</div><p style="color:var(--muted)">${t('analytics.no.data')}</p>`;
@@ -215,24 +251,42 @@
         </div>
       </div>
 
-      <div class="page-section">
-        <div class="page-section-hd">
-          <span class="page-section-ttl">${t('analytics.sessions.title')}</span>
-          ${timedTrades.length ? `<span class="page-section-count">${timedTrades.length} / ${all.length} chronométrés</span>` : ''}
-        </div>
-        <div class="chart-card">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${t('analytics.sessions.hint')}</div>
-          ${sessHtml}
-        </div>
-      </div>
+      ${isPro
+        ? `<div class="page-section">
+            <div class="page-section-hd">
+              <span class="page-section-ttl">${t('analytics.sessions.title')}</span>
+              ${timedTrades.length ? `<span class="page-section-count">${timedTrades.length} / ${all.length} chronométrés</span>` : ''}
+            </div>
+            <div class="chart-card">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${t('analytics.sessions.hint')}</div>
+              ${sessHtml}
+            </div>
+          </div>
 
-      <div class="page-section">
-        <div class="page-section-hd">
-          <span class="page-section-ttl">${t('analytics.hours.title')}</span>
-        </div>
-        <div class="chart-card">
-          ${hoursHtml}
-        </div>
-      </div>`;
+          <div class="page-section">
+            <div class="page-section-hd">
+              <span class="page-section-ttl">${t('analytics.hours.title')}</span>
+            </div>
+            <div class="chart-card">${hoursHtml}</div>
+          </div>`
+        : featureLockSection(
+            t('analytics.sessions.title'),
+            timedTrades.length ? `${timedTrades.length} / ${all.length}` : null,
+            i18n.getLang() === 'en'
+              ? 'Session & hourly breakdowns are available with the Pro plan.'
+              : 'L\'analyse par session et par heure est disponible avec le plan Pro.'
+          )
+          + featureLockSection(
+            t('analytics.hours.title'),
+            null,
+            i18n.getLang() === 'en'
+              ? 'Hourly performance heatmap is a Pro feature.'
+              : 'La heatmap de performance par heure est une fonctionnalité Pro.'
+          )
+      }`;
+    // Bind lock CTA buttons
+    el.querySelectorAll('.feature-lock-cta').forEach(btn => {
+      btn.addEventListener('click', goOffers);
+    });
   };
 })();

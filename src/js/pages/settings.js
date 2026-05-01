@@ -66,7 +66,10 @@
       el.innerHTML = `
         <div class="settings-section settings-section--wide">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-            <h3 style="margin:0">${t('set.accounts')}</h3>
+            <div style="display:flex;align-items:center;gap:8px">
+              <h3 style="margin:0">${t('set.accounts')}</h3>
+              ${!Store.isPro() ? `<span class="plan-badge plan-basic" style="font-size:9px">Basic · 1 max</span>` : ''}
+            </div>
             <button class="btn-ghost" id="btnAddMyAccount">${t('set.acc.add')}</button>
           </div>
 
@@ -142,8 +145,27 @@
 
       $('btnAddMyAccount').addEventListener('click', () => {
         if (!Store.canAddAccount()) {
-          UI.toast(t('err.limit.account'), true);
-          setTimeout(() => document.querySelector('[data-page="offers"]').click(), 1500);
+          const isEn = i18n.getLang() === 'en';
+          // Show inline upgrade banner instead of toast
+          const existing = document.getElementById('accLimitBanner');
+          if (existing) { existing.remove(); return; }
+          const banner = document.createElement('div');
+          banner.id = 'accLimitBanner';
+          banner.className = 'upgrade-inline';
+          banner.style.marginTop = '12px';
+          banner.innerHTML = `
+            <div class="upgrade-inline-icon">🔒</div>
+            <div class="upgrade-inline-body">
+              <div class="upgrade-inline-title">${isEn ? 'Unlimited accounts — Pro feature' : 'Comptes illimités — Fonctionnalité Pro'}</div>
+              <div class="upgrade-inline-sub">${isEn
+                ? 'Basic plan allows 1 account. Upgrade to Pro to manage multiple challenges at once.'
+                : 'Le plan Basic permet 1 compte. Passez Pro pour gérer plusieurs challenges simultanément.'}</div>
+            </div>
+            <button class="upgrade-inline-btn" id="btnUpgradeAccounts">${isEn ? 'Upgrade →' : 'Passer PRO →'}</button>`;
+          document.getElementById('maList').after(banner);
+          document.getElementById('btnUpgradeAccounts').addEventListener('click', () => {
+            document.querySelector('[data-page="offers"]').click();
+          });
           return;
         }
         $('maFormTitle').textContent = t('set.acc.new');
@@ -410,6 +432,32 @@
   function renderGroupsSettings() {
     const el = $('settingsGroups');
     if (!el) return;
+
+    // Gate: Groups are a Pro feature
+    if (!Store.isPro()) {
+      const isEn = i18n.getLang() === 'en';
+      el.innerHTML = `
+        <div class="settings-section settings-section--wide">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <h3 style="margin:0">${t('set.groups')}</h3>
+            <span class="plan-badge plan-pro">PRO</span>
+          </div>
+          <div class="upgrade-inline">
+            <div class="upgrade-inline-icon">⬡</div>
+            <div class="upgrade-inline-body">
+              <div class="upgrade-inline-title">${isEn ? 'Account groups — Pro feature' : 'Groupes de comptes — Fonctionnalité Pro'}</div>
+              <div class="upgrade-inline-sub">${isEn
+                ? 'Group multiple accounts to analyze their combined performance on the Dashboard.'
+                : 'Regroupez plusieurs comptes pour analyser leurs performances combinées sur le Dashboard.'}</div>
+            </div>
+            <button class="upgrade-inline-btn" id="btnUpgradeGroups">${isEn ? 'Upgrade →' : 'Passer PRO →'}</button>
+          </div>
+        </div>`;
+      $('btnUpgradeGroups').addEventListener('click', () => {
+        document.querySelector('[data-page="offers"]').click();
+      });
+      return;
+    }
 
     function render() {
       const grps = Store.getGroups();

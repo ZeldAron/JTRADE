@@ -89,12 +89,19 @@ function initApp() {
     location.reload();
   });
 
-  // Badge plan dans la sidebar
+  // Badge plan + sidebar upgrade CTA
   const planBadge = $('planBadge');
+  const isPro = Store.isPro();
   if (planBadge) {
-    const isPro = Store.isPro();
     planBadge.textContent = isPro ? 'PRO' : 'BASIC';
     planBadge.className   = 'plan-badge ' + (isPro ? 'plan-pro' : 'plan-basic');
+  }
+  const upgradeBlock = $('sidebarUpgrade');
+  if (upgradeBlock) {
+    upgradeBlock.style.display = isPro ? 'none' : 'block';
+    if (!isPro) {
+      $('btnSidebarUpgrade').addEventListener('click', () => switchPage('offers'));
+    }
   }
 
   Modal.init();
