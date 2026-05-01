@@ -3,13 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src  'self' https://www.gstatic.com https://cdnjs.cloudflare.com;
+    style-src   'self' 'unsafe-inline';
+    connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com wss://*.firebaseio.com https://api.groq.com https://api.web3forms.com;
+    img-src     'self' data: blob:;
+    frame-src   'none';
+    object-src  'none';
+    base-uri    'self';
+  ">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
   <title>ZeldTrade</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=0.9.40">
+  <link rel="stylesheet" href="css/style.css?v=0.9.41">
 </head>
 <body>
 
@@ -595,7 +605,7 @@
 
           <div class="settings-section">
             <h3 data-i18n="set.about">À propos</h3>
-            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.40</span></div>
+            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.41</span></div>
             <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
           </div>
         </div>
@@ -789,160 +799,26 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="js/firebase.js?v=0.9.40"></script>
+  <script src="js/firebase.js?v=0.9.41"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script src="js/i18n.js?v=0.9.40"></script>
-  <script src="js/auth.js?v=0.9.40"></script>
-  <script src="js/store.js?v=0.9.40"></script>
-  <script src="js/calc.js?v=0.9.40"></script>
-  <script src="js/modal.js?v=0.9.40"></script>
-  <script src="js/ui.js?v=0.9.40"></script>
-  <script src="js/pages/dashboard.js?v=0.9.40"></script>
-  <script src="js/pages/analytics.js?v=0.9.40"></script>
-  <script src="js/pages/settings.js?v=0.9.40"></script>
-  <script src="js/pages/goals.js?v=0.9.40"></script>
-  <script src="js/pages/calendar.js?v=0.9.40"></script>
-  <script src="js/pages/micro.js?v=0.9.40"></script>
-  <script src="js/pages/offers.js?v=0.9.40"></script>
-  <script src="js/contact.js?v=0.9.40"></script>
-  <script src="js/app.js?v=0.9.40"></script>
+  <script src="js/i18n.js?v=0.9.41"></script>
+  <script src="js/auth.js?v=0.9.41"></script>
+  <script src="js/store.js?v=0.9.41"></script>
+  <script src="js/calc.js?v=0.9.41"></script>
+  <script src="js/modal.js?v=0.9.41"></script>
+  <script src="js/ui.js?v=0.9.41"></script>
+  <script src="js/pages/dashboard.js?v=0.9.41"></script>
+  <script src="js/pages/analytics.js?v=0.9.41"></script>
+  <script src="js/pages/settings.js?v=0.9.41"></script>
+  <script src="js/pages/goals.js?v=0.9.41"></script>
+  <script src="js/pages/calendar.js?v=0.9.41"></script>
+  <script src="js/pages/micro.js?v=0.9.41"></script>
+  <script src="js/pages/offers.js?v=0.9.41"></script>
+  <script src="js/contact.js?v=0.9.41"></script>
+  <script src="js/app.js?v=0.9.41"></script>
 
-  <script>
-  // ── Bootstrap auth (Firebase) ────────────────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', () => {
-    const $ = id => document.getElementById(id);
-    i18n.apply();
-    Contact.init();
-
-    const landing   = $('landingScreen');
-    const authModal = $('authModal');
-    const loader    = $('loginLoader');
-    let appLaunched = false;
-
-    // ── Modal auth ────────────────────────────────────────────────────────────
-    function showForm(mode) {
-      ['loginFormEl','registerFormEl','forgotFormEl'].forEach(id => {
-        $(id).style.display = (id === mode + 'FormEl') ? '' : 'none';
-      });
-      ['loginError','registerError','forgotError'].forEach(id => {
-        if ($(id)) $(id).textContent = '';
-      });
-      const focus = { login: 'loginUsername', register: 'regUsername', forgot: 'forgotEmail' };
-      setTimeout(() => { if ($(focus[mode])) $(focus[mode]).focus(); }, 60);
-    }
-    function openModal(mode) { showForm(mode); authModal.style.display = 'flex'; }
-    function closeModal()    { authModal.style.display = 'none'; }
-
-    $('btnNavLogin').addEventListener('click',    () => openModal('login'));
-    $('btnNavRegister').addEventListener('click', () => openModal('register'));
-    $('btnHeroCta').addEventListener('click',     () => openModal('register'));
-    $('btnHeroLogin').addEventListener('click',   () => openModal('login'));
-    $('btnLandingFree').addEventListener('click', () => openModal('register'));
-    $('btnLandingPro').addEventListener('click',  () => {
-      sessionStorage.setItem('ztGoto', 'offers');
-      openModal('login');
-    });
-    $('authModalClose').addEventListener('click',    closeModal);
-    $('authModalBackdrop').addEventListener('click', closeModal);
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-    // ── Loader ────────────────────────────────────────────────────────────────
-    function showLoader(username) {
-      closeModal();
-      loader.style.display = 'flex';
-      $('loaderUser').textContent = username;
-      const fill = $('loaderFill');
-      fill.style.transition = 'none'; fill.style.width = '0%';
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        fill.style.transition = 'width 1.1s cubic-bezier(0.4,0,0.2,1)';
-        fill.style.width = '100%';
-      }));
-    }
-
-    // ── Launch app ────────────────────────────────────────────────────────────
-    function launchApp(user) {
-      if (appLaunched) return;
-      appLaunched = true;
-      Store.initForUser(user.id);
-      $('userPillName').textContent = user.username;
-      $('userAvatar').textContent   = user.username[0].toUpperCase();
-      landing.style.transition = 'opacity 0.45s ease';
-      landing.style.opacity    = '0';
-      setTimeout(() => { landing.style.display = 'none'; loader.style.display = 'none'; }, 450);
-      initApp();
-      // Re-render quand Firestore a fini de sync (sans réinitialiser les listeners)
-      window.addEventListener('store:synced', () => {
-        try {
-          UI.renderList();
-          UI.updateStats();
-          UI.initSettings();
-          const planBadge = document.getElementById('planBadge');
-          if (planBadge) {
-            planBadge.textContent = Store.isPro() ? 'PRO' : 'BASIC';
-            planBadge.className   = 'plan-badge ' + (Store.isPro() ? 'plan-pro' : 'plan-basic');
-          }
-        } catch {}
-      }, { once: true });
-    }
-
-    // ── Firebase Auth state ───────────────────────────────────────────────────
-    Auth.onAuthReady(user => {
-      if (user) { showLoader(user.username); setTimeout(() => launchApp(user), 1200); }
-    });
-
-    // ── Login ─────────────────────────────────────────────────────────────────
-    $('loginFormEl').addEventListener('submit', async e => {
-      e.preventDefault();
-      $('loginError').textContent = '';
-      const btn = e.target.querySelector('button[type=submit]');
-      btn.disabled = true;
-      const user = await Auth.login($('loginUsername').value.trim(), $('loginPassword').value);
-      btn.disabled = false;
-      if (!user) { $('loginError').textContent = i18n.t('auth.err.login'); return; }
-      showLoader(user.username);
-      setTimeout(() => launchApp(user), 1200);
-    });
-
-    // ── Register ──────────────────────────────────────────────────────────────
-    $('registerFormEl').addEventListener('submit', async e => {
-      e.preventDefault();
-      $('registerError').textContent = '';
-      const username = $('regUsername').value.trim();
-      const email    = $('regEmail').value.trim();
-      const password = $('regPassword').value;
-      const confirm  = $('regPasswordConfirm').value;
-      if (password !== confirm) { $('registerError').textContent = i18n.t('auth.err.mismatch'); return; }
-      if (password.length < 6)  { $('registerError').textContent = i18n.t('auth.err.short'); return; }
-      const btn = e.target.querySelector('button[type=submit]');
-      btn.disabled = true;
-      const result = await Auth.register(username, password, email);
-      btn.disabled = false;
-      if (result.error) { $('registerError').textContent = result.error; return; }
-      showLoader(result.user.username);
-      setTimeout(() => launchApp(result.user), 1200);
-    });
-
-    // ── Mot de passe oublié ───────────────────────────────────────────────────
-    $('forgotFormEl').addEventListener('submit', async e => {
-      e.preventDefault();
-      $('forgotError').textContent = '';
-      const btn = e.target.querySelector('button[type=submit]');
-      btn.disabled = true;
-      const result = await Auth.resetPassword($('forgotEmail').value.trim());
-      btn.disabled = false;
-      if (result.error) { $('forgotError').textContent = result.error; return; }
-      $('forgotError').style.color = 'var(--green)';
-      $('forgotError').textContent = 'Email envoyé ! Vérifie ta boîte mail.';
-    });
-
-    // ── Toggle formulaires ────────────────────────────────────────────────────
-    $('showRegister').addEventListener('click',        () => showForm('register'));
-    $('showLogin').addEventListener('click',           () => showForm('login'));
-    $('showForgot').addEventListener('click',          () => showForm('forgot'));
-    $('showLoginFromForgot').addEventListener('click', () => showForm('login'));
-  });
-  </script>
+  <script src="js/app-bootstrap.js?v=0.9.41"></script>
 
   <!-- CONTACT WIDGET ──────────────────────────────────────────────────────── -->
   <div id="contactWidget">

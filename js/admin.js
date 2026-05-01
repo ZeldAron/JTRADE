@@ -1,4 +1,6 @@
-// ─── CONSOLE ADMIN ZELDT RADE ─────────────────────────────────────────────────
+// ─── CONSOLE ADMIN ZELDTRADE ─────────────────────────────────────────────────
+if (window.top !== window.self) { window.top.location.replace(window.self.location.href); }
+
 const ADMIN_EMAIL = 'zeldtradepro@gmail.com';
 
 const Admin = (() => {

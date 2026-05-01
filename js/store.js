@@ -68,6 +68,7 @@ const Store = (() => {
   let spreadsByFirm = Object.fromEntries(Object.keys(DEFAULT_SPREADS_BY_FIRM).map(k => [k, { ...DEFAULT_SPREADS_BY_FIRM[k] }]));
   let groups        = [];
   let _plan         = { plan: 'basic' };
+  let _aiUsage      = { date: '', count: 0 };
 
   // ── Clés localStorage (cache local) ─────────────────────────────────────────
   const lk = () => ({
@@ -124,8 +125,10 @@ const Store = (() => {
       if (spf[fk]) spreadsByFirm[fk] = { ...DEFAULT_SPREADS_BY_FIRM[fk], ...spf[fk] };
     });
     if (g)   groups = g;
-    const p = lsGet(k.plan);
-    if (p)   _plan  = { plan: 'basic', ...p };
+    const p  = lsGet(k.plan);
+    const ai = lsGet(k.aiUsage);
+    if (p)   _plan    = { plan: 'basic', ...p };
+    if (ai)  _aiUsage = { date: '', count: 0, ...ai };
     // Merge nouveaux presets si absents
     _mergeAccountTypeDefaults();
   }
@@ -143,7 +146,11 @@ const Store = (() => {
       ]);
       let changed = false;
       if (tSnap.exists)   { trades      = tSnap.data().items  || [];  changed = true; }
-      if (sSnap.exists)   { settings    = { ...DEFAULT_SETTINGS, ...sSnap.data() }; changed = true; }
+      if (sSnap.exists) {
+        const { groqKey: _, ...cloudSettings } = sSnap.data();
+        settings = { ...DEFAULT_SETTINGS, ...cloudSettings, groqKey: settings.groqKey };
+        changed = true;
+      }
       if (maSnap.exists)  { myAccounts  = maSnap.data().items || [];  changed = true; }
       if (spfSnap.exists) {
         const d = spfSnap.data();
@@ -163,7 +170,12 @@ const Store = (() => {
         }
         changed = true;
       }
-      if (aiSnap.exists) { lsSet(lk().aiUsage, aiSnap.data()); changed = true; }
+      if (aiSnap.exists) {
+        const aiData = aiSnap.data();
+        lsSet(lk().aiUsage, aiData);
+        _aiUsage = { date: '', count: 0, ...aiData };
+        changed = true;
+      }
 
       if (changed) {
         const k = lk();
@@ -266,7 +278,8 @@ const Store = (() => {
   function updateSettings(data) {
     settings = { ...settings, ...data };
     lsSet(lk().settings, settings);
-    fbSet('settings', settings);
+    const { groqKey: _, ...cloudSettings } = settings;
+    fbSet('settings', cloudSettings);
   }
 
   // ── Account types (presets statiques) ────────────────────────────────────────
@@ -377,17 +390,16 @@ const Store = (() => {
   }
 
   // ── IA usage ─────────────────────────────────────────────────────────────────
-  function getAIUsage()      { return lsGet(lk().aiUsage) || { date: '', count: 0 }; }
+  function getAIUsage()      { return { ..._aiUsage }; }
   function canAnalyzeToday() {
     if (isPro()) return true;
     const today = new Date().toISOString().split('T')[0];
-    const u = getAIUsage();
-    return u.date !== today || u.count < 1;
+    return _aiUsage.date !== today || _aiUsage.count < 1;
   }
   function recordAnalysis() {
     const today = new Date().toISOString().split('T')[0];
-    const u = getAIUsage();
-    const next = { date: today, count: u.date === today ? u.count + 1 : 1 };
+    const next  = { date: today, count: _aiUsage.date === today ? _aiUsage.count + 1 : 1 };
+    _aiUsage = next;
     lsSet(lk().aiUsage, next);
     fbSet('aiUsage', next);
   }
