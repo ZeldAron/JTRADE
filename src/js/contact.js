@@ -28,8 +28,8 @@ const Contact = (() => {
   }
 
   async function submitForm() {
-    const name    = document.getElementById('cName').value.trim();
-    const email   = document.getElementById('cEmail').value.trim();
+    const name    = document.getElementById('cName').value.trim().replace(/[\r\n]/g, '');
+    const email   = document.getElementById('cEmail').value.trim().replace(/[\r\n]/g, '');
     const message = document.getElementById('cMessage').value.trim();
     const error   = document.getElementById('cError');
     const btn     = document.getElementById('cSend');

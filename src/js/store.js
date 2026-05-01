@@ -4,7 +4,6 @@
 const Store = (() => {
 
   // ── Données statiques (presets, référence) ───────────────────────────────────
-  const SHARED_GROQ_KEY  = ['gsk_0nPZyRQnwWBk5', 'eI6BPJmWGdyb3FY6AJeq', 'TEdCnpr2xq3JBws8N7b'].join('');
   const DEFAULT_SETTINGS = { capital: 50000, contracts: 1, instrument: 'MES1', groqKey: '' };
 
   const DEFAULT_ACCOUNT_TYPES = [
@@ -68,6 +67,7 @@ const Store = (() => {
   let spreads       = { ...DEFAULT_SPREADS };
   let spreadsByFirm = Object.fromEntries(Object.keys(DEFAULT_SPREADS_BY_FIRM).map(k => [k, { ...DEFAULT_SPREADS_BY_FIRM[k] }]));
   let groups        = [];
+  let _plan         = { plan: 'basic' };
 
   // ── Clés localStorage (cache local) ─────────────────────────────────────────
   const lk = () => ({
@@ -124,6 +124,8 @@ const Store = (() => {
       if (spf[fk]) spreadsByFirm[fk] = { ...DEFAULT_SPREADS_BY_FIRM[fk], ...spf[fk] };
     });
     if (g)   groups = g;
+    const p = lsGet(k.plan);
+    if (p)   _plan  = { plan: 'basic', ...p };
     // Merge nouveaux presets si absents
     _mergeAccountTypeDefaults();
   }
@@ -150,9 +152,18 @@ const Store = (() => {
         });
         changed = true;
       }
-      if (gSnap.exists)   { groups = gSnap.data().items || []; changed = true; }
-      if (planSnap.exists)  { lsSet(lk().plan,    planSnap.data());  changed = true; }
-      if (aiSnap.exists)    { lsSet(lk().aiUsage, aiSnap.data());   changed = true; }
+      if (gSnap.exists)  { groups = gSnap.data().items || []; changed = true; }
+      if (planSnap.exists) {
+        const planData = planSnap.data();
+        lsSet(lk().plan, planData);
+        const wasPro = _plan.plan === 'pro';
+        _plan = { plan: 'basic', ...planData };
+        if ((_plan.plan === 'pro') !== wasPro) {
+          window.dispatchEvent(new CustomEvent('store:planChanged'));
+        }
+        changed = true;
+      }
+      if (aiSnap.exists) { lsSet(lk().aiUsage, aiSnap.data()); changed = true; }
 
       if (changed) {
         const k = lk();
@@ -251,7 +262,7 @@ const Store = (() => {
 
   // ── Settings ─────────────────────────────────────────────────────────────────
   function getSettings()        { return { ...settings }; }
-  function getGroqKey()         { return settings.groqKey || SHARED_GROQ_KEY; }
+  function getGroqKey()         { return settings.groqKey || ''; }
   function updateSettings(data) {
     settings = { ...settings, ...data };
     lsSet(lk().settings, settings);
@@ -337,26 +348,29 @@ const Store = (() => {
   function deleteGroup(id) { groups = groups.filter(g => g.id !== id); _saveGroups(); }
 
   // ── Plan ─────────────────────────────────────────────────────────────────────
-  // Codes stockés en SHA-256 uniquement — les codes en clair ne sont jamais dans le bundle
-  const PRO_CODE_HASHES = [
-    '12baec02bac5869abd9c5eb21d2331f618bd76fdc9b66bfeb2d4f2bd7bff6244',
-    '091b4fbecc92c7fc283d9e2e87bcfc718baa19976cf2b48c710711e541884c36',
-  ];
-
   async function _sha256(str) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  function getPlanInfo() { return lsGet(lk().plan) || { plan: 'basic' }; }
-  function isPro()       { return getPlanInfo().plan === 'pro'; }
+  function getPlanInfo() { return { ..._plan }; }
+  function isPro()       { return _plan.plan === 'pro'; }
+
   async function activatePro(code) {
-    const hash = await _sha256(code.trim().toUpperCase());
-    if (!PRO_CODE_HASHES.includes(hash)) return false;
-    const info = { plan: 'pro', activatedAt: Date.now() };
-    lsSet(lk().plan, info);
-    fbSet('plan', info);
-    return true;
+    try {
+      const hash    = await _sha256(code.trim().toUpperCase());
+      const hashDoc = await _fbDb.collection('proCodeHashes').doc(hash).get();
+      if (!hashDoc.exists) return false;
+      const info = { plan: 'pro', activatedAt: Date.now(), codeHash: hash };
+      lsSet(lk().plan, info);
+      _plan = { ...info };
+      fbSet('plan', info);
+      window.dispatchEvent(new CustomEvent('store:planChanged'));
+      return true;
+    } catch (e) {
+      console.warn('[Store] activatePro error', e);
+      return false;
+    }
   }
 
   // ── IA usage ─────────────────────────────────────────────────────────────────

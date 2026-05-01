@@ -90,19 +90,26 @@ function initApp() {
   });
 
   // Badge plan + sidebar upgrade CTA
-  const planBadge = $('planBadge');
-  const isPro = Store.isPro();
-  if (planBadge) {
-    planBadge.textContent = isPro ? 'PRO' : 'BASIC';
-    planBadge.className   = 'plan-badge ' + (isPro ? 'plan-pro' : 'plan-basic');
-  }
-  const upgradeBlock = $('sidebarUpgrade');
-  if (upgradeBlock) {
-    upgradeBlock.style.display = isPro ? 'none' : 'block';
-    if (!isPro) {
-      $('btnSidebarUpgrade').addEventListener('click', () => switchPage('offers'));
+  function refreshPlanUI() {
+    const pro        = Store.isPro();
+    const planBadge  = $('planBadge');
+    const upgradeBlock = $('sidebarUpgrade');
+    if (planBadge) {
+      planBadge.textContent = pro ? 'PRO' : 'BASIC';
+      planBadge.className   = 'plan-badge ' + (pro ? 'plan-pro' : 'plan-basic');
+    }
+    if (upgradeBlock) {
+      upgradeBlock.style.display = pro ? 'none' : 'block';
     }
   }
+  refreshPlanUI();
+  $('btnSidebarUpgrade')?.addEventListener('click', () => switchPage('offers'));
+  window.addEventListener('store:planChanged', () => {
+    refreshPlanUI();
+    if (currentPage === 'dashboard') UI.renderDashboard();
+    if (currentPage === 'analytics') UI.renderAnalytics();
+    if (currentPage === 'settings')  UI.initSettings();
+  });
 
   Modal.init();
   UI.initSettings();

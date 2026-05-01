@@ -7,17 +7,36 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Un utilisateur ne peut lire/écrire QUE ses propres données
-    match /users/{userId}/data/{docName} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == userId
-                         && docName in ['trades', 'settings', 'myAccounts',
-                                        'spreadsByFirm', 'groups', 'plan', 'aiUsage'];
+    // Hashes des codes Pro — écriture réservée à l'admin (console Firebase)
+    match /proCodeHashes/{hash} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
 
-      // Limite la taille des documents (anti-abus)
+    // Données utilisateur (tout sauf plan)
+    match /users/{userId}/data/{docName} {
+      allow read: if request.auth != null
+                  && request.auth.uid == userId
+                  && docName in ['trades', 'settings', 'myAccounts',
+                                 'spreadsByFirm', 'groups', 'aiUsage'];
       allow write: if request.auth != null
                    && request.auth.uid == userId
-                   && request.resource.size < 2 * 1024 * 1024; // 2 MB max
+                   && docName in ['trades', 'settings', 'myAccounts',
+                                  'spreadsByFirm', 'groups', 'aiUsage']
+                   && request.resource.size < 2 * 1024 * 1024;
+    }
+
+    // Plan Pro — validation stricte du contenu + vérification du code en base
+    match /users/{userId}/data/plan {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 512
+                   && request.resource.data.keys().hasAll(['plan', 'activatedAt', 'codeHash'])
+                   && request.resource.data.keys().hasOnly(['plan', 'activatedAt', 'codeHash'])
+                   && request.resource.data.plan == 'pro'
+                   && request.resource.data.activatedAt is int
+                   && exists(/databases/$(database)/documents/proCodeHashes/$(request.resource.data.codeHash));
     }
   }
 }
