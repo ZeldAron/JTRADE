@@ -2,6 +2,7 @@
 
 const Contact = (() => {
   const WEB3FORMS_KEY = '465a3d27-6989-4226-8bb1-c5e70e9704c5';
+  let _lastSubmit = 0;
 
   function init() {
     const bubble = document.getElementById('contactBubble');
@@ -36,9 +37,10 @@ const Contact = (() => {
     const label   = document.getElementById('cSendLabel');
 
     error.textContent = '';
-    if (!name)                                                      { error.textContent = i18n.t('contact.err.name');  return; }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))   { error.textContent = i18n.t('contact.err.email'); return; }
-    if (!message)                                                   { error.textContent = i18n.t('contact.err.msg');   return; }
+    if (Date.now() - _lastSubmit < 60_000)                          { error.textContent = i18n.t('contact.err.wait') || 'Merci de patienter 60 secondes avant de renvoyer un message.'; return; }
+    if (!name)                                                       { error.textContent = i18n.t('contact.err.name');  return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))    { error.textContent = i18n.t('contact.err.email'); return; }
+    if (!message)                                                    { error.textContent = i18n.t('contact.err.msg');   return; }
 
     btn.disabled      = true;
     label.textContent = i18n.t('contact.sending');
@@ -59,6 +61,7 @@ const Contact = (() => {
       });
       const data = await res.json();
       if (data.success) {
+        _lastSubmit = Date.now();
         document.getElementById('contactForm').style.display    = 'none';
         document.getElementById('contactSuccess').style.display = 'flex';
       } else {

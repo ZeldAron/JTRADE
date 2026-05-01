@@ -127,11 +127,9 @@ const Store = (() => {
       if (spf[fk]) spreadsByFirm[fk] = { ...DEFAULT_SPREADS_BY_FIRM[fk], ...spf[fk] };
     });
     if (g)   groups = g;
-    const p  = lsGet(k.plan);
-    const ai = lsGet(k.aiUsage);
-    if (p)   _plan    = { plan: 'basic', ...p };
-    if (ai)  _aiUsage = { date: '', count: 0, ...ai };
-    // Merge nouveaux presets si absents
+    // _plan and _aiUsage are intentionally NOT loaded from localStorage:
+    // always start as Basic/empty so localStorage manipulation cannot grant
+    // temporary Pro access (e.g. adding extra accounts) before Firestore syncs.
     _mergeAccountTypeDefaults();
   }
 
