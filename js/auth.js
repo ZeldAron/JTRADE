@@ -8,9 +8,20 @@ const Auth = (() => {
       : null;
   }
 
+  function _storeUserEmail(user) {
+    if (!user) return;
+    _fbDb.collection('userEmails').doc(user.uid).set({
+      uid:      user.uid,
+      email:    user.email || '',
+      username: user.displayName || '',
+      lastSeen: Date.now(),
+    }, { merge: true }).catch(() => {});
+  }
+
   // Appelé par l'app pour attendre que Firebase confirme la session
   function onAuthReady(cb) {
     _fbAuth.onAuthStateChanged(user => {
+      if (user) _storeUserEmail(user);
       cb(user ? { id: user.uid, username: user.displayName || user.email.split('@')[0] } : null);
     });
   }
@@ -77,6 +88,7 @@ const Auth = (() => {
       const dataRef = _fbDb.collection('users').doc(user.uid).collection('data');
       const snap    = await dataRef.get();
       await Promise.all(snap.docs.map(d => d.ref.delete()));
+      await _fbDb.collection('userEmails').doc(user.uid).delete().catch(() => {});
 
       // Supprime le compte Firebase Auth
       await user.delete();

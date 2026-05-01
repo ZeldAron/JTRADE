@@ -358,13 +358,16 @@ const Store = (() => {
 
   async function activatePro(code) {
     try {
-      const hash    = await _sha256(code.trim().toUpperCase());
-      const hashDoc = await _fbDb.collection('proCodeHashes').doc(hash).get();
+      const normalized = code.trim().toUpperCase().replace(/[-\s]/g, '');
+      const hash       = await _sha256(normalized);
+      const hashDoc    = await _fbDb.collection('proCodeHashes').doc(hash).get();
       if (!hashDoc.exists) return false;
+      const hdata = hashDoc.data();
+      if (hdata.uid !== _uid) return false;
       const info = { plan: 'pro', activatedAt: Date.now(), codeHash: hash };
       lsSet(lk().plan, info);
       _plan = { ...info };
-      fbSet('plan', info);
+      await userDoc('plan').set(info);
       window.dispatchEvent(new CustomEvent('store:planChanged'));
       return true;
     } catch (e) {
