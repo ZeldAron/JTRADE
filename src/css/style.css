@@ -504,38 +504,21 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .kpi-card {
-  background: linear-gradient(135deg, var(--bg3) 0%, var(--bg2) 100%);
+  background: var(--bg3);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  padding: 18px;
+  padding: 16px 18px;
   transition: border-color 0.15s;
 }
 .kpi-card:hover { border-color: var(--border2); }
-.kpi-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-.kpi-icon svg { width: 14px; height: 14px; }
-.kpi-val {
-  font-family: 'Geist Mono', monospace;
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1;
-  margin-bottom: 4px;
-  letter-spacing: -0.02em;
-}
-.kpi-label { font-size: 11px; color: var(--muted); }
-.kpi-sub   { font-size: 10px; color: var(--muted2); margin-top: 2px; }
+.kpi-val   { font-family: 'Geist Mono', monospace; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.kpi-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+.kpi-sub   { font-size: 11px; color: var(--muted2); font-family: 'Geist Mono', monospace; }
 
 .chart-card {
   background: var(--bg2);
@@ -607,8 +590,8 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 .a-table td:last-child { text-align: right; }
 
 .wr-bar-wrap { display: flex; align-items: center; gap: 8px; }
-.wr-bar-bg { flex: 1; height: 3px; background: var(--bg4); border-radius: 99px; overflow: hidden; }
-.wr-bar-fill { height: 100%; border-radius: 99px; transition: width 0.3s; }
+.wr-bar-bg { flex: 1; height: 5px; background: var(--bg4); border-radius: 3px; overflow: hidden; }
+.wr-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
 
 /* ─── SETTINGS ─── */
 .settings-section {
@@ -1710,14 +1693,18 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 .dac-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  gap: 0;
   margin-bottom: 14px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0;
 }
-
 .dac-kpi {
   text-align: center;
+  padding: 0 6px;
+  border-right: 1px solid var(--border);
 }
-
+.dac-kpi:last-child { border-right: none; }
 .dac-kpi-val {
   font-family: 'Geist Mono', monospace;
   font-size: 14px;
@@ -2010,6 +1997,106 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 .ach-icon  { font-size: 24px; margin-bottom: 7px; }
 .ach-label { font-size: 11px; font-weight: 600; margin-bottom: 4px; line-height: 1.2; }
 .ach-desc  { font-size: 10px; color: var(--muted); line-height: 1.35; }
+
+/* ─── SECTIONS TRANSVERSALES ─── */
+.page-section { margin-bottom: 28px; }
+
+.page-section-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.page-section-ttl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted2);
+}
+.page-section-count {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'Geist Mono', monospace;
+}
+
+/* ─── GOALS GRID ─── */
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  margin-bottom: 0;
+}
+.goals-grid .goal-card { margin-bottom: 0; }
+
+/* ─── STAT STRIP (dashboard stats sous le graphique) ─── */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 0;
+  padding: 16px 0 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 14px;
+}
+.stat-strip-item {
+  text-align: center;
+  padding: 0 10px;
+  border-right: 1px solid var(--border);
+}
+.stat-strip-item:last-child { border-right: none; }
+.stat-strip-val {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Geist Mono', monospace;
+  margin-bottom: 4px;
+}
+.stat-strip-lbl {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ─── RECENT TRADES TABLE ─── */
+.recent-trade-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.recent-trade-table th {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 0 12px 10px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.recent-trade-table th:last-child,
+.recent-trade-table td:last-child { text-align: right; padding-right: 0; }
+.recent-trade-table td {
+  padding: 11px 12px 11px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.recent-trade-table tr:last-child td { border-bottom: none; }
+
+/* ─── DASHBOARD SECTION TITLE ─── */
+.dash-section-ttl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* old .dac-kpis overridden below */
 
 /* ─── TOAST ─── */
 .toast {

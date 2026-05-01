@@ -225,38 +225,19 @@
       ? `${stats.streakType === 'win' ? '🔥' : '❄️'} ${stats.streak}`
       : '–';
     const streakLbl = stats.streakType === 'win'
-      ? (isEn ? 'consec. wins' : 'W consécutifs')
+      ? (isEn ? 'Wins consécutifs' : 'W consécutifs')
       : stats.streakType === 'loss'
-        ? (isEn ? 'consec. losses' : 'L consécutives')
-        : (isEn ? 'Streak' : 'Série');
+        ? (isEn ? 'Losses consécutives' : 'L consécutives')
+        : 'Série';
 
-    statsEl.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-        <div style="text-align:center">
-          <div style="font-size:13px;font-weight:600;font-family:'Geist Mono';color:var(--red)">${stats.maxDD > 0 ? '-$' + stats.maxDD.toFixed(0) : '–'}</div>
-          <div style="font-size:10px;color:var(--muted)">Max Drawdown</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:13px;font-weight:600;font-family:'Geist Mono';color:${pfCol}">${pfStr}</div>
-          <div style="font-size:10px;color:var(--muted)">Profit Factor</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:13px;font-weight:600;font-family:'Geist Mono';color:${stats.expectancy >= 0 ? 'var(--green)' : 'var(--red)'}">${Calc.formatPnL(stats.expectancy)}</div>
-          <div style="font-size:10px;color:var(--muted)">${isEn ? 'Expectancy' : 'Espérance/trade'}</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:13px;font-weight:600;font-family:'Geist Mono';color:var(--green)">${Calc.formatPnL(stats.best)}</div>
-          <div style="font-size:10px;color:var(--muted)">${isEn ? 'Best trade' : 'Meilleur trade'}</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:13px;font-weight:600;font-family:'Geist Mono';color:var(--red)">${Calc.formatPnL(stats.worst)}</div>
-          <div style="font-size:10px;color:var(--muted)">${isEn ? 'Worst trade' : 'Pire trade'}</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:14px;font-weight:600">${streakVal}</div>
-          <div style="font-size:10px;color:var(--muted)">${streakLbl}</div>
-        </div>
-      </div>`;
+    statsEl.innerHTML = `<div class="stat-strip">
+      <div class="stat-strip-item"><div class="stat-strip-val" style="color:var(--red)">${stats.maxDD > 0 ? '-$' + stats.maxDD.toFixed(0) : '–'}</div><div class="stat-strip-lbl">Max DD</div></div>
+      <div class="stat-strip-item"><div class="stat-strip-val" style="color:${pfCol}">${pfStr}</div><div class="stat-strip-lbl">Profit Factor</div></div>
+      <div class="stat-strip-item"><div class="stat-strip-val" style="color:${stats.expectancy >= 0 ? 'var(--green)' : 'var(--red)'}">${Calc.formatPnL(stats.expectancy)}</div><div class="stat-strip-lbl">${isEn ? 'Expectancy' : 'Espérance'}</div></div>
+      <div class="stat-strip-item"><div class="stat-strip-val" style="color:var(--green)">${Calc.formatPnL(stats.best)}</div><div class="stat-strip-lbl">${isEn ? 'Best trade' : 'Meilleur'}</div></div>
+      <div class="stat-strip-item"><div class="stat-strip-val" style="color:var(--red)">${Calc.formatPnL(stats.worst)}</div><div class="stat-strip-lbl">${isEn ? 'Worst trade' : 'Pire'}</div></div>
+      <div class="stat-strip-item"><div class="stat-strip-val">${streakVal}</div><div class="stat-strip-lbl">${streakLbl}</div></div>
+    </div>`;
   }
 
   function kpiCard(label, value, sub, color) {
@@ -299,65 +280,88 @@
 
     let body = '';
 
+    function recentTradesBlock(tradesList) {
+      if (!tradesList.length) return '';
+      const rows = tradesList.slice(0, 8).map(tr => {
+        const c       = Calc.trade(tr);
+        const date    = new Date(tr.date).toLocaleDateString(i18n.locale(), { day:'2-digit', month:'2-digit' });
+        const safeDir = tr.direction === 'long' ? 'long' : 'short';
+        const dirC    = safeDir === 'long' ? 'var(--green)' : 'var(--red)';
+        const outcomeC = tr.outcome === 'win' ? 'var(--green)' : tr.outcome === 'loss' ? 'var(--red)' : 'var(--muted)';
+        const pnlStr  = c.netPnl !== null ? Calc.formatPnL(c.netPnl) : '—';
+        return `<tr>
+          <td><span style="display:inline-block;width:3px;height:14px;border-radius:2px;background:${dirC};margin-right:8px;vertical-align:middle"></span><strong>${UI.escHtml(tr.instrument)}</strong></td>
+          <td style="color:${dirC}">${safeDir === 'long' ? '↑ Long' : '↓ Short'}</td>
+          ${tr.apex ? `<td style="color:var(--muted);font-size:12px">${UI.escHtml(tr.apex)}</td>` : '<td></td>'}
+          <td style="color:var(--muted)">${date}</td>
+          <td style="color:${Calc.rrColor(c.rr)}">${c.rr.toFixed(2)}R</td>
+          <td style="color:${outcomeC}">${pnlStr}</td>
+        </tr>`;
+      }).join('');
+      return `<div class="page-section">
+        <div class="page-section-hd">
+          <span class="page-section-ttl">${t('dash.recent.trades')}</span>
+          <span class="page-section-count">${tradesList.length} total</span>
+        </div>
+        <div class="chart-card" style="padding:16px 20px">
+          <table class="recent-trade-table">
+            <thead><tr>
+              <th>Instrument</th><th>Direction</th><th>Compte</th><th>Date</th><th>R:R</th><th>PnL net</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>`;
+    }
+
     if (dashFilter && dashFilter.startsWith('acc:')) {
       const accName = dashFilter.slice(4);
       const acc     = accs.find(a => a.name === accName);
       if (acc) body = accountCard(acc, trades);
       body += `<div class="chart-card"><h3>${t('dash.pnl.curve')}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div><div id="pnlStats"></div></div>`;
+      body += recentTradesBlock(trades);
+
     } else if (dashFilter && dashFilter.startsWith('grp:')) {
-      const grp  = Store.getGroupById(dashFilter.slice(4));
-      const kpis = `<div class="kpi-grid">
-        ${kpiCard(t('ui.pnl.net'), (s.totalPnL>=0?'+':'-')+'$'+Math.abs(s.totalPnL).toFixed(0), s.total+' trades', s.totalPnL>=0?'var(--green)':'var(--red)')}
-        ${kpiCard(t('dash.win.rate'), s.winRate!==null ? s.winRate.toFixed(0)+'%' : '—', s.wins+'W · '+s.losses+'L', (s.winRate||0)>=50?'var(--green)':'var(--red)')}
-        ${kpiCard(t('dash.avg.rr'), s.avgRR.toFixed(2)+'R', t('dash.group'), s.avgRR>=1.5?'var(--green)':'var(--amber)')}
-        ${kpiCard(t('dash.open'), s.open.toString(), t('dash.in.progress'), 'var(--blue)')}
-      </div>`;
-      body = kpis;
-      body += `<div class="chart-card"><h3>${t('dash.pnl.group', { name: UI.escHtml(grp?.name || '') })}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div><div id="pnlStats"></div></div>`;
+      const grp = Store.getGroupById(dashFilter.slice(4));
       if (grp && grp.accountIds && grp.accountIds.length) {
-        body += `<div class="dash-group-accounts">`;
+        body += `<div class="page-section"><div class="page-section-hd"><span class="page-section-ttl">${t('dash.accounts.grp')}</span><span class="page-section-count">${grp.accountIds.length} compte${grp.accountIds.length > 1 ? 's' : ''}</span></div><div class="dash-group-accounts">`;
         grp.accountIds.forEach(accId => {
           const acc = Store.getMyAccountById(accId);
           if (!acc) return;
           body += accountCard(acc, trades.filter(tr => tr.apex === acc.name));
         });
-        body += `</div>`;
+        body += `</div></div>`;
       }
-    } else {
-      const kpis = `<div class="kpi-grid">
-        ${kpiCard(t('ui.pnl.net'), (s.totalPnL>=0?'+':'-')+'$'+Math.abs(s.totalPnL).toFixed(0), s.total+' trades', s.totalPnL>=0?'var(--green)':'var(--red)')}
-        ${kpiCard(t('dash.win.rate'), s.winRate!==null ? s.winRate.toFixed(0)+'%' : '—', s.wins+'W · '+s.losses+'L', (s.winRate||0)>=50?'var(--green)':'var(--red)')}
-        ${kpiCard(t('dash.avg.rr'), s.avgRR.toFixed(2)+'R', t('dash.all.trades'), s.avgRR>=1.5?'var(--green)':'var(--amber)')}
-        ${kpiCard(t('dash.open'), s.open.toString(), t('dash.in.progress'), 'var(--blue)')}
+      body += `<div class="page-section"><div class="page-section-hd"><span class="page-section-ttl">${t('dash.pnl.cumul')}</span></div>
+        <div class="kpi-grid">
+          ${kpiCard(t('ui.pnl.net'), (s.totalPnL>=0?'+':'-')+'$'+Math.abs(s.totalPnL).toFixed(0), s.total+' trades', s.totalPnL>=0?'var(--green)':'var(--red)')}
+          ${kpiCard(t('dash.win.rate'), s.winRate!==null ? s.winRate.toFixed(0)+'%' : '—', s.wins+'W · '+s.losses+'L', (s.winRate||0)>=50?'var(--green)':'var(--red)')}
+          ${kpiCard(t('dash.avg.rr'), s.avgRR.toFixed(2)+'R', t('dash.group'), s.avgRR>=1.5?'var(--green)':'var(--amber)')}
+          ${kpiCard(t('dash.open'), s.open.toString(), t('dash.in.progress'), 'var(--blue)')}
+        </div>
+        <div class="chart-card"><div class="chart-area"><canvas id="pnlChart"></canvas></div><div id="pnlStats"></div></div>
       </div>`;
-      body = kpis;
-      body += `<div class="chart-card"><h3>${t('dash.pnl.cumul')}</h3><div class="chart-area"><canvas id="pnlChart"></canvas></div><div id="pnlStats"></div></div>`;
+      body += recentTradesBlock(trades);
+
+    } else {
+      // Vue globale : comptes d'abord, puis courbe
       if (accs.length) {
-        body += `<div class="dash-group-accounts">`;
+        body += `<div class="page-section"><div class="page-section-hd"><span class="page-section-ttl">${t('dash.accounts.grp')}</span><span class="page-section-count">${accs.length} compte${accs.length > 1 ? 's' : ''}</span></div><div class="dash-group-accounts">`;
         accs.forEach(acc => {
           body += accountCard(acc, all.filter(tr => tr.apex === acc.name));
         });
-        body += `</div>`;
+        body += `</div></div>`;
       }
-    }
-
-    if (trades.length) {
-      body += `<div class="chart-card"><h3>${t('dash.recent.trades')}</h3><div id="recentRows">` +
-        trades.slice(0, 6).map(tr => {
-          const c    = Calc.trade(tr);
-          const date = new Date(tr.date).toLocaleDateString(i18n.locale(), { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-          const safeDir = tr.direction === 'long' ? 'long' : 'short';
-          const dirC = safeDir === 'long' ? 'var(--green)' : 'var(--red)';
-          return `<div class="recent-row">
-            <div class="recent-bar" style="background:${dirC}"></div>
-            <span class="recent-instr">${UI.escHtml(tr.instrument)}</span>
-            <span class="recent-dir" style="color:${dirC}">${safeDir.toUpperCase()}</span>
-            ${tr.apex ? `<span class="recent-date" style="color:var(--muted)">${UI.escHtml(tr.apex)}</span>` : ''}
-            <span class="recent-date">${date}</span>
-            <span class="recent-rr" style="color:${Calc.rrColor(c.rr)}">${c.rr.toFixed(2)}R</span>
-            ${c.pnl!==null ? `<span class="recent-pnl" style="color:${Calc.pnlColor(c.pnl)}">${Calc.formatPnL(c.pnl)}</span>` : ''}
-          </div>`;
-        }).join('') + `</div></div>`;
+      body += `<div class="page-section"><div class="page-section-hd"><span class="page-section-ttl">${t('dash.pnl.cumul')}</span></div>
+        <div class="kpi-grid">
+          ${kpiCard(t('ui.pnl.net'), (s.totalPnL>=0?'+':'-')+'$'+Math.abs(s.totalPnL).toFixed(0), s.total+' trades', s.totalPnL>=0?'var(--green)':'var(--red)')}
+          ${kpiCard(t('dash.win.rate'), s.winRate!==null ? s.winRate.toFixed(0)+'%' : '—', s.wins+'W · '+s.losses+'L', (s.winRate||0)>=50?'var(--green)':'var(--red)')}
+          ${kpiCard(t('dash.avg.rr'), s.avgRR.toFixed(2)+'R', t('dash.all.trades'), s.avgRR>=1.5?'var(--green)':'var(--amber)')}
+          ${kpiCard(t('dash.open'), s.open.toString(), t('dash.in.progress'), 'var(--blue)')}
+        </div>
+        <div class="chart-card"><div class="chart-area"><canvas id="pnlChart"></canvas></div><div id="pnlStats"></div></div>
+      </div>`;
+      body += recentTradesBlock(all);
     }
 
     const titleRow = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">

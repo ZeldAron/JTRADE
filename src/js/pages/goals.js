@@ -269,20 +269,24 @@
     let html = `<div class="page-title">${t('page.goals')}</div>`;
 
     if (evalAccs.length) {
-      html += `<div class="goal-section-title">${t('goals.eval.accounts')}</div>`;
+      html += `<div class="page-section"><div class="page-section-hd"><span class="page-section-ttl">${t('goals.eval.accounts')}</span><span class="page-section-count">${evalAccs.length} compte${evalAccs.length > 1 ? 's' : ''}</span></div>`;
+      html += `<div class="goals-grid">`;
       evalAccs.forEach(acc => {
         html += evalCard(acc, trades.filter(tr => tr.apex === acc.name), today);
       });
+      html += `</div></div>`;
     }
 
     if (fundedAccs.length) {
-      html += `<div class="goal-section-title">${t('goals.funded.accounts')}</div>`;
+      html += `<div class="page-section"><div class="page-section-hd"><span class="page-section-ttl">${t('goals.funded.accounts')}</span><span class="page-section-count">${fundedAccs.length} compte${fundedAccs.length > 1 ? 's' : ''}</span></div>`;
+      html += `<div class="goals-grid">`;
       fundedAccs.forEach(acc => {
         html += fundedCard(acc, trades.filter(tr => tr.apex === acc.name), today);
       });
+      html += `</div></div>`;
     }
 
-    html += achievementsCard(trades);
+    html += `<div class="page-section">` + achievementsCard(trades) + `</div>`;
     el.innerHTML = html;
   };
 })();
