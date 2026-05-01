@@ -35,19 +35,23 @@
   }
 
   function accountCard(acc, trades) {
-    const s         = UI.statsForTrades(trades);
-    const today     = new Date().toISOString().split('T')[0];
-    const todayLoss = trades
+    const s            = UI.statsForTrades(trades);
+    const adjustedPnL  = s.totalPnL + (acc.pnlOffset || 0);
+    const balance      = acc.capital + adjustedPnL;
+    const today        = new Date().toISOString().split('T')[0];
+    const todayLoss    = trades
       .filter(tr => tr.date.startsWith(today) && tr.outcome === 'loss')
       .reduce((sum, tr) => sum + Math.abs(Calc.trade(tr).netPnl || 0), 0);
 
-    const ddPct     = acc.maxDrawdown    ? Math.min(100, (Math.abs(Math.min(0, s.totalPnL)) / acc.maxDrawdown) * 100) : 0;
+    const ddPct     = acc.maxDrawdown    ? Math.min(100, (Math.abs(Math.min(0, adjustedPnL)) / acc.maxDrawdown) * 100) : 0;
     const dailyPct  = acc.dailyLossLimit ? Math.min(100, (todayLoss / acc.dailyLossLimit) * 100) : 0;
-    const targetPct = acc.profitTarget   ? Math.min(100, (Math.max(0, s.totalPnL) / acc.profitTarget) * 100) : 0;
+    const targetPct = acc.profitTarget   ? Math.min(100, (Math.max(0, adjustedPnL) / acc.profitTarget) * 100) : 0;
     const STATUS_LABEL = { evaluation:'EVAL', funded:'PA' };
     const STATUS_C     = { evaluation:'var(--amber)', funded:'var(--green)' };
     const badge = STATUS_LABEL[acc.status] || '?';
     const bclr  = STATUS_C[acc.status]  || 'var(--muted)';
+    const balColor    = balance >= acc.capital ? 'var(--green)' : 'var(--red)';
+    const deltaSign   = adjustedPnL >= 0 ? '+' : '-';
 
     return `<div class="dash-acc-card">
       <div class="dac-header">
@@ -55,9 +59,16 @@
           <span class="dac-badge" style="color:${bclr};border-color:${bclr}">${badge}</span>
           <span class="dac-name">${UI.escHtml(acc.name)}</span>
         </div>
-        <span class="dac-pnl" style="color:${s.totalPnL >= 0 ? 'var(--green)' : 'var(--red)'}">
-          ${s.totalPnL >= 0 ? '+' : '-'}$${Math.abs(s.totalPnL).toFixed(0)}
+        <span class="dac-pnl" style="color:${adjustedPnL >= 0 ? 'var(--green)' : 'var(--red)'}">
+          ${deltaSign}$${Math.abs(adjustedPnL).toFixed(0)}
         </span>
+      </div>
+      <div class="dac-balance-wrap">
+        <div class="dac-balance-lbl">Solde</div>
+        <div class="dac-balance" style="color:${balColor}">$${Math.round(balance).toLocaleString('fr-FR')}</div>
+        <div class="dac-balance-delta" style="color:${adjustedPnL >= 0 ? 'var(--green)' : 'var(--red)'}">
+          ${deltaSign}$${Math.abs(adjustedPnL).toFixed(0)} depuis le départ
+        </div>
       </div>
       <div class="dac-kpis">
         <div class="dac-kpi"><div class="dac-kpi-val">${s.winRate !== null ? s.winRate.toFixed(0) + '%' : '—'}</div><div class="dac-kpi-lbl">${t('dash.win.rate')}</div></div>
@@ -65,8 +76,8 @@
         <div class="dac-kpi"><div class="dac-kpi-val">${s.total}</div><div class="dac-kpi-lbl">${t('dash.trades')}</div></div>
         <div class="dac-kpi"><div class="dac-kpi-val">${s.open}</div><div class="dac-kpi-lbl">${t('dash.open')}</div></div>
       </div>
-      ${acc.profitTarget   ? progressBar(targetPct, 'var(--green)', t('dash.profit.target'), '+$' + Math.max(0, s.totalPnL).toFixed(0) + ' / $' + acc.profitTarget) : ''}
-      ${acc.maxDrawdown    ? progressBar(ddPct,      'var(--amber)', t('dash.drawdown.used'), '$' + Math.abs(Math.min(0, s.totalPnL)).toFixed(0) + ' / $' + acc.maxDrawdown) : ''}
+      ${acc.profitTarget   ? progressBar(targetPct, 'var(--green)', t('dash.profit.target'), '+$' + Math.max(0, adjustedPnL).toFixed(0) + ' / $' + acc.profitTarget) : ''}
+      ${acc.maxDrawdown    ? progressBar(ddPct,      'var(--amber)', t('dash.drawdown.used'), '$' + Math.abs(Math.min(0, adjustedPnL)).toFixed(0) + ' / $' + acc.maxDrawdown) : ''}
       ${acc.dailyLossLimit ? progressBar(dailyPct,   'var(--red)',   t('dash.daily.loss'),   '$' + todayLoss.toFixed(0) + ' / $' + acc.dailyLossLimit) : ''}
     </div>`;
   }

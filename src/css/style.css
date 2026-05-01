@@ -1670,9 +1670,41 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 
 .dac-pnl {
   font-family: 'Geist Mono', monospace;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.dac-balance-wrap {
+  text-align: center;
+  padding: 14px 0 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+
+.dac-balance-lbl {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.dac-balance {
+  font-family: 'Geist Mono', monospace;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.dac-balance-delta {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+  opacity: 0.85;
 }
 
 .dac-kpis {
