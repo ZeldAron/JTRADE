@@ -428,7 +428,7 @@ const i18n = (() => {
       'micro.result.tax.note':'⚠ IR non inclus. Barème progressif après abattement de {abat}% sur le CA.\nImposable ≈ €{amount}',
       // Offers
       'off.title':     'Choisissez votre offre',
-      'off.sub':       'Tous vos trades et données restent stockés localement — aucun compte en ligne requis.',
+      'off.sub':       'Vos données sont synchronisées dans le cloud via Firebase — accessibles sur tous vos appareils.',
       'off.current':   'Plan actuel',
       'off.free':      'Gratuit',
       'off.forever':   'pour toujours',
@@ -919,7 +919,7 @@ const i18n = (() => {
       'micro.result.tax.note':'⚠ Income tax not included. Progressive scale after {abat}% allowance.\nTaxable income ≈ €{amount}',
       // Offers
       'off.title':     'Choose your plan',
-      'off.sub':       'All your trades and data are stored locally — no online account required.',
+      'off.sub':       'Your data is securely synced to the cloud via Firebase — accessible on all your devices.',
       'off.current':   'Current plan',
       'off.free':      'Free',
       'off.forever':   'forever',

@@ -248,6 +248,10 @@
     </div>`;
   }
 
+  function goOffers() {
+    document.querySelector('[data-page="offers"]').click();
+  }
+
   UI.renderDashboard = function () {
     const el     = $('dashContent');
     const all    = Store.getTrades();
@@ -255,6 +259,7 @@
     const grps   = Store.getGroups();
     const trades = tradesForFilter(dashFilter);
     const s      = UI.statsForTrades(trades);
+    const isPro  = Store.isPro();
 
     const currentVal = dashFilter || 'all';
     let opts = `<option value="all"${currentVal==='all'?' selected':''}>${t('dash.all.accounts')}</option>`;
@@ -364,11 +369,28 @@
       body += recentTradesBlock(all);
     }
 
+    // Upgrade nudge for Basic users with 1 account
+    const upgradeBanner = !isPro
+      ? `<div class="upgrade-inline" id="dashUpgradeBanner" style="margin-bottom:20px">
+          <div class="upgrade-inline-icon">✦</div>
+          <div class="upgrade-inline-body">
+            <div class="upgrade-inline-title">${i18n.getLang() === 'en' ? 'Pro: unlimited accounts & advanced analytics' : 'Pro : comptes illimités & analytics avancées'}</div>
+            <div class="upgrade-inline-sub">${i18n.getLang() === 'en'
+              ? 'Basic plan · 1 account · Session analytics locked'
+              : 'Plan Basic · 1 compte · Analytics par session verrouillées'}</div>
+          </div>
+          <button class="upgrade-inline-btn" id="btnDashUpgrade">${i18n.getLang() === 'en' ? 'See plans →' : 'Voir les offres →'}</button>
+        </div>`
+      : '';
+
     const titleRow = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div class="page-title" style="margin-bottom:0">Dashboard</div>
       ${filterBar.replace('<div class="dash-selector-row">', '<div class="dash-selector-row" style="margin-bottom:0">')}
     </div>`;
-    el.innerHTML = titleRow + body;
+    el.innerHTML = titleRow + upgradeBanner + body;
+
+    const upgBtn = $('btnDashUpgrade');
+    if (upgBtn) upgBtn.addEventListener('click', goOffers);
 
     const sel = $('dashAccountSelect');
     if (sel) sel.addEventListener('change', () => {
