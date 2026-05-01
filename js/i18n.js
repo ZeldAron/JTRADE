@@ -263,13 +263,13 @@ const i18n = (() => {
       // Outcome badges
       'ob.win':  'Gain',
       'ob.loss': 'Perte',
-      'ob.be':   'Neutre',
+      'ob.be':   'BE',
       'ob.open': 'Ouvert',
       // Filter chips
       'filter.all':  'Tous',
       'filter.win':  'Gain',
       'filter.loss': 'Perte',
-      'filter.be':   'Neutre',
+      'filter.be':   'BE',
       'filter.open': 'Ouvert',
       // Dashboard
       'dash.all.accounts':  'Tous les comptes',
@@ -441,7 +441,7 @@ const i18n = (() => {
       'wiz.outcome.open': 'Ouvert',
       'wiz.outcome.win':  'Gain',
       'wiz.outcome.loss': 'Perte',
-      'wiz.outcome.be':   'Neutre',
+      'wiz.outcome.be':   'BE',
       'contact.err.server':'Erreur serveur',
       'off.code':      'Code requis',
       'off.code.hint': 'entrez votre code ci-dessous',
