@@ -301,6 +301,38 @@ const Modal = (() => {
   }
 
   // ── Étape 3 : Calcul ────────────────────────────────────────────────────────
+  const INSTR_CAT = {
+    MES1:'Indices Micro', ES1:'Indices Full', MNQ1:'Indices Micro', NQ1:'Indices Full',
+    MYM1:'Indices Micro', YM1:'Indices Full', M2K1:'Indices Micro', RTY1:'Indices Full',
+    MGC1:'Métaux', GC1:'Métaux', QO1:'Métaux',
+    MCL1:'Énergie', CL1:'Énergie', ZN1:'Taux',
+    US500:'Indices CFD', US100:'Indices CFD', US30:'Indices CFD', GER40:'Indices CFD', UK100:'Indices CFD',
+    XAUUSD:'Métaux CFD', EURUSD:'Forex', GBPUSD:'Forex', USDJPY:'Forex', USOIL:'Énergie CFD',
+  };
+
+  function populateInstrumentSelect(fk, keepVal) {
+    const sp     = Store.getSpreadsByFirm(fk || 'apex');
+    const instrs = Object.keys(sp).filter(i => VALID_INSTRS.has(i));
+    const sel    = $('wInstr');
+    const cur    = keepVal || sel.value || 'MES1';
+
+    const groups = {};
+    instrs.forEach(i => {
+      const cat = INSTR_CAT[i] || 'Autres';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(i);
+    });
+
+    const cats = Object.keys(groups);
+    sel.innerHTML = cats.map(cat =>
+      cats.length > 1
+        ? `<optgroup label="${cat}">${groups[cat].map(i => `<option value="${i}">${i}</option>`).join('')}</optgroup>`
+        : groups[cat].map(i => `<option value="${i}">${i}</option>`).join('')
+    ).join('');
+
+    sel.value = [...sel.options].some(o => o.value === cur) ? cur : (sel.options[0]?.value || 'MES1');
+  }
+
   function populateApexSelect(currentVal) {
     const accounts = Store.getMyAccounts();
     const grps     = Store.getGroups();
@@ -440,6 +472,7 @@ const Modal = (() => {
       populateApexSelect(t.apex || '');
       const acc = Store.getMyAccountByName(t.apex || '');
       if (acc) { capital = acc.capital; feePerSide = acc.feePerSide || 2.14; firmKey = acc.firmKey || 'apex'; }
+      populateInstrumentSelect(firmKey, t.instrument);
       fillStep3FromParsed();
       goToStep(3);
     } else {
@@ -560,6 +593,7 @@ const Modal = (() => {
         if (hint) parsedTrade = parseTextHint(hint);
       }
       if (parsedTrade) fillStep3FromParsed();
+      populateInstrumentSelect(firmKey, parsedTrade?.instrument);
       populateApexSelect('');
       goToStep(3);
       $('wContracts').focus();
@@ -639,6 +673,7 @@ const Modal = (() => {
           firmKey    = 'apex';
         }
       }
+      populateInstrumentSelect(firmKey);
       spreadCost = getSpreadForInstrument(firmKey, $('wInstr').value);
       wRecalc();
     });
