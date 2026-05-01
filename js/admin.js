@@ -20,7 +20,7 @@ const Admin = (() => {
 
   // ── UI helpers ───────────────────────────────────────────────────────────────
   function $(id) { return document.getElementById(id); }
-  function show(id) { $(id).style.display = ''; }
+  function show(id, type = 'block') { $(id).style.display = type; }
   function hide(id) { $(id).style.display = 'none'; }
 
   function toast(msg, isError = false) {
@@ -225,7 +225,7 @@ const Admin = (() => {
 
   function showDashboard(user) {
     hide('loginScreen');
-    show('dashboard');
+    show('dashboard', 'block');
     $('adminUserEmail').textContent = user.email;
     switchTab('users');
   }
@@ -236,7 +236,7 @@ const Admin = (() => {
       if (user && user.email === ADMIN_EMAIL) {
         showDashboard(user);
       } else {
-        show('loginScreen');
+        show('loginScreen', 'flex');
         hide('dashboard');
       }
     });
