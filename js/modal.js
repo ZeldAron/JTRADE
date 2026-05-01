@@ -192,7 +192,15 @@ const Modal = (() => {
 
       try {
         const parsed = JSON.parse(jsonStr);
-        if (parsed.entry || parsed.sl || parsed.tp1) return parsed;
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) continue;
+        const result = {};
+        for (const key of ['entry', 'sl', 'tp1', 'tp2']) {
+          if (key in parsed) {
+            const v = parseFloat(parsed[key]);
+            if (!isNaN(v) && isFinite(v)) result[key] = v;
+          }
+        }
+        if (result.entry || result.sl || result.tp1) return result;
       } catch { continue; }
     }
 
