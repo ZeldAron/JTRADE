@@ -2,23 +2,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'zeldtradepro@gmail.com';
+    }
+
     // Règle par défaut : tout refuser
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Hashes des codes Pro — écriture réservée à l'admin (console Firebase)
-    match /proCodeHashes/{hash} {
-      allow read: if request.auth != null;
-      allow write: if false;
+    // ── Profils utilisateurs (lookup admin) ──────────────────────────────────────
+    match /userEmails/{uid} {
+      allow get:  if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow list: if isAdmin();
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 512
+                   && request.resource.data.uid == uid;
     }
 
-    // Données utilisateur (tout sauf plan)
+    // ── Codes Pro (hashes) — écriture admin uniquement ───────────────────────────
+    match /proCodeHashes/{hash} {
+      allow get:  if request.auth != null;
+      allow list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ── Données utilisateur (tout sauf plan) ─────────────────────────────────────
     match /users/{userId}/data/{docName} {
-      allow read: if request.auth != null
-                  && request.auth.uid == userId
+      allow read: if (request.auth != null && request.auth.uid == userId)
                   && docName in ['trades', 'settings', 'myAccounts',
                                  'spreadsByFirm', 'groups', 'aiUsage'];
+      allow read: if isAdmin(); // admin peut tout lire pour support
       allow write: if request.auth != null
                    && request.auth.uid == userId
                    && docName in ['trades', 'settings', 'myAccounts',
@@ -26,9 +42,9 @@ service cloud.firestore {
                    && request.resource.size < 2 * 1024 * 1024;
     }
 
-    // Plan Pro — validation stricte du contenu + vérification du code en base
+    // ── Plan Pro — validation stricte, code lié à l'uid ─────────────────────────
     match /users/{userId}/data/plan {
-      allow read: if request.auth != null && request.auth.uid == userId;
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
       allow write: if request.auth != null
                    && request.auth.uid == userId
                    && request.resource.size < 512
@@ -36,7 +52,8 @@ service cloud.firestore {
                    && request.resource.data.keys().hasOnly(['plan', 'activatedAt', 'codeHash'])
                    && request.resource.data.plan == 'pro'
                    && request.resource.data.activatedAt is int
-                   && exists(/databases/$(database)/documents/proCodeHashes/$(request.resource.data.codeHash));
+                   && exists(/databases/$(database)/documents/proCodeHashes/$(request.resource.data.codeHash))
+                   && get(/databases/$(database)/documents/proCodeHashes/$(request.resource.data.codeHash)).data.uid == request.auth.uid;
     }
   }
 }
