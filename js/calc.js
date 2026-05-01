@@ -134,9 +134,10 @@ const Calc = (() => {
       byDay[d] = (byDay[d] || 0) + (c.netPnl || 0);
     });
 
+    const pnlOffset = acc.pnlOffset || 0;
     const days = Object.keys(byDay).sort();
-    let cumPnL = 0;
-    let hwm    = startBalance; // high water mark du solde EOD
+    let cumPnL = pnlOffset;
+    let hwm    = startBalance + Math.max(0, pnlOffset); // HWM déjà relevé si offset positif
 
     days.forEach(d => {
       cumPnL += byDay[d];
