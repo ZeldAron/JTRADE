@@ -24,9 +24,10 @@
   }
 
   function evalCard(acc, accTrades, today) {
-    const s      = UI.statsForTrades(accTrades);
-    const ddUsed = Math.abs(Math.min(0, s.totalPnL));
-    const profit = Math.max(0, s.totalPnL);
+    const s           = UI.statsForTrades(accTrades);
+    const adjustedPnL = s.totalPnL + (acc.pnlOffset || 0);
+    const ddUsed      = Math.abs(Math.min(0, adjustedPnL));
+    const profit      = Math.max(0, adjustedPnL);
 
     const todayLoss = accTrades
       .filter(tr => tr.date.startsWith(today) && tr.outcome === 'loss')
@@ -62,7 +63,7 @@
     return `<div class="goal-card">
       <div class="goal-card-header">
         <div><span class="goal-badge goal-badge--eval">EVAL</span><span class="goal-card-name">${UI.escHtml(acc.name)}</span></div>
-        <span class="goal-pnl" style="color:${s.totalPnL>=0?'var(--green)':'var(--red)'}">${s.totalPnL>=0?'+':'-'}$${Math.abs(s.totalPnL).toFixed(0)}</span>
+        <span class="goal-pnl" style="color:${adjustedPnL>=0?'var(--green)':'var(--red)'}">${adjustedPnL>=0?'+':'-'}$${Math.abs(adjustedPnL).toFixed(0)}</span>
       </div>
       <div class="goal-rules">
         ${acc.profitTarget   ? goalBar(t('goals.profit.target'),   profit,    acc.profitTarget,   'var(--green)') : ''}
@@ -136,7 +137,7 @@
     return `<div class="goal-card">
       <div class="goal-card-header">
         <div><span class="goal-badge goal-badge--funded">PA</span><span class="goal-card-name">${UI.escHtml(acc.name)}</span></div>
-        <span class="goal-pnl" style="color:${s.totalPnL>=0?'var(--green)':'var(--red)'}">${s.totalPnL>=0?'+':'-'}$${Math.abs(s.totalPnL).toFixed(0)}</span>
+        <span class="goal-pnl" style="color:${(currentBalance-startBalance)>=0?'var(--green)':'var(--red)'}">${(currentBalance-startBalance)>=0?'+':'-'}$${Math.abs(currentBalance-startBalance).toFixed(0)}</span>
       </div>
 
       <div class="floor-panel ${safetyReached ? 'floor-panel--safe' : ''}">

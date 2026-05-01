@@ -123,6 +123,14 @@
               </div>
             </div>
 
+            <div style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+              <div class="form-field">
+                <label class="form-label" style="color:var(--indigo,#6366f1)">${t('set.acc.pnloffset')} <span style="font-weight:400;color:var(--muted);font-size:10px">(optionnel)</span></label>
+                <input class="form-input mono" type="number" step="1" id="maPnlOffset" placeholder="0" style="max-width:160px">
+                <p style="font-size:11px;color:var(--muted);margin-top:5px">${t('set.acc.pnloffset.desc')}</p>
+              </div>
+            </div>
+
             <div style="display:flex;gap:8px;justify-content:flex-end">
               <button class="btn-ghost" id="maBtnCancel">${t('set.acc.cancel')}</button>
               <button class="btn-primary" id="maBtnSave">${t('set.acc.save')}</button>
@@ -143,6 +151,7 @@
         $('maCapital').value = ''; $('maProfitTarget').value = '';
         $('maMaxDrawdown').value = ''; $('maDailyLoss').value = '';
         $('maMaxContracts').value = ''; $('maFeePerSide').value = '2.14';
+        $('maPnlOffset').value = '';
         $('maForm').style.display = 'block';
         $('maName').focus();
       });
@@ -168,6 +177,7 @@
         if (name.length > 50) { UI.toast(t('err.name.invalid'), true); return; }
 
         const selType = types.find(tp => tp.id === $('maTypeId').value);
+        const pnlOffsetRaw = $('maPnlOffset').value.trim();
         const data = {
           name,
           status:         $('maStatus').value,
@@ -179,6 +189,7 @@
           dailyLossLimit: parseFloat($('maDailyLoss').value)    || 0,
           maxContracts:   parseInt($('maMaxContracts').value)   || 1,
           feePerSide:     parseFloat($('maFeePerSide').value)   || 2.14,
+          pnlOffset:      pnlOffsetRaw !== '' ? (parseFloat(pnlOffsetRaw) || 0) : 0,
         };
 
         const editId = $('maEditId').value;
@@ -207,6 +218,7 @@
           $('maDailyLoss').value    = acc.dailyLossLimit;
           $('maMaxContracts').value = acc.maxContracts;
           $('maFeePerSide').value   = (acc.feePerSide || 2.14).toFixed(2);
+          $('maPnlOffset').value    = acc.pnlOffset || 0;
           $('maForm').style.display = 'block';
           $('maName').focus();
         });
