@@ -145,10 +145,14 @@ UI.renderOffers = function () {
       btn.disabled    = true;
       btn.textContent = '…';
       error.textContent = '';
-      const ok = await Store.activatePro(code);
-      if (ok) {
+      const result = await Store.activatePro(code);
+      if (result === true) {
         UI.toast(t('off.ok'));
         setTimeout(() => location.reload(), 1200);
+      } else if (result === 'throttled') {
+        error.textContent = 'Trop de tentatives — réessaie dans 60 secondes.';
+        btn.disabled    = false;
+        btn.textContent = t('off.activate');
       } else {
         error.textContent = t('off.err.inv');
         btn.disabled    = false;

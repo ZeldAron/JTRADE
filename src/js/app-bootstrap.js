@@ -105,8 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const email    = $('regEmail').value.trim();
     const password = $('regPassword').value;
     const confirm  = $('regPasswordConfirm').value;
-    if (password !== confirm) { $('registerError').textContent = i18n.t('auth.err.mismatch'); return; }
-    if (password.length < 6)  { $('registerError').textContent = i18n.t('auth.err.short'); return; }
+    if (password !== confirm)  { $('registerError').textContent = i18n.t('auth.err.mismatch'); return; }
+    if (password.length < 8)   { $('registerError').textContent = i18n.t('auth.err.short'); return; }
+    if (!/\d/.test(password))  { $('registerError').textContent = 'Le mot de passe doit contenir au moins un chiffre.'; return; }
     const btn = e.target.querySelector('button[type=submit]');
     btn.disabled = true;
     const result = await Auth.register(username, password, email);

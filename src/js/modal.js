@@ -54,6 +54,8 @@ const Modal = (() => {
 
   function loadImageFile(file) {
     if (!file) return;
+    if (!file.type.startsWith('image/')) { UI.toast('Format non supporté — utilise une image (PNG, JPG…)', true); return; }
+    if (file.size > 10 * 1024 * 1024)   { UI.toast('Image trop lourde (max 10 Mo)', true); return; }
     const reader = new FileReader();
     reader.onload = ev => {
       const b64 = ev.target.result.split(',')[1];

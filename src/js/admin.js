@@ -24,6 +24,7 @@ const Admin = (() => {
   function $(id) { return document.getElementById(id); }
   function show(id, type = 'block') { $(id).style.display = type; }
   function hide(id) { $(id).style.display = 'none'; }
+  function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   function toast(msg, isError = false) {
     const t = $('adminToast');
@@ -88,13 +89,13 @@ const Admin = (() => {
       const isPro = plan?.plan === 'pro';
       const activatedAt = isPro ? formatDate(plan.activatedAt) : '—';
       return `<tr>
-        <td>${u.username || '—'}</td>
-        <td>${u.email}</td>
+        <td>${esc(u.username)}</td>
+        <td>${esc(u.email)}</td>
         <td><span class="plan-tag ${isPro ? 'plan-tag-pro' : 'plan-tag-basic'}">${isPro ? '✦ PRO' : 'BASIC'}</span></td>
         <td>${activatedAt}</td>
         <td>${formatDate(u.lastSeen)}</td>
         <td>
-          <button class="btn-gen" data-uid="${u.uid}" data-email="${u.email}">Générer code</button>
+          <button class="btn-gen" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}">Générer code</button>
         </td>
       </tr>`;
     }).join('');
@@ -121,11 +122,11 @@ const Admin = (() => {
     }
 
     const rows = codes.map(c => `<tr>
-      <td class="hash-cell">${c.id.slice(0, 16)}…</td>
-      <td>${c.email || '—'}</td>
+      <td class="hash-cell">${esc(c.id.slice(0, 16))}…</td>
+      <td>${esc(c.email)}</td>
       <td>${formatDate(c.createdAt)}</td>
       <td><span class="plan-tag ${c.isActive ? 'plan-tag-pro' : 'plan-tag-basic'}">${c.isActive ? '✦ Abonnement actif' : 'Non activé'}</span></td>
-      <td><button class="btn-revoke" data-id="${c.id}" data-uid="${c.uid}" data-email="${c.email || '?'}" data-active="${c.isActive}">Révoquer</button></td>
+      <td><button class="btn-revoke" data-id="${esc(c.id)}" data-uid="${esc(c.uid)}" data-email="${esc(c.email || '?')}" data-active="${c.isActive}">Révoquer</button></td>
     </tr>`).join('');
 
     wrap.innerHTML = `
