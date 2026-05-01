@@ -105,6 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const email    = $('regEmail').value.trim();
     const password = $('regPassword').value;
     const confirm  = $('regPasswordConfirm').value;
+    if (username.length < 2 || username.length > 30) { $('registerError').textContent = i18n.t('auth.err.username.length') || 'Le pseudo doit faire entre 2 et 30 caractères.'; return; }
+    if (!/^[a-zA-Z0-9_-]+$/.test(username))          { $('registerError').textContent = i18n.t('auth.err.username.chars')  || 'Le pseudo ne peut contenir que lettres, chiffres, _ et -.'; return; }
     if (password !== confirm)  { $('registerError').textContent = i18n.t('auth.err.mismatch'); return; }
     if (password.length < 8)   { $('registerError').textContent = i18n.t('auth.err.short'); return; }
     if (!/\d/.test(password))  { $('registerError').textContent = 'Le mot de passe doit contenir au moins un chiffre.'; return; }

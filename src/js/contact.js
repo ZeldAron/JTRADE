@@ -36,9 +36,9 @@ const Contact = (() => {
     const label   = document.getElementById('cSendLabel');
 
     error.textContent = '';
-    if (!name)                         { error.textContent = i18n.t('contact.err.name');  return; }
-    if (!email || !email.includes('@')) { error.textContent = i18n.t('contact.err.email'); return; }
-    if (!message)                      { error.textContent = i18n.t('contact.err.msg');   return; }
+    if (!name)                                                      { error.textContent = i18n.t('contact.err.name');  return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))   { error.textContent = i18n.t('contact.err.email'); return; }
+    if (!message)                                                   { error.textContent = i18n.t('contact.err.msg');   return; }
 
     btn.disabled      = true;
     label.textContent = i18n.t('contact.sending');
