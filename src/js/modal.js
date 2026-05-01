@@ -276,22 +276,37 @@ const Modal = (() => {
       }
 
       function renderEditablePills() {
-        const fv = v => (v !== null && !isNaN(Number(v)) && Number(v) !== 0) ? Number(v) : '';
-        $('wAnalysisResult').innerHTML =
-          `<div class="wpill wpill-edit"><span>Entry</span><input type="number" step="0.1" data-pill="entry" value="${fv(parsedTrade.entry)}" placeholder="—"></div>` +
-          `<div class="wpill wpill-sl wpill-edit"><span>SL</span><input type="number" step="0.1" data-pill="sl" value="${fv(parsedTrade.sl)}" placeholder="—"></div>` +
-          `<div class="wpill wpill-tp wpill-edit"><span>TP1</span><input type="number" step="0.1" data-pill="tp1" value="${fv(parsedTrade.tp1)}" placeholder="—"></div>` +
-          (parsedTrade.tp2 ? `<div class="wpill wpill-tp wpill-edit"><span>TP2</span><input type="number" step="0.1" data-pill="tp2" value="${Number(parsedTrade.tp2)}" placeholder="—"></div>` : '') +
-          (parsedTrade.tp3 ? `<div class="wpill wpill-tp wpill-edit"><span>TP3</span><input type="number" step="0.1" data-pill="tp3" value="${Number(parsedTrade.tp3)}" placeholder="—"></div>` : '');
-        $('wAnalysisResult').querySelectorAll('[data-pill]').forEach(inp => {
-          inp.addEventListener('change', () => {
-            const key = inp.dataset.pill;
-            parsedTrade[key] = parseFloat(inp.value) || null;
-          });
-          inp.addEventListener('input', () => {
-            const key = inp.dataset.pill;
-            parsedTrade[key] = parseFloat(inp.value) || null;
-          });
+        const fv        = v => (v !== null && !isNaN(Number(v)) && Number(v) !== 0) ? Number(v) : '';
+        const container = $('wAnalysisResult');
+        container.innerHTML = '';
+        const PILL_KEYS = new Set(['entry', 'sl', 'tp1', 'tp2', 'tp3']);
+        const pills = [
+          { cls: 'wpill wpill-edit',          label: 'Entry', key: 'entry', val: fv(parsedTrade.entry) },
+          { cls: 'wpill wpill-sl wpill-edit',  label: 'SL',    key: 'sl',   val: fv(parsedTrade.sl)    },
+          { cls: 'wpill wpill-tp wpill-edit',  label: 'TP1',   key: 'tp1',  val: fv(parsedTrade.tp1)   },
+          ...(parsedTrade.tp2 ? [{ cls: 'wpill wpill-tp wpill-edit', label: 'TP2', key: 'tp2', val: Number(parsedTrade.tp2) }] : []),
+          ...(parsedTrade.tp3 ? [{ cls: 'wpill wpill-tp wpill-edit', label: 'TP3', key: 'tp3', val: Number(parsedTrade.tp3) }] : []),
+        ];
+        pills.forEach(({ cls, label, key, val }) => {
+          const div   = document.createElement('div');
+          div.className = cls;
+          const span  = document.createElement('span');
+          span.textContent = label;
+          const input = document.createElement('input');
+          input.type        = 'number';
+          input.step        = '0.1';
+          input.dataset.pill = key;
+          input.placeholder = '—';
+          if (val !== '') input.value = val;
+          const handler = () => {
+            if (!PILL_KEYS.has(input.dataset.pill)) return;
+            parsedTrade[input.dataset.pill] = parseFloat(input.value) || null;
+          };
+          input.addEventListener('change', handler);
+          input.addEventListener('input',  handler);
+          div.appendChild(span);
+          div.appendChild(input);
+          container.appendChild(div);
         });
       }
       renderEditablePills();

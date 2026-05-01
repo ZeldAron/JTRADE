@@ -17,7 +17,13 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow write: if request.auth != null
                    && request.auth.uid == uid
-                   && request.resource.data.uid == uid;
+                   && request.resource.data.keys().hasOnly(['uid', 'email', 'username', 'lastSeen'])
+                   && request.resource.data.uid == uid
+                   && request.resource.data.email is string
+                   && request.resource.data.email.size() <= 254
+                   && request.resource.data.username is string
+                   && request.resource.data.username.size() <= 50
+                   && request.resource.data.lastSeen is int;
     }
 
     // ── Codes Pro (hashes) — écriture admin uniquement ───────────────────────────
