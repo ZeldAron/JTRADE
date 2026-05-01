@@ -478,7 +478,7 @@ const Modal = (() => {
 
       populateApexSelect(t.apex || '');
       const acc = Store.getMyAccountByName(t.apex || '');
-      if (acc) { capital = acc.capital; feePerSide = acc.feePerSide || 2.14; firmKey = acc.firmKey || 'apex'; }
+      if (acc) { capital = acc.capital + (acc.pnlOffset || 0); feePerSide = acc.feePerSide || 2.14; firmKey = acc.firmKey || 'apex'; }
       populateInstrumentSelect(firmKey, t.instrument);
       fillStep3FromParsed();
       goToStep(3);
@@ -663,14 +663,14 @@ const Modal = (() => {
         const grp     = Store.getGroupById(val.slice(4));
         const firstAcc = grp && grp.accountIds && grp.accountIds.length
           ? Store.getMyAccountById(grp.accountIds[0]) : null;
-        capital    = firstAcc ? firstAcc.capital    : (Store.getSettings().capital || 50000);
+        capital    = firstAcc ? firstAcc.capital + (firstAcc.pnlOffset || 0) : (Store.getSettings().capital || 50000);
         feePerSide = firstAcc ? (firstAcc.feePerSide || 2.14) : 2.14;
         firmKey    = firstAcc?.firmKey || 'apex';
         if (firstAcc) $('wContracts').max = firstAcc.maxContracts;
       } else {
         const acc = Store.getMyAccountByName(val);
         if (acc) {
-          capital              = acc.capital;
+          capital              = acc.capital + (acc.pnlOffset || 0);
           feePerSide           = acc.feePerSide || 2.14;
           firmKey              = acc.firmKey || 'apex';
           $('wContracts').max  = acc.maxContracts;
