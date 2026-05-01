@@ -373,6 +373,12 @@ const Modal = (() => {
     wRecalc();
   }
 
+  function updateSpreadDisplay() {
+    const el = document.getElementById('wSpreadInfo');
+    if (!el) return;
+    el.textContent = spreadCost > 0 ? '$' + spreadCost.toFixed(2) + ' / contrat' : '—';
+  }
+
   function wRecalc() {
     const entry      = parseFloat($('wEntry').value);
     const sl         = parseFloat($('wSL').value);
@@ -381,6 +387,7 @@ const Modal = (() => {
     const instrument = $('wInstr').value;
     const lc         = $('wLiveCalc');
 
+    updateSpreadDisplay();
     if (!entry || !sl || !tp1) { lc.style.display = 'none'; return; }
     lc.style.display = 'flex';
 
