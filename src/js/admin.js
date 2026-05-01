@@ -43,8 +43,22 @@ const Admin = (() => {
   }
 
   async function loadCodes() {
-    const snap = await _fbDb.collection('proCodeHashes').orderBy('createdAt', 'desc').get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap  = await _fbDb.collection('proCodeHashes').get();
+    const codes = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                           .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    const planSnaps = await Promise.all(
+      codes.map(c =>
+        _fbDb.collection('users').doc(c.uid).collection('data').doc('plan')
+          .get().catch(() => null)
+      )
+    );
+
+    return codes.map((c, i) => {
+      const plan     = planSnaps[i];
+      const isActive = plan && plan.exists && plan.data().codeHash === c.id;
+      return { ...c, isActive };
+    });
   }
 
   async function getUserPlan(uid) {
@@ -107,19 +121,21 @@ const Admin = (() => {
     const rows = codes.map(c => `<tr>
       <td class="hash-cell">${c.id.slice(0, 16)}…</td>
       <td>${c.email || '—'}</td>
-      <td>${c.uid}</td>
       <td>${formatDate(c.createdAt)}</td>
-      <td><button class="btn-revoke" data-id="${c.id}">Révoquer</button></td>
+      <td><span class="plan-tag ${c.isActive ? 'plan-tag-pro' : 'plan-tag-basic'}">${c.isActive ? '✦ Abonnement actif' : 'Non activé'}</span></td>
+      <td><button class="btn-revoke" data-id="${c.id}" data-uid="${c.uid}" data-email="${c.email || '?'}" data-active="${c.isActive}">Révoquer</button></td>
     </tr>`).join('');
 
     wrap.innerHTML = `
       <table class="admin-table">
-        <thead><tr><th>Hash (tronqué)</th><th>Généré pour</th><th>UID</th><th>Créé le</th><th>Action</th></tr></thead>
+        <thead><tr><th>Hash (tronqué)</th><th>Généré pour</th><th>Créé le</th><th>Statut</th><th>Action</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>`;
 
     wrap.querySelectorAll('.btn-revoke').forEach(btn => {
-      btn.addEventListener('click', () => revokeCode(btn.dataset.id));
+      btn.addEventListener('click', () =>
+        revokeCode(btn.dataset.id, btn.dataset.uid, btn.dataset.email, btn.dataset.active === 'true')
+      );
     });
   }
 
@@ -179,11 +195,17 @@ const Admin = (() => {
   }
 
   // ── Révoquer un code ──────────────────────────────────────────────────────────
-  async function revokeCode(id) {
-    if (!confirm('Révoquer ce code ? L\'utilisateur ne pourra plus l\'utiliser.')) return;
+  async function revokeCode(id, uid, email, isActive) {
+    const msg = isActive
+      ? `Révoquer le code ET désactiver l'abonnement Pro de ${email} ?`
+      : `Supprimer le code non utilisé de ${email} ?`;
+    if (!confirm(msg)) return;
     try {
+      if (isActive) {
+        await _fbDb.collection('users').doc(uid).collection('data').doc('plan').delete();
+      }
       await _fbDb.collection('proCodeHashes').doc(id).delete();
-      toast('Code révoqué.');
+      toast(isActive ? 'Abonnement Pro révoqué.' : 'Code supprimé.');
       renderCodes();
     } catch (e) {
       toast('Erreur : ' + e.message, true);
