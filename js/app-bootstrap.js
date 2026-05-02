@@ -137,4 +137,15 @@ document.addEventListener('DOMContentLoaded', () => {
   $('showLogin').addEventListener('click',           () => showForm('login'));
   $('showForgot').addEventListener('click',          () => showForm('forgot'));
   $('showLoginFromForgot').addEventListener('click', () => showForm('login'));
+
+  // ── Cookie banner ───────────────────────────────────────────────────────────
+  const cookieBanner = $('cookieBanner');
+  if (cookieBanner && !localStorage.getItem('zt_cookie_ok')) {
+    cookieBanner.style.display = 'flex';
+  }
+  const cookieBtn = $('cookieAcceptBtn');
+  if (cookieBtn) cookieBtn.addEventListener('click', () => {
+    cookieBanner.style.display = 'none';
+    localStorage.setItem('zt_cookie_ok', '1');
+  });
 });

@@ -6,8 +6,9 @@
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src  'self' https://www.gstatic.com https://cdnjs.cloudflare.com;
-    style-src   'self' 'unsafe-inline';
-    connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com wss://*.firebaseio.com wss://*.googleapis.com https://api.groq.com https://api.web3forms.com;
+    style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src    'self' https://fonts.gstatic.com;
+    connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com wss://*.firebaseio.com wss://*.googleapis.com https://api.groq.com https://api.web3forms.com https://api.frankfurter.app;
     img-src     'self' data: blob:;
     frame-src   'none';
     object-src  'none';
@@ -20,7 +21,7 @@
   <title>ZeldTrade</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=0.9.42">
+  <link rel="stylesheet" href="css/style.css?v=0.9.46">
 </head>
 <body>
 
@@ -124,9 +125,9 @@
     <footer class="lp-footer">
       © 2026 ZeldTrade · Aaron Platon · Tous droits réservés<br>
       <div style="margin-top:8px;display:flex;gap:18px;justify-content:center;flex-wrap:wrap;font-size:12px">
-        <a href="legal.html" style="color:inherit;opacity:0.55;text-decoration:none" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">Mentions légales</a>
-        <a href="privacy.html" style="color:inherit;opacity:0.55;text-decoration:none" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">Politique de confidentialité</a>
-        <a href="cgu.html" style="color:inherit;opacity:0.55;text-decoration:none" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.55">CGU / CGV</a>
+        <a href="legal.html" style="color:inherit;opacity:0.55;text-decoration:none">Mentions légales</a>
+        <a href="privacy.html" style="color:inherit;opacity:0.55;text-decoration:none">Politique de confidentialité</a>
+        <a href="cgu.html" style="color:inherit;opacity:0.55;text-decoration:none">CGU / CGV</a>
       </div>
     </footer>
 
@@ -140,19 +141,6 @@
     </p>
     <button id="cookieAcceptBtn" style="background:#6366f1;color:#fff;border:none;border-radius:7px;padding:8px 20px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;flex-shrink:0">J'ai compris</button>
   </div>
-  <script>
-    (function() {
-      var banner = document.getElementById('cookieBanner');
-      if (!localStorage.getItem('zt_cookie_ok')) {
-        banner.style.display = 'flex';
-      }
-      document.getElementById('cookieAcceptBtn').addEventListener('click', function() {
-        banner.style.display = 'none';
-        localStorage.setItem('zt_cookie_ok', '1');
-      });
-    })();
-  </script>
-
   <!-- ══ AUTH MODAL ════════════════════════════════════════════════════════════ -->
   <div id="authModal" class="auth-modal" style="display:none">
     <div class="auth-modal-backdrop" id="authModalBackdrop"></div>
@@ -606,7 +594,7 @@
 
           <div class="settings-section">
             <h3 data-i18n="set.about">À propos</h3>
-            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.45</span></div>
+            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.46</span></div>
             <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
           </div>
         </div>
@@ -800,26 +788,26 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="js/firebase.js?v=0.9.42"></script>
+  <script src="js/firebase.js?v=0.9.46"></script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script src="js/i18n.js?v=0.9.42"></script>
-  <script src="js/auth.js?v=0.9.42"></script>
-  <script src="js/store.js?v=0.9.42"></script>
-  <script src="js/calc.js?v=0.9.42"></script>
-  <script src="js/modal.js?v=0.9.42"></script>
-  <script src="js/ui.js?v=0.9.42"></script>
-  <script src="js/pages/dashboard.js?v=0.9.42"></script>
-  <script src="js/pages/analytics.js?v=0.9.42"></script>
-  <script src="js/pages/settings.js?v=0.9.42"></script>
-  <script src="js/pages/goals.js?v=0.9.42"></script>
-  <script src="js/pages/calendar.js?v=0.9.42"></script>
-  <script src="js/pages/micro.js?v=0.9.42"></script>
-  <script src="js/pages/offers.js?v=0.9.42"></script>
-  <script src="js/contact.js?v=0.9.42"></script>
-  <script src="js/app.js?v=0.9.42"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
+  <script src="js/i18n.js?v=0.9.46"></script>
+  <script src="js/auth.js?v=0.9.46"></script>
+  <script src="js/store.js?v=0.9.46"></script>
+  <script src="js/calc.js?v=0.9.46"></script>
+  <script src="js/modal.js?v=0.9.46"></script>
+  <script src="js/ui.js?v=0.9.46"></script>
+  <script src="js/pages/dashboard.js?v=0.9.46"></script>
+  <script src="js/pages/analytics.js?v=0.9.46"></script>
+  <script src="js/pages/settings.js?v=0.9.46"></script>
+  <script src="js/pages/goals.js?v=0.9.46"></script>
+  <script src="js/pages/calendar.js?v=0.9.46"></script>
+  <script src="js/pages/micro.js?v=0.9.46"></script>
+  <script src="js/pages/offers.js?v=0.9.46"></script>
+  <script src="js/contact.js?v=0.9.46"></script>
+  <script src="js/app.js?v=0.9.46"></script>
 
-  <script src="js/app-bootstrap.js?v=0.9.42"></script>
+  <script src="js/app-bootstrap.js?v=0.9.46"></script>
 
   <!-- CONTACT WIDGET ──────────────────────────────────────────────────────── -->
   <div id="contactWidget">
