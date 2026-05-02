@@ -133,9 +133,13 @@ const Store = (() => {
     _mergeAccountTypeDefaults();
   }
 
+  function _withTimeout(promise, ms) {
+    return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('Firestore timeout')), ms))]);
+  }
+
   async function _loadFromFirestore() {
     try {
-      const [tSnap, sSnap, maSnap, spfSnap, gSnap, planSnap, aiSnap] = await Promise.all([
+      const [tSnap, sSnap, maSnap, spfSnap, gSnap, planSnap, aiSnap] = await _withTimeout(Promise.all([
         userDoc('trades').get(),
         userDoc('settings').get(),
         userDoc('myAccounts').get(),
@@ -143,7 +147,7 @@ const Store = (() => {
         userDoc('groups').get(),
         userDoc('plan').get(),
         userDoc('aiUsage').get(),
-      ]);
+      ]), 10000);
       let changed = false;
       if (tSnap.exists)   { trades      = tSnap.data().items  || [];  changed = true; }
       if (sSnap.exists) {
@@ -162,7 +166,6 @@ const Store = (() => {
       if (gSnap.exists)  { groups = gSnap.data().items || []; changed = true; }
       if (planSnap.exists) {
         const planData = planSnap.data();
-        lsSet(lk().plan, planData);
         const wasPro = _plan.plan === 'pro';
         _plan = { plan: 'basic', ...planData };
         if ((_plan.plan === 'pro') !== wasPro) {
@@ -172,7 +175,6 @@ const Store = (() => {
       }
       if (aiSnap.exists) {
         const aiData = aiSnap.data();
-        lsSet(lk().aiUsage, aiData);
         _aiUsage = { date: '', count: 0, ...aiData };
         changed = true;
       }
@@ -223,7 +225,7 @@ const Store = (() => {
       setup:      String(raw.setup  || '').slice(0, 500),
       notes:      String(raw.notes  || '').slice(0, 2000),
       apex:       String(raw.apex   || '').replace(/[^A-Za-z0-9 _-]/g, '').slice(0, 100),
-      date:       /^\d{4}-\d{2}-\d{2}T[\d:.Z+-]+$/.test(raw.date) ? raw.date : new Date().toISOString(),
+      date:       (() => { try { const d = new Date(raw.date); return (isFinite(d) && /^\d{4}-\d{2}-\d{2}T/.test(raw.date)) ? raw.date : new Date().toISOString(); } catch { return new Date().toISOString(); } })(),
       entry:      raw.entry  != null ? _safeNum(raw.entry,  -1e7, 1e7, null) : null,
       sl:         raw.sl     != null ? _safeNum(raw.sl,     -1e7, 1e7, null) : null,
       tp1:        raw.tp1    != null ? _safeNum(raw.tp1,    -1e7, 1e7, null) : null,
@@ -288,7 +290,7 @@ const Store = (() => {
   function getGroqKey()         { return settings.groqKey || ''; }
   const SETTINGS_ALLOWED = new Set(['capital','contracts','instrument','groqKey']);
   function updateSettings(data) {
-    const safe = {};
+    const safe = Object.create(null);
     for (const [k, v] of Object.entries(data)) {
       if (!SETTINGS_ALLOWED.has(k)) continue;
       if (k === 'capital')    safe.capital    = _safeNum(v, 0, 1e9, 50000);
@@ -423,7 +425,6 @@ const Store = (() => {
       }
       _proAttempts = 0;
       const info = { plan: 'pro', activatedAt: Date.now(), codeHash: hash };
-      lsSet(lk().plan, info);
       _plan = { ...info };
       await userDoc('plan').set(info);
       window.dispatchEvent(new CustomEvent('store:planChanged'));
