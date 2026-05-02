@@ -100,7 +100,7 @@ const Auth = (() => {
         return { error: i18n.t('auth.err.email') };
       if (e.code === 'auth/user-mismatch')
         return { error: i18n.t('auth.err.mismatch') };
-      return { error: e.message };
+      return { error: i18n.t('auth.err.unknown') };
     }
   }
 
