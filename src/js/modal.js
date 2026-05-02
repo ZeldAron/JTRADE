@@ -18,7 +18,7 @@ const Modal = (() => {
   }
 
   const $ = id => document.getElementById(id);
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const STATUS_LABEL = { evaluation: 'EVAL', funded: 'PA' };
 
   // ── Navigation ──────────────────────────────────────────────────────────────

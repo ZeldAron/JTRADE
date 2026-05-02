@@ -36,7 +36,7 @@
     const days   = new Set(accTrades.map(tr => UI.localDay(tr.date))).size;
     const minDays = 5;
 
-    const byDay = {};
+    const byDay = Object.create(null);
     accTrades.forEach(tr => {
       const d = UI.localDay(tr.date);
       byDay[d] = (byDay[d] || 0) + (Calc.trade(tr).netPnl || 0);

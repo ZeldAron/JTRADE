@@ -21,7 +21,7 @@
   }
 
   function buildByDate(trades) {
-    const byDate = {};
+    const byDate = Object.create(null);
     trades.forEach(tr => {
       const d = UI.localDay(tr.date);
       if (!d) return;
