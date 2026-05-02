@@ -4,7 +4,7 @@
 const Store = (() => {
 
   // ── Données statiques (presets, référence) ───────────────────────────────────
-  const DEFAULT_SETTINGS = { capital: 50000, contracts: 1, instrument: 'MES1', groqKey: '' };
+  const DEFAULT_SETTINGS = { capital: 50000, contracts: 1, instrument: 'MES1' };
 
   const DEFAULT_ACCOUNT_TYPES = [
     { id: 'apex-25k',     firmKey: 'apex',    name: 'Apex $25K',      capital:  25000, profitTarget:  1500, maxDrawdown:  1000, dailyLossLimit:   500, maxContracts:  4, feePerSide: 1.99 },
@@ -69,6 +69,7 @@ const Store = (() => {
   let groups        = [];
   let _plan         = { plan: 'basic' };
   let _aiUsage      = { date: '', count: 0 };
+  let _globalGroqKey = '';
 
   // ── Clés localStorage (cache local) ─────────────────────────────────────────
   const lk = () => ({
@@ -99,9 +100,10 @@ const Store = (() => {
 
   // ── Init & chargement ────────────────────────────────────────────────────────
   function initForUser(userId) {
-    _uid      = userId || 'default';
-    _plan     = { plan: 'basic' };
-    _aiUsage  = { date: '', count: 0 };
+    _uid           = userId || 'default';
+    _plan          = { plan: 'basic' };
+    _aiUsage       = { date: '', count: 0 };
+    _globalGroqKey = '';
     trades        = [];
     settings      = { ...DEFAULT_SETTINGS };
     accountTypes  = DEFAULT_ACCOUNT_TYPES.map(a => ({ ...a }));
@@ -120,8 +122,11 @@ const Store = (() => {
     const ma = lsGet(k.myAccounts);
     const spf = lsGet(k.spreadsByFirm);
     const g  = lsGet(k.groups);
-    if (t)   trades       = t;
-    if (s)   settings     = { ...DEFAULT_SETTINGS, ...s };
+    if (t)   trades   = t;
+    if (s) {
+      const { groqKey: _gk, ...safeS } = s;
+      settings = { ...DEFAULT_SETTINGS, ...safeS };
+    }
     if (ma)  myAccounts   = ma;
     if (spf) Object.keys(DEFAULT_SPREADS_BY_FIRM).forEach(fk => {
       if (spf[fk]) spreadsByFirm[fk] = { ...DEFAULT_SPREADS_BY_FIRM[fk], ...spf[fk] };
@@ -139,7 +144,7 @@ const Store = (() => {
 
   async function _loadFromFirestore() {
     try {
-      const [tSnap, sSnap, maSnap, spfSnap, gSnap, planSnap, aiSnap] = await _withTimeout(Promise.all([
+      const [tSnap, sSnap, maSnap, spfSnap, gSnap, planSnap, aiSnap, groqSnap] = await _withTimeout(Promise.all([
         userDoc('trades').get(),
         userDoc('settings').get(),
         userDoc('myAccounts').get(),
@@ -147,19 +152,37 @@ const Store = (() => {
         userDoc('groups').get(),
         userDoc('plan').get(),
         userDoc('aiUsage').get(),
+        _fbDb.collection('config').doc('groq').get(),
       ]), 10000);
       let changed = false;
       if (tSnap.exists)   { trades      = tSnap.data().items  || [];  changed = true; }
       if (sSnap.exists) {
-        const { groqKey: _, ...cloudSettings } = sSnap.data();
-        settings = { ...DEFAULT_SETTINGS, ...cloudSettings, groqKey: settings.groqKey };
+        const raw = sSnap.data();
+        settings = {
+          capital:    (typeof raw.capital    === 'number' && isFinite(raw.capital))    ? Math.max(0, Math.min(1e9, raw.capital))    : DEFAULT_SETTINGS.capital,
+          contracts:  (typeof raw.contracts  === 'number' && isFinite(raw.contracts))  ? Math.max(1, Math.min(999, raw.contracts))  : DEFAULT_SETTINGS.contracts,
+          instrument: (typeof raw.instrument === 'string' && raw.instrument.length > 0) ? String(raw.instrument).replace(/[^A-Za-z0-9/. _-]/g, '').slice(0, 20) || DEFAULT_SETTINGS.instrument : DEFAULT_SETTINGS.instrument,
+        };
         changed = true;
+      }
+      if (groqSnap.exists) {
+        _globalGroqKey = String(groqSnap.data().key || '');
+        window.dispatchEvent(new CustomEvent('store:groqReady'));
       }
       if (maSnap.exists)  { myAccounts  = maSnap.data().items || [];  changed = true; }
       if (spfSnap.exists) {
         const d = spfSnap.data();
         Object.keys(DEFAULT_SPREADS_BY_FIRM).forEach(fk => {
-          if (d[fk]) spreadsByFirm[fk] = { ...DEFAULT_SPREADS_BY_FIRM[fk], ...d[fk] };
+          if (d[fk] && typeof d[fk] === 'object') {
+            const safe = { ...DEFAULT_SPREADS_BY_FIRM[fk] };
+            Object.keys(DEFAULT_SPREADS_BY_FIRM[fk]).forEach(instr => {
+              if (instr in d[fk]) {
+                const v = parseFloat(d[fk][instr]);
+                if (isFinite(v) && v >= 0) safe[instr] = v;
+              }
+            });
+            spreadsByFirm[fk] = safe;
+          }
         });
         changed = true;
       }
@@ -175,7 +198,10 @@ const Store = (() => {
       }
       if (aiSnap.exists) {
         const aiData = aiSnap.data();
-        _aiUsage = { date: '', count: 0, ...aiData };
+        _aiUsage = {
+          date:  (typeof aiData.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(aiData.date)) ? aiData.date : '',
+          count: (typeof aiData.count === 'number' && isFinite(aiData.count)) ? Math.max(0, Math.floor(aiData.count)) : 0,
+        };
         changed = true;
       }
 
@@ -278,7 +304,7 @@ const Store = (() => {
       notes:      t.notes  ? String(t.notes).slice(0, 2000) : '',
       apex:       t.apex   ? String(t.apex).replace(/[^A-Za-z0-9 _-]/g, '').slice(0, 100) : '',
     }));
-    trades = [...sanitized, ...trades];
+    trades = [...sanitized, ...trades].slice(0, 10000);
     _saveTrades();
     return sanitized.length;
   }
@@ -287,21 +313,19 @@ const Store = (() => {
 
   // ── Settings ─────────────────────────────────────────────────────────────────
   function getSettings()        { return { ...settings }; }
-  function getGroqKey()         { return settings.groqKey || ''; }
-  const SETTINGS_ALLOWED = new Set(['capital','contracts','instrument','groqKey']);
+  function getGroqKey()         { return _globalGroqKey; }
+  const SETTINGS_ALLOWED = new Set(['capital','contracts','instrument']);
   function updateSettings(data) {
     const safe = Object.create(null);
     for (const [k, v] of Object.entries(data)) {
       if (!SETTINGS_ALLOWED.has(k)) continue;
-      if (k === 'capital')    safe.capital    = _safeNum(v, 0, 1e9, 50000);
-      else if (k === 'contracts') safe.contracts = _safeNum(v, 1, 999, 1);
+      if (k === 'capital')         safe.capital    = _safeNum(v, 0, 1e9, 50000);
+      else if (k === 'contracts')  safe.contracts  = _safeNum(v, 1, 999, 1);
       else if (k === 'instrument') safe.instrument = String(v).replace(/[^A-Za-z0-9/. _-]/g,'').slice(0,20) || 'MES1';
-      else if (k === 'groqKey') safe.groqKey = String(v || '').slice(0, 200);
     }
     settings = { ...settings, ...safe };
     lsSet(lk().settings, settings);
-    const { groqKey: _, ...cloudSettings } = settings;
-    fbSet('settings', cloudSettings);
+    fbSet('settings', settings);
   }
 
   // ── Account types (presets statiques) ────────────────────────────────────────
@@ -441,13 +465,13 @@ const Store = (() => {
   function canAnalyzeToday() {
     if (isPro()) return true;
     const today = new Date().toISOString().split('T')[0];
+    if (typeof _aiUsage.date === 'string' && _aiUsage.date > today) return false;
     return _aiUsage.date !== today || _aiUsage.count < 1;
   }
   function recordAnalysis() {
     const today = new Date().toISOString().split('T')[0];
     const next  = { date: today, count: _aiUsage.date === today ? _aiUsage.count + 1 : 1 };
     _aiUsage = next;
-    lsSet(lk().aiUsage, next);
     fbSet('aiUsage', next);
   }
 

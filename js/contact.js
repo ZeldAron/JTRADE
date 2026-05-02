@@ -67,8 +67,8 @@ const Contact = (() => {
       } else {
         throw new Error(data.message || i18n.t('contact.err.server'));
       }
-    } catch (e) {
-      error.textContent = i18n.t('contact.err.send') + e.message;
+    } catch {
+      error.textContent = i18n.t('contact.err.send');
       btn.disabled      = false;
       label.textContent = i18n.t('contact.send');
     }

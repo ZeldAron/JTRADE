@@ -24,7 +24,7 @@ const Admin = (() => {
   function $(id) { return document.getElementById(id); }
   function show(id, type = 'block') { $(id).style.display = type; }
   function hide(id) { $(id).style.display = 'none'; }
-  function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
   function toast(msg, isError = false) {
     const t = $('adminToast');
@@ -179,8 +179,8 @@ const Admin = (() => {
       $('genResult').style.display = 'block';
       toast('Code généré avec succès !');
       renderCodes();
-    } catch (e) {
-      $('genError').textContent = 'Erreur : ' + e.message;
+    } catch {
+      $('genError').textContent = 'Erreur lors de la génération — réessaie.';
     } finally {
       btn.disabled    = false;
       btn.textContent = 'Générer';
@@ -210,19 +210,90 @@ const Admin = (() => {
       await _fbDb.collection('proCodeHashes').doc(id).delete();
       toast(isActive ? 'Abonnement Pro révoqué.' : 'Code supprimé.');
       renderCodes();
-    } catch (e) {
-      toast('Erreur : ' + e.message, true);
+    } catch {
+      toast('Erreur lors de la révocation — réessaie.', true);
+    }
+  }
+
+  // ── Config Groq ───────────────────────────────────────────────────────────────
+  async function loadGroqConfig() {
+    try {
+      const snap = await _fbDb.collection('config').doc('groq').get();
+      return snap.exists ? (snap.data().key || '') : '';
+    } catch { return ''; }
+  }
+
+  async function saveGroqConfig(key) {
+    await _fbDb.collection('config').doc('groq').set({ key });
+  }
+
+  async function renderConfig() {
+    const wrap = $('tabConfig');
+    wrap.innerHTML = '<div class="admin-loading">Chargement…</div>';
+    const currentKey = await loadGroqConfig();
+
+    wrap.innerHTML = `
+      <div style="max-width:520px">
+        <h3 style="margin:0 0 6px;font-size:15px">Clé API Groq (globale)</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">
+          Cette clé est utilisée par tous les utilisateurs pour l'analyse IA des screenshots.<br>
+          Récupère-la sur <strong>console.groq.com</strong> → "API Keys".
+        </p>
+        <div style="display:flex;gap:8px">
+          <input type="password" id="groqConfigInput" value="${esc(currentKey)}"
+            placeholder="gsk_..."
+            style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:9px 12px;font-size:13px;font-family:monospace;outline:none">
+          <button class="btn-gen" id="btnSaveGroqConfig" style="padding:8px 18px">Sauvegarder</button>
+        </div>
+        <div id="groqConfigStatus" style="font-size:12px;margin-top:8px;min-height:16px;color:${currentKey ? 'var(--green)' : 'var(--muted)'}">
+          ${currentKey ? '✓ Clé configurée' : 'Aucune clé — IA désactivée pour tous les utilisateurs'}
+        </div>
+        ${currentKey ? `<button class="btn-revoke" id="btnClearGroqConfig" style="margin-top:12px;font-size:12px">Supprimer la clé</button>` : ''}
+      </div>`;
+
+    $('btnSaveGroqConfig').addEventListener('click', async () => {
+      const key = $('groqConfigInput').value.trim();
+      if (key && !key.startsWith('gsk_')) {
+        $('groqConfigStatus').textContent = 'Clé invalide — doit commencer par gsk_';
+        $('groqConfigStatus').style.color = 'var(--red)';
+        return;
+      }
+      const btn = $('btnSaveGroqConfig');
+      btn.disabled = true;
+      btn.textContent = '…';
+      try {
+        await saveGroqConfig(key);
+        toast(key ? 'Clé Groq sauvegardée.' : 'Clé Groq supprimée.');
+        renderConfig();
+      } catch {
+        $('groqConfigStatus').textContent = 'Erreur lors de la sauvegarde — réessaie.';
+        $('groqConfigStatus').style.color = 'var(--red)';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sauvegarder';
+      }
+    });
+
+    const clearBtn = $('btnClearGroqConfig');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', async () => {
+        if (!confirm('Supprimer la clé Groq ? L\'IA sera désactivée pour tous les utilisateurs.')) return;
+        await saveGroqConfig('');
+        toast('Clé Groq supprimée.');
+        renderConfig();
+      });
     }
   }
 
   // ── Onglets ───────────────────────────────────────────────────────────────────
   function switchTab(name) {
-    ['users', 'codes'].forEach(t => {
+    ['users', 'codes', 'config'].forEach(t => {
       $('tab-' + t).classList.toggle('tab-active', t === name);
       $('tab' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t === name ? '' : 'none';
     });
-    if (name === 'users') renderUsers();
-    if (name === 'codes') renderCodes();
+    if (name === 'users')  renderUsers();
+    if (name === 'codes')  renderCodes();
+    if (name === 'config') renderConfig();
   }
 
   // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -271,6 +342,7 @@ const Admin = (() => {
     $('btnLogout').addEventListener('click', () => _fbAuth.signOut());
     $('tab-users').addEventListener('click', () => switchTab('users'));
     $('tab-codes').addEventListener('click', () => switchTab('codes'));
+    $('tab-config').addEventListener('click', () => switchTab('config'));
     $('btnDoGen').addEventListener('click', doGenerate);
     $('btnCopyCode').addEventListener('click', copyCode);
     $('btnCloseModal').addEventListener('click', closeGenModal);

@@ -9,6 +9,7 @@
   async function fetchEurUsd() {
     try {
       const res  = await fetch('https://api.frankfurter.app/latest?from=USD&to=EUR');
+      if (!res.ok) return null;
       const data = await res.json();
       const rate = data?.rates?.EUR;
       const date = data?.date;
@@ -36,7 +37,7 @@
     const type        = $('microType')?.value    || 'bnc';
     const acre        = $('microAcre')?.checked  || false;
     const vl          = $('microVL')?.checked    || false;
-    const fxRate      = parseFloat($('microFxRate')?.value) || microEurUsd || 0.92;
+    const fxRate      = Math.max(0.0001, parseFloat($('microFxRate')?.value) || microEurUsd || 0.92);
     const revenueUsd  = source === 'manual'
       ? Math.max(0, parseFloat($('microManualAmt')?.value) || 0)
       : getMicroRevUsd(source);
@@ -96,9 +97,7 @@
     const monthLabel  = months[parseInt(month.split('-')[1]) - 1] + ' ' + month.split('-')[0];
     const monthUsd    = getMicroRevUsd('month');
     const totalUsd    = getMicroRevUsd('all');
-    const fxDisplay   = microEurUsd
-      ? `1 USD = <strong>${microEurUsd.toFixed(4)}</strong> EUR · ECB ${microEurUsdDate}`
-      : t('micro.fx.loading');
+    const fxDisplay   = microEurUsd ? '' : t('micro.fx.loading');
 
     el.innerHTML = `
       <div class="page-title">${t('page.micro')}</div>
@@ -174,6 +173,14 @@
       </div>
     `;
 
+    if (microEurUsd) {
+      const fi = $('microFxInfo');
+      fi.textContent = '';
+      const strong = document.createElement('strong');
+      strong.textContent = microEurUsd.toFixed(4);
+      fi.append('1 USD = ', strong, ` EUR · ECB ${microEurUsdDate}`);
+    }
+
     updateMicroResults();
 
     $('microFxRefresh').addEventListener('click', async () => {
@@ -183,7 +190,11 @@
       btn.textContent = t('micro.fx.refresh'); btn.disabled = false;
       if (rate) {
         $('microFxRate').value = rate.toFixed(4);
-        $('microFxInfo').innerHTML = `1 USD = <strong>${rate.toFixed(4)}</strong> EUR · ECB ${microEurUsdDate}`;
+        const fi = $('microFxInfo');
+        fi.textContent = '';
+        const strong = document.createElement('strong');
+        strong.textContent = rate.toFixed(4);
+        fi.append('1 USD = ', strong, ` EUR · ECB ${microEurUsdDate}`);
       }
       updateMicroResults();
     });
@@ -201,7 +212,11 @@
       fetchEurUsd().then(rate => {
         if (!rate || !$('microFxRate')) return;
         $('microFxRate').value = rate.toFixed(4);
-        $('microFxInfo').innerHTML = `1 USD = <strong>${rate.toFixed(4)}</strong> EUR · ECB ${microEurUsdDate}`;
+        const fi = $('microFxInfo');
+        fi.textContent = '';
+        const strong = document.createElement('strong');
+        strong.textContent = rate.toFixed(4);
+        fi.append('1 USD = ', strong, ` EUR · ECB ${microEurUsdDate}`);
         updateMicroResults();
       });
     }
