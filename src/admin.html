@@ -7,13 +7,16 @@
     default-src 'self';
     script-src  'self' https://www.gstatic.com;
     style-src   'self' 'unsafe-inline';
-    connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com wss://*.firebaseio.com;
+    connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com wss://*.firebaseio.com wss://*.googleapis.com;
     img-src     'self' data:;
     frame-src   'none';
     object-src  'none';
     base-uri    'self';
     upgrade-insecure-requests;
   ">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
   <title>ZeldTrade Admin</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -428,6 +431,7 @@
       <div class="admin-tabs">
         <button class="admin-tab tab-active" id="tab-users">Utilisateurs</button>
         <button class="admin-tab" id="tab-codes">Codes générés</button>
+        <button class="admin-tab" id="tab-config">Config</button>
       </div>
 
       <!-- Onglet Utilisateurs -->
@@ -435,6 +439,9 @@
 
       <!-- Onglet Codes -->
       <div id="tabCodes" style="display:none"></div>
+
+      <!-- Onglet Config -->
+      <div id="tabConfig" style="display:none"></div>
 
     </main>
   </div>

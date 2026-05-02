@@ -44,8 +44,9 @@ const Modal = (() => {
     goToStep(2);
     const groqBadge = $('groqStatusBadge');
     if (groqBadge) {
-      groqBadge.textContent = i18n.t('modal.groq.active');
-      groqBadge.style.color = 'var(--green)';
+      const hasKey = !!Store.getGroqKey();
+      groqBadge.textContent = hasKey ? i18n.t('modal.groq.active') : i18n.t('modal.groq.nokey');
+      groqBadge.style.color = hasKey ? 'var(--green)' : 'var(--red)';
     }
     setTimeout(() => $('wDropZone').focus?.(), 150);
   }
@@ -225,6 +226,13 @@ const Modal = (() => {
 
     try {
 
+      if (!groqKey) {
+        statusEl.innerHTML = `<span style="color:var(--red)">${i18n.t('modal.groq.nokey')}</span>`;
+        $('wBtnNext2').disabled = false;
+        retryBtn.style.display  = 'none';
+        return;
+      }
+
       if (!Store.canAnalyzeToday()) {
         statusEl.innerHTML = `<span style="color:var(--red)">${i18n.t('err.limit.ai')}</span>
           <span style="color:var(--muted)"> <a href="#" id="goOffersLink" style="color:var(--accent)">${i18n.t('err.limit.ai.cta')}</a></span>`;
@@ -239,8 +247,8 @@ const Modal = (() => {
         return;
       }
 
-      Store.recordAnalysis();
       const result = await analyzeWithGroq(capturedImage, groqKey, direction);
+      Store.recordAnalysis();
       let { entry, sl, tp1 } = result;
       entry = entry || null; sl = sl || null; tp1 = tp1 || null;
 

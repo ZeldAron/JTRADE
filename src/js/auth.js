@@ -15,7 +15,7 @@ const Auth = (() => {
       email:    user.email || '',
       username: String(user.displayName || '').replace(/[<>"'`]/g, '').trim().slice(0, 50),
       lastSeen: Date.now(),
-    }, { merge: true }).catch(() => {});
+    }).catch(() => {});
   }
 
   // Appelé par l'app pour attendre que Firebase confirme la session

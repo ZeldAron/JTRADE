@@ -442,9 +442,11 @@
       });
 
       $('btnSaveSpreads').addEventListener('click', () => {
-        const data = {};
+        const data = Object.create(null);
+        const validInstrs = new Set(Object.keys(Store.getSpreadsByFirm(activeKey)));
         el.querySelectorAll('[data-sp-instr]').forEach(input => {
-          data[input.dataset.spInstr] = Math.max(0, parseFloat(input.value) || 0);
+          const k = input.dataset.spInstr;
+          if (validInstrs.has(k)) data[k] = Math.max(0, parseFloat(input.value) || 0);
         });
         Store.updateSpreadsByFirm(activeKey, data);
         UI.toast(t('set.sp.saved'));
@@ -614,25 +616,15 @@
       });
     });
 
-    const s = Store.getSettings();
-
-    $('setGroqKey').value = s.groqKey || '';
-    $('btnSaveGroq').addEventListener('click', () => {
-      const key = $('setGroqKey').value.trim();
-      const st  = $('groqKeyStatus');
-      if (key && !key.startsWith('gsk_')) {
-        st.textContent = t('set.groq.invalid') || 'Clé invalide (doit commencer par gsk_)';
-        st.style.color = 'var(--red)';
-        return;
-      }
-      Store.updateSettings({ groqKey: key });
-      st.textContent = key ? t('set.groq.saved') : t('set.groq.cleared');
-      st.style.color = key ? 'var(--green)' : 'var(--muted)';
-    });
-    if (s.groqKey) {
-      $('groqKeyStatus').textContent = t('set.groq.ok');
-      $('groqKeyStatus').style.color = 'var(--green)';
+    function updateGroqStatus() {
+      const statusEl = $('groqKeyStatus');
+      if (!statusEl) return;
+      const key = Store.getGroqKey();
+      statusEl.textContent = key ? (t('set.groq.ok') || '★ IA active') : (t('set.groq.admin') || 'Clé non configurée — contactez l\'admin');
+      statusEl.style.color = key ? 'var(--green)' : 'var(--muted)';
     }
+    updateGroqStatus();
+    window.addEventListener('store:groqReady', updateGroqStatus);
 
     $('btnExport').addEventListener('click', () => {
       const blob = new Blob([Store.exportJSON()], { type: 'application/json' });

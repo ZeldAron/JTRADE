@@ -13,17 +13,19 @@ service cloud.firestore {
 
     // ── Profils utilisateurs (lookup admin) ──────────────────────────────────────
     match /userEmails/{uid} {
-      allow get:  if isAdmin() || (request.auth != null && request.auth.uid == uid);
-      allow list: if isAdmin();
-      allow write: if request.auth != null
-                   && request.auth.uid == uid
-                   && request.resource.data.keys().hasOnly(['uid', 'email', 'username', 'lastSeen'])
-                   && request.resource.data.uid == uid
-                   && request.resource.data.email is string
-                   && request.resource.data.email.size() <= 254
-                   && request.resource.data.username is string
-                   && request.resource.data.username.size() <= 50
-                   && request.resource.data.lastSeen is int;
+      allow get:    if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow list:   if isAdmin();
+      allow delete: if request.auth != null && request.auth.uid == uid;
+      allow write:  if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['uid', 'email', 'username', 'lastSeen'])
+                    && request.resource.data.uid == uid
+                    && request.resource.data.email is string
+                    && request.resource.data.email == request.auth.token.email
+                    && request.resource.data.email.size() <= 254
+                    && request.resource.data.username is string
+                    && request.resource.data.username.size() <= 50
+                    && request.resource.data.lastSeen is int;
     }
 
     // ── Codes Pro (hashes) — écriture admin uniquement ───────────────────────────
@@ -35,7 +37,8 @@ service cloud.firestore {
 
     // ── Trades — seuls les champs attendus, limite taille ────────────────────────
     match /users/{userId}/data/trades {
-      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow read:   if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow delete: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null
                    && request.auth.uid == userId
                    && request.resource.data.keys().hasOnly(['items'])
@@ -45,60 +48,90 @@ service cloud.firestore {
 
     // ── Settings — whitelist stricte des champs, types validés ──────────────────
     match /users/{userId}/data/settings {
-      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow read:   if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow delete: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null
                    && request.auth.uid == userId
                    && request.resource.data.keys().hasOnly(['capital', 'contracts', 'instrument'])
                    && request.resource.data.capital is number
+                   && request.resource.data.capital >= 0
+                   && request.resource.data.capital <= 1000000000
                    && request.resource.data.contracts is number
+                   && request.resource.data.contracts >= 1
+                   && request.resource.data.contracts <= 999
                    && request.resource.data.instrument is string
                    && request.resource.data.instrument.size() <= 20;
     }
 
-    // ── Mes comptes — structure validée ─────────────────────────────────────────
+    // ── Mes comptes — 1 max Basic, 100 max Pro ───────────────────────────────────
     match /users/{userId}/data/myAccounts {
-      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
-      allow write: if request.auth != null
-                   && request.auth.uid == userId
-                   && request.resource.data.keys().hasOnly(['items'])
-                   && request.resource.data.items is list
-                   && request.resource.data.items.size() <= 100;
+      allow read:   if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow write: if isAdmin()
+                   || (request.auth != null
+                       && request.auth.uid == userId
+                       && request.resource.data.keys().hasOnly(['items'])
+                       && request.resource.data.items is list
+                       && (
+                         request.resource.data.items.size() <= 1
+                         || (
+                           exists(/databases/$(database)/documents/users/$(userId)/data/plan)
+                           && get(/databases/$(database)/documents/users/$(userId)/data/plan).data.plan == 'pro'
+                           && request.resource.data.items.size() <= 100
+                         )
+                       ));
+    }
+
+    // ── Clé Groq globale — lecture auth, écriture admin ─────────────────────────
+    match /config/groq {
+      allow read: if request.auth != null;
+      allow write: if isAdmin()
+                   && request.resource.data.keys().hasOnly(['key'])
+                   && request.resource.data.key is string
+                   && request.resource.data.key.size() <= 200;
     }
 
     // ── Spreads par firm ─────────────────────────────────────────────────────────
     match /users/{userId}/data/spreadsByFirm {
-      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow read:   if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow delete: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null
                    && request.auth.uid == userId
                    && request.resource.data.keys().hasOnly(['apex', 'topstep', 'ftmo', 'lucid']);
     }
 
-    // ── Groupes — structure validée ──────────────────────────────────────────────
+    // ── Groupes — Pro uniquement ─────────────────────────────────────────────────
     match /users/{userId}/data/groups {
-      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow read:   if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow delete: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null
                    && request.auth.uid == userId
                    && request.resource.data.keys().hasOnly(['items'])
                    && request.resource.data.items is list
-                   && request.resource.data.items.size() <= 50;
+                   && request.resource.data.items.size() <= 50
+                   && exists(/databases/$(database)/documents/users/$(userId)/data/plan)
+                   && get(/databases/$(database)/documents/users/$(userId)/data/plan).data.plan == 'pro';
     }
 
-    // ── AI usage — structure validée, compteur non réductible à même date ───────
+    // ── AI usage — structure validée, date non rétrogradable, compteur non réductible ──
     match /users/{userId}/data/aiUsage {
-      allow read: if request.auth != null && request.auth.uid == userId;
+      allow read:   if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null
                    && request.auth.uid == userId
                    && request.resource.data.keys().hasAll(['date', 'count'])
                    && request.resource.data.keys().hasOnly(['date', 'count'])
                    && request.resource.data.date is string
                    && request.resource.data.date.size() == 10
+                   && request.resource.data.date.matches('^[12][0-9]{3}-[0-9]{2}-[0-9]{2}$')
                    && request.resource.data.count is int
                    && request.resource.data.count >= 0
                    && request.resource.data.count <= 1000
                    && (
                      !exists(/databases/$(database)/documents/users/$(userId)/data/aiUsage)
-                     || request.resource.data.date != resource.data.date
-                     || request.resource.data.count >= resource.data.count
+                     || request.resource.data.date > resource.data.date
+                     || (request.resource.data.date == resource.data.date
+                         && request.resource.data.count >= resource.data.count)
                    );
     }
 

@@ -94,6 +94,7 @@ const i18n = (() => {
       'set.groq.hint':    'Optionnel — active l\'analyse IA des screenshots TradingView.',
       'set.groq.save':    'Sauvegarder',
       'set.groq.ok':      '✓ Clé Groq configurée — analyse IA active',
+      'set.groq.admin':   'Aucune clé IA configurée — contactez l\'administrateur',
       'set.groq.saved':   '✓ Clé Groq sauvegardée — analyse IA active',
       'set.groq.cleared': 'Clé effacée',
       'set.accounts':     'Mes Comptes',
@@ -230,6 +231,7 @@ const i18n = (() => {
       'auth.back.login':  '← Retour à la connexion',
       // Modal
       'modal.groq.active':    '● Groq actif',
+      'modal.groq.nokey':     '⚠ Analyse IA non disponible — clé non configurée',
       'modal.groq.missing':   '⚠ Clé Groq manquante',
       'modal.groq.configure': 'Configure ta clé Groq dans Réglages → Intelligence Artificielle',
       'modal.groq.analyzing': 'Analyse Groq…',
@@ -585,6 +587,7 @@ const i18n = (() => {
       'set.groq.hint':    'Optional — enables AI analysis of TradingView screenshots.',
       'set.groq.save':    'Save',
       'set.groq.ok':      '✓ Groq key configured — AI analysis active',
+      'set.groq.admin':   'No AI key configured — contact the administrator',
       'set.groq.saved':   '✓ Groq key saved — AI analysis active',
       'set.groq.cleared': 'Key removed',
       'set.accounts':     'My Accounts',
@@ -721,6 +724,7 @@ const i18n = (() => {
       'auth.back.login':  '← Back to login',
       // Modal
       'modal.groq.active':    '● Groq active',
+      'modal.groq.nokey':     '⚠ AI analysis unavailable — key not configured',
       'modal.groq.missing':   '⚠ Groq key missing',
       'modal.groq.configure': 'Set up your Groq key in Settings → AI Analysis',
       'modal.groq.analyzing': 'Analyzing with Groq…',
