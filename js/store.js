@@ -263,7 +263,7 @@ const Store = (() => {
       DIRS.has(t.direction) && OUTCOMES.has(t.outcome)
     ).map(t => ({
       id:         String(t.id || Date.now() + Math.random()).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32),
-      date:       /^\d{4}-\d{2}-\d{2}/.test(String(t.date)) ? String(t.date) : new Date().toISOString(),
+      date:       (() => { try { const d = new Date(t.date); return isFinite(d) ? new Date(d).toISOString() : new Date().toISOString(); } catch { return new Date().toISOString(); } })(),
       instrument: String(t.instrument).replace(/[^A-Za-z0-9/. _-]/g, '').slice(0, 20),
       direction:  t.direction,
       outcome:    t.outcome,
@@ -324,7 +324,7 @@ const Store = (() => {
   }
 
   function _sanitizeAccountName(name) {
-    return String(name || '').replace(/[<>"'`]/g, '').trim().slice(0, 50);
+    return String(name || '').replace(/[<>"]/g, '').trim().slice(0, 50);
   }
   function _sanitizeAccount(data) {
     const s = {};
@@ -337,6 +337,7 @@ const Store = (() => {
     if (data.dailyLossLimit!==undefined)s.dailyLossLimit = _safeNum(data.dailyLossLimit,0, 1e7, 0);
     if (data.maxContracts!== undefined) s.maxContracts   = _safeNum(data.maxContracts,  1, 999, 1);
     if (data.feePerSide  !== undefined) s.feePerSide     = _safeNum(data.feePerSide,    0, 100, 0);
+    if (data.pnlOffset   !== undefined) s.pnlOffset      = _safeNum(data.pnlOffset,    -1e7, 1e7, 0);
     return s;
   }
   function addMyAccount(data) {
@@ -376,7 +377,7 @@ const Store = (() => {
   }
 
   function _sanitizeGroupName(name) {
-    return String(name || '').replace(/[<>"'`]/g, '').trim().slice(0, 50);
+    return String(name || '').replace(/[<>"]/g, '').trim().slice(0, 50);
   }
   function addGroup(data) {
     const g = { ...data, name: _sanitizeGroupName(data.name), id: 'grp-' + Date.now() };
