@@ -198,7 +198,9 @@ const UI = (() => {
          </div>`
       : '';
 
-    const contractLabel = t.contracts > 1 ? i18n.t('ui.contracts') : i18n.t('ui.contract');
+    const cfd = Calc.isCFD(t.instrument);
+    const contractLabel = cfd ? 'lots' : (t.contracts > 1 ? i18n.t('ui.contracts') : i18n.t('ui.contract'));
+    const contractDisplay = cfd ? t.contracts.toFixed(2) : t.contracts;
 
     panel.innerHTML = `
       <button class="detail-back-btn" id="detailBackBtn" style="display:none">
@@ -229,12 +231,12 @@ const UI = (() => {
           <div class="metric-card">
             <div class="mc-label">${i18n.t('ui.risk.usd')}</div>
             <div class="mc-val" style="color:var(--red)">-$${c.riskUSD.toFixed(0)}</div>
-            <div class="mc-sub">${c.riskTicks} ticks</div>
+            <div class="mc-sub">${cfd ? c.riskPts.toFixed(cfd ? 2 : 0) + ' pts' : c.riskTicks + ' ticks'}</div>
           </div>
           <div class="metric-card">
             <div class="mc-label">${i18n.t('ui.reward.usd')}</div>
             <div class="mc-val" style="color:var(--green)">+$${c.rewardUSD.toFixed(0)}</div>
-            <div class="mc-sub">${c.rewardTicks} ticks</div>
+            <div class="mc-sub">${cfd ? c.rewardPts.toFixed(2) + ' pts' : c.rewardTicks + ' ticks'}</div>
           </div>
           <div class="metric-card">
             <div class="mc-label">Risk %</div>
@@ -252,7 +254,7 @@ const UI = (() => {
           <div class="level-card lc-sl">
             <div class="lc-label">SL</div>
             <div class="lc-price">${t.sl.toFixed(2)}</div>
-            <div class="lc-ticks">${c.riskTicks} ticks</div>
+            <div class="lc-ticks">${cfd ? c.riskPts.toFixed(2) + ' pts' : c.riskTicks + ' ticks'}</div>
           </div>
           ${tpCards}
           ${t.exitPrice ? `<div class="level-card lc-exit"><div class="lc-label">Exit</div><div class="lc-price">${t.exitPrice.toFixed(2)}</div></div>` : ''}
@@ -263,7 +265,7 @@ const UI = (() => {
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
           ${apexMsg}
-          <span class="apex-right">${t.contracts} ${contractLabel} · $${c.pv}/pt</span>
+          <span class="apex-right">${contractDisplay} ${contractLabel}${cfd ? '' : ' · $' + c.pv + '/pt'}</span>
         </div>
 
         ${infoCard}
