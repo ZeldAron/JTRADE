@@ -79,12 +79,12 @@ const Calc = (() => {
   }
 
   // Live preview depuis le formulaire
-  function fromForm(direction, entry, sl, tp1, instrument, contracts, capital, feePerSide = 2.14, spreadCost = 0) {
+  function fromForm(direction, entry, sl, tp1, instrument, contracts, capital, feePerSide = 2.14, spreadCost = 0, exitPrice = null) {
     return trade({
       direction, entry, sl, tp1,
       instrument, contracts, capital,
       feePerSide, spreadCost,
-      exitPrice: null,
+      exitPrice,
     });
   }
 

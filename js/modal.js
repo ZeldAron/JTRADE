@@ -420,28 +420,61 @@ const Modal = (() => {
     const instrument = $('wInstr').value;
     const lc         = $('wLiveCalc');
 
+    // Prix de sortie : parseFloat retourne NaN si vide, on garde null si absent
+    const rawExit = $('wExit').value.trim();
+    const exitPrice = rawExit !== '' && !isNaN(parseFloat(rawExit)) ? parseFloat(rawExit) : null;
+    const hasExit = exitPrice !== null;
+
     updateSpreadDisplay();
     if (!entry || !sl || !tp1) { lc.style.display = 'none'; return; }
     lc.style.display = 'flex';
 
-    const c = Calc.fromForm(direction, entry, sl, tp1, instrument, contracts, capital, feePerSide, spreadCost);
+    const c = Calc.fromForm(direction, entry, sl, tp1, instrument, contracts, capital, feePerSide, spreadCost, exitPrice);
 
+    // R:R théorique si pas de sortie, R réel si sortie
     const rrEl = $('lcRR');
-    rrEl.textContent = c.rr.toFixed(2) + 'R';
-    rrEl.style.color = Calc.rrColor(c.rr);
+    if (hasExit) {
+      const actualR = c.riskUSD > 0 ? c.pnl / c.riskUSD : 0;
+      rrEl.textContent = actualR.toFixed(2) + 'R réel';
+      rrEl.style.color = c.pnl >= 0 ? 'var(--green)' : 'var(--red)';
+    } else {
+      rrEl.textContent = c.rr.toFixed(2) + 'R';
+      rrEl.style.color = Calc.rrColor(c.rr);
+    }
 
-    $('lcRisk').textContent   = '-$' + c.riskUSD.toFixed(0);
-    $('lcReward').textContent = '+$' + c.rewardUSD.toFixed(0);
+    $('lcRisk').textContent = '-$' + c.riskUSD.toFixed(0);
+
+    // Reward ou P&L brut selon présence du prix de sortie
+    const rewardEl    = $('lcReward');
+    const rewardLabel = $('lcRewardLabel');
+    if (hasExit) {
+      rewardLabel.textContent = 'P&L brut';
+      rewardEl.textContent    = (c.pnl >= 0 ? '+' : '−') + '$' + Math.abs(c.pnl).toFixed(2);
+      rewardEl.style.color    = c.pnl >= 0 ? 'var(--green)' : 'var(--red)';
+    } else {
+      rewardLabel.textContent = 'Reward $';
+      rewardEl.textContent    = '+$' + c.rewardUSD.toFixed(0);
+      rewardEl.style.color    = 'var(--green)';
+    }
 
     const rpcEl = $('lcRiskPct');
     rpcEl.textContent = c.riskPct.toFixed(2) + '%';
     rpcEl.style.color = Calc.riskColor(c.riskPct);
 
-    $('lcFees').textContent = '-$' + c.totalFees.toFixed(2);
+    $('lcFees').textContent = '−$' + c.totalFees.toFixed(2);
 
-    const netEl = $('lcNet');
-    netEl.textContent = (c.netRewardUSD >= 0 ? '+' : '-') + '$' + Math.abs(c.netRewardUSD).toFixed(0);
-    netEl.style.color = c.netRewardUSD >= 0 ? 'var(--green)' : 'var(--red)';
+    // Net reward ou P&L net selon présence du prix de sortie
+    const netEl    = $('lcNet');
+    const netLabel = $('lcNetLabel');
+    if (hasExit) {
+      netLabel.textContent = 'P&L net';
+      netEl.textContent    = (c.netPnl >= 0 ? '+' : '−') + '$' + Math.abs(c.netPnl).toFixed(2);
+      netEl.style.color    = c.netPnl >= 0 ? 'var(--green)' : 'var(--red)';
+    } else {
+      netLabel.textContent = 'Net reward';
+      netEl.textContent    = (c.netRewardUSD >= 0 ? '+' : '−') + '$' + Math.abs(c.netRewardUSD).toFixed(0);
+      netEl.style.color    = c.netRewardUSD >= 0 ? 'var(--green)' : 'var(--red)';
+    }
 
     const warnEl  = $('lcApexWarn');
     const account = Store.getMyAccountByName($('wApex').value);
@@ -718,13 +751,16 @@ const Modal = (() => {
       wRecalc();
     });
 
-    ['wContracts', 'wEntry', 'wSL', 'wTP1'].forEach(id => {
+    ['wContracts', 'wEntry', 'wSL', 'wTP1', 'wExit'].forEach(id => {
       $(id).addEventListener('input',  wRecalc);
       $(id).addEventListener('change', wRecalc);
     });
 
     $('wOutcome').addEventListener('change', () => {
-      $('wExitField').style.display = $('wOutcome').value !== 'open' ? '' : 'none';
+      const isOpen = $('wOutcome').value === 'open';
+      $('wExitField').style.display = isOpen ? 'none' : '';
+      if (isOpen) $('wExit').value = '';
+      wRecalc();
     });
 
     $('wOptToggle').addEventListener('click', () => {
