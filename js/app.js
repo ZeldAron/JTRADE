@@ -11,7 +11,7 @@ function initApp() {
     analytics: 'page.analytics',
     goals:     'page.goals',
     calendar:  'page.calendar',
-    micro:     'page.micro',
+    outils:    'page.outils',
     offers:    'page.offers',
     settings:  'page.settings',
     tutorial:  'page.tutorial',
@@ -32,7 +32,7 @@ function initApp() {
     if (page === 'analytics') UI.renderAnalytics();
     if (page === 'goals')     UI.renderGoals();
     if (page === 'calendar')  UI.renderCalendar();
-    if (page === 'micro')     UI.renderMicro();
+    if (page === 'outils')    UI.renderOutils();
     if (page === 'offers')    UI.renderOffers();
     if (page === 'changelog') Changelog.renderChangelog();
   }
@@ -153,7 +153,7 @@ function initApp() {
   UI.updateStats();
 
   // Redirect post-login if a destination was set (ex: landing Pro button)
-  const VALID_PAGES = new Set(['journal','dashboard','analytics','goals','calendar','micro','offers','settings','tutorial','changelog']);
+  const VALID_PAGES = new Set(['journal','dashboard','analytics','goals','calendar','outils','offers','settings','tutorial','changelog']);
   const _goto = sessionStorage.getItem('ztGoto');
   sessionStorage.removeItem('ztGoto');
   if (_goto && VALID_PAGES.has(_goto)) {
