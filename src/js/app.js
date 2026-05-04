@@ -86,6 +86,7 @@ function initApp() {
 
   // ── NEW TRADE BUTTON ───────────────────────────────────────────────────────
   $('btnNewTrade').addEventListener('click', () => {
+    if (isMobile()) closeSidebar();
     if (!Store.getMyAccounts().length) {
       UI.toast(i18n.t('err.no.account'), true);
       return;
