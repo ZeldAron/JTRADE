@@ -3235,5 +3235,15 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 
   /* ── Offers ── */
   .offers-cards { grid-template-columns: 1fr !important; }
+
+  /* ── Dashboard recent trades : masquer Direction + Compte sur mobile ── */
+  .recent-trade-table th:nth-child(2),
+  .recent-trade-table td:nth-child(2),
+  .recent-trade-table th:nth-child(3),
+  .recent-trade-table td:nth-child(3) { display: none; }
+
+  /* Conteneur scrollable en fallback si ça déborde encore */
+  .recent-trade-table { font-size: 12px; }
+  .chart-card .recent-trade-table { overflow-x: auto; display: block; }
 }
 .offer-compare-header .offer-compare-pro { color: #7c3aed; }
