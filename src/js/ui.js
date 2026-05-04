@@ -147,6 +147,9 @@ const UI = (() => {
     selectedId = id;
     renderList();
     renderDetail();
+    // Mobile : afficher le panel et cacher la liste
+    const layout = document.querySelector('.journal-layout');
+    if (layout) layout.classList.toggle('has-detail', !!id);
   }
 
   function renderDetail() {
@@ -198,6 +201,9 @@ const UI = (() => {
     const contractLabel = t.contracts > 1 ? i18n.t('ui.contracts') : i18n.t('ui.contract');
 
     panel.innerHTML = `
+      <button class="detail-back-btn" id="detailBackBtn" style="display:none">
+        ← ${i18n.t('ui.back') || 'Retour'}
+      </button>
       <div class="detail-content">
         <div class="detail-header">
           <div>
@@ -263,6 +269,18 @@ const UI = (() => {
         ${infoCard}
       </div>`;
 
+    // Bouton retour mobile
+    const backBtn = $('detailBackBtn');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        selectedId = null;
+        const layout = document.querySelector('.journal-layout');
+        if (layout) layout.classList.remove('has-detail');
+        renderList();
+        renderDetail();
+      });
+    }
+
     $('detailBtnEdit').addEventListener('click', () => {
       Modal.open(t.id, saved => {
         selectTrade(saved.id);
@@ -274,6 +292,8 @@ const UI = (() => {
       if (!confirm(i18n.t('confirm.trade.delete'))) return;
       Store.deleteTrade(t.id);
       selectedId = Store.getTrades()[0]?.id || null;
+      const layout = document.querySelector('.journal-layout');
+      if (layout) layout.classList.remove('has-detail');
       renderList();
       renderDetail();
       updateStats();

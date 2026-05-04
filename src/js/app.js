@@ -35,8 +35,41 @@ function initApp() {
     if (page === 'offers')    UI.renderOffers();
   }
 
+  // ── SIDEBAR TOGGLE ─────────────────────────────────────────────────────────
+  const sidebar        = $('sidebar');
+  const sidebarOverlay = $('sidebarOverlay');
+  const isMobile       = () => window.innerWidth <= 768;
+
+  function openSidebar() {
+    sidebar.classList.add('sb-open');
+    sidebar.classList.remove('sb-collapsed');
+    if (isMobile()) sidebarOverlay.classList.add('active');
+  }
+
+  function closeSidebar() {
+    if (isMobile()) {
+      sidebar.classList.remove('sb-open');
+      sidebarOverlay.classList.remove('active');
+    } else {
+      sidebar.classList.toggle('sb-collapsed');
+    }
+  }
+
+  $('btnSidebarToggle').addEventListener('click', () => {
+    if (isMobile()) {
+      sidebar.classList.contains('sb-open') ? closeSidebar() : openSidebar();
+    } else {
+      sidebar.classList.toggle('sb-collapsed');
+    }
+  });
+
+  sidebarOverlay.addEventListener('click', closeSidebar);
+
   document.querySelectorAll('.nav-item[data-page]').forEach(el => {
-    el.addEventListener('click', () => switchPage(el.dataset.page));
+    el.addEventListener('click', () => {
+      switchPage(el.dataset.page);
+      if (isMobile()) closeSidebar();
+    });
   });
 
   // ── JOURNAL FILTERS ────────────────────────────────────────────────────────

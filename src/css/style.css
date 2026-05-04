@@ -3071,4 +3071,169 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   color: var(--muted2);
   padding-bottom: 6px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HAMBURGER + SIDEBAR TOGGLE
+   ═══════════════════════════════════════════════════════════════════════════ */
+.hamburger-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+  transition: background 0.15s;
+}
+.hamburger-btn:hover { background: rgba(255,255,255,0.07); }
+.hamburger-btn span {
+  display: block;
+  height: 1.5px;
+  background: var(--muted);
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+.hamburger-btn:hover span { background: var(--text); }
+
+/* Sidebar overlay (mobile) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 190;
+  backdrop-filter: blur(2px);
+}
+.sidebar-overlay.active { display: block; }
+
+/* Sidebar transition for collapse/expand */
+.sidebar {
+  transition: transform 0.26s cubic-bezier(0.4,0,0.2,1),
+              width 0.26s cubic-bezier(0.4,0,0.2,1),
+              min-width 0.26s cubic-bezier(0.4,0,0.2,1),
+              opacity 0.26s;
+}
+
+/* ── Desktop collapse ──────────────────────────────────────────────────── */
+@media (min-width: 769px) {
+  .sidebar.sb-collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden;
+    border-right: none;
+    opacity: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  body { overflow: hidden; }
+
+  /* ── Sidebar : drawer fixe ── */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 200;
+    transform: translateX(-100%);
+    width: 240px !important;
+    min-width: 240px !important;
+    box-shadow: none;
+  }
+  .sidebar.sb-open {
+    transform: translateX(0);
+    box-shadow: 6px 0 32px rgba(0,0,0,0.5);
+  }
+
+  /* ── Main prend toute la largeur ── */
+  .main { width: 100%; }
+
+  /* ── Topbar ── */
+  .topbar { padding: 0 12px; gap: 8px; }
+  .topbar-title { font-size: 13px; }
+  .search-wrap { width: auto; flex: 1; min-width: 0; }
+
+  /* ── Journal : liste pleine largeur, panel masqué par défaut ── */
+  .journal-layout { flex-direction: column; }
+  .trade-list {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 55vh;
+  }
+  .detail-panel { flex: 1; min-height: 0; }
+
+  /* Quand un trade est sélectionné sur mobile : montrer seulement le panel */
+  .journal-layout.has-detail .trade-list { display: none; }
+  .journal-layout.has-detail .detail-panel { flex: 1; }
+
+  /* Bouton retour dans detail panel mobile */
+  .detail-back-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    width: 100%;
+  }
+
+  /* ── Dashboard / pages scrollables ── */
+  .dash-page { padding: 16px; }
+  .page-title { font-size: 17px; margin-bottom: 14px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* ── Wizard modal ── */
+  .modal-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  .modalOverlay, #modalOverlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  /* ── Analytics ── */
+  .analytics-page { padding: 16px; }
+
+  /* ── Micro ── */
+  .micro-content { padding: 16px; }
+
+  /* ── Goals ── */
+  .goals-page { padding: 16px; }
+
+  /* ── Settings ── */
+  .settings-page { padding: 16px; }
+  .settings-layout { grid-template-columns: 1fr !important; }
+  .settings-sidebar { display: none; }
+
+  /* ── Calendar ── */
+  .cal-page { padding: 16px; }
+
+  /* ── Live calc ── */
+  .live-calc { flex-wrap: wrap; gap: 8px 14px; }
+
+  /* ── Form grid ── */
+  .form-grid-3 { grid-template-columns: 1fr 1fr !important; }
+
+  /* ── Offers ── */
+  .offers-cards { grid-template-columns: 1fr !important; }
+}
 .offer-compare-header .offer-compare-pro { color: #7c3aed; }
