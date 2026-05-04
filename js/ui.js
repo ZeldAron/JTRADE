@@ -202,7 +202,7 @@ const UI = (() => {
 
     panel.innerHTML = `
       <button class="detail-back-btn" id="detailBackBtn" style="display:none">
-        ← ${i18n.t('ui.back') || 'Retour'}
+        ${i18n.t('ui.back') || '← Retour'}
       </button>
       <div class="detail-content">
         <div class="detail-header">
