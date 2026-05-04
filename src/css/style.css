@@ -3197,36 +3197,84 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   .page-title { font-size: 17px; margin-bottom: 14px; }
   .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
 
-  /* ── Wizard modal : plein écran sur mobile ── */
+  /* ── Wizard modal : plein écran fixe sur mobile ── */
   .modal-overlay {
-    align-items: flex-end;
+    align-items: flex-start;
     padding: 0;
   }
   .trade-wizard {
+    position: relative;
     width: 100% !important;
     max-width: 100% !important;
-    max-height: 92dvh !important;
-    border-radius: 18px 18px 0 0 !important;
-    padding: 20px 16px 32px !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
   }
-  /* Grilles wizard : Entry/SL/TP en 3 colonnes reste lisible, Instrument/Lots/Compte en 2 */
+  /* Header collant en haut */
+  .trade-wizard .wiz-header {
+    position: sticky;
+    top: 0;
+    background: var(--bg2);
+    z-index: 10;
+    padding: 16px 20px 14px;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  /* Panes scrollables */
+  .trade-wizard .wiz-pane {
+    padding: 20px 20px 32px;
+    flex: 1;
+  }
+  /* Titre de pane */
+  .trade-wizard .wiz-pane-title {
+    font-size: 16px;
+    margin-bottom: 24px;
+  }
+  /* Inputs plus grands, évite le zoom iOS (font-size ≥16px) */
+  .trade-wizard .form-input {
+    font-size: 16px !important;
+    padding: 12px 14px !important;
+    border-radius: 10px !important;
+  }
+  .trade-wizard select.form-input { padding-right: 36px !important; }
+  .trade-wizard .form-label { font-size: 12px; margin-bottom: 4px; }
+  /* Boutons Long/Short : grands et touch-friendly */
+  .dir-choice { gap: 16px; margin-top: 8px; }
+  .dir-btn {
+    padding: 40px 16px 32px !important;
+    font-size: 16px !important;
+    border-radius: 14px !important;
+  }
+  .dir-btn svg { width: 40px !important; height: 40px !important; }
+  /* Zone de drop compacte */
+  .wizard-drop-zone { min-height: 90px !important; }
+  /* Grilles */
   .wiz-pane .form-grid-3 { grid-template-columns: 1fr 1fr !important; }
   .wiz-levels-grid       { grid-template-columns: 1fr 1fr 1fr !important; }
-  .wiz-pane .form-grid-2 { grid-template-columns: 1fr 1fr !important; }
-  /* Date + heure : chacun sur sa ligne */
-  #wTradeDate, #wTradeTime { width: 100%; }
-  /* Boutons Long/Short : plus grands, touch-friendly */
-  .dir-btn { padding: 28px 16px 20px !important; font-size: 15px !important; }
-  /* Zone de drop moins haute */
-  .wizard-drop-zone { min-height: 100px !important; }
-  /* Live calc : 3 par ligne */
-  #wLiveCalc { gap: 6px 12px; }
+  .wiz-levels-grid .form-input { padding: 12px 8px !important; text-align: center; }
+  /* Live calc */
+  #wLiveCalc { gap: 8px 12px; padding: 12px; }
   #wLiveCalc .lc-stat { min-width: calc(33% - 8px); }
-  /* Bouton enregistrer plein largeur */
-  .wiz-nav { gap: 10px; }
-  #wBtnSave { flex: 1; }
+  .lc-stat-val { font-size: 13px !important; }
+  /* Nav boutons collants en bas */
+  .trade-wizard .wiz-nav {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+    margin-top: 0;
+    gap: 12px;
+  }
+  #wBtnSave { flex: 1; padding: 13px !important; font-size: 15px !important; }
+  /* Opt toggle */
+  .wiz-opt-toggle { width: 100%; text-align: left; padding: 12px 0; }
 
   /* ── Analytics ── */
   .analytics-page { padding: 16px; }
@@ -3248,6 +3296,8 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   /* ── Live calc ── */
   .live-calc { flex-wrap: wrap; gap: 8px 14px; }
 
+  /* ── Inputs : 16px minimum pour éviter zoom iOS ── */
+  .form-input { font-size: 16px !important; padding: 11px 12px !important; }
   /* ── Form grid global ── */
   .form-grid-3 { grid-template-columns: 1fr 1fr !important; }
 
