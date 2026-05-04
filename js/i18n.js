@@ -12,6 +12,7 @@ const i18n = (() => {
       'nav.calendar':  'Calendrier',
       'nav.micro':     'Micro',
       'nav.settings':  'Réglages',
+      'nav.changelog': 'Mises à jour',
       'nav.offers':    'Offres',
       'nav.tutorial':  'Guide',
       // Sidebar
@@ -27,6 +28,7 @@ const i18n = (() => {
       'page.calendar':  'Calendrier',
       'page.micro':     'Micro-Entrepreneur',
       'page.settings':  'Réglages',
+      'page.changelog': 'Mises à jour',
       'page.offers':    'Offres',
       'page.tutorial':  'Guide ZeldTrade',
       // Tutorial
@@ -507,6 +509,7 @@ const i18n = (() => {
       'nav.calendar':  'Calendar',
       'nav.micro':     'Tax Calc',
       'nav.settings':  'Settings',
+      'nav.changelog': 'Changelog',
       'nav.offers':    'Plans',
       'nav.tutorial':  'Guide',
       // Sidebar
@@ -522,6 +525,7 @@ const i18n = (() => {
       'page.calendar':  'Calendar',
       'page.micro':     'Tax Calculator',
       'page.settings':  'Settings',
+      'page.changelog': 'Changelog',
       'page.offers':    'Plans',
       'page.tutorial':  'ZeldTrade Guide',
       'tuto.subtitle':         'Everything you need to know to use ZeldTrade in 5 steps.',

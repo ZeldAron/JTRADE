@@ -3315,3 +3315,107 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   .chart-card .recent-trade-table { overflow-x: auto; display: block; }
 }
 .offer-compare-header .offer-compare-pro { color: #7c3aed; }
+
+/* ─── CHANGELOG ─────────────────────────────────────────────────────────────── */
+.cl-wrapper {
+  max-width: 680px;
+  padding: 0 24px 48px;
+}
+.cl-intro {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 28px;
+}
+.cl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.cl-entry {
+  position: relative;
+  padding: 0 0 32px 24px;
+  border-left: 2px solid var(--border);
+}
+.cl-entry::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+.cl-entry:last-child {
+  border-left-color: transparent;
+}
+.cl-entry-header {
+  margin-bottom: 12px;
+}
+.cl-version-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.cl-version {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: 0.03em;
+}
+.cl-tags {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.cl-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 99px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.cl-date {
+  font-size: 11px;
+  color: var(--muted2);
+  margin-bottom: 5px;
+  font-family: 'Geist Mono', monospace;
+}
+.cl-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.cl-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.cl-item-icon {
+  flex-shrink: 0;
+  width: 14px;
+  font-size: 11px;
+  margin-top: 2px;
+  text-align: center;
+}
+.cl-item-text {
+  flex: 1;
+}
+@media (max-width: 768px) {
+  .cl-wrapper { padding: 0 16px 48px; }
+}
