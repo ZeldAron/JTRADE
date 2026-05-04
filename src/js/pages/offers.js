@@ -26,10 +26,10 @@ UI.renderOffers = function () {
   // ── Card : GRATUIT ────────────────────────────────────────────────────────
   const cardFree = `
     <div class="offer-card ${!pro ? 'offer-current' : ''}">
+      <div class="offer-badge-basic">BASIC</div>
       <div class="offer-badge-current" style="opacity:${!pro ? 1 : 0}">${t('off.current')}</div>
       <div class="offer-name">Basic</div>
-      <div class="offer-price" style="color:var(--text)">${t('off.free')}</div>
-      <div class="offer-price-sub">${t('off.forever')}</div>
+      <div class="offer-price-hidden" style="color:var(--green)">✓ ${t('off.free')} — ${t('off.forever')}</div>
       <ul class="offer-features">
         <li class="ok">${t('off.basic.f1')}</li>
         <li class="ok">${t('off.basic.f2')}</li>
