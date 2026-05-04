@@ -3197,18 +3197,36 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   .page-title { font-size: 17px; margin-bottom: 14px; }
   .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
 
-  /* ── Wizard modal ── */
-  .modal-box {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 100dvh !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-  }
-  .modalOverlay, #modalOverlay {
+  /* ── Wizard modal : plein écran sur mobile ── */
+  .modal-overlay {
     align-items: flex-end;
     padding: 0;
   }
+  .trade-wizard {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92dvh !important;
+    border-radius: 18px 18px 0 0 !important;
+    padding: 20px 16px 32px !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Grilles wizard : Entry/SL/TP en 3 colonnes reste lisible, Instrument/Lots/Compte en 2 */
+  .wiz-pane .form-grid-3 { grid-template-columns: 1fr 1fr !important; }
+  .wiz-levels-grid       { grid-template-columns: 1fr 1fr 1fr !important; }
+  .wiz-pane .form-grid-2 { grid-template-columns: 1fr 1fr !important; }
+  /* Date + heure : chacun sur sa ligne */
+  #wTradeDate, #wTradeTime { width: 100%; }
+  /* Boutons Long/Short : plus grands, touch-friendly */
+  .dir-btn { padding: 28px 16px 20px !important; font-size: 15px !important; }
+  /* Zone de drop moins haute */
+  .wizard-drop-zone { min-height: 100px !important; }
+  /* Live calc : 3 par ligne */
+  #wLiveCalc { gap: 6px 12px; }
+  #wLiveCalc .lc-stat { min-width: calc(33% - 8px); }
+  /* Bouton enregistrer plein largeur */
+  .wiz-nav { gap: 10px; }
+  #wBtnSave { flex: 1; }
 
   /* ── Analytics ── */
   .analytics-page { padding: 16px; }
@@ -3230,7 +3248,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   /* ── Live calc ── */
   .live-calc { flex-wrap: wrap; gap: 8px 14px; }
 
-  /* ── Form grid ── */
+  /* ── Form grid global ── */
   .form-grid-3 { grid-template-columns: 1fr 1fr !important; }
 
   /* ── Offers ── */
