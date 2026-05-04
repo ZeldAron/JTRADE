@@ -462,11 +462,11 @@ const Modal = (() => {
     const rewardEl    = $('lcReward');
     const rewardLabel = $('lcRewardLabel');
     if (hasExit) {
-      rewardLabel.textContent = 'P&L brut';
+      rewardLabel.textContent = i18n.t('wiz.pnl.gross');
       rewardEl.textContent    = (c.pnl >= 0 ? '+' : '−') + '$' + Math.abs(c.pnl).toFixed(2);
       rewardEl.style.color    = c.pnl >= 0 ? 'var(--green)' : 'var(--red)';
     } else {
-      rewardLabel.textContent = 'Reward $';
+      rewardLabel.textContent = i18n.t('wiz.reward');
       rewardEl.textContent    = '+$' + c.rewardUSD.toFixed(0);
       rewardEl.style.color    = 'var(--green)';
     }
@@ -481,11 +481,11 @@ const Modal = (() => {
     const netEl    = $('lcNet');
     const netLabel = $('lcNetLabel');
     if (hasExit) {
-      netLabel.textContent = 'P&L net';
+      netLabel.textContent = i18n.t('wiz.pnl.net');
       netEl.textContent    = (c.netPnl >= 0 ? '+' : '−') + '$' + Math.abs(c.netPnl).toFixed(2);
       netEl.style.color    = c.netPnl >= 0 ? 'var(--green)' : 'var(--red)';
     } else {
-      netLabel.textContent = 'Net reward';
+      netLabel.textContent = i18n.t('wiz.net.reward');
       netEl.textContent    = (c.netRewardUSD >= 0 ? '+' : '−') + '$' + Math.abs(c.netRewardUSD).toFixed(0);
       netEl.style.color    = c.netRewardUSD >= 0 ? 'var(--green)' : 'var(--red)';
     }

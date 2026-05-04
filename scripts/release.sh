@@ -51,7 +51,7 @@ echo "  Déployé."
 
 echo ""
 echo "======================================="
-echo "  En ligne (30s) : https://zeldaron.github.io/JTRADE"
+echo "  En ligne (30s) : https://zeldaron.github.io/zeldtrade"
 echo "  Version         : $VERSION"
 echo "======================================="
 echo ""

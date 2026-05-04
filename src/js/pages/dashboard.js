@@ -64,10 +64,10 @@
         </span>
       </div>
       <div class="dac-balance-wrap">
-        <div class="dac-balance-lbl">Solde</div>
+        <div class="dac-balance-lbl">${t('dash.balance')}</div>
         <div class="dac-balance" style="color:${balColor}">$${Math.round(balance).toLocaleString('fr-FR')}</div>
         <div class="dac-balance-delta" style="color:${adjustedPnL >= 0 ? 'var(--green)' : 'var(--red)'}">
-          ${deltaSign}$${Math.abs(adjustedPnL).toFixed(0)} depuis le départ
+          ${deltaSign}$${Math.abs(adjustedPnL).toFixed(0)} ${t('dash.since.start')}
         </div>
       </div>
       <div class="dac-kpis">
@@ -189,7 +189,7 @@
               label: c => {
                 const i   = c.dataIndex;
                 const cum = Calc.formatPnL(c.parsed.y);
-                if (i === 0) return ' Départ : $0';
+                if (i === 0) return t('dash.chart.start');
                 const tr  = sorted[i - 1];
                 const dir = tr.direction === 'long' ? '↑' : '↓';
                 const pnlSign = tradePnls[i] >= 0 ? '+' : '';
@@ -218,24 +218,23 @@
     const statsEl = $('pnlStats');
     if (!stats || !statsEl) return;
 
-    const isEn  = i18n.getLang() === 'en';
     const pfStr = stats.pf === Infinity ? '∞' : stats.pf.toFixed(2);
     const pfCol = stats.pf >= 1.5 ? 'var(--green)' : stats.pf >= 1 ? 'var(--amber)' : 'var(--red)';
     const streakVal = stats.streak > 0
       ? `${stats.streakType === 'win' ? '🔥' : '❄️'} ${stats.streak}`
       : '–';
     const streakLbl = stats.streakType === 'win'
-      ? (isEn ? 'Wins consécutifs' : 'W consécutifs')
+      ? t('dash.streak.wins')
       : stats.streakType === 'loss'
-        ? (isEn ? 'Losses consécutives' : 'L consécutives')
-        : 'Série';
+        ? t('dash.streak.losses')
+        : t('dash.streak.none');
 
     statsEl.innerHTML = `<div class="stat-strip">
       <div class="stat-strip-item"><div class="stat-strip-val" style="color:var(--red)">${stats.maxDD > 0 ? '-$' + stats.maxDD.toFixed(0) : '–'}</div><div class="stat-strip-lbl">Max DD</div></div>
       <div class="stat-strip-item"><div class="stat-strip-val" style="color:${pfCol}">${pfStr}</div><div class="stat-strip-lbl">Profit Factor</div></div>
-      <div class="stat-strip-item"><div class="stat-strip-val" style="color:${stats.expectancy >= 0 ? 'var(--green)' : 'var(--red)'}">${Calc.formatPnL(stats.expectancy)}</div><div class="stat-strip-lbl">${isEn ? 'Expectancy' : 'Espérance'}</div></div>
-      <div class="stat-strip-item"><div class="stat-strip-val" style="color:var(--green)">${Calc.formatPnL(stats.best)}</div><div class="stat-strip-lbl">${isEn ? 'Best trade' : 'Meilleur'}</div></div>
-      <div class="stat-strip-item"><div class="stat-strip-val" style="color:var(--red)">${Calc.formatPnL(stats.worst)}</div><div class="stat-strip-lbl">${isEn ? 'Worst trade' : 'Pire'}</div></div>
+      <div class="stat-strip-item"><div class="stat-strip-val" style="color:${stats.expectancy >= 0 ? 'var(--green)' : 'var(--red)'}">${Calc.formatPnL(stats.expectancy)}</div><div class="stat-strip-lbl">${t('dash.expectancy')}</div></div>
+      <div class="stat-strip-item"><div class="stat-strip-val" style="color:var(--green)">${Calc.formatPnL(stats.best)}</div><div class="stat-strip-lbl">${t('dash.best.trade')}</div></div>
+      <div class="stat-strip-item"><div class="stat-strip-val" style="color:var(--red)">${Calc.formatPnL(stats.worst)}</div><div class="stat-strip-lbl">${t('dash.worst.trade')}</div></div>
       <div class="stat-strip-item"><div class="stat-strip-val">${streakVal}</div><div class="stat-strip-lbl">${streakLbl}</div></div>
     </div>`;
   }
