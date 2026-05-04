@@ -3,161 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Paiement — ZeldTrade</title>
+  <title>Payment — ZeldTrade</title>
   <link rel="icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0e1220;
-      color: #c8cdd8;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: #0e1220; color: #c8cdd8;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
       padding: 40px 24px;
     }
-
-    .wrap {
-      max-width: 520px;
-      width: 100%;
-      text-align: center;
-    }
-
+    .wrap { max-width: 520px; width: 100%; text-align: center; }
     .logo {
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      color: #6366f1;
-      text-transform: uppercase;
-      margin-bottom: 56px;
-      display: inline-block;
-      text-decoration: none;
+      font-size: 13px; font-weight: 800; letter-spacing: 0.12em; color: #6366f1;
+      text-transform: uppercase; margin-bottom: 56px; display: inline-block; text-decoration: none;
     }
-
     .construction-icon {
-      font-size: 64px;
-      margin-bottom: 20px;
-      display: block;
+      font-size: 64px; margin-bottom: 20px; display: block;
       filter: drop-shadow(0 0 24px rgba(251,191,36,0.3));
     }
-
     .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(251,191,36,0.10);
-      color: #fbbf24;
-      border: 1px solid rgba(251,191,36,0.22);
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 4px 16px;
-      margin-bottom: 24px;
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(251,191,36,0.10); color: #fbbf24;
+      border: 1px solid rgba(251,191,36,0.22); border-radius: 20px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 4px 16px; margin-bottom: 24px;
     }
-
-    h1 {
-      font-size: 30px;
-      font-weight: 800;
-      color: #f0f2f7;
-      margin-bottom: 14px;
-      line-height: 1.2;
-    }
-
-    .sub {
-      font-size: 14px;
-      color: #9ca3af;
-      line-height: 1.75;
-      margin-bottom: 40px;
-    }
-
+    h1 { font-size: 30px; font-weight: 800; color: #f0f2f7; margin-bottom: 14px; line-height: 1.2; }
+    .sub { font-size: 14px; color: #9ca3af; line-height: 1.75; margin-bottom: 40px; }
     .info-block {
-      background: #131929;
-      border: 1px solid #1e2535;
-      border-radius: 12px;
-      padding: 22px 28px;
-      margin-bottom: 36px;
-      text-align: left;
+      background: #131929; border: 1px solid #1e2535; border-radius: 12px;
+      padding: 22px 28px; margin-bottom: 36px; text-align: left;
     }
-
-    .info-block-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: #f0f2f7;
-      margin-bottom: 10px;
-    }
-
-    .info-block p {
-      font-size: 13px;
-      color: #9ca3af;
-      line-height: 1.65;
-    }
-
+    .info-block-title { font-size: 13px; font-weight: 700; color: #f0f2f7; margin-bottom: 10px; }
+    .info-block p { font-size: 13px; color: #9ca3af; line-height: 1.65; }
     .info-block strong { color: #c8cdd8; }
-
-    .plans {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 36px;
-    }
-
+    .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 36px; }
     .plan-card {
-      background: #131929;
-      border: 1.5px solid #1e2535;
-      border-radius: 10px;
-      padding: 18px 16px;
-      text-align: left;
-      opacity: 0.6;
+      background: #131929; border: 1.5px solid #1e2535; border-radius: 10px;
+      padding: 18px 16px; text-align: left; opacity: 0.6;
     }
-
-    .plan-card-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: #f0f2f7;
-      margin-bottom: 4px;
-    }
-
-    .plan-card-price {
-      font-size: 11px;
-      color: #6b7280;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
+    .plan-card-name { font-size: 13px; font-weight: 700; color: #f0f2f7; margin-bottom: 4px; }
+    .plan-card-price { font-size: 11px; color: #6b7280; display: flex; align-items: center; gap: 4px; }
     .plan-card-price::before { content: '🔒'; font-size: 10px; }
-
     .plan-card.plan-pro { border-color: #7c3aed55; }
     .plan-card.plan-lt  { border-color: #d9770655; }
-
     .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: #6b7280;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
+      display: inline-flex; align-items: center; gap: 8px;
+      color: #6b7280; text-decoration: none; font-size: 13px; font-weight: 500;
       transition: color .15s, border-color .15s;
-      border: 1.5px solid #1e2535;
-      border-radius: 9px;
-      padding: 10px 20px;
+      border: 1.5px solid #1e2535; border-radius: 9px; padding: 10px 20px;
     }
-
     .back-link:hover { color: #c8cdd8; border-color: #374151; }
-
-    .divider {
-      width: 40px;
-      height: 1px;
-      background: #1e2535;
-      margin: 32px auto;
-    }
+    .divider { width: 40px; height: 1px; background: #1e2535; margin: 32px auto; }
   </style>
 </head>
 <body>
@@ -165,37 +65,48 @@
     <a href="index.html" class="logo">ZeldTrade</a>
 
     <span class="construction-icon">🚧</span>
-    <span class="badge">En cours de construction</span>
+    <span class="badge" id="badge"></span>
 
-    <h1>Page de paiement</h1>
-    <p class="sub">
-      Le système de paiement est en cours de développement.<br>
-      Les abonnements <strong>Pro</strong> et <strong>Lifetime</strong> seront bientôt disponibles.
-    </p>
+    <h1 id="title"></h1>
+    <p class="sub" id="sub"></p>
 
     <div class="plans">
       <div class="plan-card plan-pro">
         <div class="plan-card-name">Pro</div>
-        <div class="plan-card-price">Prix bientôt disponible</div>
+        <div class="plan-card-price" id="price-pro"></div>
       </div>
       <div class="plan-card plan-lt">
         <div class="plan-card-name">Lifetime</div>
-        <div class="plan-card-price">Prix bientôt disponible</div>
+        <div class="plan-card-price" id="price-lt"></div>
       </div>
     </div>
 
     <div class="info-block">
-      <div class="info-block-title">Obtenir un accès dès maintenant</div>
-      <p>
-        Pendant la bêta, l'accès Pro s'active via un <strong>code promo</strong>.<br>
-        Retourne sur la page Offres et entre ton code dans le champ dédié —
-        ou contacte-nous via le formulaire intégré à l'application.
-      </p>
+      <div class="info-block-title" id="info-title"></div>
+      <p id="info-body"></p>
     </div>
 
     <div class="divider"></div>
-
-    <a href="index.html" class="back-link">← Retour à ZeldTrade</a>
+    <a href="index.html" class="back-link" id="back-link"></a>
   </div>
+
+  <script>
+    const lang = localStorage.getItem('jtrade_lang') || 'fr';
+    const en = lang === 'en';
+
+    document.getElementById('badge').textContent       = en ? 'Under construction' : 'En cours de construction';
+    document.getElementById('title').textContent       = en ? 'Payment page' : 'Page de paiement';
+    document.getElementById('sub').innerHTML           = en
+      ? 'The payment system is under development.<br><strong>Pro</strong> and <strong>Lifetime</strong> subscriptions will be available soon.'
+      : 'Le système de paiement est en cours de développement.<br>Les abonnements <strong>Pro</strong> et <strong>Lifetime</strong> seront bientôt disponibles.';
+    document.getElementById('price-pro').textContent   = en ? 'Price coming soon' : 'Prix bientôt disponible';
+    document.getElementById('price-lt').textContent    = en ? 'Price coming soon' : 'Prix bientôt disponible';
+    document.getElementById('info-title').textContent  = en ? 'Get access right now' : 'Obtenir un accès dès maintenant';
+    document.getElementById('info-body').innerHTML     = en
+      ? 'During the beta, Pro access is activated via a <strong>promo code</strong>.<br>Go back to the Offers page and enter your code in the dedicated field — or contact us through the in-app contact form.'
+      : 'Pendant la bêta, l\'accès Pro s\'active via un <strong>code promo</strong>.<br>Retourne sur la page Offres et entre ton code dans le champ dédié — ou contacte-nous via le formulaire intégré à l\'application.';
+    document.getElementById('back-link').textContent   = en ? '← Back to ZeldTrade' : '← Retour à ZeldTrade';
+    document.title = en ? 'Payment — ZeldTrade' : 'Paiement — ZeldTrade';
+  </script>
 </body>
 </html>

@@ -42,7 +42,16 @@ else
     echo "  Tag $VERSION créé et poussé."
 fi
 
-# 2. Déploie src/ sur gh-pages (sans Actions, depuis le terminal)
+# 2. Vérifie que src/ est propre — auto-commit si besoin
+if [ -n "$(git status --porcelain src/)" ]; then
+    echo ""
+    echo "  ⚠  Modifications non commitées dans src/ — commit automatique..."
+    git add src/
+    git commit -m "chore: release $VERSION — sync src/"
+    echo "  ✓  Committé."
+fi
+
+# 3. Déploie src/ sur gh-pages (sans Actions, depuis le terminal)
 echo ""
 echo "  Déploiement sur GitHub Pages..."
 COMMIT=$(git subtree split --prefix src HEAD)
