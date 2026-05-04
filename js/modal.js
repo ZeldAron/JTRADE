@@ -501,8 +501,8 @@ const Modal = (() => {
     firmKey       = 'apex';
 
     clearImage();
-    $('wOptFields').style.display  = 'none';
-    $('wOptToggle').textContent    = i18n.t('wiz.setup');
+    $('wOptFields').style.display  = '';
+    $('wOptToggle').textContent    = i18n.t('wiz.setup.close');
     $('wExitField').style.display  = 'none';
     $('wOutcome').value            = 'open';
     $('wSetup').value              = '';
@@ -534,7 +534,7 @@ const Modal = (() => {
       const tt = t.date && t.date.length > 10 ? t.date.slice(11, 16) : '';
       $('wTradeDate').value  = td;
       $('wTradeTime').value  = tt;
-      if (t.outcome !== 'open') { $('wExitField').style.display = ''; $('wOptFields').style.display = ''; }
+      $('wExitField').style.display = t.outcome !== 'open' ? '' : 'none';
 
       // Badge direction
       const badge = $('wDirBadge');
@@ -757,9 +757,17 @@ const Modal = (() => {
     });
 
     $('wOutcome').addEventListener('change', () => {
-      const isOpen = $('wOutcome').value === 'open';
-      $('wExitField').style.display = isOpen ? 'none' : '';
-      if (isOpen) $('wExit').value = '';
+      const outcome = $('wOutcome').value;
+      $('wExitField').style.display = outcome === 'open' ? 'none' : '';
+      if (outcome === 'open') {
+        $('wExit').value = '';
+      } else if (outcome === 'win') {
+        $('wExit').value = $('wTP1').value || '';
+      } else if (outcome === 'loss') {
+        $('wExit').value = $('wSL').value || '';
+      } else if (outcome === 'be') {
+        $('wExit').value = '';
+      }
       wRecalc();
     });
 
