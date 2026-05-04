@@ -50,7 +50,7 @@
              ${t('set.acc.empty')}
            </p>`;
 
-      const FIRM_LABELS = { apex: 'Apex', topstep: 'Topstep', ftmo: 'FTMO', lucid: 'Lucid' };
+      const FIRM_LABELS = { apex: 'Apex', topstep: 'Topstep', ftmo: 'FTMO', ftmo1step: 'FTMO 1-Step', lucid: 'Lucid', fpips: 'Funding Pips' };
       const byFirm = {};
       types.forEach(tp => {
         const fk = tp.firmKey || tp.id.split('-')[0] || 'other';
@@ -292,13 +292,15 @@
     if (!el) return;
 
     const firms      = Store.getPropFirms();
-    const FIRM_ORDER = ['apex', 'topstep', 'ftmo', 'lucid'];
+    const FIRM_ORDER = ['apex', 'topstep', 'ftmo', 'ftmo1step', 'lucid', 'fpips'];
 
     function ddBadge(type) {
       if (!type) return '';
       const lc = type.toLowerCase();
       if (lc.includes('statique') || lc.includes('static'))
         return `<span class="ac-badge" style="background:var(--border);color:var(--muted)">STATIC</span>`;
+      if (lc.includes('trailing'))
+        return `<span class="ac-badge" style="background:rgba(99,102,241,0.15);color:var(--accent)">TRAIL</span>`;
       if (lc.includes('intraday'))
         return `<span class="ac-badge" style="background:rgba(255,160,50,0.15);color:#f0a030">INTRA</span>`;
       return `<span class="ac-badge">EOD</span>`;
@@ -383,7 +385,7 @@
     const el         = $('settingsSpreads');
     if (!el) return;
     const firms      = Store.getPropFirms();
-    const FIRM_ORDER = ['apex', 'topstep', 'ftmo', 'lucid'];
+    const FIRM_ORDER = ['apex', 'topstep', 'ftmo', 'ftmo1step', 'lucid', 'fpips'];
 
     function renderRows(firmKey) {
       const sp       = Store.getSpreadsByFirm(firmKey);
