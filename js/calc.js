@@ -3,13 +3,25 @@
 
 const Calc = (() => {
   const POINT_VALUES = {
+    // Futures CME
     MES1: 5, ES1: 50, MNQ1: 2, NQ1: 20,
     MYM1: 0.5, YM1: 5, M2K1: 5, RTY1: 50,
     MGC1: 10, GC1: 100, QO1: 50,
     MCL1: 100, CL1: 1000,
     ZN1: 1000,
+    // CFD Indices MT4/MT5 ($ par lot par point d'index, lot size standard FTMO/FP)
+    US30: 5, US100: 1, US500: 1, GER40: 1, UK100: 1,
+    // Métaux CFD ($ par lot par $ de prix — XAUUSD : 100 oz/lot)
+    XAUUSD: 100,
+    // Forex ($ par lot par unité complète — EURUSD 100k$/lot, 1 pip=0.0001=$10/lot)
+    EURUSD: 100000, GBPUSD: 100000, USDJPY: 650,
+    // Énergie CFD (USOIL : 1000 barils/lot, $0.01 move = $10/lot)
+    USOIL: 1000,
   };
-  const TICK_SIZE    = 0.25;
+  const TICK_SIZE = 0.25;
+
+  const CFD_INSTRS = new Set(['US30','US100','US500','GER40','UK100','XAUUSD','EURUSD','GBPUSD','USDJPY','USOIL']);
+  function isCFD(instrument) { return CFD_INSTRS.has(instrument); }
 
   // Règles Apex par taille de compte (EOD)
   const ACCOUNT_RULES = {
@@ -35,8 +47,8 @@ const Calc = (() => {
     const rewardUSD = rewardPts * pv * t.contracts;
     const riskPct   = t.capital > 0 ? (riskUSD / t.capital) * 100 : 0;
 
-    const riskTicks   = Math.round(riskPts   / TICK_SIZE);
-    const rewardTicks = Math.round(rewardPts / TICK_SIZE);
+    const riskTicks   = isCFD(t.instrument) ? 0 : Math.round(riskPts   / TICK_SIZE);
+    const rewardTicks = isCFD(t.instrument) ? 0 : Math.round(rewardPts / TICK_SIZE);
 
     // Commissions aller-retour (entry + exit)
     const feePerSide = t.feePerSide != null ? t.feePerSide : 2.14;
@@ -178,6 +190,6 @@ const Calc = (() => {
   return {
     trade, fromForm, trailingFloor,
     rrColor, rrLabel, riskColor, pnlColor, formatPnL,
-    pointValue, ACCOUNT_RULES,
+    pointValue, isCFD, ACCOUNT_RULES,
   };
 })();

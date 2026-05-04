@@ -18,10 +18,15 @@ const Store = (() => {
     { id: 'ftmo-50k',     firmKey: 'ftmo',    name: 'FTMO $50K',      capital:  50000, profitTarget:  5000, maxDrawdown:  5000, dailyLossLimit:  2500, maxContracts:  3, feePerSide: 3.00 },
     { id: 'ftmo-100k',    firmKey: 'ftmo',    name: 'FTMO $100K',     capital: 100000, profitTarget: 10000, maxDrawdown: 10000, dailyLossLimit:  5000, maxContracts:  5, feePerSide: 3.00 },
     { id: 'ftmo-200k',    firmKey: 'ftmo',    name: 'FTMO $200K',     capital: 200000, profitTarget: 20000, maxDrawdown: 20000, dailyLossLimit: 10000, maxContracts: 10, feePerSide: 3.00 },
-    { id: 'lucid-25k',    firmKey: 'lucid',   name: 'Lucid $25K',     capital:  25000, profitTarget:  1500, maxDrawdown:  1500, dailyLossLimit:   300, maxContracts:  3, feePerSide: 1.75 },
-    { id: 'lucid-50k',    firmKey: 'lucid',   name: 'Lucid $50K',     capital:  50000, profitTarget:  3000, maxDrawdown:  3000, dailyLossLimit:   600, maxContracts:  5, feePerSide: 1.75 },
-    { id: 'lucid-100k',   firmKey: 'lucid',   name: 'Lucid $100K',    capital: 100000, profitTarget:  6000, maxDrawdown:  4500, dailyLossLimit:  1200, maxContracts: 10, feePerSide: 1.75 },
-    { id: 'lucid-150k',   firmKey: 'lucid',   name: 'Lucid $150K',    capital: 150000, profitTarget:  9000, maxDrawdown:  4500, dailyLossLimit:  2700, maxContracts: 15, feePerSide: 1.75 },
+    { id: 'lucid-25k',    firmKey: 'lucid',   name: 'Lucid $25K',     capital:  25000, profitTarget:  1500, maxDrawdown:  1500, dailyLossLimit:   300, maxContracts:  3,   feePerSide: 1.75 },
+    { id: 'lucid-50k',    firmKey: 'lucid',   name: 'Lucid $50K',     capital:  50000, profitTarget:  3000, maxDrawdown:  3000, dailyLossLimit:   600, maxContracts:  5,   feePerSide: 1.75 },
+    { id: 'lucid-100k',   firmKey: 'lucid',   name: 'Lucid $100K',    capital: 100000, profitTarget:  6000, maxDrawdown:  4500, dailyLossLimit:  1200, maxContracts: 10,   feePerSide: 1.75 },
+    { id: 'lucid-150k',   firmKey: 'lucid',   name: 'Lucid $150K',    capital: 150000, profitTarget:  9000, maxDrawdown:  4500, dailyLossLimit:  2700, maxContracts: 15,   feePerSide: 1.75 },
+    { id: 'fpips-10k',    firmKey: 'fpips',   name: 'Funding Pips $10K',  capital:  10000, profitTarget:   800, maxDrawdown:   500, dailyLossLimit:   200, maxContracts:  2,   feePerSide: 0.00 },
+    { id: 'fpips-25k',    firmKey: 'fpips',   name: 'Funding Pips $25K',  capital:  25000, profitTarget:  2000, maxDrawdown:  1250, dailyLossLimit:   500, maxContracts:  5,   feePerSide: 0.00 },
+    { id: 'fpips-50k',    firmKey: 'fpips',   name: 'Funding Pips $50K',  capital:  50000, profitTarget:  4000, maxDrawdown:  2500, dailyLossLimit:  1000, maxContracts: 10,   feePerSide: 0.00 },
+    { id: 'fpips-100k',   firmKey: 'fpips',   name: 'Funding Pips $100K', capital: 100000, profitTarget:  8000, maxDrawdown:  5000, dailyLossLimit:  2000, maxContracts: 20,   feePerSide: 0.00 },
+    { id: 'fpips-200k',   firmKey: 'fpips',   name: 'Funding Pips $200K', capital: 200000, profitTarget: 16000, maxDrawdown: 10000, dailyLossLimit:  4000, maxContracts: 40,   feePerSide: 0.00 },
   ];
 
   const DEFAULT_PROP_FIRMS = {
@@ -48,6 +53,13 @@ const Store = (() => {
       { id:'lucid-100k',   size:'100K', capital:100000, profitTarget:6000, maxDrawdown:4500, dailyLossLimit:1200, drawdownType:'Trailing EOD', consistency:'≤40% meilleure j. (funded)', minTradingDays:5, payoutConditions:'100% premier $10K, puis 90/10 — 5j min' },
       { id:'lucid-150k',   size:'150K', capital:150000, profitTarget:9000, maxDrawdown:4500, dailyLossLimit:2700, drawdownType:'Trailing EOD', consistency:'≤40% meilleure j. (funded)', minTradingDays:5, payoutConditions:'100% premier $10K, puis 90/10 — 5j min' },
     ]},
+    fpips:   { name: 'Funding Pips (CFD/Forex)', accounts: [
+      { id:'fpips-10k',    size:'10K',  capital:10000,  profitTarget:800,   maxDrawdown:500,   dailyLossLimit:200,  drawdownType:'Statique (2-Step)', consistency:'Aucune', minTradingDays:3, payoutConditions:'80% split — délai 14j' },
+      { id:'fpips-25k',    size:'25K',  capital:25000,  profitTarget:2000,  maxDrawdown:1250,  dailyLossLimit:500,  drawdownType:'Statique (2-Step)', consistency:'Aucune', minTradingDays:3, payoutConditions:'80% split — délai 14j' },
+      { id:'fpips-50k',    size:'50K',  capital:50000,  profitTarget:4000,  maxDrawdown:2500,  dailyLossLimit:1000, drawdownType:'Statique (2-Step)', consistency:'Aucune', minTradingDays:3, payoutConditions:'80% split — délai 14j' },
+      { id:'fpips-100k',   size:'100K', capital:100000, profitTarget:8000,  maxDrawdown:5000,  dailyLossLimit:2000, drawdownType:'Statique (2-Step)', consistency:'Aucune', minTradingDays:3, payoutConditions:'80% split — délai 14j' },
+      { id:'fpips-200k',   size:'200K', capital:200000, profitTarget:16000, maxDrawdown:10000, dailyLossLimit:4000, drawdownType:'Statique (2-Step)', consistency:'Aucune', minTradingDays:3, payoutConditions:'80% split — délai 14j' },
+    ]},
   };
 
   const DEFAULT_SPREADS = { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,QO1:6.25,MCL1:1.00,CL1:10.00 };
@@ -56,6 +68,7 @@ const Store = (() => {
     topstep: { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,QO1:6.25,MCL1:1.00,CL1:10.00,ZN1:15.63 },
     ftmo:    { US500:0.50,US100:1.50,US30:2.50,GER40:1.50,UK100:1.00,XAUUSD:0.35,EURUSD:1.00,GBPUSD:1.20,USDJPY:0.80,USOIL:3.00 },
     lucid:   { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,QO1:6.25,MCL1:1.00,CL1:10.00 },
+    fpips:   { US500:0.40,US100:1.20,US30:2.00,GER40:1.20,UK100:0.80,XAUUSD:0.25,EURUSD:0.80,GBPUSD:1.00,USDJPY:0.70,USOIL:2.50 },
   };
 
   // ── État en mémoire ──────────────────────────────────────────────────────────
@@ -160,7 +173,7 @@ const Store = (() => {
         const raw = sSnap.data();
         settings = {
           capital:    (typeof raw.capital    === 'number' && isFinite(raw.capital))    ? Math.max(0, Math.min(1e9, raw.capital))    : DEFAULT_SETTINGS.capital,
-          contracts:  (typeof raw.contracts  === 'number' && isFinite(raw.contracts))  ? Math.max(1, Math.min(999, raw.contracts))  : DEFAULT_SETTINGS.contracts,
+          contracts:  (typeof raw.contracts  === 'number' && isFinite(raw.contracts))  ? Math.max(0.01, Math.min(999, raw.contracts))  : DEFAULT_SETTINGS.contracts,
           instrument: (typeof raw.instrument === 'string' && raw.instrument.length > 0) ? String(raw.instrument).replace(/[^A-Za-z0-9/. _-]/g, '').slice(0, 20) || DEFAULT_SETTINGS.instrument : DEFAULT_SETTINGS.instrument,
         };
         changed = true;
@@ -247,7 +260,7 @@ const Store = (() => {
       instrument: String(raw.instrument || '').replace(/[^A-Za-z0-9/. _-]/g, '').slice(0, 20) || 'MES1',
       direction:  DIRS.has(raw.direction)    ? raw.direction : 'long',
       outcome:    OUTCOMES.has(raw.outcome)  ? raw.outcome   : 'open',
-      contracts:  Math.max(1, Math.min(999, parseInt(raw.contracts) || 1)),
+      contracts:  Math.max(0.01, Math.min(999, parseFloat(raw.contracts) || 0.01)),
       setup:      String(raw.setup  || '').slice(0, 500),
       notes:      String(raw.notes  || '').slice(0, 2000),
       apex:       String(raw.apex   || '').replace(/[^A-Za-z0-9 _-]/g, '').slice(0, 100),
@@ -299,7 +312,7 @@ const Store = (() => {
       ...(t.tp2       ? { tp2:       Number(t.tp2) }       : {}),
       ...(t.tp3       ? { tp3:       Number(t.tp3) }       : {}),
       ...(t.exitPrice ? { exitPrice: Number(t.exitPrice) } : {}),
-      contracts:  Math.max(1, Math.min(999, parseInt(t.contracts) || 1)),
+      contracts:  Math.max(0.01, Math.min(999, parseFloat(t.contracts) || 0.01)),
       setup:      t.setup  ? String(t.setup).slice(0, 500)  : '',
       notes:      t.notes  ? String(t.notes).slice(0, 2000) : '',
       apex:       t.apex   ? String(t.apex).replace(/[^A-Za-z0-9 _-]/g, '').slice(0, 100) : '',
@@ -320,7 +333,7 @@ const Store = (() => {
     for (const [k, v] of Object.entries(data)) {
       if (!SETTINGS_ALLOWED.has(k)) continue;
       if (k === 'capital')         safe.capital    = _safeNum(v, 0, 1e9, 50000);
-      else if (k === 'contracts')  safe.contracts  = _safeNum(v, 1, 999, 1);
+      else if (k === 'contracts')  safe.contracts  = _safeNum(v, 0.01, 999, 1);
       else if (k === 'instrument') safe.instrument = String(v).replace(/[^A-Za-z0-9/. _-]/g,'').slice(0,20) || 'MES1';
     }
     settings = { ...settings, ...safe };

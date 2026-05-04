@@ -396,7 +396,7 @@ const Modal = (() => {
     if (!parsedTrade) return;
     const instr = parsedTrade.instrument;
     if (instr && VALID_INSTRS.has(instr)) $('wInstr').value = instr;
-    if (parsedTrade.contracts > 1) $('wContracts').value = parseInt(parsedTrade.contracts);
+    if (parsedTrade.contracts > 0) $('wContracts').value = parseFloat(parsedTrade.contracts);
     $('wEntry').value = parsedTrade.entry || '';
     $('wSL').value    = parsedTrade.sl    || '';
     $('wTP1').value   = parsedTrade.tp1   || '';
@@ -409,14 +409,28 @@ const Modal = (() => {
   function updateSpreadDisplay() {
     const el = document.getElementById('wSpreadInfo');
     if (!el) return;
-    el.textContent = spreadCost > 0 ? '$' + spreadCost.toFixed(2) + ' / contrat' : '—';
+    const unit = Calc.isCFD($('wInstr').value) ? 'lot' : 'contrat';
+    el.textContent = spreadCost > 0 ? '$' + spreadCost.toFixed(2) + ' / ' + unit : '—';
+  }
+
+  function updateLotsInput(instr) {
+    const inp = $('wContracts');
+    if (Calc.isCFD(instr)) {
+      inp.step = '0.01';
+      inp.min  = '0.01';
+    } else {
+      inp.step = '1';
+      inp.min  = '1';
+      const v = parseFloat(inp.value) || 1;
+      inp.value = Math.max(1, Math.round(v));
+    }
   }
 
   function wRecalc() {
     const entry      = parseFloat($('wEntry').value);
     const sl         = parseFloat($('wSL').value);
     const tp1        = parseFloat($('wTP1').value);
-    const contracts  = parseInt($('wContracts').value) || 1;
+    const contracts  = parseFloat($('wContracts').value) || 0.01;
     const instrument = $('wInstr').value;
     const lc         = $('wLiveCalc');
 
@@ -546,6 +560,7 @@ const Modal = (() => {
       const acc = Store.getMyAccountByName(t.apex || '');
       if (acc) { capital = acc.capital + (acc.pnlOffset || 0); feePerSide = acc.feePerSide || 2.14; firmKey = acc.firmKey || 'apex'; }
       populateInstrumentSelect(firmKey, t.instrument);
+      updateLotsInput(t.instrument);
       fillStep3FromParsed();
       goToStep(3);
     } else {
@@ -599,7 +614,7 @@ const Modal = (() => {
       instrument: safeInstr,
       direction:  safeDir,
       date:       dateStr,
-      contracts:  Math.max(1, Math.min(999, parseInt($('wContracts').value) || 1)),
+      contracts:  Math.max(0.01, Math.min(999, parseFloat($('wContracts').value) || 0.01)),
       capital,
       apex:       $('wApex').value,
       feePerSide,
@@ -719,6 +734,8 @@ const Modal = (() => {
 
     $('wInstr').addEventListener('change', () => {
       spreadCost = getSpreadForInstrument(firmKey, $('wInstr').value);
+      updateLotsInput($('wInstr').value);
+      updateSpreadDisplay();
       wRecalc();
     });
 
@@ -748,6 +765,7 @@ const Modal = (() => {
       }
       populateInstrumentSelect(firmKey);
       spreadCost = getSpreadForInstrument(firmKey, $('wInstr').value);
+      updateLotsInput($('wInstr').value);
       wRecalc();
     });
 
