@@ -2646,6 +2646,12 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   padding: 3px 14px; border-radius: 20px;
   box-shadow: 0 2px 8px rgba(245,158,11,0.4);
 }
+.offer-badge-basic {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--bg3); border: 1.5px solid var(--border);
+  color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: 0.1em;
+  padding: 3px 14px; border-radius: 20px;
+}
 
 /* Hidden price */
 .offer-price-hidden {
