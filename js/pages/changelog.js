@@ -5,6 +5,33 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.66',
+      date: '2026-05-05',
+      time: '01:45',
+      tags: ['feat'],
+      title: 'Page Offres restructurée — 3 paliers + code promo bêta',
+      items: [
+        { type: 'feat', text: '3 paliers : Gratuit, Pro (le plus populaire), Lifetime — avec liste de fonctionnalités détaillée' },
+        { type: 'feat', text: 'Prix masqués pendant la bêta — affichage "🔒 Prix bientôt disponible"' },
+        { type: 'feat', text: 'Section "Code bêta / Code promo" en bas de page pour activer l\'accès Pro' },
+        { type: 'feat', text: 'Boutons Pro et Lifetime → page "En cours de construction" dédiée (payment.html)' },
+        { type: 'feat', text: 'Tableau comparatif 3 colonnes (Gratuit / Pro / Lifetime)' },
+        { type: 'feat', text: 'Toutes les chaînes de la page Offres traduites en FR et EN parfait' },
+      ],
+    },
+    {
+      version: '0.9.65',
+      date: '2026-05-05',
+      time: '01:12',
+      tags: ['fix'],
+      title: 'Traductions complètes FR/EN',
+      items: [
+        { type: 'fix', text: 'Dashboard : "Solde", "depuis le départ", étiquettes stats (Espérance, Meilleur, Pire, série) correctement traduites' },
+        { type: 'fix', text: 'Wizard : labels P&L brut/net et Reward $ traduits selon la langue active' },
+        { type: 'fix', text: 'Offres : message d\'erreur de limitation de tentatives traduit en anglais' },
+      ],
+    },
+    {
       version: '0.9.63',
       date: '2026-05-05',
       time: '00:46',
