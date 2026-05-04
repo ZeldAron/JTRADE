@@ -5,6 +5,16 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.67',
+      date: '2026-05-05',
+      time: '02:05',
+      tags: ['fix'],
+      title: 'Titre "Mises à jour" corrigé',
+      items: [
+        { type: 'fix', text: 'Le titre de la page Mises à jour s\'affichait en double (dans la topbar ET dans le contenu) — corrigé' },
+      ],
+    },
+    {
       version: '0.9.66',
       date: '2026-05-05',
       time: '01:45',
@@ -248,12 +258,13 @@ const Changelog = (() => {
       </div>
     `).join('');
 
+    const intro = i18n.getLang() === 'en'
+      ? 'History of improvements, fixes and new features in ZeldTrade.'
+      : 'Historique des améliorations, correctifs et nouvelles fonctionnalités de ZeldTrade.';
+
     el.innerHTML = `
-      <div class="page-header">
-        <div class="page-title" data-i18n="page.changelog">Mises à jour</div>
-      </div>
       <div class="cl-wrapper">
-        <p class="cl-intro">Historique des améliorations, correctifs et nouvelles fonctionnalités de ZeldTrade.</p>
+        <p class="cl-intro">${intro}</p>
         <div class="cl-list">${html}</div>
       </div>`;
   }
