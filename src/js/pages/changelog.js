@@ -5,6 +5,21 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.70',
+      date: '2026-05-05',
+      time: '03:30',
+      tags: ['feat'],
+      title: 'Onglet Outils — Calculatrice de position + Micro-Entrepreneur',
+      titleEn: 'Tools tab — Position calculator + Tax calc',
+      items: [
+        { type: 'feat', text: 'Nouvel onglet "Outils" dans la barre latérale remplaçant l\'ancien onglet "Micro"', textEn: 'New "Tools" tab in the sidebar replacing the old "Tax Calc" tab' },
+        { type: 'feat', text: 'Calculatrice de position intégrée : calcule automatiquement la taille de position en contrats ou lots', textEn: 'Integrated position calculator: automatically computes position size in contracts or lots' },
+        { type: 'feat', text: '23 instruments supportés : futures CME (MES, ES, MNQ, NQ, GC, CL…) et CFD/Forex (US30, US100, XAUUSD, EUR/USD…)', textEn: '23 instruments supported: CME futures (MES, ES, MNQ, NQ, GC, CL…) and CFD/Forex (US30, US100, XAUUSD, EUR/USD…)' },
+        { type: 'feat', text: 'Lien automatique avec le compte sélectionné : capital pré-rempli, budget journalier restant, avertissement si dépassement du max contrats', textEn: 'Auto-link with the selected account: pre-filled capital, remaining daily budget, warning if max contracts exceeded' },
+        { type: 'feat', text: 'Le simulateur Micro-Entrepreneur est maintenant un sous-onglet dans Outils', textEn: 'The Micro-Entrepreneur simulator is now a sub-tab inside Tools' },
+      ],
+    },
+    {
       version: '0.9.68',
       date: '2026-05-05',
       time: '02:15',
