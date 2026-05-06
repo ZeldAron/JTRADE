@@ -111,6 +111,7 @@ function initApp() {
 
   // ── LOGOUT ─────────────────────────────────────────────────────────────────
   $('btnLogout').addEventListener('click', () => {
+    try { Store.clearLocalCache(); } catch {}
     Auth.logout();
     location.reload();
   });

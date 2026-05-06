@@ -3,6 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src  'self';
+    style-src   'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src    'self' https://fonts.gstatic.com;
+    img-src     'self' data:;
+    frame-src   'none';
+    frame-ancestors 'none';
+    form-action 'self';
+    object-src  'none';
+    base-uri    'self';
+    upgrade-insecure-requests;
+  ">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=(), midi=(), serial=(), interest-cohort=()">
   <title>Payment — ZeldTrade</title>
   <link rel="icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -90,23 +108,6 @@
     <a href="index.html" class="back-link" id="back-link"></a>
   </div>
 
-  <script>
-    const lang = localStorage.getItem('jtrade_lang') || 'fr';
-    const en = lang === 'en';
-
-    document.getElementById('badge').textContent       = en ? 'Under construction' : 'En cours de construction';
-    document.getElementById('title').textContent       = en ? 'Payment page' : 'Page de paiement';
-    document.getElementById('sub').innerHTML           = en
-      ? 'The payment system is under development.<br><strong>Pro</strong> and <strong>Lifetime</strong> subscriptions will be available soon.'
-      : 'Le système de paiement est en cours de développement.<br>Les abonnements <strong>Pro</strong> et <strong>Lifetime</strong> seront bientôt disponibles.';
-    document.getElementById('price-pro').textContent   = en ? 'Price coming soon' : 'Prix bientôt disponible';
-    document.getElementById('price-lt').textContent    = en ? 'Price coming soon' : 'Prix bientôt disponible';
-    document.getElementById('info-title').textContent  = en ? 'Get access right now' : 'Obtenir un accès dès maintenant';
-    document.getElementById('info-body').innerHTML     = en
-      ? 'During the beta, Pro access is activated via a <strong>promo code</strong>.<br>Go back to the Offers page and enter your code in the dedicated field — or contact us through the in-app contact form.'
-      : 'Pendant la bêta, l\'accès Pro s\'active via un <strong>code promo</strong>.<br>Retourne sur la page Offres et entre ton code dans le champ dédié — ou contacte-nous via le formulaire intégré à l\'application.';
-    document.getElementById('back-link').textContent   = en ? '← Back to ZeldTrade' : '← Retour à ZeldTrade';
-    document.title = en ? 'Payment — ZeldTrade' : 'Paiement — ZeldTrade';
-  </script>
+  <script src="js/payment.js?v=0.9.72"></script>
 </body>
 </html>

@@ -170,8 +170,9 @@
       const pnlTxt = c.estimated
         ? `~$${Math.abs(c.netPnl || 0).toFixed(0)}`
         : `${(c.netPnl || 0) >= 0 ? '+' : ''}$${Math.abs(c.netPnl || 0).toFixed(0)}`;
+      const safeOutcome = ['win','loss','be','open'].includes(tr.outcome) ? tr.outcome : 'open';
       return `<div class="cdt-row">
-        <span class="ob ob-${tr.outcome} ob-sm">${i18n.t('ob.' + tr.outcome)}</span>
+        <span class="ob ob-${safeOutcome} ob-sm">${i18n.t('ob.' + safeOutcome)}</span>
         <span class="cdt-inst">${UI.escHtml(tr.instrument)} ${tr.direction === 'long' ? 'long' : 'short'}</span>
         <span class="cdt-setup">${UI.escHtml(tr.setup || '—')}</span>
         <span class="cdt-pnl-val" style="color:${(c.netPnl || 0) >= 0 ? 'var(--green)' : 'var(--red)'}">${pnlTxt}</span>

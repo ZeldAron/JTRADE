@@ -1123,12 +1123,22 @@ const i18n = (() => {
     localStorage.setItem(LANG_KEY, lang);
   }
 
+  function _escVar(v) {
+    return String(v)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  }
+
   function t(key, vars) {
     const lang = getLang();
     let str = (dict[lang] || dict.fr)[key] || (dict.fr[key] || key);
     if (vars) {
       Object.entries(vars).forEach(([k, v]) => {
-        str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+        // Variables échappées par défaut (défense en profondeur si t() est passé à innerHTML)
+        str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), _escVar(v));
       });
     }
     return str;

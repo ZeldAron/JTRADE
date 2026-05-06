@@ -38,11 +38,11 @@
                 <span class="ma-name">${UI.escHtml(a.name)}</span>
                 <span class="ma-preset">${UI.escHtml(tp.name || '—')}</span>
                 <span class="ma-stat" style="${balColor}" title="Capital : $${Number(a.capital).toLocaleString('fr-FR')}">$${Number(balance).toLocaleString('fr-FR')}</span>
-                <span class="ma-stat" style="color:var(--green)">TP +$${a.profitTarget}</span>
-                <span class="ma-stat" style="color:var(--red)">DD -$${a.maxDrawdown}</span>
+                <span class="ma-stat" style="color:var(--green)">TP +$${Number(a.profitTarget) || 0}</span>
+                <span class="ma-stat" style="color:var(--red)">DD -$${Number(a.maxDrawdown) || 0}</span>
                 <div class="ma-actions">
-                  <button class="btn-ghost" style="padding:3px 10px;font-size:11px" data-ma-edit="${a.id}">${t('btn.edit')}</button>
-                  <button class="btn-ghost btn-danger" style="padding:3px 10px;font-size:11px" data-ma-del="${a.id}">${t('btn.delete')}</button>
+                  <button class="btn-ghost" style="padding:3px 10px;font-size:11px" data-ma-edit="${UI.escHtml(a.id)}">${t('btn.edit')}</button>
+                  <button class="btn-ghost btn-danger" style="padding:3px 10px;font-size:11px" data-ma-del="${UI.escHtml(a.id)}">${t('btn.delete')}</button>
                 </div>
               </div>`;
           }).join('')
@@ -503,8 +503,8 @@
               <span class="grp-name">⬡ ${UI.escHtml(g.name)}</span>
               <span class="grp-accounts">${names || '—'}</span>
               <div class="grp-actions">
-                <button class="btn-ghost" style="padding:3px 10px;font-size:11px" data-grp-edit="${g.id}">${t('btn.edit')}</button>
-                <button class="btn-ghost btn-danger" style="padding:3px 10px;font-size:11px" data-grp-del="${g.id}">${t('btn.delete')}</button>
+                <button class="btn-ghost" style="padding:3px 10px;font-size:11px" data-grp-edit="${UI.escHtml(g.id)}">${t('btn.edit')}</button>
+                <button class="btn-ghost btn-danger" style="padding:3px 10px;font-size:11px" data-grp-del="${UI.escHtml(g.id)}">${t('btn.delete')}</button>
               </div>
             </div>`;
           }).join('')
