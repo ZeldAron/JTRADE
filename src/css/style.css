@@ -3381,6 +3381,8 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 .cl-wrapper {
   max-width: 680px;
   padding: 0 24px 48px;
+  overflow-y: auto;
+  flex: 1;
 }
 .cl-intro {
   font-size: 13px;
