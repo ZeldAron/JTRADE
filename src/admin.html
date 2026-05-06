@@ -11,13 +11,16 @@
     connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com wss://*.firebaseio.com wss://*.googleapis.com;
     img-src     'self' data:;
     frame-src   'none';
+    frame-ancestors 'none';
+    form-action 'self';
     object-src  'none';
     base-uri    'self';
     upgrade-insecure-requests;
   ">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=(), midi=(), serial=(), interest-cohort=()">
   <title>ZeldTrade Admin</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -402,11 +405,11 @@
       </div>
       <div class="login-field">
         <label>Email admin</label>
-        <input type="email" id="loginEmail" value="zeldtradepro@gmail.com" autocomplete="email">
+        <input type="email" id="loginEmail" value="zeldtradepro@gmail.com" autocomplete="email" maxlength="254" required>
       </div>
       <div class="login-field">
         <label>Mot de passe</label>
-        <input type="password" id="loginPassword" autocomplete="current-password" placeholder="••••••••">
+        <input type="password" id="loginPassword" autocomplete="current-password" placeholder="••••••••" maxlength="128" required>
       </div>
       <div class="login-error" id="loginError"></div>
       <button class="btn-primary" id="btnLogin">Se connecter</button>

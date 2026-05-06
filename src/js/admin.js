@@ -297,23 +297,44 @@ const Admin = (() => {
   }
 
   // ── Auth ──────────────────────────────────────────────────────────────────────
+  let _adminLoginAttempts = 0;
+  let _adminLockedUntil = 0;
+
   async function login() {
-    const email    = $('loginEmail').value.trim();
+    const email    = $('loginEmail').value.trim().slice(0, 254);
     const password = $('loginPassword').value;
     const errEl    = $('loginError');
     const btn      = $('btnLogin');
     errEl.textContent = '';
+
+    if (Date.now() < _adminLockedUntil) {
+      const wait = Math.ceil((_adminLockedUntil - Date.now()) / 1000);
+      errEl.textContent = `Trop de tentatives — réessayez dans ${wait}s.`;
+      return;
+    }
+
     btn.disabled = true;
     try {
       const cred = await _fbAuth.signInWithEmailAndPassword(email, password);
       if (cred.user.email !== ADMIN_EMAIL) {
         await _fbAuth.signOut();
-        errEl.textContent = 'Accès refusé — compte non autorisé.';
+        _adminLoginAttempts++;
+        if (_adminLoginAttempts >= 3) {
+          _adminLockedUntil = Date.now() + 5 * 60_000;
+          _adminLoginAttempts = 0;
+        }
+        errEl.textContent = 'Identifiants invalides.';
         return;
       }
+      _adminLoginAttempts = 0;
       showDashboard(cred.user);
     } catch (e) {
-      errEl.textContent = 'Email ou mot de passe incorrect.';
+      _adminLoginAttempts++;
+      if (_adminLoginAttempts >= 3) {
+        _adminLockedUntil = Date.now() + 5 * 60_000;
+        _adminLoginAttempts = 0;
+      }
+      errEl.textContent = 'Identifiants invalides.';
     } finally {
       btn.disabled = false;
     }

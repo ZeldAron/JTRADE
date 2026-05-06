@@ -529,8 +529,15 @@ const Store = (() => {
     };
   }
 
+  function clearLocalCache() {
+    if (!_uid || _uid === 'default') return;
+    Object.values(lk()).forEach(key => {
+      try { localStorage.removeItem(key); } catch {}
+    });
+  }
+
   return {
-    initForUser,
+    initForUser, clearLocalCache,
     getTrades, getTradeById, addTrade, updateTrade, deleteTrade, importTrades, clearTrades, exportJSON,
     getSettings, getGroqKey, updateSettings,
     getAccountTypes, getAccountByName, updateAccountTypes,

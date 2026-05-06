@@ -90,6 +90,9 @@ const Auth = (() => {
       await Promise.all(snap.docs.map(d => d.ref.delete()));
       await _fbDb.collection('userEmails').doc(user.uid).delete().catch(() => {});
 
+      // Nettoie le cache local
+      try { Store.clearLocalCache(); } catch {}
+
       // Supprime le compte Firebase Auth
       await user.delete();
       return { ok: true };

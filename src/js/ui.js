@@ -125,7 +125,7 @@ const UI = (() => {
         : '';
 
       const safeDir = t.direction === 'long' ? 'long' : 'short';
-      return `<div class="trade-item ${selectedId === t.id ? 'selected' : ''}" data-id="${t.id}">
+      return `<div class="trade-item ${selectedId === t.id ? 'selected' : ''}" data-id="${escHtml(t.id)}">
         <div class="trade-bar" style="background:${dc}"></div>
         <div class="trade-item-body">
           <div class="trade-item-top">

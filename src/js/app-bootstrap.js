@@ -84,15 +84,35 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user) { showLoader(user.username); setTimeout(() => launchApp(user), 1200); }
   });
 
+  // ── Rate-limiting ───────────────────────────────────────────────────────────
+  let _loginAttempts = 0;
+  let _loginLockedUntil = 0;
+  let _lastRegister = 0;
+  let _lastForgot = 0;
+
   // ── Login ───────────────────────────────────────────────────────────────────
   $('loginFormEl').addEventListener('submit', async e => {
     e.preventDefault();
     $('loginError').textContent = '';
+    if (Date.now() < _loginLockedUntil) {
+      const wait = Math.ceil((_loginLockedUntil - Date.now()) / 1000);
+      $('loginError').textContent = `Trop de tentatives — réessayez dans ${wait}s.`;
+      return;
+    }
     const btn = e.target.querySelector('button[type=submit]');
     btn.disabled = true;
-    const user = await Auth.login($('loginUsername').value.trim(), $('loginPassword').value);
+    const user = await Auth.login($('loginUsername').value.trim().slice(0, 254), $('loginPassword').value);
     btn.disabled = false;
-    if (!user) { $('loginError').textContent = i18n.t('auth.err.login'); return; }
+    if (!user) {
+      _loginAttempts++;
+      if (_loginAttempts >= 5) {
+        _loginLockedUntil = Date.now() + 60_000;
+        _loginAttempts = 0;
+      }
+      $('loginError').textContent = i18n.t('auth.err.login');
+      return;
+    }
+    _loginAttempts = 0;
     showLoader(user.username);
     setTimeout(() => launchApp(user), 1200);
   });
@@ -101,15 +121,30 @@ document.addEventListener('DOMContentLoaded', () => {
   $('registerFormEl').addEventListener('submit', async e => {
     e.preventDefault();
     $('registerError').textContent = '';
-    const username = $('regUsername').value.trim();
-    const email    = $('regEmail').value.trim();
+    // Honeypot — si rempli, c'est un bot. On feint le succès sans rien faire.
+    const honey = $('regWebsite');
+    if (honey && honey.value) {
+      $('registerError').style.color = 'var(--green)';
+      $('registerError').textContent = '✓';
+      return;
+    }
+    // Rate-limit : 1 inscription / 30s
+    if (Date.now() - _lastRegister < 30_000) {
+      $('registerError').textContent = 'Merci de patienter avant de réessayer.';
+      return;
+    }
+    const username = $('regUsername').value.trim().slice(0, 30);
+    const email    = $('regEmail').value.trim().slice(0, 254);
     const password = $('regPassword').value;
     const confirm  = $('regPasswordConfirm').value;
     if (username.length < 2 || username.length > 30) { $('registerError').textContent = i18n.t('auth.err.username.length') || 'Le pseudo doit faire entre 2 et 30 caractères.'; return; }
     if (!/^[a-zA-Z0-9_-]+$/.test(username))          { $('registerError').textContent = i18n.t('auth.err.username.chars')  || 'Le pseudo ne peut contenir que lettres, chiffres, _ et -.'; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { $('registerError').textContent = i18n.t('auth.err.email') || 'Email invalide.'; return; }
     if (password !== confirm)  { $('registerError').textContent = i18n.t('auth.err.mismatch'); return; }
-    if (password.length < 8)   { $('registerError').textContent = i18n.t('auth.err.short'); return; }
+    if (password.length < 8 || password.length > 128) { $('registerError').textContent = i18n.t('auth.err.short'); return; }
     if (!/\d/.test(password))  { $('registerError').textContent = 'Le mot de passe doit contenir au moins un chiffre.'; return; }
+    if (!/[a-zA-Z]/.test(password)) { $('registerError').textContent = 'Le mot de passe doit contenir au moins une lettre.'; return; }
+    _lastRegister = Date.now();
     const btn = e.target.querySelector('button[type=submit]');
     btn.disabled = true;
     const result = await Auth.register(username, password, email);
@@ -123,13 +158,24 @@ document.addEventListener('DOMContentLoaded', () => {
   $('forgotFormEl').addEventListener('submit', async e => {
     e.preventDefault();
     $('forgotError').textContent = '';
+    // Rate-limit : 1 demande / 60s
+    if (Date.now() - _lastForgot < 60_000) {
+      $('forgotError').textContent = 'Merci de patienter 60 secondes avant de réessayer.';
+      return;
+    }
+    const email = $('forgotEmail').value.trim().slice(0, 254);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      $('forgotError').textContent = i18n.t('auth.err.email') || 'Email invalide.';
+      return;
+    }
+    _lastForgot = Date.now();
     const btn = e.target.querySelector('button[type=submit]');
     btn.disabled = true;
-    const result = await Auth.resetPassword($('forgotEmail').value.trim());
+    const result = await Auth.resetPassword(email);
     btn.disabled = false;
     if (result.error) { $('forgotError').textContent = result.error; return; }
     $('forgotError').style.color = 'var(--green)';
-    $('forgotError').textContent = 'Email envoyé ! Vérifie ta boîte mail.';
+    $('forgotError').textContent = 'Si cet email est associé à un compte, un lien de réinitialisation a été envoyé.';
   });
 
   // ── Toggle formulaires ──────────────────────────────────────────────────────

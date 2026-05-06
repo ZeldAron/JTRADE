@@ -5,6 +5,24 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.72',
+      date: '2026-05-06',
+      time: '17:30',
+      tags: ['security', 'fix'],
+      title: 'Sécurité — durcissement complet du site',
+      titleEn: 'Security — full site hardening',
+      items: [
+        { type: 'security', text: 'Politique de sécurité (CSP) renforcée : protection anti-clickjacking, restriction des destinations de formulaires, blocage strict des scripts externes', textEn: 'Hardened Content Security Policy: anti-clickjacking, restricted form destinations, strict external script blocking' },
+        { type: 'security', text: 'Honeypot anti-bots sur les formulaires d\'inscription et de contact — bloque les bots de spam invisibles à l\'œil humain', textEn: 'Anti-bot honeypot on sign-up and contact forms — blocks spam bots invisibly' },
+        { type: 'security', text: 'Limitation de tentatives : 5 tentatives de connexion → blocage 60s · 3 tentatives admin → blocage 5min · inscription/reset → 30-60s entre essais', textEn: 'Rate limiting: 5 login attempts → 60s lock · 3 admin attempts → 5min lock · register/reset → 30-60s between tries' },
+        { type: 'security', text: 'Audit XSS complet — 8 vulnérabilités potentielles colmatées (échappement renforcé sur les IDs et classes générées dynamiquement)', textEn: 'Full XSS audit — 8 potential vulnerabilities patched (reinforced escaping on dynamically-generated IDs and classes)' },
+        { type: 'security', text: 'Validation stricte des champs : longueurs maximales (email 254, password 128, message 5000…), regex pseudo, mot de passe avec lettre + chiffre obligatoires', textEn: 'Strict input validation: max lengths (email 254, password 128, message 5000…), username regex, password requires letter + digit' },
+        { type: 'security', text: 'Nettoyage automatique des données locales à la déconnexion — sur appareil partagé, plus aucune donnée trace après logout', textEn: 'Automatic local data cleanup on logout — no traces left on shared devices' },
+        { type: 'security', text: 'Pages /admin et /payment exclues des moteurs de recherche · Permissions-Policy étendue (capteurs, USB, Bluetooth, etc. désactivés)', textEn: '/admin and /payment pages excluded from search engines · Extended Permissions-Policy (sensors, USB, Bluetooth, etc. disabled)' },
+        { type: 'fix', text: 'Messages d\'erreur génériques sur l\'admin (ne révèle plus si l\'email existe ou pas)', textEn: 'Generic error messages on admin (no longer leaks email existence)' },
+      ],
+    },
+    {
       version: '0.9.71',
       date: '2026-05-06',
       time: '16:00',

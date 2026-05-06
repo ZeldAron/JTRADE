@@ -29,18 +29,26 @@ const Contact = (() => {
   }
 
   async function submitForm() {
-    const name    = document.getElementById('cName').value.trim().replace(/[\r\n]/g, '');
-    const email   = document.getElementById('cEmail').value.trim().replace(/[\r\n]/g, '');
-    const message = document.getElementById('cMessage').value.trim();
+    const name    = document.getElementById('cName').value.trim().replace(/[\r\n]/g, '').slice(0, 100);
+    const email   = document.getElementById('cEmail').value.trim().replace(/[\r\n]/g, '').slice(0, 254);
+    const message = document.getElementById('cMessage').value.trim().slice(0, 5000);
+    const honey   = document.getElementById('cWebsite');
     const error   = document.getElementById('cError');
     const btn     = document.getElementById('cSend');
     const label   = document.getElementById('cSendLabel');
 
     error.textContent = '';
+    // Honeypot — si rempli, c'est un bot. On feint le succès sans envoyer.
+    if (honey && honey.value) {
+      _lastSubmit = Date.now();
+      document.getElementById('contactForm').style.display    = 'none';
+      document.getElementById('contactSuccess').style.display = 'flex';
+      return;
+    }
     if (Date.now() - _lastSubmit < 60_000)                          { error.textContent = i18n.t('contact.err.wait') || 'Merci de patienter 60 secondes avant de renvoyer un message.'; return; }
-    if (!name)                                                       { error.textContent = i18n.t('contact.err.name');  return; }
+    if (!name || name.length < 2)                                    { error.textContent = i18n.t('contact.err.name');  return; }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))    { error.textContent = i18n.t('contact.err.email'); return; }
-    if (!message)                                                    { error.textContent = i18n.t('contact.err.msg');   return; }
+    if (!message || message.length < 5)                              { error.textContent = i18n.t('contact.err.msg');   return; }
 
     btn.disabled      = true;
     label.textContent = i18n.t('contact.sending');
