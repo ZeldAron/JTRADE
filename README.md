@@ -1,54 +1,59 @@
-# JTRADE
+# ZeldTrade
 
-Journal de trading personnel pour contrats futures CME (MES1, ES1, MNQ1, NQ1).  
-Application 100 % locale — aucune donnée envoyée sur internet.
+Journal de trading pour traders en prop firm (Apex, Topstep, FTMO, Lucid).
+Application web déployée sur GitHub Pages — données synchronisées dans le cloud via Firebase.
 
-## Lancer l'application
+🌐 **Live** : https://zeldaron.github.io/zeldtrade
 
-### Mac
-```bash
-chmod +x scripts/launch.sh   # une seule fois
-./scripts/launch.sh
-```
+## Fonctionnalités
 
-### Windows
-Double-clique sur `scripts/launch.bat`
-
-Ouvre automatiquement `http://localhost:8765` dans le navigateur.  
-**Prérequis : Python 3** — [python.org/downloads](https://www.python.org/downloads/)
-
----
-
-## Créer les installeurs
-
-### Mac — génère `dist/JTRADE.dmg`
-```bash
-python3 build/build_mac.py
-```
-
-### Windows — génère `dist/JTRADE_Setup.exe`
-```bash
-python build/build_windows.py
-```
-> À exécuter sur une machine Windows. Installe PyInstaller + Inno Setup automatiquement.
-
----
-
-## Structure du projet
-
-```
-JTRADE/
-├── src/              # Application web (HTML · CSS · JS vanilla)
-├── scripts/          # Lanceurs directs (launch.sh / launch.bat)
-├── build/            # Scripts de packaging (Mac DMG, Windows EXE)
-├── dist/             # Sorties des builds (gitignored)
-├── docs/             # Documentation (GUIDE.md, PDF)
-└── .github/          # GitHub Actions (build automatique)
-```
-
----
+- **Journal** — saisie de trades avec screenshot TradingView, détection IA des niveaux (Groq Vision)
+- **Dashboard** — courbe equity, max DD, profit factor, série en cours
+- **Analytics** — win rate, P&L par instrument, performance par session/heure
+- **Objectifs** — suivi des règles prop firm (drawdown, daily loss, consistency)
+- **Calendrier** — vue mensuelle avec P&L journalier
+- **Outils** — calculatrice de position (23 instruments) + simulateur fiscal micro-entrepreneur (BNC, BIC)
+- **Bilingue** — FR / EN
 
 ## Stack
 
-HTML · CSS · JavaScript vanilla · Python 3 (serveur local)  
-Analyse IA : [Groq Vision](https://console.groq.com) (optionnel, gratuit)
+- **Frontend** : HTML · CSS · JavaScript vanilla (pas de bundler)
+- **Backend** : Firebase (Auth + Firestore)
+- **IA** : Groq Vision API (analyse des screenshots)
+- **Hébergement** : GitHub Pages (branche `gh-pages`)
+
+## Structure
+
+```
+JTRADE/
+├── src/              # Code source de l'app (déployé sur gh-pages)
+│   ├── index.html
+│   ├── admin.html
+│   ├── payment.html, cgu.html, legal.html, privacy.html
+│   ├── css/style.css
+│   └── js/
+│       ├── pages/    # Vue par page (dashboard, analytics, ...)
+│       ├── firebase.js, auth.js, store.js
+│       └── i18n.js, calc.js, modal.js, ui.js, app.js
+├── scripts/release.sh   # Déploiement vers GitHub Pages
+├── firestore.rules      # Règles de sécurité Firestore
+└── .github/             # GitHub Actions
+```
+
+## Déploiement
+
+```bash
+./scripts/release.sh v0.9.71
+```
+
+Le script :
+1. Crée le tag git si absent
+2. Auto-commit `src/` si modifications en cours
+3. Push `src/` vers la branche `gh-pages` via `git subtree split`
+
+## Versioning
+
+Pattern à respecter pour chaque release :
+1. Ajouter une entrée en tête de `ENTRIES` dans `src/js/pages/changelog.js`
+2. Bumper tous les `?v=X.Y.Z` dans `src/index.html` + le texte affiché
+3. `./scripts/release.sh vX.Y.Z`

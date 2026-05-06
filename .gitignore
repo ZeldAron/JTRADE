@@ -1,7 +1,2 @@
-dist/
-__pycache__/
-*.pyc
-*.spec
 .DS_Store
 .claude/
-build/make_guide.py

@@ -5,6 +5,22 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.71',
+      date: '2026-05-06',
+      time: '16:00',
+      tags: ['fix', 'feat', 'security'],
+      title: 'Audit complet — corrections de bugs critiques + nettoyage',
+      titleEn: 'Full audit — critical bug fixes + cleanup',
+      items: [
+        { type: 'fix', text: 'Correction du calcul de "perte du jour" qui utilisait l\'heure UTC au lieu de l\'heure locale — impactait les règles Prop Firm pour les trades en soirée', textEn: 'Fixed "daily loss" calculation that was using UTC instead of local time — affected Prop Firm rules for evening trades' },
+        { type: 'fix', text: 'Correction d\'une fuite mémoire dans la page Réglages : les boutons (Export, Import, Effacer…) déclenchaient plusieurs actions à la fois après une synchronisation cloud', textEn: 'Fixed a memory leak in the Settings page: buttons (Export, Import, Clear…) were triggering multiple actions after a cloud sync' },
+        { type: 'fix', text: 'Le titre de la page Micro-Entrepreneur affichait "page.micro" brut au lieu du vrai titre traduit', textEn: 'The Tax Calculator page was displaying the raw key "page.micro" instead of the translated title' },
+        { type: 'feat', text: 'La page Guide est maintenant entièrement bilingue (FR/EN) — traduction qui n\'était pas branchée', textEn: 'The Guide page is now fully bilingual (FR/EN) — translation was not wired up' },
+        { type: 'security', text: 'Pages /admin et /payment maintenant exclues des moteurs de recherche (noindex + robots.txt)', textEn: '/admin and /payment pages now excluded from search engines (noindex + robots.txt)' },
+        { type: 'feat', text: 'Ajout de l\'entrée changelog v0.9.69 manquante (changelog bilingue + déploiement auto-commit)', textEn: 'Added missing v0.9.69 changelog entry (bilingual changelog + auto-commit deploy)' },
+      ],
+    },
+    {
       version: '0.9.70',
       date: '2026-05-05',
       time: '03:30',
@@ -17,6 +33,19 @@ const Changelog = (() => {
         { type: 'feat', text: '23 instruments supportés : futures CME (MES, ES, MNQ, NQ, GC, CL…) et CFD/Forex (US30, US100, XAUUSD, EUR/USD…)', textEn: '23 instruments supported: CME futures (MES, ES, MNQ, NQ, GC, CL…) and CFD/Forex (US30, US100, XAUUSD, EUR/USD…)' },
         { type: 'feat', text: 'Lien automatique avec le compte sélectionné : capital pré-rempli, budget journalier restant, avertissement si dépassement du max contrats', textEn: 'Auto-link with the selected account: pre-filled capital, remaining daily budget, warning if max contracts exceeded' },
         { type: 'feat', text: 'Le simulateur Micro-Entrepreneur est maintenant un sous-onglet dans Outils', textEn: 'The Micro-Entrepreneur simulator is now a sub-tab inside Tools' },
+      ],
+    },
+    {
+      version: '0.9.69',
+      date: '2026-05-05',
+      time: '03:00',
+      tags: ['feat', 'fix'],
+      title: 'Changelog bilingue + page paiement bilingue + déploiement auto-commit',
+      titleEn: 'Bilingual changelog + bilingual payment page + auto-commit deploy',
+      items: [
+        { type: 'feat', text: 'Le changelog s\'affiche maintenant en français ou anglais selon la langue choisie', textEn: 'The changelog now displays in French or English depending on the selected language' },
+        { type: 'feat', text: 'La page de paiement s\'adapte aussi à la langue (lecture du localStorage)', textEn: 'The payment page also adapts to the language (reads from localStorage)' },
+        { type: 'fix', text: 'Le script de release commit automatiquement les changements en attente avant de déployer — fini les déploiements qui poussent du vieux code', textEn: 'The release script automatically commits pending changes before deploying — no more deployments pushing stale code' },
       ],
     },
     {
