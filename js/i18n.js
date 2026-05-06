@@ -27,6 +27,7 @@ const i18n = (() => {
       'page.goals':     'Objectifs & Récompenses',
       'page.calendar':  'Calendrier',
       'page.outils':    'Outils',
+      'page.micro':     'Micro-Entrepreneur',
       'page.settings':  'Réglages',
       'page.changelog': 'Mises à jour',
       'page.offers':    'Offres',
@@ -72,7 +73,7 @@ const i18n = (() => {
       'tuto.s5.b':             'Saisis chaque trade <b>juste après</b> sa clôture pendant que l\'info est fraîche',
       'tuto.s5.c':             'Utilise le champ <b>Setup</b> pour taguer tes stratégies (FVG, OB, Breakout…) et analyser ce qui fonctionne',
       'tuto.s5.d':             'Vérifie <b>Objectifs</b> chaque matin pour voir où tu en es par rapport aux règles Prop Firm',
-      'tuto.s5.e':             'Page <b>Micro</b> : calcule ta taille de position et ton risque avant d\'entrer en trade',
+      'tuto.s5.e':             'Page <b>Outils</b> : calcule ta taille de position et ton risque avant d\'entrer en trade',
       'tuto.cta':              'Commencer →',
       // Shared buttons
       'btn.edit':       'Modifier',
@@ -582,6 +583,7 @@ const i18n = (() => {
       'page.goals':     'Goals & Rewards',
       'page.calendar':  'Calendar',
       'page.outils':    'Tools',
+      'page.micro':     'Tax Calculator',
       'page.settings':  'Settings',
       'page.changelog': 'Changelog',
       'page.offers':    'Plans',
@@ -626,7 +628,7 @@ const i18n = (() => {
       'tuto.s5.b':             'Log each trade <b>right after closing</b> it while details are fresh',
       'tuto.s5.c':             'Use the <b>Setup</b> field to tag your strategies (FVG, OB, Breakout…) and analyze what works',
       'tuto.s5.d':             'Check <b>Goals</b> every morning to see where you stand against Prop Firm rules',
-      'tuto.s5.e':             '<b>Micro</b> page: calculate position size and risk before entering a trade',
+      'tuto.s5.e':             '<b>Tools</b> page: calculate position size and risk before entering a trade',
       'tuto.cta':              'Get started →',
       // Shared buttons
       'btn.edit':       'Edit',

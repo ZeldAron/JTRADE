@@ -251,7 +251,7 @@
     const el     = $('goalsContent');
     const accs   = Store.getMyAccounts();
     const trades = Store.getTrades();
-    const today  = new Date().toISOString().split('T')[0];
+    const today  = UI.localToday();
 
     if (!accs.length) {
       el.innerHTML = `<div class="page-title">${t('page.goals')}</div>

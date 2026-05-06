@@ -170,10 +170,10 @@ function initApp() {
   if (first) UI.selectTrade(first.id);
 
   // ── AUTO-REFRESH EOD ───────────────────────────────────────────────────────
-  // Re-rend les pages actives à minuit pour mettre à jour le plancher trailing
-  let lastDate = new Date().toISOString().split('T')[0];
+  // Re-rend les pages actives à minuit local pour mettre à jour le plancher trailing
+  let lastDate = UI.localToday();
   setInterval(() => {
-    const nowDate = new Date().toISOString().split('T')[0];
+    const nowDate = UI.localToday();
     if (nowDate !== lastDate) {
       lastDate = nowDate;
       if (currentPage === 'goals')     UI.renderGoals();

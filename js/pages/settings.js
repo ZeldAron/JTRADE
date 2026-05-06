@@ -602,11 +602,19 @@
     render();
   }
 
+  let _settingsBound = false;
+
   UI.initSettings = function () {
     try { renderGroupsSettings(); }    catch(e) { console.error('[Settings] groups error:', e); }
     try { renderMyAccountsSettings(); } catch(e) { console.error('[Settings] accounts error:', e); }
     try { renderPropFirmsSettings(); }  catch(e) { console.error('[Settings] propfirms error:', e); }
     try { renderSpreadsSettings(); }    catch(e) { console.error('[Settings] spreads error:', e); }
+
+    if (_settingsBound) {
+      updateGroqStatus();
+      return;
+    }
+    _settingsBound = true;
 
     // Tab switching
     document.querySelectorAll('[data-settings-tab]').forEach(btn => {
@@ -632,7 +640,7 @@
       const blob = new Blob([Store.exportJSON()], { type: 'application/json' });
       const a    = document.createElement('a');
       a.href     = URL.createObjectURL(blob);
-      a.download = 'zeldtrade-' + new Date().toISOString().split('T')[0] + '.json';
+      a.download = 'zeldtrade-' + UI.localToday() + '.json';
       a.click();
       UI.toast(t('set.export.done'));
     });

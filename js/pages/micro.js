@@ -91,7 +91,7 @@
     const el = $('microContent');
     if (!el) return;
 
-    const today       = new Date().toISOString().split('T')[0];
+    const today       = UI.localToday();
     const month       = today.slice(0, 7);
     const months      = t('cal.months').split(',');
     const monthLabel  = months[parseInt(month.split('-')[1]) - 1] + ' ' + month.split('-')[0];

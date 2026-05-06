@@ -3,6 +3,12 @@
 
 const Store = (() => {
 
+  // YYYY-MM-DD au fuseau local (évite les bordures de jour UTC)
+  function localToday() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
   // ── Données statiques (presets, référence) ───────────────────────────────────
   const DEFAULT_SETTINGS = { capital: 50000, contracts: 1, instrument: 'MES1' };
 
@@ -494,12 +500,12 @@ const Store = (() => {
   function getAIUsage()      { return { ..._aiUsage }; }
   function canAnalyzeToday() {
     if (isPro()) return true;
-    const today = new Date().toISOString().split('T')[0];
+    const today = localToday();
     if (typeof _aiUsage.date === 'string' && _aiUsage.date > today) return false;
     return _aiUsage.date !== today || _aiUsage.count < 1;
   }
   function recordAnalysis() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = localToday();
     const next  = { date: today, count: _aiUsage.date === today ? _aiUsage.count + 1 : 1 };
     _aiUsage = next;
     fbSet('aiUsage', next);

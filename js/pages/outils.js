@@ -76,7 +76,7 @@
     if (acctName) {
       const acct = Store.getMyAccountByName(acctName);
       if (acct && acct.dailyLossLimit) {
-        const today       = new Date().toISOString().split('T')[0];
+        const today       = UI.localToday();
         const todayLoss   = Store.getTrades()
           .filter(tr => tr.apex === acct.name && (tr.date || '').startsWith(today))
           .reduce((s, tr) => s + Math.min(0, Calc.trade(tr).netPnl || 0), 0);

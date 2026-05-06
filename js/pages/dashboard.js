@@ -38,7 +38,7 @@
     const s            = UI.statsForTrades(trades);
     const adjustedPnL  = s.totalPnL + (acc.pnlOffset || 0);
     const balance      = acc.capital + adjustedPnL;
-    const today        = new Date().toISOString().split('T')[0];
+    const today        = UI.localToday();
     const todayLoss    = trades
       .filter(tr => tr.date.startsWith(today) && tr.outcome === 'loss')
       .reduce((sum, tr) => sum + Math.abs(Calc.trade(tr).netPnl || 0), 0);

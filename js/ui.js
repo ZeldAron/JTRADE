@@ -26,6 +26,12 @@ const UI = (() => {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
 
+  // YYYY-MM-DD au fuseau local — à utiliser pour comparer aux dates de trades
+  function localToday() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
   function escHtml(str) {
     return String(str)
       .replace(/&/g,'&amp;')
@@ -321,7 +327,7 @@ const UI = (() => {
   return {
     toast, updateStats, renderList, selectTrade, renderDetail,
     // Shared utilities exposed for js/pages/*.js
-    escHtml, localDay, statsForTrades,
+    escHtml, localDay, localToday, statsForTrades,
     OB_CLASS, OB_LABEL, MICRO_RATES,
     setFilter: (f) => { currentFilter = f; renderList(); },
     get selectedId()  { return selectedId; },
