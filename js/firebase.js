@@ -24,4 +24,4 @@ try {
 
 const _fbAuth      = firebase.auth();
 const _fbDb        = firebase.firestore();
-const _fbFunctions = firebase.functions ? firebase.functions('europe-west1') : null;
+const _fbFunctions = firebase.functions ? firebase.app().functions('europe-west1') : null;
