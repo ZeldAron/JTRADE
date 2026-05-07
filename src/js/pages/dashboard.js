@@ -40,7 +40,7 @@
     const balance      = acc.capital + adjustedPnL;
     const today        = UI.localToday();
     const todayLoss    = trades
-      .filter(tr => tr.date.startsWith(today) && tr.outcome === 'loss')
+      .filter(tr => UI.localDay(tr.date) === today && tr.outcome === 'loss')
       .reduce((sum, tr) => sum + Math.abs(Calc.trade(tr).netPnl || 0), 0);
 
     const ddPct     = acc.maxDrawdown    ? Math.min(100, (Math.abs(Math.min(0, adjustedPnL)) / acc.maxDrawdown) * 100) : 0;

@@ -242,14 +242,18 @@
         };
 
         const editId = $('maEditId').value;
-        if (editId) {
-          Store.updateMyAccount(editId, data);
-          UI.toast(t('set.acc.updated'));
-        } else {
-          Store.addMyAccount(data);
-          UI.toast(t('set.acc.added'));
+        try {
+          if (editId) {
+            Store.updateMyAccount(editId, data);
+            UI.toast(t('set.acc.updated'));
+          } else {
+            Store.addMyAccount(data);
+            UI.toast(t('set.acc.added'));
+          }
+          render();
+        } catch (e) {
+          UI.toast(e.message || 'Erreur lors de la sauvegarde.', true);
         }
-        render();
       });
 
       el.querySelectorAll('[data-ma-edit]').forEach(btn => {

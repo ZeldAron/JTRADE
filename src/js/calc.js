@@ -139,13 +139,30 @@ const Calc = (() => {
   }
 
   // Calcul du plancher trailing (EOD) pour un compte funded
-  // Le plancher = max des soldes EOD - drawdown, jamais < solde initial - drawdown
-  // Une fois le Safety Net atteint, le plancher ne peut plus passer sous le solde initial
+  // Trailing : Apex, Topstep, FTMO 1-Step, Lucid → max des soldes EOD - drawdown
+  // Statique : FTMO 2-Step (classique), Funding Pips → solde initial - drawdown figé
   function trailingFloor(acc, accTrades) {
     const startBalance = acc.capital || 50000;
     const rules        = ACCOUNT_RULES[startBalance] || {};
     const drawdown     = acc.maxDrawdown || rules.drawdown || 2000;
     const safetyNet    = rules.safetyNet || (drawdown + 100);
+
+    // Drawdown statique : pas de trailing, juste le plancher initial
+    const STATIC_FIRMS = new Set(['ftmo', 'fpips']);
+    if (STATIC_FIRMS.has(acc.firmKey)) {
+      const cumPnL = (acc.pnlOffset || 0) +
+        accTrades.reduce((s, t) => {
+          const c = trade(t);
+          return c.estimated ? s : s + (c.netPnl || 0);
+        }, 0);
+      return {
+        floor:             startBalance - drawdown,
+        balance:           startBalance + cumPnL,
+        drawdownConsumed:  Math.max(0, -cumPnL),
+        safetyNetReached:  cumPnL >= safetyNet,
+        isStatic:          true,
+      };
+    }
 
     // Cumul P&L par jour (trades fermés uniquement)
     const byDay = {};

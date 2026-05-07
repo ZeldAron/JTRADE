@@ -30,7 +30,7 @@
     const profit      = Math.max(0, adjustedPnL);
 
     const todayLoss = accTrades
-      .filter(tr => tr.date.startsWith(today) && tr.outcome === 'loss')
+      .filter(tr => UI.localDay(tr.date) === today && tr.outcome === 'loss')
       .reduce((sum, tr) => sum + Math.abs(Calc.trade(tr).netPnl || 0), 0);
 
     const days   = new Set(accTrades.map(tr => UI.localDay(tr.date))).size;
@@ -114,13 +114,13 @@
       : `<div style="font-size:11px;color:var(--muted);padding:6px 0">${t('goals.no.profit.data')}</div>`;
 
     const month       = today.slice(0, 7);
-    const monthTrades = accTrades.filter(tr => tr.date.startsWith(month));
+    const monthTrades = accTrades.filter(tr => (UI.localDay(tr.date) || '').startsWith(month));
     const monthStats  = UI.statsForTrades(monthTrades);
     const monthDays   = new Set(monthTrades.map(tr => UI.localDay(tr.date))).size;
     const monthlyGoal = acc.profitTarget ? Math.round(acc.profitTarget * 0.5) : 0;
 
     const todayLoss = accTrades
-      .filter(tr => tr.date.startsWith(today))
+      .filter(tr => UI.localDay(tr.date) === today)
       .reduce((sum, tr) => {
         const c = Calc.trade(tr);
         return c.netPnl < 0 ? sum + Math.abs(c.netPnl) : sum;

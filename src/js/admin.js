@@ -215,74 +215,27 @@ const Admin = (() => {
     }
   }
 
-  // ── Config Groq ───────────────────────────────────────────────────────────────
-  async function loadGroqConfig() {
-    try {
-      const snap = await _fbDb.collection('config').doc('groq').get();
-      return snap.exists ? (snap.data().key || '') : '';
-    } catch { return ''; }
-  }
-
-  async function saveGroqConfig(key) {
-    await _fbDb.collection('config').doc('groq').set({ key });
-  }
-
+  // ── Config Groq — DÉPRÉCIÉE depuis v0.9.82 ───────────────────────────────────
+  // La clé Groq est désormais stockée dans Google Secret Manager et utilisée
+  // exclusivement par la Cloud Function `analyzeChart`. Plus aucune lecture
+  // ni écriture client (rules Firestore : `allow read, write: if false`).
   async function renderConfig() {
     const wrap = $('tabConfig');
-    wrap.innerHTML = '<div class="admin-loading">Chargement…</div>';
-    const currentKey = await loadGroqConfig();
-
     wrap.innerHTML = `
-      <div style="max-width:520px">
-        <h3 style="margin:0 0 6px;font-size:15px">Clé API Groq (globale)</h3>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">
-          Cette clé est utilisée par tous les utilisateurs pour l'analyse IA des screenshots.<br>
-          Récupère-la sur <strong>console.groq.com</strong> → "API Keys".
+      <div style="max-width:560px">
+        <h3 style="margin:0 0 6px;font-size:15px">Clé API Groq</h3>
+        <p style="font-size:12px;color:var(--muted);line-height:1.6">
+          La clé Groq est désormais stockée dans <strong>Google Secret Manager</strong> et utilisée
+          uniquement par la Cloud Function <code>analyzeChart</code>.<br>
+          Plus aucune lecture/écriture côté client — la clé n'est jamais exposée au navigateur.
         </p>
-        <div style="display:flex;gap:8px">
-          <input type="password" id="groqConfigInput" value="${esc(currentKey)}"
-            placeholder="gsk_..."
-            style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:9px 12px;font-size:13px;font-family:monospace;outline:none">
-          <button class="btn-gen" id="btnSaveGroqConfig" style="padding:8px 18px">Sauvegarder</button>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:14px;font-family:monospace;font-size:12px;color:var(--muted);line-height:1.7">
+          # Mettre à jour la clé Groq :<br>
+          <span style="color:var(--text)">firebase functions:secrets:set GROQ_API_KEY</span><br>
+          # Redéployer ensuite :<br>
+          <span style="color:var(--text)">firebase deploy --only functions</span>
         </div>
-        <div id="groqConfigStatus" style="font-size:12px;margin-top:8px;min-height:16px;color:${currentKey ? 'var(--green)' : 'var(--muted)'}">
-          ${currentKey ? '✓ Clé configurée' : 'Aucune clé — IA désactivée pour tous les utilisateurs'}
-        </div>
-        ${currentKey ? `<button class="btn-revoke" id="btnClearGroqConfig" style="margin-top:12px;font-size:12px">Supprimer la clé</button>` : ''}
       </div>`;
-
-    $('btnSaveGroqConfig').addEventListener('click', async () => {
-      const key = $('groqConfigInput').value.trim();
-      if (key && !key.startsWith('gsk_')) {
-        $('groqConfigStatus').textContent = 'Clé invalide — doit commencer par gsk_';
-        $('groqConfigStatus').style.color = 'var(--red)';
-        return;
-      }
-      const btn = $('btnSaveGroqConfig');
-      btn.disabled = true;
-      btn.textContent = '…';
-      try {
-        await saveGroqConfig(key);
-        toast(key ? 'Clé Groq sauvegardée.' : 'Clé Groq supprimée.');
-        renderConfig();
-      } catch {
-        $('groqConfigStatus').textContent = 'Erreur lors de la sauvegarde — réessaie.';
-        $('groqConfigStatus').style.color = 'var(--red)';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Sauvegarder';
-      }
-    });
-
-    const clearBtn = $('btnClearGroqConfig');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', async () => {
-        if (!confirm('Supprimer la clé Groq ? L\'IA sera désactivée pour tous les utilisateurs.')) return;
-        await saveGroqConfig('');
-        toast('Clé Groq supprimée.');
-        renderConfig();
-      });
-    }
   }
 
   // ── Onglets ───────────────────────────────────────────────────────────────────

@@ -174,6 +174,7 @@ const Modal = (() => {
     ];
 
     // Appel via Cloud Function (clé Groq côté serveur, quota enforce côté serveur)
+    if (!_fbFunctions) throw new Error('Service IA indisponible — recharge la page.');
     const callable = _fbFunctions.httpsCallable('analyzeChart');
     let lastError = null;
 
@@ -571,7 +572,7 @@ const Modal = (() => {
       direction    = t.direction;
       parsedTrade  = { entry: t.entry, sl: t.sl, tp1: t.tp1, tp2: t.tp2, tp3: t.tp3, instrument: t.instrument };
       capital      = t.capital || capital;
-      feePerSide   = t.feePerSide || 2.14;
+      feePerSide   = (t.feePerSide != null) ? t.feePerSide : 2.14;
       spreadCost   = t.spreadCost != null ? t.spreadCost : (Store.getSpreads()[t.instrument] || 0);
 
       $('wContracts').value  = t.contracts;
@@ -601,7 +602,7 @@ const Modal = (() => {
         // Préserver feePerSide HISTORIQUE du trade : ne pas écraser avec la
         // valeur actuelle du compte (sinon les anciens trades changent de P&L
         // si l'utilisateur modifie les fees). Fallback sur compte si pas stocké.
-        feePerSide = (t.feePerSide != null) ? t.feePerSide : (acc.feePerSide || 2.14);
+        feePerSide = (t.feePerSide != null) ? t.feePerSide : ((acc.feePerSide != null ? acc.feePerSide : 2.14));
       }
       populateInstrumentSelect(firmKey, t.instrument);
       updateLotsInput(t.instrument);
@@ -616,7 +617,7 @@ const Modal = (() => {
       populateApexSelect(defaultAcc ? defaultAcc.name : '');
       if (defaultAcc) {
         capital    = defaultAcc.capital;
-        feePerSide = defaultAcc.feePerSide || 2.14;
+        feePerSide = (defaultAcc.feePerSide != null) ? defaultAcc.feePerSide : 2.14;
         firmKey    = defaultAcc.firmKey || 'apex';
       }
       goToStep(1);
@@ -691,7 +692,7 @@ const Modal = (() => {
             ...data,
             apex:       acc.name,
             capital:    acc.capital,
-            feePerSide: acc.feePerSide || 2.14,
+            feePerSide: (acc.feePerSide != null ? acc.feePerSide : 2.14),
             spreadCost: Store.getSpreadsByFirm(acc.firmKey || 'apex')[data.instrument] || 0,
             groupId,
           });
@@ -794,14 +795,14 @@ const Modal = (() => {
         const firstAcc = grp && grp.accountIds && grp.accountIds.length
           ? Store.getMyAccountById(grp.accountIds[0]) : null;
         capital    = firstAcc ? firstAcc.capital + (firstAcc.pnlOffset || 0) : (Store.getSettings().capital || 50000);
-        feePerSide = firstAcc ? (firstAcc.feePerSide || 2.14) : 2.14;
+        feePerSide = (firstAcc && firstAcc.feePerSide != null) ? firstAcc.feePerSide : 2.14;
         firmKey    = firstAcc?.firmKey || 'apex';
         if (firstAcc) $('wContracts').max = firstAcc.maxContracts;
       } else {
         const acc = Store.getMyAccountByName(val);
         if (acc) {
           capital              = acc.capital + (acc.pnlOffset || 0);
-          feePerSide           = acc.feePerSide || 2.14;
+          feePerSide           = (acc.feePerSide != null ? acc.feePerSide : 2.14);
           firmKey              = acc.firmKey || 'apex';
           $('wContracts').max  = acc.maxContracts;
         } else {

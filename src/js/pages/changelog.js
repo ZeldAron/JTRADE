@@ -5,6 +5,32 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.90',
+      date: '2026-05-08',
+      time: '10:00',
+      tags: ['security', 'fix'],
+      title: '2e ultraréview — failles régression colmatées',
+      titleEn: '2nd ultra-review — regression flaws patched',
+      items: [
+        { type: 'fix', text: 'Bug critique : la lecture config/groq cassait tout le chargement Firestore depuis v0.9.89 (sync cross-device perdue). Supprimée — la clé Groq vit dans Secret Manager', textEn: 'Critical bug: config/groq read was breaking all Firestore loading since v0.9.89 (cross-device sync lost). Removed — Groq key lives in Secret Manager' },
+        { type: 'fix', text: 'firebase.json : ajout de la section firestore (sinon les rules ne se déploient pas avec firebase deploy)', textEn: 'firebase.json: added firestore section (rules were not deployed with firebase deploy)' },
+        { type: 'fix', text: 'updateTrade : merge des données partielles AVANT sanitize (ne plus écraser apex/setup/notes/contracts par les valeurs par défaut)', textEn: 'updateTrade: partial data merge BEFORE sanitize (no longer overwrites apex/setup/notes/contracts with defaults)' },
+        { type: 'fix', text: 'importTrades passe maintenant par _sanitizeTrade — validation stricte identique à addTrade (anti-injection JSON)', textEn: 'importTrades now goes through _sanitizeTrade — same strict validation as addTrade (JSON injection-proof)' },
+        { type: 'security', text: 'Validation d\'unicité du nom de compte (impossible de créer 2 comptes avec le même nom — empêchait le rattachement correct des trades)', textEn: 'Account name uniqueness validation (cannot create 2 accounts with the same name — was breaking trade-account linking)' },
+        { type: 'security', text: 'IDs trades anti-collision : timestamp + 6 chars random (avant : Date.now() seul → collisions sur enregistrement de groupes)', textEn: 'Anti-collision trade IDs: timestamp + 6 random chars (before: Date.now() alone → collisions on group save)' },
+        { type: 'security', text: 'Cloud Function analyzeChart : rollback du quota si Groq échoue (ne plus consommer le quota du user pour rien)', textEn: 'analyzeChart Cloud Function: quota rollback if Groq fails (no longer wastes user quota)' },
+        { type: 'security', text: 'Cloud Function notifyNewSignup : flag idempotent posé AVANT envoi (anti race-condition double-clic) + vérification creationTime (immuable, contrairement à auth_time)', textEn: 'notifyNewSignup Cloud Function: idempotent flag set BEFORE send (anti double-click race) + creationTime check (immutable, unlike auth_time)' },
+        { type: 'security', text: 'Cloud Function sendContactMessage : email_verified obligatoire (anti-spoofing renforcé)', textEn: 'sendContactMessage Cloud Function: email_verified required (reinforced anti-spoofing)' },
+        { type: 'fix', text: 'manualPnl forcé à null si outcome=open dans _sanitizeTrade (ne plus polluer les stats si l\'utilisateur passe le trade à win/loss plus tard)', textEn: 'manualPnl forced to null if outcome=open in _sanitizeTrade (no longer pollutes stats if user later switches to win/loss)' },
+        { type: 'fix', text: 'Migration auto au login : firmKey legacy ftmo→ftmo1step pour FTMO 1-Step + hydratation capital/feePerSide pour anciens trades', textEn: 'Auto-migration on login: legacy ftmo→ftmo1step firmKey for FTMO 1-Step + capital/feePerSide hydration for old trades' },
+        { type: 'fix', text: 'feePerSide=0 (Funding Pips) maintenant correctement géré partout (avant : remplacé par 2.14 à cause des `||`)', textEn: 'feePerSide=0 (Funding Pips) now correctly handled everywhere (before: replaced by 2.14 due to `||`)' },
+        { type: 'fix', text: 'Calc.trailingFloor : drawdown statique pour FTMO 2-Step et Funding Pips (au lieu de trailing partout)', textEn: 'Calc.trailingFloor: static drawdown for FTMO 2-Step and Funding Pips (instead of trailing everywhere)' },
+        { type: 'fix', text: 'Filtres de date : utilisation de UI.localDay() partout (cohérence client/serveur sur les bordures de fuseau)', textEn: 'Date filters: UI.localDay() used everywhere (client/server consistency on timezone borders)' },
+        { type: 'fix', text: 'Null-check sur _fbFunctions (message d\'erreur clair si SDK Functions ne charge pas)', textEn: 'Null-check on _fbFunctions (clear error if Functions SDK fails to load)' },
+        { type: 'fix', text: 'Clés i18n manquantes ajoutées (auth.err.username.length/chars, contact.err.wait)', textEn: 'Missing i18n keys added (auth.err.username.length/chars, contact.err.wait)' },
+      ],
+    },
+    {
       version: '0.9.89',
       date: '2026-05-07',
       time: '21:30',
