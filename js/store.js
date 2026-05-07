@@ -155,29 +155,38 @@ const Store = (() => {
   //  - Comptes FTMO 1-Step créés avant v0.9.89 ont firmKey:'ftmo' au lieu de 'ftmo1step'
   //  - Trades anciens n'ont pas capital/feePerSide stockés → on les hydrate
   //    depuis le compte associé (apex) si présent
+  // Tout est wrapped en try/catch pour ne JAMAIS bloquer le login.
   function _migrateLegacyData() {
-    let migrated = false;
-    // 1. firmKey legacy pour FTMO 1-Step
-    myAccounts.forEach(a => {
-      if (a.firmKey === 'ftmo' && /1[-\s]step/i.test(a.name || '')) {
-        a.firmKey = 'ftmo1step';
-        migrated = true;
+    try {
+      let migrated = false;
+      // 1. firmKey legacy pour FTMO 1-Step
+      if (Array.isArray(myAccounts)) {
+        myAccounts.forEach(a => {
+          if (a && a.firmKey === 'ftmo' && /1[-\s]step/i.test(String(a.name || ''))) {
+            a.firmKey = 'ftmo1step';
+            migrated = true;
+          }
+        });
       }
-    });
-    // 2. capital + feePerSide manquants sur les trades : hydrater depuis le compte
-    const accByName = Object.fromEntries(myAccounts.map(a => [a.name, a]));
-    trades.forEach(t => {
-      if (t.apex && (t.capital == null || t.feePerSide == null)) {
-        const acc = accByName[t.apex];
-        if (acc) {
-          if (t.capital    == null) { t.capital    = acc.capital + (acc.pnlOffset || 0); migrated = true; }
-          if (t.feePerSide == null) { t.feePerSide = (acc.feePerSide != null) ? acc.feePerSide : 2.14; migrated = true; }
-        }
+      // 2. capital + feePerSide manquants sur les trades : hydrater depuis le compte
+      if (Array.isArray(trades) && Array.isArray(myAccounts)) {
+        const accByName = Object.fromEntries(myAccounts.filter(a => a && a.name).map(a => [a.name, a]));
+        trades.forEach(t => {
+          if (t && t.apex && (t.capital == null || t.feePerSide == null)) {
+            const acc = accByName[t.apex];
+            if (acc) {
+              if (t.capital    == null) { t.capital    = (acc.capital || 0) + (acc.pnlOffset || 0); migrated = true; }
+              if (t.feePerSide == null) { t.feePerSide = (acc.feePerSide != null) ? acc.feePerSide : 2.14; migrated = true; }
+            }
+          }
+        });
       }
-    });
-    if (migrated) {
-      _saveMyAccounts();
-      _saveTrades();
+      if (migrated) {
+        try { _saveMyAccounts(); } catch (e) { console.warn('[Migrate] saveMyAccounts failed', e); }
+        try { _saveTrades(); }    catch (e) { console.warn('[Migrate] saveTrades failed', e); }
+      }
+    } catch (e) {
+      console.warn('[Migrate] error (non-blocking)', e);
     }
   }
 
