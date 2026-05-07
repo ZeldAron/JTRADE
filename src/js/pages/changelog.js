@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.74',
+      date: '2026-05-07',
+      time: '01:30',
+      tags: ['feat'],
+      title: 'Landing — DA harmonisée avec la page Offres',
+      titleEn: 'Landing — DA harmonised with the Offers page',
+      items: [
+        { type: 'feat', text: 'La section tarifs de la landing reprend exactement la même direction artistique que la page Offres (cartes, badges, couleurs Pro violet / Lifetime ambre, CTAs alignés)', textEn: 'The landing pricing section now uses the exact same design as the Offers page (cards, badges, Pro purple / Lifetime amber colors, aligned CTAs)' },
+        { type: 'feat', text: 'CSS landing simplifié : suppression des classes lp-plan dupliquées au profit des classes offer-card unifiées', textEn: 'Simplified landing CSS: removed duplicate lp-plan classes in favor of unified offer-card classes' },
+      ],
+    },
+    {
       version: '0.9.73',
       date: '2026-05-07',
       time: '00:30',

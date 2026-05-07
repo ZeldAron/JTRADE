@@ -1305,44 +1305,8 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 .lp-pricing h2    { font-size: 30px; font-weight: 600; margin: 0 0 10px; }
 .lp-pricing-sub   { font-size: 13px; color: var(--muted); margin-bottom: 40px; }
-.lp-plans         { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 1100px; margin: 0 auto; align-items: stretch; }
-.lp-plan {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 30px 26px;
-  text-align: left;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-.lp-plan ul { flex: 1; }
-.lp-plan-pro {
-  border-color: rgba(10,132,255,0.4);
-  box-shadow: 0 0 0 1px rgba(10,132,255,0.1), 0 8px 32px rgba(10,132,255,0.1);
-}
-.lp-plan-lt {
-  border-color: rgba(217,119,6,0.4);
-  box-shadow: 0 0 0 1px rgba(217,119,6,0.1), 0 8px 32px rgba(217,119,6,0.08);
-}
-.lp-plan-badge {
-  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-  background: var(--accent); color: #fff;
-  font-size: 9px; font-weight: 800; letter-spacing: 0.1em;
-  padding: 3px 12px; border-radius: 99px;
-  white-space: nowrap;
-}
-.lp-plan-badge-basic { background: var(--muted); color: #fff; }
-.lp-plan-badge-lt    { background: linear-gradient(135deg, #d97706, #f59e0b); color: #fff; }
-.lp-plan h3         { font-size: 15px; font-weight: 700; margin: 0 0 10px; }
-.lp-price           { font-size: 26px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-.lp-price-sub       { font-size: 11px; color: var(--muted); margin-bottom: 22px; }
-.lp-plan ul         { list-style: none; padding: 0; margin: 0 0 26px; display: flex; flex-direction: column; gap: 9px; }
-.lp-plan li         { font-size: 12px; color: var(--text); display: flex; align-items: center; gap: 8px; }
-.lp-li-no           { color: var(--muted); }
-.lp-ok              { color: var(--accent); font-weight: 700; flex-shrink: 0; }
-.lp-no              { color: var(--muted2); flex-shrink: 0; }
-.lp-plan-btn        { width: 100%; justify-content: center; }
+/* Landing — utilise les classes .offer-card de la page Offres pour cohérence */
+.lp-offers-cards { max-width: 1100px; margin: 0 auto; }
 
 .lp-footer {
   text-align: center;
@@ -1396,12 +1360,8 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   .lp-hero    { padding: 60px 20px 50px; }
   .lp-hero h1 { font-size: 36px; }
   .lp-feat-grid { grid-template-columns: 1fr 1fr; }
-  .lp-plans   { grid-template-columns: 1fr; max-width: 420px; }
   .lp-features, .lp-pricing { padding-left: 20px; padding-right: 20px; }
   .lp-nav-actions .lp-nav-btn { display: none; }
-}
-@media (min-width: 769px) and (max-width: 1024px) {
-  .lp-plans { grid-template-columns: 1fr 1fr; max-width: 720px; }
 }
 
 /* ─── LOGIN SCREEN (legacy, inutilisé mais conservé) ─── */
