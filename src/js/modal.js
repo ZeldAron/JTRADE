@@ -174,7 +174,7 @@ const Modal = (() => {
     ];
 
     // Appel via Cloud Function (clé Groq côté serveur, quota enforce côté serveur)
-    const callable = firebase.functions('europe-west1').httpsCallable('analyzeChart');
+    const callable = _fbFunctions.httpsCallable('analyzeChart');
 
     for (const model of GROQ_MODELS) {
       let data;
