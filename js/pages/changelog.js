@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.78',
+      date: '2026-05-07',
+      time: '04:30',
+      tags: ['security'],
+      title: 'Firebase App Check (reCAPTCHA Enterprise) activé',
+      titleEn: 'Firebase App Check (reCAPTCHA Enterprise) enabled',
+      items: [
+        { type: 'security', text: 'App Check activé : chaque requête vers Firestore et Auth est désormais vérifiée par reCAPTCHA Enterprise — bloque les bots et requêtes non légitimes depuis d\'autres domaines', textEn: 'App Check enabled: every request to Firestore and Auth is now verified by reCAPTCHA Enterprise — blocks bots and illegitimate requests from other domains' },
+        { type: 'security', text: 'SDK Firebase App Check ajouté avec SRI (intégrité du script vérifiée)', textEn: 'Firebase App Check SDK added with SRI (script integrity verified)' },
+        { type: 'security', text: 'CSP étendue pour autoriser google.com et recaptcha.net (nécessaires au fonctionnement de reCAPTCHA Enterprise)', textEn: 'CSP extended to allow google.com and recaptcha.net (required by reCAPTCHA Enterprise)' },
+      ],
+    },
+    {
       version: '0.9.77',
       date: '2026-05-07',
       time: '04:00',
