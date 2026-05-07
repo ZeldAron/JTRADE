@@ -48,7 +48,7 @@ const Auth = (() => {
     // Sanitize strict (mêmes règles qu'au form HTML : alphanum + _ + -)
     const safeName  = name.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 30);
     if (safeName.length < 2) return { error: i18n.t('auth.err.username.chars') || 'Pseudo invalide.' };
-    const safeEmail = String(email).replace(/[\r\n\t\f\v  ]/g, '').slice(0, 254);
+    const safeEmail = String(email).replace(/[\s]/g, '').slice(0, 254);
     try {
       const cred = await _fbAuth.createUserWithEmailAndPassword(safeEmail, password);
       await cred.user.updateProfile({ displayName: safeName });
