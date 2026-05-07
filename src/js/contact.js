@@ -1,7 +1,7 @@
 // ─── WIDGET CONTACT ───────────────────────────────────────────────────────────
+// Envoi via Cloud Function (clé Web3Forms côté serveur, jamais exposée client)
 
 const Contact = (() => {
-  const WEB3FORMS_KEY = '465a3d27-6989-4226-8bb1-c5e70e9704c5';
   let _lastSubmit = 0;
 
   function init() {
@@ -61,33 +61,25 @@ const Contact = (() => {
     label.textContent = i18n.t('contact.sending');
 
     try {
+      // Vérifie qu'un utilisateur est connecté (la CF exige auth)
+      if (!_fbAuth || !_fbAuth.currentUser) {
+        error.textContent = 'Connecte-toi pour envoyer un message.';
+        btn.disabled      = false;
+        label.textContent = i18n.t('contact.send');
+        return;
+      }
+
       const plan = (() => { try { return Store.isPro() ? 'Pro' : 'Basic'; } catch { return '?'; } })();
-      const ctrl = new AbortController();
-      const tmr  = setTimeout(() => ctrl.abort(), 15_000);
-      const res  = await fetch('https://api.web3forms.com/submit', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        signal:  ctrl.signal,
-        body: JSON.stringify({
-          access_key: WEB3FORMS_KEY,
-          subject:    `[ZeldTrade] Message de ${name}`,
-          from_name:  name,
-          email,
-          message,
-          plan,
-          'h-captcha-response': captchaToken,
-        }),
-      });
-      clearTimeout(tmr);
-      const data = await res.json();
-      if (data.success) {
+      const callable = _fbFunctions.httpsCallable('sendContactMessage');
+      const result   = await callable({ name, email, message, plan });
+      if (result.data?.ok) {
         _lastSubmit = Date.now();
         document.getElementById('contactForm').style.display    = 'none';
         document.getElementById('contactSuccess').style.display = 'flex';
       } else {
-        throw new Error(data.message || i18n.t('contact.err.server'));
+        throw new Error('Échec d\'envoi');
       }
-    } catch {
+    } catch (e) {
       // Reset hCaptcha pour permettre un nouvel essai
       try {
         const widget = document.querySelector('#contactForm .h-captcha');
@@ -95,7 +87,15 @@ const Contact = (() => {
           hcaptcha.reset(widget.dataset.hcaptchaWidgetId);
         }
       } catch {}
-      error.textContent = i18n.t('contact.err.send');
+      const code = e.code || '';
+      const msg  = e.message || '';
+      if (code === 'functions/resource-exhausted' || code === 'resource-exhausted') {
+        error.textContent = msg;
+      } else if (code === 'functions/invalid-argument' || code === 'invalid-argument') {
+        error.textContent = 'Champ invalide : ' + msg;
+      } else {
+        error.textContent = i18n.t('contact.err.send');
+      }
       btn.disabled      = false;
       label.textContent = i18n.t('contact.send');
     }
