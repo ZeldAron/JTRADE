@@ -63,20 +63,29 @@ const Calc = (() => {
     // Reward net prévu (pour la planification avant clôture)
     const netRewardUSD = rewardUSD - totalFees;
 
-    // P&L : exitPrice explicite > outcome estimé > TP1 potentiel pour open
+    // P&L : manualPnl saisi par l'utilisateur > exitPrice explicite > outcome estimé > TP1 potentiel
     let pnl    = null;
     let netPnl = null;
     let estimated = false;
-    const resolvedExit = t.exitPrice != null ? t.exitPrice
-      : t.outcome === 'win'  ? t.tp1
-      : t.outcome === 'loss' ? t.sl
-      : t.outcome === 'be'   ? t.entry
-      : t.tp1;   // open : P&L potentiel si TP atteint
-    if (resolvedExit != null && resolvedExit !== undefined) {
-      const pts = isLong ? resolvedExit - t.entry : t.entry - resolvedExit;
-      pnl      = pts * pv * t.contracts;
-      netPnl   = pnl - totalFees;
-      estimated = t.exitPrice == null;
+    const hasManualPnl = t.manualPnl != null && t.manualPnl !== '' && !isNaN(Number(t.manualPnl));
+
+    if (hasManualPnl) {
+      // L'utilisateur a saisi un P&L net : il prime sur tout calcul
+      netPnl    = Number(t.manualPnl);
+      pnl       = netPnl + totalFees; // brut reconstitué (info uniquement)
+      estimated = false;
+    } else {
+      const resolvedExit = t.exitPrice != null ? t.exitPrice
+        : t.outcome === 'win'  ? t.tp1
+        : t.outcome === 'loss' ? t.sl
+        : t.outcome === 'be'   ? t.entry
+        : t.tp1;   // open : P&L potentiel si TP atteint
+      if (resolvedExit != null && resolvedExit !== undefined) {
+        const pts = isLong ? resolvedExit - t.entry : t.entry - resolvedExit;
+        pnl      = pts * pv * t.contracts;
+        netPnl   = pnl - totalFees;
+        estimated = t.exitPrice == null;
+      }
     }
 
     return {
