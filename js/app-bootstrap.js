@@ -26,7 +26,16 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { if ($(focus[mode])) $(focus[mode]).focus(); }, 60);
   }
   function openModal(mode) { showForm(mode); authModal.style.display = 'flex'; }
-  function closeModal()    { authModal.style.display = 'none'; }
+  function closeModal() {
+    authModal.style.display = 'none';
+    // Vide les champs sensibles à la fermeture
+    ['loginPassword','regPassword','regPasswordConfirm','forgotEmail','loginUsername','regUsername','regEmail'].forEach(id => {
+      const el = $(id); if (el) el.value = '';
+    });
+    ['loginError','registerError','forgotError'].forEach(id => {
+      const el = $(id); if (el) { el.textContent = ''; el.style.color = ''; }
+    });
+  }
 
   $('btnNavLogin').addEventListener('click',    () => openModal('login'));
   $('btnNavRegister').addEventListener('click', () => openModal('register'));

@@ -8,7 +8,10 @@
 
   async function fetchEurUsd() {
     try {
-      const res  = await fetch('https://api.frankfurter.app/latest?from=USD&to=EUR');
+      const ctrl = new AbortController();
+      const tmr  = setTimeout(() => ctrl.abort(), 10_000);
+      const res  = await fetch('https://api.frankfurter.app/latest?from=USD&to=EUR', { signal: ctrl.signal });
+      clearTimeout(tmr);
       if (!res.ok) return null;
       const data = await res.json();
       const rate = data?.rates?.EUR;
