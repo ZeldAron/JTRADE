@@ -52,6 +52,9 @@ const Auth = (() => {
       const cred = await _fbAuth.createUserWithEmailAndPassword(safeEmail, password);
       await cred.user.updateProfile({ displayName: safeName });
 
+      // Envoie l'email de vérification (non bloquant — l'utilisateur peut continuer sans)
+      cred.user.sendEmailVerification().catch(() => {});
+
       // Notif admin via Web3Forms (captcha requis maintenant que hCaptcha est activé)
       if (captchaToken) {
         const ctrl = new AbortController();

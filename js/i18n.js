@@ -1152,6 +1152,9 @@ const i18n = (() => {
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.dataset.i18n;
       if (el.dataset.i18nHtml) {
+        // SECURITY: safe car `dict` est statique et inclus dans le bundle.
+        // Si jamais les traductions venaient d'une source distante, il faudrait
+        // les sanitiser avec DOMPurify avant cette assignation.
         el.innerHTML = t(key);
       } else {
         el.textContent = t(key);
