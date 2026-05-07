@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.73',
+      date: '2026-05-07',
+      time: '00:30',
+      tags: ['feat'],
+      title: 'Landing page — 3 offres affichées (Basic / Pro / Lifetime)',
+      titleEn: 'Landing page — 3 plans displayed (Basic / Pro / Lifetime)',
+      items: [
+        { type: 'feat', text: 'Ajout de l\'offre Lifetime sur la landing page (3 cartes côte à côte au lieu de 2)', textEn: 'Added Lifetime plan on the landing page (3 cards side by side instead of 2)' },
+        { type: 'feat', text: 'Badges visuels harmonisés avec la page Offres (BASIC, LE PLUS POPULAIRE, LIFETIME)', textEn: 'Visual badges harmonised with the Offers page (BASIC, MOST POPULAR, LIFETIME)' },
+        { type: 'feat', text: 'Mention plus précise des fonctionnalités par plan (calculatrice de position, simulateur fiscal, vote roadmap…)', textEn: 'More precise feature listing per plan (position calculator, tax simulator, roadmap vote…)' },
+      ],
+    },
+    {
       version: '0.9.72',
       date: '2026-05-06',
       time: '17:30',

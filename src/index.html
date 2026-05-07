@@ -24,7 +24,7 @@
   <title>ZeldTrade</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=0.9.72">
+  <link rel="stylesheet" href="css/style.css?v=0.9.73">
 </head>
 <body>
 
@@ -88,10 +88,11 @@
     <!-- Pricing -->
     <section class="lp-pricing">
       <h2>Tarifs simples</h2>
-      <p class="lp-pricing-sub">Commence gratuitement, passe PRO quand tu es prêt.</p>
+      <p class="lp-pricing-sub">Commence gratuitement, passe PRO ou LIFETIME quand tu es prêt.</p>
       <div class="lp-plans">
 
         <div class="lp-plan">
+          <div class="lp-plan-badge lp-plan-badge-basic">BASIC</div>
           <h3>Basic</h3>
           <div class="lp-price">Gratuit</div>
           <div class="lp-price-sub">Pour toujours</div>
@@ -100,6 +101,7 @@
             <li><span class="lp-ok">✓</span> Dashboard performances</li>
             <li><span class="lp-ok">✓</span> 1 compte prop firm</li>
             <li><span class="lp-ok">✓</span> Règles prop firms intégrées</li>
+            <li><span class="lp-ok">✓</span> Calculatrice de position</li>
             <li class="lp-li-no"><span class="lp-no">✗</span> Analytics avancées</li>
             <li class="lp-li-no"><span class="lp-no">✗</span> IA Vision</li>
           </ul>
@@ -107,19 +109,36 @@
         </div>
 
         <div class="lp-plan lp-plan-pro">
-          <div class="lp-plan-badge">PRO</div>
+          <div class="lp-plan-badge">LE PLUS POPULAIRE</div>
           <h3>Pro</h3>
-          <div class="lp-price">Code d'accès</div>
-          <div class="lp-price-sub">Accès complet à vie</div>
+          <div class="lp-price">🔒 Bientôt</div>
+          <div class="lp-price-sub">Accès complet — abonnement</div>
           <ul>
             <li><span class="lp-ok">✓</span> Tout Basic, sans limites</li>
             <li><span class="lp-ok">✓</span> Comptes illimités</li>
-            <li><span class="lp-ok">✓</span> Analytics complètes</li>
-            <li><span class="lp-ok">✓</span> IA Vision (screenshots)</li>
+            <li><span class="lp-ok">✓</span> Analytics complètes (sessions, heures)</li>
+            <li><span class="lp-ok">✓</span> IA Vision Groq (screenshots)</li>
             <li><span class="lp-ok">✓</span> Groupes de comptes</li>
+            <li><span class="lp-ok">✓</span> Simulateur fiscal micro-entrepreneur</li>
             <li><span class="lp-ok">✓</span> Support prioritaire</li>
           </ul>
           <button class="lp-plan-btn lp-cta-btn lp-cta-primary" id="btnLandingPro">Obtenir un code PRO</button>
+        </div>
+
+        <div class="lp-plan lp-plan-lt">
+          <div class="lp-plan-badge lp-plan-badge-lt">LIFETIME</div>
+          <h3>Lifetime</h3>
+          <div class="lp-price">🔒 Bientôt</div>
+          <div class="lp-price-sub">Paiement unique — accès à vie</div>
+          <ul>
+            <li><span class="lp-ok">✓</span> Tout Pro, sans limites</li>
+            <li><span class="lp-ok">✓</span> Accès à vie — pas d'abonnement</li>
+            <li><span class="lp-ok">✓</span> Toutes les futures fonctionnalités</li>
+            <li><span class="lp-ok">✓</span> Support prioritaire à vie</li>
+            <li><span class="lp-ok">✓</span> Badge Lifetime</li>
+            <li><span class="lp-ok">✓</span> Vote sur la roadmap</li>
+          </ul>
+          <button class="lp-plan-btn lp-cta-btn lp-cta-ghost" id="btnLandingLifetime">Obtenir Lifetime</button>
         </div>
 
       </div>
@@ -610,7 +629,7 @@
 
           <div class="settings-section">
             <h3 data-i18n="set.about">À propos</h3>
-            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.72</span></div>
+            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.73</span></div>
             <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
           </div>
         </div>
@@ -804,28 +823,28 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="js/firebase.js?v=0.9.72"></script>
+  <script src="js/firebase.js?v=0.9.73"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
-  <script src="js/i18n.js?v=0.9.72"></script>
-  <script src="js/auth.js?v=0.9.72"></script>
-  <script src="js/store.js?v=0.9.72"></script>
-  <script src="js/calc.js?v=0.9.72"></script>
-  <script src="js/modal.js?v=0.9.72"></script>
-  <script src="js/ui.js?v=0.9.72"></script>
-  <script src="js/pages/dashboard.js?v=0.9.72"></script>
-  <script src="js/pages/analytics.js?v=0.9.72"></script>
-  <script src="js/pages/settings.js?v=0.9.72"></script>
-  <script src="js/pages/goals.js?v=0.9.72"></script>
-  <script src="js/pages/calendar.js?v=0.9.72"></script>
-  <script src="js/pages/micro.js?v=0.9.72"></script>
-  <script src="js/pages/outils.js?v=0.9.72"></script>
-  <script src="js/pages/offers.js?v=0.9.72"></script>
-  <script src="js/pages/changelog.js?v=0.9.72"></script>
-  <script src="js/contact.js?v=0.9.72"></script>
-  <script src="js/app.js?v=0.9.72"></script>
+  <script src="js/i18n.js?v=0.9.73"></script>
+  <script src="js/auth.js?v=0.9.73"></script>
+  <script src="js/store.js?v=0.9.73"></script>
+  <script src="js/calc.js?v=0.9.73"></script>
+  <script src="js/modal.js?v=0.9.73"></script>
+  <script src="js/ui.js?v=0.9.73"></script>
+  <script src="js/pages/dashboard.js?v=0.9.73"></script>
+  <script src="js/pages/analytics.js?v=0.9.73"></script>
+  <script src="js/pages/settings.js?v=0.9.73"></script>
+  <script src="js/pages/goals.js?v=0.9.73"></script>
+  <script src="js/pages/calendar.js?v=0.9.73"></script>
+  <script src="js/pages/micro.js?v=0.9.73"></script>
+  <script src="js/pages/outils.js?v=0.9.73"></script>
+  <script src="js/pages/offers.js?v=0.9.73"></script>
+  <script src="js/pages/changelog.js?v=0.9.73"></script>
+  <script src="js/contact.js?v=0.9.73"></script>
+  <script src="js/app.js?v=0.9.73"></script>
 
-  <script src="js/app-bootstrap.js?v=0.9.72"></script>
+  <script src="js/app-bootstrap.js?v=0.9.73"></script>
 
   <!-- CONTACT WIDGET ──────────────────────────────────────────────────────── -->
   <div id="contactWidget">
