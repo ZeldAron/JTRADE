@@ -760,7 +760,7 @@
         else if (['short','sell','s','sto','sell to open','vente'].includes(dirRaw)) direction = 'short';
         else { skipped++; continue; }
 
-        const contracts = Math.max(1, Math.min(999, parseInt(gf('contracts')) || 1));
+        const contracts = Math.max(0.01, Math.min(999, parseFloat(gf('contracts')) || 1));
         const entry     = parseFloat(gf('entry').replace(',','.'))     || null;
         const sl        = parseFloat(gf('sl').replace(',','.'))        || null;
         const tp1       = parseFloat(gf('tp1').replace(',','.'))       || null;

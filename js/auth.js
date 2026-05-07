@@ -45,8 +45,10 @@ const Auth = (() => {
   async function register(username, password, email, captchaToken) {
     const name = username.trim();
     if (!name || !password || !email) return { error: i18n.t('auth.err.required') };
-    const safeName  = name.replace(/[\r\n]/g, '').slice(0, 100);
-    const safeEmail = String(email).replace(/[\r\n]/g, '').slice(0, 254);
+    // Sanitize strict (mêmes règles qu'au form HTML : alphanum + _ + -)
+    const safeName  = name.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 30);
+    if (safeName.length < 2) return { error: i18n.t('auth.err.username.chars') || 'Pseudo invalide.' };
+    const safeEmail = String(email).replace(/[\r\n\t\f\v  ]/g, '').slice(0, 254);
     try {
       const cred = await _fbAuth.createUserWithEmailAndPassword(safeEmail, password);
       await cred.user.updateProfile({ displayName: safeName });

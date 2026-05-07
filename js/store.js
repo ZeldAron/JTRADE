@@ -27,11 +27,11 @@ const Store = (() => {
     { id: 'ftmo-100k',    firmKey: 'ftmo',    name: 'FTMO $100K',     capital: 100000, profitTarget: 10000, maxDrawdown: 10000, dailyLossLimit:  5000, maxContracts: 50, feePerSide: 2.50 },
     { id: 'ftmo-200k',    firmKey: 'ftmo',    name: 'FTMO $200K',     capital: 200000, profitTarget: 20000, maxDrawdown: 20000, dailyLossLimit: 10000, maxContracts: 50, feePerSide: 2.50 },
     // FTMO 1-Step Challenge (drawdown trailing 10%, daily loss 3%, 0 jours min, 90% split)
-    { id: 'ftmo1-10k',    firmKey: 'ftmo',    name: 'FTMO 1-Step $10K',   capital:  10000, profitTarget:  1000, maxDrawdown:  1000, dailyLossLimit:   300, maxContracts: 10, feePerSide: 2.50 },
-    { id: 'ftmo1-25k',    firmKey: 'ftmo',    name: 'FTMO 1-Step $25K',   capital:  25000, profitTarget:  2500, maxDrawdown:  2500, dailyLossLimit:   750, maxContracts: 20, feePerSide: 2.50 },
-    { id: 'ftmo1-50k',    firmKey: 'ftmo',    name: 'FTMO 1-Step $50K',   capital:  50000, profitTarget:  5000, maxDrawdown:  5000, dailyLossLimit:  1500, maxContracts: 30, feePerSide: 2.50 },
-    { id: 'ftmo1-100k',   firmKey: 'ftmo',    name: 'FTMO 1-Step $100K',  capital: 100000, profitTarget: 10000, maxDrawdown: 10000, dailyLossLimit:  3000, maxContracts: 50, feePerSide: 2.50 },
-    { id: 'ftmo1-200k',   firmKey: 'ftmo',    name: 'FTMO 1-Step $200K',  capital: 200000, profitTarget: 20000, maxDrawdown: 20000, dailyLossLimit:  6000, maxContracts: 50, feePerSide: 2.50 },
+    { id: 'ftmo1-10k',    firmKey: 'ftmo1step', name: 'FTMO 1-Step $10K',   capital:  10000, profitTarget:  1000, maxDrawdown:  1000, dailyLossLimit:   300, maxContracts: 10, feePerSide: 2.50 },
+    { id: 'ftmo1-25k',    firmKey: 'ftmo1step', name: 'FTMO 1-Step $25K',   capital:  25000, profitTarget:  2500, maxDrawdown:  2500, dailyLossLimit:   750, maxContracts: 20, feePerSide: 2.50 },
+    { id: 'ftmo1-50k',    firmKey: 'ftmo1step', name: 'FTMO 1-Step $50K',   capital:  50000, profitTarget:  5000, maxDrawdown:  5000, dailyLossLimit:  1500, maxContracts: 30, feePerSide: 2.50 },
+    { id: 'ftmo1-100k',   firmKey: 'ftmo1step', name: 'FTMO 1-Step $100K',  capital: 100000, profitTarget: 10000, maxDrawdown: 10000, dailyLossLimit:  3000, maxContracts: 50, feePerSide: 2.50 },
+    { id: 'ftmo1-200k',   firmKey: 'ftmo1step', name: 'FTMO 1-Step $200K',  capital: 200000, profitTarget: 20000, maxDrawdown: 20000, dailyLossLimit:  6000, maxContracts: 50, feePerSide: 2.50 },
     { id: 'lucid-25k',    firmKey: 'lucid',   name: 'Lucid $25K',     capital:  25000, profitTarget:  1500, maxDrawdown:  1500, dailyLossLimit:   300, maxContracts:  3,   feePerSide: 1.75 },
     { id: 'lucid-50k',    firmKey: 'lucid',   name: 'Lucid $50K',     capital:  50000, profitTarget:  3000, maxDrawdown:  3000, dailyLossLimit:   600, maxContracts:  5,   feePerSide: 1.75 },
     { id: 'lucid-100k',   firmKey: 'lucid',   name: 'Lucid $100K',    capital: 100000, profitTarget:  6000, maxDrawdown:  4500, dailyLossLimit:  1200, maxContracts: 10,   feePerSide: 1.75 },
@@ -279,7 +279,7 @@ const Store = (() => {
     return Math.max(min, Math.min(max, n));
   }
   function _sanitizeTrade(raw) {
-    return {
+    const out = {
       instrument: String(raw.instrument || '').replace(/[^A-Za-z0-9/. _-]/g, '').slice(0, 20) || 'MES1',
       direction:  DIRS.has(raw.direction)    ? raw.direction : 'long',
       outcome:    OUTCOMES.has(raw.outcome)  ? raw.outcome   : 'open',
@@ -295,9 +295,19 @@ const Store = (() => {
       tp3:        raw.tp3        != null ? _safeNum(raw.tp3,        -1e7, 1e7, null) : null,
       exitPrice:  raw.exitPrice  != null ? _safeNum(raw.exitPrice,  -1e7, 1e7, null) : null,
       manualPnl:  raw.manualPnl  != null ? _safeNum(raw.manualPnl,  -1e9, 1e9, null) : null,
+      // Snapshot du compte au moment du trade — préservé pour cohérence historique
+      capital:    raw.capital    != null ? _safeNum(raw.capital,     0,    1e9, null) : null,
+      feePerSide: raw.feePerSide != null ? _safeNum(raw.feePerSide,  0,    100, null) : null,
+      spreadCost: raw.spreadCost != null ? _safeNum(raw.spreadCost,  0,    1000, null) : null,
       pnl:        raw.pnl        != null ? _safeNum(raw.pnl,        -1e7, 1e7, null) : null,
       rr:         raw.rr         != null ? _safeNum(raw.rr,         -100, 100, null) : null,
     };
+    // groupId optionnel : utilisé pour lier les trades multi-comptes via groupes
+    if (raw.groupId) {
+      const safe = String(raw.groupId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+      if (safe) out.groupId = safe;
+    }
+    return out;
   }
 
   function addTrade(trade) {
@@ -517,11 +527,19 @@ const Store = (() => {
     if (typeof _aiUsage.date === 'string' && _aiUsage.date > today) return false;
     return _aiUsage.date !== today || _aiUsage.count < 1;
   }
-  function recordAnalysis() {
-    const today = localToday();
-    const next  = { date: today, count: _aiUsage.date === today ? _aiUsage.count + 1 : 1 };
-    _aiUsage = next;
-    fbSet('aiUsage', next);
+  // recordAnalysis() est désormais géré exclusivement par la Cloud Function
+  // (transaction atomique côté serveur, impossible à bypasser via DevTools).
+  // Le client ne peut plus écrire dans aiUsage — rule Firestore bloque.
+  // On garde la fonction pour rétro-compat mais elle est no-op.
+  function recordAnalysis() { /* no-op — handled server-side */ }
+
+  // Refetch aiUsage depuis Firestore (à appeler après une analyse réussie pour
+  // que canAnalyzeToday() côté client reste cohérent avec l'état serveur)
+  async function refreshAiUsage() {
+    try {
+      const snap = await userDoc('aiUsage').get();
+      if (snap.exists) _aiUsage = snap.data() || _aiUsage;
+    } catch {}
   }
 
   function canAddAccount() { return isPro() || myAccounts.length < 1; }
@@ -558,7 +576,7 @@ const Store = (() => {
     getMyAccounts, getMyAccountById, getMyAccountByName, addMyAccount, updateMyAccount, deleteMyAccount,
     getSpreads, updateSpreads, getSpreadsByFirm, getAllSpreadsByFirm, updateSpreadsByFirm,
     getGroups, getGroupById, addGroup, updateGroup, deleteGroup,
-    getPlanInfo, isPro, activatePro, canAnalyzeToday, recordAnalysis, canAddAccount,
+    getPlanInfo, isPro, activatePro, canAnalyzeToday, recordAnalysis, refreshAiUsage, canAddAccount,
     getStats,
   };
 })();
