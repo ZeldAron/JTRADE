@@ -175,6 +175,7 @@ const Modal = (() => {
 
     // Appel via Cloud Function (clé Groq côté serveur, quota enforce côté serveur)
     const callable = _fbFunctions.httpsCallable('analyzeChart');
+    let lastError = null;
 
     for (const model of GROQ_MODELS) {
       let data;
@@ -182,14 +183,20 @@ const Modal = (() => {
         const result = await callable({ model, prompt, imageB64 });
         data = result.data;
       } catch (e) {
+        lastError = e;
         const code = e.code || '';
         const msg  = e.message || '';
+        console.warn('[Groq via CF] error for', model, ':', code, msg, e);
         if (code === 'functions/unauthenticated' || code === 'unauthenticated')
           throw new Error('Tu dois être connecté pour analyser un screenshot.');
         if (code === 'functions/resource-exhausted' || code === 'resource-exhausted')
           throw new Error(msg || 'Limite quotidienne atteinte. Passe Pro pour des analyses illimitées.');
         if (code === 'functions/failed-precondition' || code === 'failed-precondition')
           throw new Error(i18n.t('modal.groq.invalid'));
+        if (code === 'functions/invalid-argument' || code === 'invalid-argument')
+          throw new Error('Requête invalide : ' + msg);
+        if (code === 'functions/internal' || code === 'internal')
+          throw new Error('Erreur serveur : ' + msg);
         // Erreur réseau ou modèle indisponible → essayer le suivant
         continue;
       }
@@ -228,6 +235,9 @@ const Modal = (() => {
       } catch { continue; }
     }
 
+    if (lastError) {
+      throw new Error('IA : ' + (lastError.message || lastError.code || 'erreur inconnue'));
+    }
     throw new Error(i18n.t('modal.groq.nomodel'));
   }
 

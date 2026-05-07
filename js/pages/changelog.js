@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.84',
+      date: '2026-05-07',
+      time: '09:00',
+      tags: ['security'],
+      title: 'Web3Forms via Cloud Function — clé jamais exposée',
+      titleEn: 'Web3Forms via Cloud Function — key never exposed',
+      items: [
+        { type: 'security', text: 'Le formulaire de contact passe maintenant par une Cloud Function — la clé Web3Forms est stockée comme secret côté serveur, jamais visible côté client', textEn: 'The contact form now goes through a Cloud Function — the Web3Forms key is stored as a server-side secret, never visible client-side' },
+        { type: 'security', text: 'La notification admin (nouvelle inscription) passe aussi par une Cloud Function dédiée', textEn: 'Admin notification (new signup) also goes through a dedicated Cloud Function' },
+        { type: 'security', text: 'Rate-limiting côté serveur sur le contact (1 message / 60s par utilisateur, stocké dans Firestore — impossible à bypasser)', textEn: 'Server-side rate-limiting on contact (1 message / 60s per user, stored in Firestore — impossible to bypass)' },
+        { type: 'security', text: 'CSP : api.web3forms.com retiré de connect-src et form-action — plus aucun appel direct depuis le client', textEn: 'CSP: api.web3forms.com removed from connect-src and form-action — no direct client calls anymore' },
+      ],
+    },
+    {
       version: '0.9.82',
       date: '2026-05-07',
       time: '08:00',
