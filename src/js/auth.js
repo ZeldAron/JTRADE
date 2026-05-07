@@ -2,9 +2,15 @@
 
 const Auth = (() => {
 
+  function _safeUsername(user) {
+    if (user.displayName) return user.displayName;
+    if (user.email && user.email.includes('@')) return user.email.split('@')[0];
+    return 'user';
+  }
+
   function getCurrentUser() {
     return _fbAuth.currentUser
-      ? { id: _fbAuth.currentUser.uid, username: _fbAuth.currentUser.displayName || _fbAuth.currentUser.email.split('@')[0] }
+      ? { id: _fbAuth.currentUser.uid, username: _safeUsername(_fbAuth.currentUser) }
       : null;
   }
 
@@ -22,7 +28,7 @@ const Auth = (() => {
   function onAuthReady(cb) {
     _fbAuth.onAuthStateChanged(user => {
       if (user) _storeUserEmail(user);
-      cb(user ? { id: user.uid, username: user.displayName || user.email.split('@')[0] } : null);
+      cb(user ? { id: user.uid, username: _safeUsername(user) } : null);
     });
   }
 
@@ -30,7 +36,7 @@ const Auth = (() => {
     try {
       const cred = await _fbAuth.signInWithEmailAndPassword(email, password);
       const user  = cred.user;
-      return { id: user.uid, username: user.displayName || user.email.split('@')[0] };
+      return { id: user.uid, username: _safeUsername(user) };
     } catch (e) {
       return null;
     }
@@ -39,23 +45,29 @@ const Auth = (() => {
   async function register(username, password, email) {
     const name = username.trim();
     if (!name || !password || !email) return { error: i18n.t('auth.err.required') };
+    // Sanitize CRLF (anti header-injection si transmis tel quel à un service mail)
+    const safeName  = name.replace(/[\r\n]/g, '').slice(0, 100);
+    const safeEmail = String(email).replace(/[\r\n]/g, '').slice(0, 254);
     try {
-      const cred = await _fbAuth.createUserWithEmailAndPassword(email, password);
-      await cred.user.updateProfile({ displayName: name });
+      const cred = await _fbAuth.createUserWithEmailAndPassword(safeEmail, password);
+      await cred.user.updateProfile({ displayName: safeName });
 
+      const ctrl = new AbortController();
+      setTimeout(() => ctrl.abort(), 10_000);
       fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal:  ctrl.signal,
         body: JSON.stringify({
           access_key: '465a3d27-6989-4226-8bb1-c5e70e9704c5',
-          subject:    `[ZeldTrade] Nouvel utilisateur : ${name}`,
+          subject:    `[ZeldTrade] Nouvel utilisateur : ${safeName}`,
           from_name:  'ZeldTrade Bot',
           email:      'zeldtradepro@gmail.com',
-          message:    `Nouvel inscrit !\n\nPseudo  : ${name}\nEmail   : ${email}\nDate    : ${new Date().toLocaleString('fr-FR')}`,
+          message:    `Nouvel inscrit !\n\nPseudo  : ${safeName}\nEmail   : ${safeEmail}\nDate    : ${new Date().toLocaleString('fr-FR')}`,
         }),
       }).catch(() => {});
 
-      return { user: { id: cred.user.uid, username: name } };
+      return { user: { id: cred.user.uid, username: safeName } };
     } catch (e) {
       if (e.code === 'auth/email-already-in-use') return { error: i18n.t('auth.err.taken') };
       if (e.code === 'auth/invalid-email')        return { error: i18n.t('auth.err.email') };
@@ -84,7 +96,8 @@ const Auth = (() => {
       const cred = firebase.auth.EmailAuthProvider.credential(email, password);
       await user.reauthenticateWithCredential(cred);
 
-      // Supprime toutes les données Firestore de l'utilisateur
+      // Supprime d'abord toutes les données Firestore — si une suppression échoue,
+      // l'utilisateur conserve son compte et peut réessayer (pas d'état orphelin).
       const dataRef = _fbDb.collection('users').doc(user.uid).collection('data');
       const snap    = await dataRef.get();
       await Promise.all(snap.docs.map(d => d.ref.delete()));
@@ -93,7 +106,7 @@ const Auth = (() => {
       // Nettoie le cache local
       try { Store.clearLocalCache(); } catch {}
 
-      // Supprime le compte Firebase Auth
+      // Supprime le compte Firebase Auth en dernier (point de non-retour)
       await user.delete();
       return { ok: true };
     } catch(e) {

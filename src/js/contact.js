@@ -55,9 +55,12 @@ const Contact = (() => {
 
     try {
       const plan = (() => { try { return Store.isPro() ? 'Pro' : 'Basic'; } catch { return '?'; } })();
+      const ctrl = new AbortController();
+      const tmr  = setTimeout(() => ctrl.abort(), 15_000);
       const res  = await fetch('https://api.web3forms.com/submit', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        signal:  ctrl.signal,
         body: JSON.stringify({
           access_key: WEB3FORMS_KEY,
           subject:    `[ZeldTrade] Message de ${name}`,
@@ -67,6 +70,7 @@ const Contact = (() => {
           plan,
         }),
       });
+      clearTimeout(tmr);
       const data = await res.json();
       if (data.success) {
         _lastSubmit = Date.now();

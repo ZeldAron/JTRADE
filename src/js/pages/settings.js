@@ -835,6 +835,9 @@
 
     $('btnClearAll').addEventListener('click', () => {
       if (!confirm(t('set.clear.confirm'))) return;
+      // Double confirmation textuelle pour éviter les clics accidentels (anti-vandalisme session)
+      const typed = prompt('Tape EFFACER pour confirmer la suppression de tous les trades :');
+      if (typed !== 'EFFACER') return;
       Store.clearTrades();
       UI.selectedId = null;
       UI.renderList();

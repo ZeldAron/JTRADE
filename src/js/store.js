@@ -479,7 +479,13 @@ const Store = (() => {
         return false;
       }
       const hdata = hashDoc.data();
-      if (hdata.uid !== _uid) {
+      // Constant-time string equality (défense en profondeur — timing attack théorique)
+      const a = String(hdata.uid || ''), b = String(_uid || '');
+      let diff = a.length ^ b.length;
+      for (let i = 0; i < Math.max(a.length, b.length); i++) {
+        diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+      }
+      if (diff !== 0) {
         _proAttempts++;
         if (_proAttempts >= 3) { _proThrottleUntil = Date.now() + 60_000; _proAttempts = 0; }
         return false;

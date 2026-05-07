@@ -314,29 +314,38 @@ const Admin = (() => {
     }
 
     btn.disabled = true;
+    // Anti-timing-attack : on garantit une durée minimale uniforme pour
+    // toutes les branches (succès, mauvais email, mauvais password, erreur réseau).
+    const start = Date.now();
+    const minDelay = 1500;
+    let success = false;
+    let user = null;
     try {
       const cred = await _fbAuth.signInWithEmailAndPassword(email, password);
       if (cred.user.email !== ADMIN_EMAIL) {
         await _fbAuth.signOut();
-        _adminLoginAttempts++;
-        if (_adminLoginAttempts >= 3) {
-          _adminLockedUntil = Date.now() + 5 * 60_000;
-          _adminLoginAttempts = 0;
-        }
-        errEl.textContent = 'Identifiants invalides.';
-        return;
+      } else {
+        success = true;
+        user = cred.user;
       }
-      _adminLoginAttempts = 0;
-      showDashboard(cred.user);
     } catch (e) {
+      // Identifiants invalides ou erreur réseau — traité comme un échec uniforme
+    }
+
+    const elapsed = Date.now() - start;
+    if (elapsed < minDelay) await new Promise(r => setTimeout(r, minDelay - elapsed));
+
+    btn.disabled = false;
+    if (success) {
+      _adminLoginAttempts = 0;
+      showDashboard(user);
+    } else {
       _adminLoginAttempts++;
       if (_adminLoginAttempts >= 3) {
         _adminLockedUntil = Date.now() + 5 * 60_000;
         _adminLoginAttempts = 0;
       }
       errEl.textContent = 'Identifiants invalides.';
-    } finally {
-      btn.disabled = false;
     }
   }
 

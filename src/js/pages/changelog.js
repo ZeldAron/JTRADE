@@ -5,6 +5,27 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.76',
+      date: '2026-05-07',
+      time: '03:30',
+      tags: ['security'],
+      title: 'Audit ligne par ligne — durcissement supplémentaire',
+      titleEn: 'Line-by-line audit — extra hardening',
+      items: [
+        { type: 'security', text: 'Codes Pro : lecture restreinte au destinataire dans les règles Firestore (anti-énumération)', textEn: 'Pro codes: read restricted to the assigned recipient in Firestore rules (anti-enumeration)' },
+        { type: 'security', text: 'CSP : restriction de connect-src aux hosts Firebase précis (au lieu de *.googleapis.com large)', textEn: 'CSP: connect-src restricted to specific Firebase hosts (instead of broad *.googleapis.com)' },
+        { type: 'security', text: 'SRI (Subresource Integrity) ajouté sur les scripts Firebase SDK — protection contre une compromission du CDN', textEn: 'SRI (Subresource Integrity) added on Firebase SDK scripts — protection against CDN compromise' },
+        { type: 'security', text: 'Login admin : protection anti-timing-attack (durée minimale uniforme de 1.5s, peu importe le résultat)', textEn: 'Admin login: anti-timing-attack protection (uniform 1.5s minimum duration regardless of outcome)' },
+        { type: 'security', text: 'Activation Pro : comparaison d\'UID en temps constant (défense en profondeur)', textEn: 'Pro activation: constant-time UID comparison (defense in depth)' },
+        { type: 'security', text: 'Suppression de tous les trades : seconde confirmation textuelle "EFFACER" requise (anti-vandalisme session)', textEn: 'Clear all trades: second textual confirmation "EFFACER" required (session anti-vandalism)' },
+        { type: 'security', text: 'Modal d\'authentification : effacement automatique des mots de passe à la fermeture', textEn: 'Auth modal: automatic password clearing on close' },
+        { type: 'security', text: 'Timeouts réseau ajoutés sur tous les fetch (Web3Forms 15s, Frankfurter 10s, Groq 30s déjà en place)', textEn: 'Network timeouts added on all fetches (Web3Forms 15s, Frankfurter 10s, Groq 30s already in place)' },
+        { type: 'security', text: 'Anti-injection CRLF : nettoyage des sauts de ligne dans le pseudo et l\'email avant envoi à Web3Forms', textEn: 'Anti-CRLF-injection: line-breaks stripped from username/email before sending to Web3Forms' },
+        { type: 'security', text: 'Liens "_blank" : ajout de rel="noopener noreferrer" partout (anti-tabnabbing)', textEn: '"_blank" links: rel="noopener noreferrer" added everywhere (anti-tabnabbing)' },
+        { type: 'security', text: 'Null-check sur email.split() — l\'app ne peut plus crasher si Firebase renvoie un user sans email', textEn: 'Null-check on email.split() — app no longer crashes if Firebase returns a user without email' },
+      ],
+    },
+    {
       version: '0.9.75',
       date: '2026-05-07',
       time: '02:30',
