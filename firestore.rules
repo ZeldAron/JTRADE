@@ -98,7 +98,8 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null
                    && request.auth.uid == userId
-                   && request.resource.data.keys().hasOnly(['apex', 'topstep', 'ftmo', 'lucid']);
+                   && request.resource.data.keys().hasOnly(['apex', 'topstep', 'ftmo', 'ftmo1step', 'lucid', 'fpips'])
+                   && request.resource.size() < 50000;
     }
 
     // ── Groupes — Pro uniquement ─────────────────────────────────────────────────

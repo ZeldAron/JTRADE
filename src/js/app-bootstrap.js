@@ -150,14 +150,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const username = $('regUsername').value.trim().slice(0, 30);
     const email    = $('regEmail').value.trim().slice(0, 254);
     const password = $('regPassword').value;
-    const confirm  = $('regPasswordConfirm').value;
+    const passwordConfirm = $('regPasswordConfirm').value;
     if (username.length < 2 || username.length > 30) { $('registerError').textContent = i18n.t('auth.err.username.length') || 'Le pseudo doit faire entre 2 et 30 caractères.'; return; }
     if (!/^[a-zA-Z0-9_-]+$/.test(username))          { $('registerError').textContent = i18n.t('auth.err.username.chars')  || 'Le pseudo ne peut contenir que lettres, chiffres, _ et -.'; return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { $('registerError').textContent = i18n.t('auth.err.email') || 'Email invalide.'; return; }
-    if (password !== confirm)  { $('registerError').textContent = i18n.t('auth.err.mismatch'); return; }
-    if (password.length < 8 || password.length > 128) { $('registerError').textContent = i18n.t('auth.err.short'); return; }
+    if (password !== passwordConfirm)  { $('registerError').textContent = i18n.t('auth.err.mismatch'); return; }
+    if (password.length < 10 || password.length > 128) { $('registerError').textContent = 'Le mot de passe doit faire entre 10 et 128 caractères.'; return; }
     if (!/\d/.test(password))  { $('registerError').textContent = 'Le mot de passe doit contenir au moins un chiffre.'; return; }
     if (!/[a-zA-Z]/.test(password)) { $('registerError').textContent = 'Le mot de passe doit contenir au moins une lettre.'; return; }
+    // Rejet des mots de passe trop communs (top breachs)
+    const COMMON_PASSWORDS = new Set([
+      'password1','password12','password123','12345678910','azerty12345','qwerty12345',
+      'motdepasse1','iloveyou12','abc123456','admin12345','welcome123','letmein123',
+      'monkey12345','dragon12345','baseball12','football12','superman12'
+    ]);
+    if (COMMON_PASSWORDS.has(password.toLowerCase())) {
+      $('registerError').textContent = 'Ce mot de passe est trop commun — choisis-en un autre.';
+      return;
+    }
     // hCaptcha — token depuis le widget du form register
     const captchaToken = document.querySelector('#registerFormEl [name="h-captcha-response"]')?.value || '';
     if (!captchaToken) {

@@ -5,6 +5,22 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.79',
+      date: '2026-05-07',
+      time: '05:00',
+      tags: ['fix', 'security'],
+      title: 'Audit frais — corrections critiques + durcissement',
+      titleEn: 'Fresh audit — critical fixes + extra hardening',
+      items: [
+        { type: 'fix', text: 'Correction du bouton "Commencer" du Guide qui ne fonctionnait pas (handler inline bloqué par la CSP) — désormais branché proprement', textEn: 'Fixed "Start" button on the Guide page that was broken (inline handler blocked by CSP) — now properly wired' },
+        { type: 'fix', text: 'Correction des règles Firestore pour les spreads — FTMO 1-Step et Funding Pips étaient refusés', textEn: 'Fixed Firestore rules for spreads — FTMO 1-Step and Funding Pips were being rejected' },
+        { type: 'security', text: 'Activation Pro : compteur de tentatives renforcé (couvre maintenant aussi les erreurs Firestore)', textEn: 'Pro activation: stricter attempt counter (now also covers Firestore errors)' },
+        { type: 'security', text: 'Mot de passe : longueur minimum portée à 10 caractères + rejet d\'une liste de mots de passe trop communs', textEn: 'Password: minimum length raised to 10 characters + rejection of common passwords list' },
+        { type: 'security', text: 'Limite de longueur sur le champ "indice IA" (anti-DoS regex)', textEn: 'Length limit on "AI hint" field (anti-DoS regex)' },
+        { type: 'security', text: 'Validation de taille des spreads dans Firestore (anti-pollution storage)', textEn: 'Spreads size validation in Firestore (anti-storage-pollution)' },
+      ],
+    },
+    {
       version: '0.9.78',
       date: '2026-05-07',
       time: '04:30',

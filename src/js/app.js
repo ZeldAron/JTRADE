@@ -116,6 +116,11 @@ function initApp() {
     location.reload();
   });
 
+  // Bouton "Commencer →" du Guide → bascule sur Journal
+  $('btnTutoCta')?.addEventListener('click', () => {
+    document.querySelector('[data-page="journal"]')?.click();
+  });
+
   // ── INIT ───────────────────────────────────────────────────────────────────
   // Applique les traductions statiques
   i18n.apply();

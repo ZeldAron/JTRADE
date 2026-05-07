@@ -24,7 +24,7 @@
   <title>ZeldTrade</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=0.9.78">
+  <link rel="stylesheet" href="css/style.css?v=0.9.79">
 </head>
 <body>
 
@@ -302,8 +302,8 @@
           <div class="login-fields">
             <input type="text"     class="form-input" id="regUsername"        placeholder="Pseudo"              autocomplete="username"     maxlength="30"  pattern="[a-zA-Z0-9_-]+" minlength="2" required>
             <input type="email"    class="form-input" id="regEmail"           placeholder="Email"               autocomplete="email"        maxlength="254" required>
-            <input type="password" class="form-input" id="regPassword"        placeholder="Mot de passe"        autocomplete="new-password" maxlength="128" minlength="8" required>
-            <input type="password" class="form-input" id="regPasswordConfirm" placeholder="Confirmer le mot de passe" autocomplete="new-password" maxlength="128" minlength="8" required>
+            <input type="password" class="form-input" id="regPassword"        placeholder="Mot de passe"        autocomplete="new-password" maxlength="128" minlength="10" required>
+            <input type="password" class="form-input" id="regPasswordConfirm" placeholder="Confirmer le mot de passe" autocomplete="new-password" maxlength="128" minlength="10" required>
           </div>
           <!-- Honeypot anti-bot — invisible pour les humains -->
           <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
@@ -622,7 +622,7 @@
               <div class="tuto-step-row"><span class="tuto-check">✓</span><span data-i18n="tuto.s5.e" data-i18n-html="1">Page <b>Outils</b> : calcule ta taille de position et ton risque avant d'entrer en trade</span></div>
             </div>
             <div class="tuto-cta">
-              <button class="btn-primary" onclick="document.querySelector('[data-page=journal]').click()" data-i18n="tuto.cta">Commencer →</button>
+              <button class="btn-primary" id="btnTutoCta" data-i18n="tuto.cta">Commencer →</button>
             </div>
           </div>
         </div>
@@ -726,7 +726,7 @@
 
           <div class="settings-section">
             <h3 data-i18n="set.about">À propos</h3>
-            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.78</span></div>
+            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.79</span></div>
             <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
           </div>
         </div>
@@ -796,7 +796,7 @@
 
         <!-- Complément texte si la lecture IA est imprécise -->
         <div class="wiz-text-supplement">
-          <input class="form-input" type="text" id="wTextHint"
+          <input class="form-input" type="text" id="wTextHint" maxlength="500"
             placeholder="Optionnel : Entry 6804.5  SL 6808.50  TP 6795  60 lots">
         </div>
 
@@ -921,28 +921,28 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js" integrity="sha384-HTm9DHQcJ0avSI5BWVmeKtm3+YULHbl/wgtLQaMGgYEZLQ8cINY+UF+ZsliUaBvK" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js" integrity="sha384-xD1t9dGSVKobUztxDkv6xUI0H4AnFz0NxwlgDJJ7FDlblG9xxr1Z9iauCZuJYj6p" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" integrity="sha384-XMIl1b2Ez9tKAM0R5q67/iLdfnlLBl9kfo40X5WMtCPb+3OLplrjnOxZTYCg1SKY" crossorigin="anonymous"></script>
-  <script src="js/firebase.js?v=0.9.78"></script>
+  <script src="js/firebase.js?v=0.9.79"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
-  <script src="js/i18n.js?v=0.9.78"></script>
-  <script src="js/auth.js?v=0.9.78"></script>
-  <script src="js/store.js?v=0.9.78"></script>
-  <script src="js/calc.js?v=0.9.78"></script>
-  <script src="js/modal.js?v=0.9.78"></script>
-  <script src="js/ui.js?v=0.9.78"></script>
-  <script src="js/pages/dashboard.js?v=0.9.78"></script>
-  <script src="js/pages/analytics.js?v=0.9.78"></script>
-  <script src="js/pages/settings.js?v=0.9.78"></script>
-  <script src="js/pages/goals.js?v=0.9.78"></script>
-  <script src="js/pages/calendar.js?v=0.9.78"></script>
-  <script src="js/pages/micro.js?v=0.9.78"></script>
-  <script src="js/pages/outils.js?v=0.9.78"></script>
-  <script src="js/pages/offers.js?v=0.9.78"></script>
-  <script src="js/pages/changelog.js?v=0.9.78"></script>
-  <script src="js/contact.js?v=0.9.78"></script>
-  <script src="js/app.js?v=0.9.78"></script>
+  <script src="js/i18n.js?v=0.9.79"></script>
+  <script src="js/auth.js?v=0.9.79"></script>
+  <script src="js/store.js?v=0.9.79"></script>
+  <script src="js/calc.js?v=0.9.79"></script>
+  <script src="js/modal.js?v=0.9.79"></script>
+  <script src="js/ui.js?v=0.9.79"></script>
+  <script src="js/pages/dashboard.js?v=0.9.79"></script>
+  <script src="js/pages/analytics.js?v=0.9.79"></script>
+  <script src="js/pages/settings.js?v=0.9.79"></script>
+  <script src="js/pages/goals.js?v=0.9.79"></script>
+  <script src="js/pages/calendar.js?v=0.9.79"></script>
+  <script src="js/pages/micro.js?v=0.9.79"></script>
+  <script src="js/pages/outils.js?v=0.9.79"></script>
+  <script src="js/pages/offers.js?v=0.9.79"></script>
+  <script src="js/pages/changelog.js?v=0.9.79"></script>
+  <script src="js/contact.js?v=0.9.79"></script>
+  <script src="js/app.js?v=0.9.79"></script>
 
-  <script src="js/app-bootstrap.js?v=0.9.78"></script>
+  <script src="js/app-bootstrap.js?v=0.9.79"></script>
 
   <!-- hCaptcha (anti-bot pour les formulaires register et contact) -->
   <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
