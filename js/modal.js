@@ -461,13 +461,21 @@ const Modal = (() => {
     // Prix de sortie : parseFloat retourne NaN si vide, on garde null si absent
     const rawExit = $('wExit').value.trim();
     const exitPrice = rawExit !== '' && !isNaN(parseFloat(rawExit)) ? parseFloat(rawExit) : null;
-    const hasExit = exitPrice !== null;
+    // P&L manuel : prend le dessus sur tout calcul si rempli
+    const rawManual = $('wManualPnl').value.trim();
+    const manualPnl = rawManual !== '' && !isNaN(parseFloat(rawManual)) ? parseFloat(rawManual) : null;
+    const hasExit = exitPrice !== null || manualPnl !== null;
 
     updateSpreadDisplay();
     if (!entry || !sl || !tp1) { lc.style.display = 'none'; return; }
     lc.style.display = 'flex';
 
-    const c = Calc.fromForm(direction, entry, sl, tp1, instrument, contracts, capital, feePerSide, spreadCost, exitPrice);
+    const c = Calc.trade({
+      direction, entry, sl, tp1,
+      instrument, contracts, capital,
+      feePerSide, spreadCost,
+      exitPrice, manualPnl,
+    });
 
     // R:R théorique si pas de sortie, R réel si sortie
     const rrEl = $('lcRR');
@@ -546,6 +554,7 @@ const Modal = (() => {
     $('wSetup').value              = '';
     $('wNotes').value              = '';
     $('wExit').value               = '';
+    $('wManualPnl').value          = '';
     $('wContracts').value          = Store.getSettings().contracts || 1;
     // Date + heure par défaut = maintenant (heure locale)
     const nowLocal = new Date();
@@ -567,6 +576,7 @@ const Modal = (() => {
       $('wNotes').value      = t.notes  || '';
       $('wOutcome').value    = t.outcome;
       $('wExit').value       = t.exitPrice || '';
+      $('wManualPnl').value  = t.manualPnl != null ? t.manualPnl : '';
       // Pré-remplir la date + heure depuis le trade existant
       const td = t.date ? t.date.slice(0, 10) : $('wTradeDate').value;
       const tt = t.date && t.date.length > 10 ? t.date.slice(11, 16) : '';
@@ -650,6 +660,9 @@ const Modal = (() => {
       notes:      $('wNotes').value.trim().slice(0, 2000),
       outcome:    safeOutcome,
       exitPrice:  parseFloat($('wExit').value) || null,
+      manualPnl:  $('wManualPnl').value.trim() !== '' && !isNaN(parseFloat($('wManualPnl').value))
+                    ? parseFloat($('wManualPnl').value)
+                    : null,
     };
 
     let saved;
@@ -793,7 +806,7 @@ const Modal = (() => {
       wRecalc();
     });
 
-    ['wContracts', 'wEntry', 'wSL', 'wTP1', 'wExit'].forEach(id => {
+    ['wContracts', 'wEntry', 'wSL', 'wTP1', 'wExit', 'wManualPnl'].forEach(id => {
       $(id).addEventListener('input',  wRecalc);
       $(id).addEventListener('change', wRecalc);
     });

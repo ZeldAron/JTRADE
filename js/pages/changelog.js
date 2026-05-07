@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.87',
+      date: '2026-05-07',
+      time: '19:00',
+      tags: ['feat', 'fix'],
+      title: 'P&L net manuel + fix sauvegarde de exitPrice / tp3',
+      titleEn: 'Manual net P&L + fix exitPrice / tp3 saving',
+      items: [
+        { type: 'feat', text: 'Nouveau champ "P&L net réel ($)" dans le wizard de trade — si rempli, prend le dessus sur le P&L calculé (utile quand le broker affiche un P&L différent à cause des frais réels, slippage, etc.)', textEn: 'New "Actual net P&L ($)" field in the trade wizard — if filled, overrides the calculated P&L (useful when the broker shows a different P&L due to actual fees, slippage, etc.)' },
+        { type: 'fix', text: 'Les champs exitPrice et tp3 étaient perdus à la sauvegarde du trade — corrigé', textEn: 'exitPrice and tp3 fields were lost on trade save — fixed' },
+      ],
+    },
+    {
       version: '0.9.85',
       date: '2026-05-07',
       time: '17:30',

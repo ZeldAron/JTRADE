@@ -288,12 +288,15 @@ const Store = (() => {
       notes:      String(raw.notes  || '').slice(0, 2000),
       apex:       String(raw.apex   || '').replace(/[^A-Za-z0-9 _-]/g, '').slice(0, 100),
       date:       (() => { try { const d = new Date(raw.date); return (isFinite(d) && /^\d{4}-\d{2}-\d{2}T/.test(raw.date)) ? raw.date : new Date().toISOString(); } catch { return new Date().toISOString(); } })(),
-      entry:      raw.entry  != null ? _safeNum(raw.entry,  -1e7, 1e7, null) : null,
-      sl:         raw.sl     != null ? _safeNum(raw.sl,     -1e7, 1e7, null) : null,
-      tp1:        raw.tp1    != null ? _safeNum(raw.tp1,    -1e7, 1e7, null) : null,
-      tp2:        raw.tp2    != null ? _safeNum(raw.tp2,    -1e7, 1e7, null) : null,
-      pnl:        raw.pnl    != null ? _safeNum(raw.pnl,    -1e7, 1e7, null) : null,
-      rr:         raw.rr     != null ? _safeNum(raw.rr,     -100, 100, null) : null,
+      entry:      raw.entry      != null ? _safeNum(raw.entry,      -1e7, 1e7, null) : null,
+      sl:         raw.sl         != null ? _safeNum(raw.sl,         -1e7, 1e7, null) : null,
+      tp1:        raw.tp1        != null ? _safeNum(raw.tp1,        -1e7, 1e7, null) : null,
+      tp2:        raw.tp2        != null ? _safeNum(raw.tp2,        -1e7, 1e7, null) : null,
+      tp3:        raw.tp3        != null ? _safeNum(raw.tp3,        -1e7, 1e7, null) : null,
+      exitPrice:  raw.exitPrice  != null ? _safeNum(raw.exitPrice,  -1e7, 1e7, null) : null,
+      manualPnl:  raw.manualPnl  != null ? _safeNum(raw.manualPnl,  -1e9, 1e9, null) : null,
+      pnl:        raw.pnl        != null ? _safeNum(raw.pnl,        -1e7, 1e7, null) : null,
+      rr:         raw.rr         != null ? _safeNum(raw.rr,         -100, 100, null) : null,
     };
   }
 
