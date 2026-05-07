@@ -177,8 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     _lastRegister = Date.now();
     const btn = e.target.querySelector('button[type=submit]');
     btn.disabled = true;
-    // captchaToken vérifié uniquement côté UX (anti-bot) — la vraie protection est App Check sur Firebase Auth
-    const result = await Auth.register(username, password, email);
+    const result = await Auth.register(username, password, email, captchaToken);
     btn.disabled = false;
     if (result.error) {
       // Reset hCaptcha pour permettre un nouvel essai

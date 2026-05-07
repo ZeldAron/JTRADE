@@ -42,7 +42,7 @@ const Auth = (() => {
     }
   }
 
-  async function register(username, password, email) {
+  async function register(username, password, email, captchaToken) {
     const name = username.trim();
     if (!name || !password || !email) return { error: i18n.t('auth.err.required') };
     const safeName  = name.replace(/[\r\n]/g, '').slice(0, 100);
@@ -56,9 +56,9 @@ const Auth = (() => {
 
       // Notif admin via Cloud Function — la clé Web3Forms reste côté serveur
       try {
-        if (_fbFunctions) {
+        if (_fbFunctions && captchaToken) {
           const callable = _fbFunctions.httpsCallable('notifyNewSignup');
-          callable({}).catch(() => {});
+          callable({ captchaToken }).catch(() => {});
         }
       } catch {}
 
