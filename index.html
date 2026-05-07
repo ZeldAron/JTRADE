@@ -24,7 +24,7 @@
   <title>ZeldTrade</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=0.9.74">
+  <link rel="stylesheet" href="css/style.css?v=0.9.75">
 </head>
 <body>
 
@@ -42,60 +42,127 @@
         ZeldTrade
       </div>
       <div class="lp-nav-actions">
-        <button class="btn-ghost lp-nav-btn" id="btnNavLogin">Se connecter</button>
-        <button class="lp-cta-btn lp-cta-primary" id="btnNavRegister">Créer un compte</button>
+        <button class="lp-nav-link" id="btnNavLogin">Se connecter</button>
+        <button class="lp-nav-cta" id="btnNavRegister">Commencer</button>
       </div>
     </nav>
 
     <!-- Hero -->
     <section class="lp-hero">
-      <div class="lp-hero-tag">Journal de trading · Prop Firm</div>
-      <h1>Maîtrise ta<br><span>Prop Firm.</span></h1>
-      <p>Suis tes performances, respecte les règles d'évaluation et analyse chaque trade — tout en un seul endroit.</p>
+      <h1>Le journal de trading,<br>pensé pour les traders<br>en prop firm.</h1>
+      <p>Suivi de performance, gestion des règles d'évaluation, calcul de position. Tout au même endroit, sans Excel.</p>
       <div class="lp-cta-group">
-        <button class="lp-cta-btn lp-cta-primary" id="btnHeroCta">Commencer gratuitement →</button>
-        <button class="lp-cta-btn lp-cta-ghost" id="btnHeroLogin">Se connecter</button>
+        <button class="lp-cta-btn lp-cta-primary" id="btnHeroCta">Commencer gratuitement</button>
+        <button class="lp-cta-text" id="btnHeroLogin">Déjà membre ?</button>
+      </div>
+      <div class="lp-hero-firms">
+        <span>Apex</span>
+        <span>·</span>
+        <span>Topstep</span>
+        <span>·</span>
+        <span>FTMO</span>
+        <span>·</span>
+        <span>Lucid</span>
+      </div>
+    </section>
+
+    <!-- Preview app — mini mockup dashboard -->
+    <section class="lp-preview">
+      <div class="lp-preview-frame">
+        <div class="lp-preview-bar">
+          <span class="lp-preview-dot" style="background:#ff5f57"></span>
+          <span class="lp-preview-dot" style="background:#febc2e"></span>
+          <span class="lp-preview-dot" style="background:#28c840"></span>
+          <span class="lp-preview-url">zeldtrade — Apex 50K · Eval</span>
+        </div>
+        <div class="lp-preview-body">
+          <div class="lp-preview-stats">
+            <div class="lp-preview-stat">
+              <div class="lp-preview-stat-lbl">P&L total</div>
+              <div class="lp-preview-stat-val" style="color:var(--green)">+$2,847</div>
+            </div>
+            <div class="lp-preview-stat">
+              <div class="lp-preview-stat-lbl">Win rate</div>
+              <div class="lp-preview-stat-val">58.3%</div>
+            </div>
+            <div class="lp-preview-stat">
+              <div class="lp-preview-stat-lbl">Profit factor</div>
+              <div class="lp-preview-stat-val">1.84</div>
+            </div>
+            <div class="lp-preview-stat">
+              <div class="lp-preview-stat-lbl">Drawdown</div>
+              <div class="lp-preview-stat-val" style="color:var(--red)">−$612</div>
+            </div>
+          </div>
+          <div class="lp-preview-chart">
+            <svg viewBox="0 0 600 140" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="lpChartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgba(10,132,255,0.25)"/>
+                  <stop offset="100%" stop-color="rgba(10,132,255,0)"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,110 L40,108 L80,95 L120,98 L160,82 L200,88 L240,72 L280,78 L320,60 L360,65 L400,48 L440,52 L480,40 L520,42 L560,28 L600,32 L600,140 L0,140 Z" fill="url(#lpChartGrad)"/>
+              <path d="M0,110 L40,108 L80,95 L120,98 L160,82 L200,88 L240,72 L280,78 L320,60 L360,65 L400,48 L440,52 L480,40 L520,42 L560,28 L600,32" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+            </svg>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- Features -->
     <section class="lp-features">
-      <div class="lp-section-title">Fonctionnalités</div>
       <div class="lp-feat-grid">
-        <div class="lp-feat-card">
-          <div class="lp-feat-icon">📒</div>
-          <h3>Journal complet</h3>
-          <p>Enregistre chaque trade avec PnL net, commissions, spreads et notes.</p>
+        <div class="lp-feat-item">
+          <svg class="lp-feat-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="3" width="16" height="18" rx="2"/>
+            <line x1="8" y1="8" x2="16" y2="8"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+            <line x1="8" y1="16" x2="13" y2="16"/>
+          </svg>
+          <h3>Journal sans friction</h3>
+          <p>Saisie rapide, screenshot collé en un Cmd+V. L'IA extrait les niveaux automatiquement.</p>
         </div>
-        <div class="lp-feat-card">
-          <div class="lp-feat-icon">🎯</div>
-          <h3>Suivi Prop Firm</h3>
-          <p>Règles d'évaluation Apex, Topstep, FTMO, Lucid — toujours à portée de main.</p>
+        <div class="lp-feat-item">
+          <svg class="lp-feat-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 17 9 11 13 15 21 7"/>
+            <polyline points="14 7 21 7 21 14"/>
+          </svg>
+          <h3>Performances en clair</h3>
+          <p>Win rate, profit factor, drawdown, expectancy. Pas de tableaux Excel à maintenir.</p>
         </div>
-        <div class="lp-feat-card">
-          <div class="lp-feat-icon">📈</div>
-          <h3>Analytics avancées</h3>
-          <p>Win rate, expectancy, drawdown réel et courbe de capital quotidienne.</p>
+        <div class="lp-feat-item">
+          <svg class="lp-feat-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v5l3 2"/>
+          </svg>
+          <h3>Règles prop firm</h3>
+          <p>Drawdown trailing, daily loss, consistency. Visualisé pour Apex, Topstep, FTMO et Lucid.</p>
         </div>
-        <div class="lp-feat-card">
-          <div class="lp-feat-icon">🤖</div>
-          <h3>IA Vision (PRO)</h3>
-          <p>Analyse automatique de tes screenshots de trades via vision IA Groq.</p>
+        <div class="lp-feat-item">
+          <svg class="lp-feat-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="M12 5v14"/>
+            <circle cx="12" cy="12" r="9"/>
+          </svg>
+          <h3>Calcul de position</h3>
+          <p>Capital, risque, instrument. La taille de position s'affiche en temps réel — 23 instruments.</p>
         </div>
       </div>
     </section>
 
     <!-- Pricing -->
     <section class="lp-pricing">
-      <h2>Tarifs simples</h2>
-      <p class="lp-pricing-sub">Commence gratuitement, passe PRO ou LIFETIME quand tu es prêt.</p>
+      <div class="lp-section-eyebrow">Tarifs</div>
+      <h2>Commence gratuitement.</h2>
+      <p class="lp-pricing-sub">Passe Pro ou Lifetime quand tu es prêt — pas avant.</p>
 
       <div class="offers-cards lp-offers-cards">
 
         <div class="offer-card">
-          <div class="offer-badge-basic">BASIC</div>
+          <div class="offer-badge-basic">Basic</div>
           <div class="offer-name">Basic</div>
-          <div class="offer-price-hidden" style="color:var(--green)">✓ Gratuit — pour toujours</div>
+          <div class="offer-price-hidden" style="color:var(--green)">Gratuit — pour toujours</div>
           <ul class="offer-features">
             <li class="ok">Journal de trading illimité</li>
             <li class="ok">Dashboard performances</li>
@@ -106,13 +173,13 @@
             <li class="no">Analytics avancées</li>
             <li class="no">Comptes illimités</li>
           </ul>
-          <button class="offer-cta offer-cta-current" id="btnLandingFree" style="cursor:pointer;background:var(--accent);color:#fff">Commencer gratuitement</button>
+          <button class="offer-cta offer-cta-basic-landing" id="btnLandingFree">Créer un compte</button>
         </div>
 
         <div class="offer-card offer-pro">
-          <div class="offer-badge-pro">LE PLUS POPULAIRE</div>
+          <div class="offer-badge-pro">Le plus populaire</div>
           <div class="offer-name" style="color:#a78bfa">Pro</div>
-          <div class="offer-price-hidden">🔒 Prix bientôt disponible</div>
+          <div class="offer-price-hidden">Prix à venir</div>
           <ul class="offer-features">
             <li class="ok">Tout Basic, sans limites</li>
             <li class="ok"><strong>Comptes illimités</strong></li>
@@ -122,13 +189,13 @@
             <li class="ok">Groupes de comptes</li>
             <li class="ok">Support prioritaire</li>
           </ul>
-          <button class="offer-cta offer-cta-pro" id="btnLandingPro">Obtenir un code PRO</button>
+          <button class="offer-cta offer-cta-pro" id="btnLandingPro">Activer Pro</button>
         </div>
 
         <div class="offer-card offer-lifetime">
-          <div class="offer-badge-lifetime">LIFETIME</div>
+          <div class="offer-badge-lifetime">Lifetime</div>
           <div class="offer-name" style="color:#f59e0b">Lifetime</div>
-          <div class="offer-price-hidden">🔒 Prix bientôt disponible</div>
+          <div class="offer-price-hidden">Prix à venir</div>
           <ul class="offer-features">
             <li class="ok">Tout Pro, sans limites</li>
             <li class="ok"><strong>Accès à vie — pas d'abonnement</strong></li>
@@ -137,18 +204,47 @@
             <li class="ok">Badge Lifetime</li>
             <li class="ok">Vote sur la roadmap</li>
           </ul>
-          <button class="offer-cta offer-cta-lifetime" id="btnLandingLifetime">Obtenir Lifetime</button>
+          <button class="offer-cta offer-cta-lifetime" id="btnLandingLifetime">Activer Lifetime</button>
         </div>
 
       </div>
     </section>
 
+    <!-- FAQ -->
+    <section class="lp-faq">
+      <div class="lp-section-eyebrow">FAQ</div>
+      <h2>Questions fréquentes.</h2>
+      <div class="lp-faq-list">
+        <div class="lp-faq-item">
+          <h4>Mes données sont-elles sécurisées ?</h4>
+          <p>Oui. Chiffrées en transit (TLS), hébergées chez Firebase (Google Cloud). Tu peux exporter ou supprimer tes données à tout moment.</p>
+        </div>
+        <div class="lp-faq-item">
+          <h4>Puis-je l'utiliser sur mobile ?</h4>
+          <p>L'interface est pensée pour le desktop. Une vue mobile est en préparation.</p>
+        </div>
+        <div class="lp-faq-item">
+          <h4>Comment activer Pro pendant la bêta ?</h4>
+          <p>Les codes Pro sont distribués manuellement aux premiers utilisateurs. Contacte-moi via le formulaire intégré.</p>
+        </div>
+        <div class="lp-faq-item">
+          <h4>Qui développe ZeldTrade ?</h4>
+          <p>Aaron Platon, day trader sur le S&P 500. J'ai construit l'outil que je voulais avoir.</p>
+        </div>
+      </div>
+    </section>
+
     <footer class="lp-footer">
-      © 2026 ZeldTrade · Aaron Platon · Tous droits réservés<br>
-      <div style="margin-top:8px;display:flex;gap:18px;justify-content:center;flex-wrap:wrap;font-size:12px">
-        <a href="legal.html" style="color:inherit;opacity:0.55;text-decoration:none">Mentions légales</a>
-        <a href="privacy.html" style="color:inherit;opacity:0.55;text-decoration:none">Politique de confidentialité</a>
-        <a href="cgu.html" style="color:inherit;opacity:0.55;text-decoration:none">CGU / CGV</a>
+      <div class="lp-footer-inner">
+        <div class="lp-footer-left">
+          <div class="lp-footer-brand">ZeldTrade</div>
+          <div class="lp-footer-cr">© 2026 · Aaron Platon</div>
+        </div>
+        <div class="lp-footer-links">
+          <a href="legal.html">Mentions légales</a>
+          <a href="privacy.html">Confidentialité</a>
+          <a href="cgu.html">CGU / CGV</a>
+        </div>
       </div>
     </footer>
 
@@ -628,7 +724,7 @@
 
           <div class="settings-section">
             <h3 data-i18n="set.about">À propos</h3>
-            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.74</span></div>
+            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.75</span></div>
             <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
           </div>
         </div>
@@ -822,28 +918,28 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="js/firebase.js?v=0.9.74"></script>
+  <script src="js/firebase.js?v=0.9.75"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
-  <script src="js/i18n.js?v=0.9.74"></script>
-  <script src="js/auth.js?v=0.9.74"></script>
-  <script src="js/store.js?v=0.9.74"></script>
-  <script src="js/calc.js?v=0.9.74"></script>
-  <script src="js/modal.js?v=0.9.74"></script>
-  <script src="js/ui.js?v=0.9.74"></script>
-  <script src="js/pages/dashboard.js?v=0.9.74"></script>
-  <script src="js/pages/analytics.js?v=0.9.74"></script>
-  <script src="js/pages/settings.js?v=0.9.74"></script>
-  <script src="js/pages/goals.js?v=0.9.74"></script>
-  <script src="js/pages/calendar.js?v=0.9.74"></script>
-  <script src="js/pages/micro.js?v=0.9.74"></script>
-  <script src="js/pages/outils.js?v=0.9.74"></script>
-  <script src="js/pages/offers.js?v=0.9.74"></script>
-  <script src="js/pages/changelog.js?v=0.9.74"></script>
-  <script src="js/contact.js?v=0.9.74"></script>
-  <script src="js/app.js?v=0.9.74"></script>
+  <script src="js/i18n.js?v=0.9.75"></script>
+  <script src="js/auth.js?v=0.9.75"></script>
+  <script src="js/store.js?v=0.9.75"></script>
+  <script src="js/calc.js?v=0.9.75"></script>
+  <script src="js/modal.js?v=0.9.75"></script>
+  <script src="js/ui.js?v=0.9.75"></script>
+  <script src="js/pages/dashboard.js?v=0.9.75"></script>
+  <script src="js/pages/analytics.js?v=0.9.75"></script>
+  <script src="js/pages/settings.js?v=0.9.75"></script>
+  <script src="js/pages/goals.js?v=0.9.75"></script>
+  <script src="js/pages/calendar.js?v=0.9.75"></script>
+  <script src="js/pages/micro.js?v=0.9.75"></script>
+  <script src="js/pages/outils.js?v=0.9.75"></script>
+  <script src="js/pages/offers.js?v=0.9.75"></script>
+  <script src="js/pages/changelog.js?v=0.9.75"></script>
+  <script src="js/contact.js?v=0.9.75"></script>
+  <script src="js/app.js?v=0.9.75"></script>
 
-  <script src="js/app-bootstrap.js?v=0.9.74"></script>
+  <script src="js/app-bootstrap.js?v=0.9.75"></script>
 
   <!-- CONTACT WIDGET ──────────────────────────────────────────────────────── -->
   <div id="contactWidget">

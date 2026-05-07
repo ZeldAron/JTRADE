@@ -5,6 +5,22 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.75',
+      date: '2026-05-07',
+      time: '02:30',
+      tags: ['feat'],
+      title: 'Refonte landing page — DA minimaliste éditoriale',
+      titleEn: 'Landing page redesign — minimalist editorial DA',
+      items: [
+        { type: 'feat', text: 'Hero épuré : titre simple sans buzzword, CTA unique blanc, lien secondaire texte, mention discrète des prop firms supportées', textEn: 'Clean hero: simple title without buzzwords, single white CTA, text-link secondary, discreet mention of supported prop firms' },
+        { type: 'feat', text: 'Nouvelle section preview : mockup du dashboard avec stats fictives + courbe d\'equity SVG', textEn: 'New preview section: dashboard mockup with sample stats + SVG equity curve' },
+        { type: 'feat', text: 'Features réorganisées en grid 2×2 sans cards bordées, icones SVG monochrome (plus d\'emojis)', textEn: 'Features reorganised in 2×2 grid without bordered cards, monochrome SVG icons (no more emojis)' },
+        { type: 'feat', text: 'Pricing : eyebrow "Tarifs", titre "Commence gratuitement.", textes plus naturels (suppression des 🔒 et "→")', textEn: 'Pricing: "Tarifs" eyebrow, "Commence gratuitement." title, more natural copy (removed 🔒 and "→")' },
+        { type: 'feat', text: 'Nouvelle section FAQ avec 4 questions clés (sécurité, mobile, accès Pro, fondateur)', textEn: 'New FAQ section with 4 key questions (security, mobile, Pro access, founder)' },
+        { type: 'feat', text: 'Footer 2 colonnes (brand · liens) au lieu de centré, plus aéré', textEn: 'Footer in 2 columns (brand · links) instead of centered, more breathing room' },
+      ],
+    },
+    {
       version: '0.9.74',
       date: '2026-05-07',
       time: '01:30',
