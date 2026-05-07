@@ -272,7 +272,10 @@ const Modal = (() => {
       }
 
       const result = await analyzeWithGroq(capturedImage, null, direction);
-      Store.recordAnalysis();
+      // Quota AI : enforced + incrementé côté serveur (Cloud Function via transaction).
+      // Le client ne peut plus écrire dans aiUsage (rule Firestore bloque).
+      // Refetch pour synchroniser canAnalyzeToday() côté client.
+      Store.refreshAiUsage();
       let { entry, sl, tp1 } = result;
       entry = entry || null; sl = sl || null; tp1 = tp1 || null;
 
@@ -592,7 +595,14 @@ const Modal = (() => {
 
       populateApexSelect(t.apex || '');
       const acc = Store.getMyAccountByName(t.apex || '');
-      if (acc) { capital = acc.capital + (acc.pnlOffset || 0); feePerSide = acc.feePerSide || 2.14; firmKey = acc.firmKey || 'apex'; }
+      if (acc) {
+        capital = acc.capital + (acc.pnlOffset || 0);
+        firmKey = acc.firmKey || 'apex';
+        // Préserver feePerSide HISTORIQUE du trade : ne pas écraser avec la
+        // valeur actuelle du compte (sinon les anciens trades changent de P&L
+        // si l'utilisateur modifie les fees). Fallback sur compte si pas stocké.
+        feePerSide = (t.feePerSide != null) ? t.feePerSide : (acc.feePerSide || 2.14);
+      }
       populateInstrumentSelect(firmKey, t.instrument);
       updateLotsInput(t.instrument);
       fillStep3FromParsed();

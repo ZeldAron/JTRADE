@@ -67,7 +67,9 @@ const Calc = (() => {
     let pnl    = null;
     let netPnl = null;
     let estimated = false;
-    const hasManualPnl = t.manualPnl != null && t.manualPnl !== '' && !isNaN(Number(t.manualPnl));
+    // manualPnl ne s'applique QUE sur un trade fermé (sinon il fausse les stats
+    // globales : un trade open ne doit pas compter dans le P&L réalisé)
+    const hasManualPnl = t.manualPnl != null && t.manualPnl !== '' && !isNaN(Number(t.manualPnl)) && t.outcome !== 'open';
 
     if (hasManualPnl) {
       // L'utilisateur a saisi un P&L net : il prime sur tout calcul

@@ -5,6 +5,26 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.89',
+      date: '2026-05-07',
+      time: '21:30',
+      tags: ['security', 'fix'],
+      title: 'Audit ultraréview — failles critiques colmatées',
+      titleEn: 'Ultra-review audit — critical flaws patched',
+      items: [
+        { type: 'security', text: 'Quota IA : transaction atomique côté serveur (impossible à bypasser via multi-onglets ou DevTools delete/recreate)', textEn: 'AI quota: server-side atomic transaction (impossible to bypass via multi-tab or DevTools delete/recreate)' },
+        { type: 'security', text: 'Cap journalier Pro ajouté (200 analyses/jour) — protège contre les coûts Groq incontrôlés', textEn: 'Pro daily cap added (200 analyses/day) — protects against uncontrolled Groq costs' },
+        { type: 'security', text: 'Rule Firestore config/groq supprimée (la clé Groq n\'est plus du tout en Firestore — uniquement Secret Manager)', textEn: 'Firestore rule config/groq removed (Groq key is no longer in Firestore at all — only in Secret Manager)' },
+        { type: 'security', text: 'Email du formulaire de contact forcé depuis le token Firebase (anti-spoofing — un user ne peut plus écrire au nom d\'une autre adresse)', textEn: 'Contact form email forced from Firebase token (anti-spoofing — a user can no longer write on behalf of another address)' },
+        { type: 'security', text: 'Idempotence sur notifyNewSignup — impossible de déclencher 2x la notif d\'inscription', textEn: 'Idempotency on notifyNewSignup — cannot trigger signup notif twice' },
+        { type: 'fix', text: 'Bug critique : capital, feePerSide, spreadCost, groupId étaient silencieusement perdus à la sauvegarde du trade — corrigé', textEn: 'Critical bug: capital, feePerSide, spreadCost, groupId were silently lost on trade save — fixed' },
+        { type: 'fix', text: 'manualPnl ne s\'applique plus aux trades Open (évite que ça compte dans le P&L cumulé)', textEn: 'manualPnl no longer applies to Open trades (prevents counting in cumulative P&L)' },
+        { type: 'fix', text: 'CSV import : les CFD avec lots fractionnaires (0.5 lot, etc.) sont maintenant correctement importés', textEn: 'CSV import: CFDs with fractional lots (0.5 lot, etc.) are now correctly imported' },
+        { type: 'fix', text: 'Édition d\'un trade : feePerSide historique préservé (ne change plus si tu modifies les fees du compte)', textEn: 'Trade edit: historical feePerSide preserved (no longer changes if you modify account fees)' },
+        { type: 'fix', text: 'firmKey corrigé pour FTMO 1-Step (était ftmo, maintenant ftmo1step) — bonnes règles trailing/daily appliquées', textEn: 'firmKey fixed for FTMO 1-Step (was ftmo, now ftmo1step) — correct trailing/daily rules applied' },
+      ],
+    },
+    {
       version: '0.9.88',
       date: '2026-05-07',
       time: '20:00',
