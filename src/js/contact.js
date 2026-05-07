@@ -50,6 +50,13 @@ const Contact = (() => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))    { error.textContent = i18n.t('contact.err.email'); return; }
     if (!message || message.length < 5)                              { error.textContent = i18n.t('contact.err.msg');   return; }
 
+    // hCaptcha — récupère le token depuis le widget de cette zone
+    const captchaToken = document.querySelector('#contactForm [name="h-captcha-response"]')?.value || '';
+    if (!captchaToken) {
+      error.textContent = 'Merci de cocher la case anti-bot.';
+      return;
+    }
+
     btn.disabled      = true;
     label.textContent = i18n.t('contact.sending');
 
@@ -68,6 +75,7 @@ const Contact = (() => {
           email,
           message,
           plan,
+          'h-captcha-response': captchaToken,
         }),
       });
       clearTimeout(tmr);
@@ -80,6 +88,13 @@ const Contact = (() => {
         throw new Error(data.message || i18n.t('contact.err.server'));
       }
     } catch {
+      // Reset hCaptcha pour permettre un nouvel essai
+      try {
+        const widget = document.querySelector('#contactForm .h-captcha');
+        if (widget && typeof hcaptcha !== 'undefined' && widget.dataset.hcaptchaWidgetId !== undefined) {
+          hcaptcha.reset(widget.dataset.hcaptchaWidgetId);
+        }
+      } catch {}
       error.textContent = i18n.t('contact.err.send');
       btn.disabled      = false;
       label.textContent = i18n.t('contact.send');

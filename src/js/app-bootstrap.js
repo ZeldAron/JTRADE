@@ -158,12 +158,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (password.length < 8 || password.length > 128) { $('registerError').textContent = i18n.t('auth.err.short'); return; }
     if (!/\d/.test(password))  { $('registerError').textContent = 'Le mot de passe doit contenir au moins un chiffre.'; return; }
     if (!/[a-zA-Z]/.test(password)) { $('registerError').textContent = 'Le mot de passe doit contenir au moins une lettre.'; return; }
+    // hCaptcha — token depuis le widget du form register
+    const captchaToken = document.querySelector('#registerFormEl [name="h-captcha-response"]')?.value || '';
+    if (!captchaToken) {
+      $('registerError').textContent = 'Merci de cocher la case anti-bot.';
+      return;
+    }
     _lastRegister = Date.now();
     const btn = e.target.querySelector('button[type=submit]');
     btn.disabled = true;
-    const result = await Auth.register(username, password, email);
+    const result = await Auth.register(username, password, email, captchaToken);
     btn.disabled = false;
-    if (result.error) { $('registerError').textContent = result.error; return; }
+    if (result.error) {
+      // Reset hCaptcha pour permettre un nouvel essai
+      try {
+        const widget = document.querySelector('#registerFormEl .h-captcha');
+        if (widget && typeof hcaptcha !== 'undefined' && widget.dataset.hcaptchaWidgetId !== undefined) {
+          hcaptcha.reset(widget.dataset.hcaptchaWidgetId);
+        }
+      } catch {}
+      $('registerError').textContent = result.error;
+      return;
+    }
     showLoader(result.user.username);
     setTimeout(() => launchApp(result.user), 1200);
   });

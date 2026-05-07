@@ -42,7 +42,7 @@ const Auth = (() => {
     }
   }
 
-  async function register(username, password, email) {
+  async function register(username, password, email, captchaToken) {
     const name = username.trim();
     if (!name || !password || !email) return { error: i18n.t('auth.err.required') };
     // Sanitize CRLF (anti header-injection si transmis tel quel à un service mail)
@@ -52,20 +52,24 @@ const Auth = (() => {
       const cred = await _fbAuth.createUserWithEmailAndPassword(safeEmail, password);
       await cred.user.updateProfile({ displayName: safeName });
 
-      const ctrl = new AbortController();
-      setTimeout(() => ctrl.abort(), 10_000);
-      fetch('https://api.web3forms.com/submit', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal:  ctrl.signal,
-        body: JSON.stringify({
-          access_key: '465a3d27-6989-4226-8bb1-c5e70e9704c5',
-          subject:    `[ZeldTrade] Nouvel utilisateur : ${safeName}`,
-          from_name:  'ZeldTrade Bot',
-          email:      'zeldtradepro@gmail.com',
-          message:    `Nouvel inscrit !\n\nPseudo  : ${safeName}\nEmail   : ${safeEmail}\nDate    : ${new Date().toLocaleString('fr-FR')}`,
-        }),
-      }).catch(() => {});
+      // Notif admin via Web3Forms (captcha requis maintenant que hCaptcha est activé)
+      if (captchaToken) {
+        const ctrl = new AbortController();
+        setTimeout(() => ctrl.abort(), 10_000);
+        fetch('https://api.web3forms.com/submit', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal:  ctrl.signal,
+          body: JSON.stringify({
+            access_key: '465a3d27-6989-4226-8bb1-c5e70e9704c5',
+            subject:    `[ZeldTrade] Nouvel utilisateur : ${safeName}`,
+            from_name:  'ZeldTrade Bot',
+            email:      'zeldtradepro@gmail.com',
+            message:    `Nouvel inscrit !\n\nPseudo  : ${safeName}\nEmail   : ${safeEmail}\nDate    : ${new Date().toLocaleString('fr-FR')}`,
+            'h-captcha-response': captchaToken,
+          }),
+        }).catch(() => {});
+      }
 
       return { user: { id: cred.user.uid, username: safeName } };
     } catch (e) {
