@@ -37,6 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
     sessionStorage.setItem('ztGoto', 'offers');
     openModal('login');
   });
+  const btnLandingLifetime = $('btnLandingLifetime');
+  if (btnLandingLifetime) btnLandingLifetime.addEventListener('click', () => {
+    sessionStorage.setItem('ztGoto', 'offers');
+    openModal('login');
+  });
   $('authModalClose').addEventListener('click',    closeModal);
   $('authModalBackdrop').addEventListener('click', closeModal);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
