@@ -148,7 +148,37 @@ const Store = (() => {
     spreadsByFirm = Object.fromEntries(Object.keys(DEFAULT_SPREADS_BY_FIRM).map(k => [k, { ...DEFAULT_SPREADS_BY_FIRM[k] }]));
     groups        = [];
     _loadFromLocalStorage();
-    _loadFromFirestore();
+    _loadFromFirestore().then(_migrateLegacyData).catch(() => _migrateLegacyData());
+  }
+
+  // Migration auto pour les données legacy :
+  //  - Comptes FTMO 1-Step créés avant v0.9.89 ont firmKey:'ftmo' au lieu de 'ftmo1step'
+  //  - Trades anciens n'ont pas capital/feePerSide stockés → on les hydrate
+  //    depuis le compte associé (apex) si présent
+  function _migrateLegacyData() {
+    let migrated = false;
+    // 1. firmKey legacy pour FTMO 1-Step
+    myAccounts.forEach(a => {
+      if (a.firmKey === 'ftmo' && /1[-\s]step/i.test(a.name || '')) {
+        a.firmKey = 'ftmo1step';
+        migrated = true;
+      }
+    });
+    // 2. capital + feePerSide manquants sur les trades : hydrater depuis le compte
+    const accByName = Object.fromEntries(myAccounts.map(a => [a.name, a]));
+    trades.forEach(t => {
+      if (t.apex && (t.capital == null || t.feePerSide == null)) {
+        const acc = accByName[t.apex];
+        if (acc) {
+          if (t.capital    == null) { t.capital    = acc.capital + (acc.pnlOffset || 0); migrated = true; }
+          if (t.feePerSide == null) { t.feePerSide = (acc.feePerSide != null) ? acc.feePerSide : 2.14; migrated = true; }
+        }
+      }
+    });
+    if (migrated) {
+      _saveMyAccounts();
+      _saveTrades();
+    }
   }
 
   function _loadFromLocalStorage() {
@@ -180,7 +210,9 @@ const Store = (() => {
 
   async function _loadFromFirestore() {
     try {
-      const [tSnap, sSnap, maSnap, spfSnap, gSnap, planSnap, aiSnap, groqSnap] = await _withTimeout(Promise.all([
+      // Note : config/groq supprimé — la clé Groq vit désormais dans Google
+      // Secret Manager côté Cloud Function. Plus aucune lecture client.
+      const [tSnap, sSnap, maSnap, spfSnap, gSnap, planSnap, aiSnap] = await _withTimeout(Promise.all([
         userDoc('trades').get(),
         userDoc('settings').get(),
         userDoc('myAccounts').get(),
@@ -188,7 +220,6 @@ const Store = (() => {
         userDoc('groups').get(),
         userDoc('plan').get(),
         userDoc('aiUsage').get(),
-        _fbDb.collection('config').doc('groq').get(),
       ]), 10000);
       let changed = false;
       if (tSnap.exists)   { trades      = tSnap.data().items  || [];  changed = true; }
@@ -200,10 +231,6 @@ const Store = (() => {
           instrument: (typeof raw.instrument === 'string' && raw.instrument.length > 0) ? String(raw.instrument).replace(/[^A-Za-z0-9/. _-]/g, '').slice(0, 20) || DEFAULT_SETTINGS.instrument : DEFAULT_SETTINGS.instrument,
         };
         changed = true;
-      }
-      if (groqSnap.exists) {
-        _globalGroqKey = String(groqSnap.data().key || '');
-        window.dispatchEvent(new CustomEvent('store:groqReady'));
       }
       if (maSnap.exists)  { myAccounts  = maSnap.data().items || [];  changed = true; }
       if (spfSnap.exists) {
@@ -294,7 +321,9 @@ const Store = (() => {
       tp2:        raw.tp2        != null ? _safeNum(raw.tp2,        -1e7, 1e7, null) : null,
       tp3:        raw.tp3        != null ? _safeNum(raw.tp3,        -1e7, 1e7, null) : null,
       exitPrice:  raw.exitPrice  != null ? _safeNum(raw.exitPrice,  -1e7, 1e7, null) : null,
-      manualPnl:  raw.manualPnl  != null ? _safeNum(raw.manualPnl,  -1e9, 1e9, null) : null,
+      // manualPnl ne s'applique QU'aux trades fermés (forcé à null si open)
+      manualPnl:  (raw.manualPnl != null && (raw.outcome && raw.outcome !== 'open'))
+                    ? _safeNum(raw.manualPnl, -1e9, 1e9, null) : null,
       // Snapshot du compte au moment du trade — préservé pour cohérence historique
       capital:    raw.capital    != null ? _safeNum(raw.capital,     0,    1e9, null) : null,
       feePerSide: raw.feePerSide != null ? _safeNum(raw.feePerSide,  0,    100, null) : null,
@@ -310,8 +339,14 @@ const Store = (() => {
     return out;
   }
 
+  function _newTradeId() {
+    // Anti-collision : timestamp + 6 chars random base36
+    // (évite les IDs identiques pour Promise.all en groupe)
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+  }
+
   function addTrade(trade) {
-    const t = { ..._sanitizeTrade(trade), id: Date.now().toString() };
+    const t = { ..._sanitizeTrade(trade), id: _newTradeId() };
     if (!t.date) t.date = new Date().toISOString();
     trades.unshift(t);
     _saveTrades();
@@ -321,7 +356,11 @@ const Store = (() => {
   function updateTrade(id, data) {
     const idx = trades.findIndex(t => t.id === id);
     if (idx < 0) return null;
-    trades[idx] = { ...trades[idx], ..._sanitizeTrade(data) };
+    // Merge des données partielles AVANT sanitize : on ne perd jamais les
+    // champs existants si `data` ne les contient pas (ex : updateTrade(id, { outcome: 'win' })
+    // ne doit pas écraser apex/setup/notes/contracts/instrument/etc.).
+    const merged = { ...trades[idx], ...data };
+    trades[idx] = { ..._sanitizeTrade(merged), id: trades[idx].id };
     _saveTrades();
     return trades[idx];
   }
@@ -333,26 +372,14 @@ const Store = (() => {
 
   function importTrades(arr) {
     if (!Array.isArray(arr)) return 0;
-    const sanitized = arr.filter(t => t && typeof t === 'object' &&
-      typeof t.instrument === 'string' && t.instrument.trim() &&
-      DIRS.has(t.direction) && OUTCOMES.has(t.outcome)
-    ).map(t => ({
-      id:         String(t.id || Date.now() + Math.random()).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32),
-      date:       (() => { try { const d = new Date(t.date); return isFinite(d) ? new Date(d).toISOString() : new Date().toISOString(); } catch { return new Date().toISOString(); } })(),
-      instrument: String(t.instrument).replace(/[^A-Za-z0-9/. _-]/g, '').slice(0, 20),
-      direction:  t.direction,
-      outcome:    t.outcome,
-      entry:      Number(t.entry)     || 0,
-      sl:         Number(t.sl)        || 0,
-      tp1:        Number(t.tp1)       || 0,
-      ...(t.tp2       ? { tp2:       Number(t.tp2) }       : {}),
-      ...(t.tp3       ? { tp3:       Number(t.tp3) }       : {}),
-      ...(t.exitPrice ? { exitPrice: Number(t.exitPrice) } : {}),
-      contracts:  Math.max(0.01, Math.min(999, parseFloat(t.contracts) || 0.01)),
-      setup:      t.setup  ? String(t.setup).slice(0, 500)  : '',
-      notes:      t.notes  ? String(t.notes).slice(0, 2000) : '',
-      apex:       t.apex   ? String(t.apex).replace(/[^A-Za-z0-9 _-]/g, '').slice(0, 100) : '',
-    }));
+    // Tous les trades importés passent par _sanitizeTrade — même validation
+    // stricte que addTrade/updateTrade : ranges, regex, types, taille.
+    const sanitized = arr
+      .filter(t => t && typeof t === 'object' && DIRS.has(t.direction) && OUTCOMES.has(t.outcome))
+      .map(t => {
+        const id = String(t.id || _newTradeId()).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || _newTradeId();
+        return { ..._sanitizeTrade(t), id };
+      });
     trades = [...sanitized, ...trades].slice(0, 10000);
     _saveTrades();
     return sanitized.length;
@@ -413,8 +440,17 @@ const Store = (() => {
     if (data.pnlOffset   !== undefined) s.pnlOffset      = _safeNum(data.pnlOffset,    -1e7, 1e7, 0);
     return s;
   }
+  function _isAccountNameTaken(name, excludeId) {
+    const n = String(name || '').trim().toLowerCase();
+    return myAccounts.some(a => a.id !== excludeId && String(a.name || '').trim().toLowerCase() === n);
+  }
+
   function addMyAccount(data) {
-    const a = { ...data, ..._sanitizeAccount(data), id: 'acc-' + Date.now() };
+    const sanitized = _sanitizeAccount(data);
+    if (_isAccountNameTaken(sanitized.name)) {
+      throw new Error('Un compte avec ce nom existe déjà.');
+    }
+    const a = { ...data, ...sanitized, id: 'acc-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6) };
     myAccounts.push(a);
     _saveMyAccounts();
     return a;
@@ -422,7 +458,11 @@ const Store = (() => {
   function updateMyAccount(id, data) {
     const i = myAccounts.findIndex(a => a.id === id);
     if (i < 0) return null;
-    myAccounts[i] = { ...myAccounts[i], ..._sanitizeAccount(data) };
+    const sanitized = _sanitizeAccount(data);
+    if (sanitized.name && _isAccountNameTaken(sanitized.name, id)) {
+      throw new Error('Un autre compte porte déjà ce nom.');
+    }
+    myAccounts[i] = { ...myAccounts[i], ...sanitized };
     _saveMyAccounts();
     return myAccounts[i];
   }

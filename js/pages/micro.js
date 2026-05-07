@@ -26,8 +26,10 @@
 
   function getMicroRevUsd(source) {
     const trades = Store.getTrades();
-    const month  = new Date().toISOString().slice(0, 7);
-    const list   = source === 'month' ? trades.filter(tr => tr.date.startsWith(month)) : trades;
+    const month  = UI.localToday().slice(0, 7); // YYYY-MM en heure locale
+    const list   = source === 'month'
+      ? trades.filter(tr => (UI.localDay(tr.date) || '').startsWith(month))
+      : trades;
     return list.reduce((sum, tr) => {
       const c = Calc.trade(tr);
       return c.estimated ? sum : sum + Math.max(0, c.netPnl || 0);

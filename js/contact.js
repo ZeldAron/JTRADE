@@ -70,6 +70,12 @@ const Contact = (() => {
       }
 
       const plan = (() => { try { return Store.isPro() ? 'Pro' : 'Basic'; } catch { return '?'; } })();
+      if (!_fbFunctions) {
+        error.textContent = 'Service indisponible — recharge la page.';
+        btn.disabled      = false;
+        label.textContent = i18n.t('contact.send');
+        return;
+      }
       const callable = _fbFunctions.httpsCallable('sendContactMessage');
       const result   = await callable({ name, email, message, plan, captchaToken });
       if (result.data?.ok) {
