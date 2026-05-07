@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.77',
+      date: '2026-05-07',
+      time: '04:00',
+      tags: ['security'],
+      title: 'hCaptcha intégré sur les formulaires',
+      titleEn: 'hCaptcha integrated on forms',
+      items: [
+        { type: 'security', text: 'Widget hCaptcha ajouté sur les formulaires d\'inscription et de contact — bloque les bots automatisés', textEn: 'hCaptcha widget added on sign-up and contact forms — blocks automated bots' },
+        { type: 'security', text: 'CSP mise à jour pour autoriser les domaines hCaptcha (script, frame, style, connect)', textEn: 'CSP updated to allow hCaptcha domains (script, frame, style, connect)' },
+        { type: 'security', text: 'Message d\'erreur si la case captcha n\'est pas cochée + reset automatique en cas d\'échec d\'envoi', textEn: 'Error message if captcha not checked + automatic reset on send failure' },
+      ],
+    },
+    {
       version: '0.9.76',
       date: '2026-05-07',
       time: '03:30',
