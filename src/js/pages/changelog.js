@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.82',
+      date: '2026-05-07',
+      time: '08:00',
+      tags: ['security'],
+      title: 'Cloud Function Groq — clé API jamais exposée',
+      titleEn: 'Cloud Function Groq — API key never exposed',
+      items: [
+        { type: 'security', text: 'Les analyses IA passent désormais par une Cloud Function Firebase (proxy serveur) — la clé Groq n\'est plus jamais visible côté navigateur', textEn: 'AI analyses now go through a Firebase Cloud Function (server proxy) — the Groq key is no longer visible client-side' },
+        { type: 'security', text: 'Quota IA enforcé côté serveur (impossible à bypasser via DevTools) — la fonction vérifie le plan et le compteur avant chaque appel', textEn: 'AI quota enforced server-side (no longer bypassable via DevTools) — function verifies plan and counter before each call' },
+        { type: 'security', text: 'CSP retire api.groq.com (plus appelée directement) et ajoute le domaine cloudfunctions.net', textEn: 'CSP removed api.groq.com (no longer called directly) and added cloudfunctions.net domain' },
+        { type: 'security', text: 'SDK Firebase Functions chargé avec SRI (Subresource Integrity)', textEn: 'Firebase Functions SDK loaded with SRI (Subresource Integrity)' },
+      ],
+    },
+    {
       version: '0.9.81',
       date: '2026-05-07',
       time: '07:00',

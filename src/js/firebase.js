@@ -22,5 +22,6 @@ try {
   console.warn('[Firebase] App Check init failed:', e);
 }
 
-const _fbAuth = firebase.auth();
-const _fbDb   = firebase.firestore();
+const _fbAuth      = firebase.auth();
+const _fbDb        = firebase.firestore();
+const _fbFunctions = firebase.functions ? firebase.functions('europe-west1') : null;
