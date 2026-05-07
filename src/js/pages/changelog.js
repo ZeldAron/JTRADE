@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.85',
+      date: '2026-05-07',
+      time: '17:30',
+      tags: ['fix', 'security'],
+      title: 'Fix Cloud Functions — captcha forwardé + rate-limit corrigé',
+      titleEn: 'Cloud Functions fix — captcha forwarded + rate-limit corrected',
+      items: [
+        { type: 'fix', text: 'Le contact form transmet maintenant le token hCaptcha à la Cloud Function (qui le forward à Web3Forms) — le 403 Web3Forms est résolu', textEn: 'Contact form now forwards the hCaptcha token to the Cloud Function (which forwards it to Web3Forms) — fixes the 403 error' },
+        { type: 'fix', text: 'Rate-limit serveur ne marque plus le timestamp lors d\'un échec — un envoi qui rate ne bloque plus pendant 60s', textEn: 'Server rate-limit no longer marks timestamp on failure — a failed send no longer blocks for 60s' },
+        { type: 'security', text: 'CSP : ajout de apis.google.com (utilisé en interne par reCAPTCHA Enterprise)', textEn: 'CSP: added apis.google.com (used internally by reCAPTCHA Enterprise)' },
+      ],
+    },
+    {
       version: '0.9.84',
       date: '2026-05-07',
       time: '09:00',

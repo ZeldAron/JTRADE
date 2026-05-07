@@ -71,7 +71,7 @@ const Contact = (() => {
 
       const plan = (() => { try { return Store.isPro() ? 'Pro' : 'Basic'; } catch { return '?'; } })();
       const callable = _fbFunctions.httpsCallable('sendContactMessage');
-      const result   = await callable({ name, email, message, plan });
+      const result   = await callable({ name, email, message, plan, captchaToken });
       if (result.data?.ok) {
         _lastSubmit = Date.now();
         document.getElementById('contactForm').style.display    = 'none';
