@@ -44,9 +44,9 @@ const Modal = (() => {
     goToStep(2);
     const groqBadge = $('groqStatusBadge');
     if (groqBadge) {
-      const hasKey = !!Store.getGroqKey();
-      groqBadge.textContent = hasKey ? i18n.t('modal.groq.active') : i18n.t('modal.groq.nokey');
-      groqBadge.style.color = hasKey ? 'var(--green)' : 'var(--red)';
+      // Avec la Cloud Function, l'IA est toujours disponible côté serveur
+      groqBadge.textContent = i18n.t('modal.groq.active');
+      groqBadge.style.color = 'var(--green)';
     }
     setTimeout(() => $('wDropZone').focus?.(), 150);
   }
@@ -132,8 +132,8 @@ const Modal = (() => {
     return (r.entry || r.sl || r.tp1) ? r : null;
   }
 
-  // ── Groq Vision API ──────────────────────────────────────────────────────────
-  async function analyzeWithGroq(imageB64, apiKey, direction) {
+  // ── Groq Vision API (via Cloud Function — clé API jamais exposée au client) ──
+  async function analyzeWithGroq(imageB64, _unusedApiKey, direction) {
     const isLong = direction !== 'short';
     const prompt =
       `You are analyzing a TradingView trading chart. Direction: ${isLong ? 'LONG' : 'SHORT'}.\n` +
@@ -173,37 +173,27 @@ const Modal = (() => {
       'llama-3.2-11b-vision-preview',
     ];
 
-    for (const model of GROQ_MODELS) {
-      let res;
-      try {
-        res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-          body:    JSON.stringify({
-            model,
-            temperature: 0,
-            max_tokens:  120,
-            messages: [{
-              role:    'user',
-              content: [
-                { type: 'text',      text: prompt },
-                { type: 'image_url', image_url: { url: `data:image/png;base64,${imageB64}` } },
-              ],
-            }],
-          }),
-          signal: AbortSignal.timeout(30000),
-        });
-      } catch { continue; }
+    // Appel via Cloud Function (clé Groq côté serveur, quota enforce côté serveur)
+    const callable = firebase.functions('europe-west1').httpsCallable('analyzeChart');
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const msg = err.error?.message || '';
-        if (res.status === 401) throw new Error(i18n.t('modal.groq.invalid'));
-        if (res.status === 429) throw new Error('Groq : rate limit — réessaie dans quelques secondes');
-        continue; // modèle indisponible ou absent → essayer le suivant
+    for (const model of GROQ_MODELS) {
+      let data;
+      try {
+        const result = await callable({ model, prompt, imageB64 });
+        data = result.data;
+      } catch (e) {
+        const code = e.code || '';
+        const msg  = e.message || '';
+        if (code === 'functions/unauthenticated' || code === 'unauthenticated')
+          throw new Error('Tu dois être connecté pour analyser un screenshot.');
+        if (code === 'functions/resource-exhausted' || code === 'resource-exhausted')
+          throw new Error(msg || 'Limite quotidienne atteinte. Passe Pro pour des analyses illimitées.');
+        if (code === 'functions/failed-precondition' || code === 'failed-precondition')
+          throw new Error(i18n.t('modal.groq.invalid'));
+        // Erreur réseau ou modèle indisponible → essayer le suivant
+        continue;
       }
 
-      const data = await res.json();
       const text = data.choices?.[0]?.message?.content || '';
 
       // Parsing robuste : JSON dans markdown ou brut
@@ -246,7 +236,6 @@ const Modal = (() => {
 
     const statusEl = $('wAnalysisStatus');
     const retryBtn = $('wBtnRetry');
-    const groqKey  = Store.getGroqKey();
     const textHint = ($('wTextHint').value || '').trim();
 
     statusEl.style.display  = 'block';
@@ -257,13 +246,7 @@ const Modal = (() => {
 
     try {
 
-      if (!groqKey) {
-        statusEl.innerHTML = `<span style="color:var(--red)">${i18n.t('modal.groq.nokey')}</span>`;
-        $('wBtnNext2').disabled = false;
-        retryBtn.style.display  = 'none';
-        return;
-      }
-
+      // Pré-check côté client (UX rapide — la Cloud Function fait le vrai check)
       if (!Store.canAnalyzeToday()) {
         statusEl.innerHTML = `<span style="color:var(--red)">${i18n.t('err.limit.ai')}</span>
           <span style="color:var(--muted)"> <a href="#" id="goOffersLink" style="color:var(--accent)">${i18n.t('err.limit.ai.cta')}</a></span>`;
@@ -278,7 +261,7 @@ const Modal = (() => {
         return;
       }
 
-      const result = await analyzeWithGroq(capturedImage, groqKey, direction);
+      const result = await analyzeWithGroq(capturedImage, null, direction);
       Store.recordAnalysis();
       let { entry, sl, tp1 } = result;
       entry = entry || null; sl = sl || null; tp1 = tp1 || null;
