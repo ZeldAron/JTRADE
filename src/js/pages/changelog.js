@@ -5,6 +5,22 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.80',
+      date: '2026-05-07',
+      time: '06:00',
+      tags: ['security', 'feat'],
+      title: 'Polish sécurité + SEO + email verification',
+      titleEn: 'Security polish + SEO + email verification',
+      items: [
+        { type: 'feat', text: 'Modal HTML stylé pour confirmer la suppression de tous les trades (remplace le prompt natif)', textEn: 'Styled HTML modal to confirm clearing all trades (replaces native prompt)' },
+        { type: 'security', text: 'Email de vérification envoyé automatiquement à l\'inscription (mode soft, n\'empêche pas l\'utilisation)', textEn: 'Verification email sent automatically on signup (soft mode, does not block usage)' },
+        { type: 'security', text: 'Rate-limiting sur la suppression de compte : 3 tentatives échouées → blocage 5 min', textEn: 'Rate-limiting on account deletion: 3 failed attempts → 5min lock' },
+        { type: 'feat', text: 'Meta description, Open Graph et Twitter Card ajoutés (meilleur partage social + SEO)', textEn: 'Meta description, Open Graph and Twitter Card added (better social sharing + SEO)' },
+        { type: 'feat', text: 'Favicon SVG ajouté (logo ZeldTrade)', textEn: 'SVG favicon added (ZeldTrade logo)' },
+        { type: 'security', text: 'Code de la Cloud Function "proxy Groq" préparé dans /cloud-functions/ (à déployer manuellement pour protéger la clé Groq)', textEn: 'Cloud Function "Groq proxy" code prepared in /cloud-functions/ (to deploy manually to protect the Groq key)' },
+      ],
+    },
+    {
       version: '0.9.79',
       date: '2026-05-07',
       time: '05:00',

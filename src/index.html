@@ -21,10 +21,30 @@
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=(), midi=(), serial=(), interest-cohort=()">
-  <title>ZeldTrade</title>
+
+  <title>ZeldTrade — Journal de trading pour traders en prop firm</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230a84ff'/%3E%3Cpolyline points='5,7 19,7 5,17 19,17' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <meta name="description" content="Journal de trading pensé pour les traders en prop firm. Suivi de performance, gestion des règles d'évaluation Apex, Topstep, FTMO, Lucid, calculatrice de position. Sans Excel.">
+  <meta name="keywords" content="journal de trading, prop firm, Apex, Topstep, FTMO, Lucid, day trading, S&P 500, performance trading, calculatrice position">
+  <meta name="author" content="Aaron Platon">
+  <meta name="theme-color" content="#0d0d0f">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ZeldTrade — Journal de trading pour traders en prop firm">
+  <meta property="og:description" content="Suivi de performance, règles d'évaluation, calcul de position. Tout au même endroit, sans Excel.">
+  <meta property="og:url" content="https://zeldaron.github.io/zeldtrade">
+  <meta property="og:site_name" content="ZeldTrade">
+  <meta property="og:locale" content="fr_FR">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ZeldTrade — Journal de trading pour traders en prop firm">
+  <meta name="twitter:description" content="Suivi de performance, règles d'évaluation, calcul de position. Tout au même endroit, sans Excel.">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=0.9.79">
+  <link rel="stylesheet" href="css/style.css?v=0.9.80">
 </head>
 <body>
 
@@ -726,7 +746,7 @@
 
           <div class="settings-section">
             <h3 data-i18n="set.about">À propos</h3>
-            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.79</span></div>
+            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.80</span></div>
             <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
           </div>
         </div>
@@ -921,28 +941,28 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js" integrity="sha384-HTm9DHQcJ0avSI5BWVmeKtm3+YULHbl/wgtLQaMGgYEZLQ8cINY+UF+ZsliUaBvK" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js" integrity="sha384-xD1t9dGSVKobUztxDkv6xUI0H4AnFz0NxwlgDJJ7FDlblG9xxr1Z9iauCZuJYj6p" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" integrity="sha384-XMIl1b2Ez9tKAM0R5q67/iLdfnlLBl9kfo40X5WMtCPb+3OLplrjnOxZTYCg1SKY" crossorigin="anonymous"></script>
-  <script src="js/firebase.js?v=0.9.79"></script>
+  <script src="js/firebase.js?v=0.9.80"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
-  <script src="js/i18n.js?v=0.9.79"></script>
-  <script src="js/auth.js?v=0.9.79"></script>
-  <script src="js/store.js?v=0.9.79"></script>
-  <script src="js/calc.js?v=0.9.79"></script>
-  <script src="js/modal.js?v=0.9.79"></script>
-  <script src="js/ui.js?v=0.9.79"></script>
-  <script src="js/pages/dashboard.js?v=0.9.79"></script>
-  <script src="js/pages/analytics.js?v=0.9.79"></script>
-  <script src="js/pages/settings.js?v=0.9.79"></script>
-  <script src="js/pages/goals.js?v=0.9.79"></script>
-  <script src="js/pages/calendar.js?v=0.9.79"></script>
-  <script src="js/pages/micro.js?v=0.9.79"></script>
-  <script src="js/pages/outils.js?v=0.9.79"></script>
-  <script src="js/pages/offers.js?v=0.9.79"></script>
-  <script src="js/pages/changelog.js?v=0.9.79"></script>
-  <script src="js/contact.js?v=0.9.79"></script>
-  <script src="js/app.js?v=0.9.79"></script>
+  <script src="js/i18n.js?v=0.9.80"></script>
+  <script src="js/auth.js?v=0.9.80"></script>
+  <script src="js/store.js?v=0.9.80"></script>
+  <script src="js/calc.js?v=0.9.80"></script>
+  <script src="js/modal.js?v=0.9.80"></script>
+  <script src="js/ui.js?v=0.9.80"></script>
+  <script src="js/pages/dashboard.js?v=0.9.80"></script>
+  <script src="js/pages/analytics.js?v=0.9.80"></script>
+  <script src="js/pages/settings.js?v=0.9.80"></script>
+  <script src="js/pages/goals.js?v=0.9.80"></script>
+  <script src="js/pages/calendar.js?v=0.9.80"></script>
+  <script src="js/pages/micro.js?v=0.9.80"></script>
+  <script src="js/pages/outils.js?v=0.9.80"></script>
+  <script src="js/pages/offers.js?v=0.9.80"></script>
+  <script src="js/pages/changelog.js?v=0.9.80"></script>
+  <script src="js/contact.js?v=0.9.80"></script>
+  <script src="js/app.js?v=0.9.80"></script>
 
-  <script src="js/app-bootstrap.js?v=0.9.79"></script>
+  <script src="js/app-bootstrap.js?v=0.9.80"></script>
 
   <!-- hCaptcha (anti-bot pour les formulaires register et contact) -->
   <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
@@ -1053,6 +1073,44 @@
           font-size:13px;font-weight:700;cursor:pointer;
           transition:opacity 0.15s;
         " data-i18n="del.modal.confirm">Supprimer définitivement</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EFFACER TOUS LES TRADES ──────────────────────────────────────────── -->
+  <div id="clearTradesOverlay" style="
+    display:none;position:fixed;inset:0;z-index:9100;
+    background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+  ">
+    <div style="
+      background:var(--bg2);border:1px solid rgba(255,69,58,0.25);
+      border-radius:14px;width:420px;max-width:calc(100vw - 40px);
+      padding:28px;box-shadow:0 40px 80px rgba(0,0,0,0.6);
+    ">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <h2 style="font-size:16px;font-weight:700;color:var(--red)">Effacer tous les trades</h2>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">
+        Cette action est irréversible. Tous tes trades seront définitivement supprimés (comptes, paramètres, groupes conservés).
+      </p>
+      <div class="form-field" style="margin-bottom:8px">
+        <label class="form-label">Pour confirmer, tape <strong style="color:var(--red)">EFFACER</strong> ci-dessous</label>
+        <input class="form-input" type="text" id="clearTradesConfirmInput" placeholder="EFFACER" autocomplete="off" maxlength="20" spellcheck="false">
+      </div>
+      <div id="clearTradesError" style="font-size:12px;color:var(--red);min-height:18px;margin-bottom:14px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn-ghost" id="clearTradesCancelBtn">Annuler</button>
+        <button id="clearTradesConfirmBtn" style="
+          padding:7px 16px;border-radius:var(--r-sm);border:none;
+          background:var(--red);color:#fff;font-family:inherit;
+          font-size:13px;font-weight:700;cursor:pointer;
+          transition:opacity 0.15s;
+        ">Effacer définitivement</button>
       </div>
     </div>
   </div>

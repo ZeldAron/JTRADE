@@ -834,16 +834,40 @@
     });
 
     $('btnClearAll').addEventListener('click', () => {
-      if (!confirm(t('set.clear.confirm'))) return;
-      // Double confirmation textuelle pour éviter les clics accidentels (anti-vandalisme session)
-      const typed = prompt('Tape EFFACER pour confirmer la suppression de tous les trades :');
-      if (typed !== 'EFFACER') return;
+      const overlay = $('clearTradesOverlay');
+      const input   = $('clearTradesConfirmInput');
+      const errEl   = $('clearTradesError');
+      if (!overlay) return;
+      input.value = '';
+      errEl.textContent = '';
+      overlay.style.display = 'flex';
+      setTimeout(() => input.focus(), 50);
+    });
+
+    $('clearTradesCancelBtn')?.addEventListener('click', () => {
+      $('clearTradesOverlay').style.display = 'none';
+    });
+
+    $('clearTradesConfirmBtn')?.addEventListener('click', () => {
+      const input = $('clearTradesConfirmInput');
+      const errEl = $('clearTradesError');
+      if (input.value.trim() !== 'EFFACER') {
+        errEl.textContent = 'Tape exactement "EFFACER" pour confirmer.';
+        return;
+      }
       Store.clearTrades();
       UI.selectedId = null;
       UI.renderList();
       UI.renderDetail();
       UI.updateStats();
+      $('clearTradesOverlay').style.display = 'none';
       UI.toast(t('set.clear.done'));
+    });
+
+    // Submit avec Entrée dans le champ
+    $('clearTradesConfirmInput')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') $('clearTradesConfirmBtn').click();
+      if (e.key === 'Escape') $('clearTradesCancelBtn').click();
     });
 
     // ── Suppression de compte ──────────────────────────────────────────────────
@@ -868,10 +892,20 @@
       if (e.target === delOverlay) delOverlay.style.display = 'none';
     });
 
+    // Rate-limiting local : max 3 échecs → blocage 5 min (anti-vandalisme session)
+    let _delAttempts = 0;
+    let _delLockedUntil = 0;
+
     delConfirmBtn.addEventListener('click', async () => {
-      const email    = $('delEmail').value.trim();
+      const email    = $('delEmail').value.trim().slice(0, 254);
       const password = $('delPassword').value;
       delError.textContent = '';
+
+      if (Date.now() < _delLockedUntil) {
+        const wait = Math.ceil((_delLockedUntil - Date.now()) / 1000);
+        delError.textContent = `Trop de tentatives — réessaie dans ${wait}s.`;
+        return;
+      }
 
       if (!email || !password) {
         delError.textContent = t('auth.err.required');
@@ -884,11 +918,17 @@
       const result = await Auth.deleteAccount(email, password);
 
       if (result.ok) {
+        _delAttempts = 0;
         delOverlay.style.display = 'none';
         // Firebase signOut se déclenche automatiquement après delete()
         // mais on force quand même le retour à la landing
         window.location.reload();
       } else {
+        _delAttempts++;
+        if (_delAttempts >= 3) {
+          _delLockedUntil = Date.now() + 5 * 60_000;
+          _delAttempts = 0;
+        }
         delError.textContent     = result.error;
         delConfirmBtn.disabled   = false;
         delConfirmBtn.textContent = t('del.modal.confirm');
