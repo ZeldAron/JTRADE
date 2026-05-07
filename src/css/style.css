@@ -1305,7 +1305,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 .lp-pricing h2    { font-size: 30px; font-weight: 600; margin: 0 0 10px; }
 .lp-pricing-sub   { font-size: 13px; color: var(--muted); margin-bottom: 40px; }
-.lp-plans         { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 1100px; margin: 0 auto; }
+.lp-plans         { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 1100px; margin: 0 auto; align-items: stretch; }
 .lp-plan {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -1313,7 +1313,10 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   padding: 30px 26px;
   text-align: left;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
+.lp-plan ul { flex: 1; }
 .lp-plan-pro {
   border-color: rgba(10,132,255,0.4);
   box-shadow: 0 0 0 1px rgba(10,132,255,0.1), 0 8px 32px rgba(10,132,255,0.1);
