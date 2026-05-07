@@ -497,6 +497,10 @@ const Store = (() => {
       window.dispatchEvent(new CustomEvent('store:planChanged'));
       return true;
     } catch (e) {
+      // Compte cette tentative comme échec (couvre le cas Firestore PERMISSION_DENIED
+      // quand un user tente un code attribué à un autre uid)
+      _proAttempts++;
+      if (_proAttempts >= 3) { _proThrottleUntil = Date.now() + 60_000; _proAttempts = 0; }
       console.warn('[Store] activatePro error', e);
       return false;
     }

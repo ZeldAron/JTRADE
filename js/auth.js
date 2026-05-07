@@ -55,7 +55,7 @@ const Auth = (() => {
       // Notif admin via Web3Forms (captcha requis maintenant que hCaptcha est activé)
       if (captchaToken) {
         const ctrl = new AbortController();
-        setTimeout(() => ctrl.abort(), 10_000);
+        const tmr  = setTimeout(() => ctrl.abort(), 10_000);
         fetch('https://api.web3forms.com/submit', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -68,7 +68,7 @@ const Auth = (() => {
             message:    `Nouvel inscrit !\n\nPseudo  : ${safeName}\nEmail   : ${safeEmail}\nDate    : ${new Date().toLocaleString('fr-FR')}`,
             'h-captcha-response': captchaToken,
           }),
-        }).catch(() => {});
+        }).finally(() => clearTimeout(tmr)).catch(() => {});
       }
 
       return { user: { id: cred.user.uid, username: safeName } };
