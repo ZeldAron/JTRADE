@@ -25,8 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const focus = { login: 'loginUsername', register: 'regUsername', forgot: 'forgotEmail' };
     setTimeout(() => { if ($(focus[mode])) $(focus[mode]).focus(); }, 60);
   }
-  function openModal(mode) { showForm(mode); authModal.style.display = 'flex'; }
+  function openModal(mode) {
+    showForm(mode);
+    authModal.style.display = 'flex';
+  }
   function closeModal() {
+    // Early return si déjà fermée → évite de vider les champs par erreur (Escape global, etc.)
+    if (authModal.style.display === 'none' || authModal.style.display === '') return;
     authModal.style.display = 'none';
     // Vide les champs sensibles à la fermeture
     ['loginPassword','regPassword','regPasswordConfirm','forgotEmail','loginUsername','regUsername','regEmail'].forEach(id => {
@@ -37,23 +42,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  $('btnNavLogin').addEventListener('click',    () => openModal('login'));
-  $('btnNavRegister').addEventListener('click', () => openModal('register'));
-  $('btnHeroCta').addEventListener('click',     () => openModal('register'));
-  $('btnHeroLogin').addEventListener('click',   () => openModal('login'));
-  $('btnLandingFree').addEventListener('click', () => openModal('register'));
-  $('btnLandingPro').addEventListener('click',  () => {
-    sessionStorage.setItem('ztGoto', 'offers');
-    openModal('login');
+  // Helper unifié : preventDefault + stopPropagation + open
+  function bindOpen(id, mode, before) {
+    const el = $(id);
+    if (!el) return;
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (before) before();
+      openModal(mode);
+    });
+  }
+
+  bindOpen('btnNavLogin',       'login');
+  bindOpen('btnNavRegister',    'register');
+  bindOpen('btnHeroCta',        'register');
+  bindOpen('btnHeroLogin',      'login');
+  bindOpen('btnLandingFree',    'register');
+  bindOpen('btnLandingPro',     'login',  () => sessionStorage.setItem('ztGoto', 'offers'));
+  bindOpen('btnLandingLifetime','login',  () => sessionStorage.setItem('ztGoto', 'offers'));
+
+  $('authModalClose').addEventListener('click', e => { e.stopPropagation(); closeModal(); });
+  // Click sur le backdrop : ne ferme QUE si le clic est sur le backdrop lui-même
+  // (un clic sur la box ne doit pas remonter au backdrop, mais on protège quand même)
+  $('authModalBackdrop').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
   });
-  const btnLandingLifetime = $('btnLandingLifetime');
-  if (btnLandingLifetime) btnLandingLifetime.addEventListener('click', () => {
-    sessionStorage.setItem('ztGoto', 'offers');
-    openModal('login');
+  // Escape : ne ferme que si la modal est réellement ouverte
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && authModal.style.display === 'flex') closeModal();
   });
-  $('authModalClose').addEventListener('click',    closeModal);
-  $('authModalBackdrop').addEventListener('click', closeModal);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
   // ── Loader ──────────────────────────────────────────────────────────────────
   function showLoader(username) {

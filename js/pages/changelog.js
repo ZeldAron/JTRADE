@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.88',
+      date: '2026-05-07',
+      time: '20:00',
+      tags: ['fix'],
+      title: 'Fix boutons de connexion sur la landing',
+      titleEn: 'Fix login buttons on landing page',
+      items: [
+        { type: 'fix', text: 'Les boutons d\'inscription/connexion fonctionnent maintenant à 100% (avant : "1 fois sur 3"). Causes : type="button" manquant, propagation d\'event vers le backdrop, Escape global qui interférait', textEn: 'Sign-up/login buttons now work 100% of the time (was "1 in 3"). Causes: missing type="button", event bubbling to backdrop, global Escape interfering' },
+        { type: 'fix', text: 'closeModal ne s\'exécute plus si la modal est déjà fermée (évitait de vider des champs par accident)', textEn: 'closeModal no longer runs if modal already closed (was clearing fields accidentally)' },
+        { type: 'fix', text: 'Le clic sur le backdrop ne ferme plus la modal si on clique sur un enfant (anti-bubble)', textEn: 'Backdrop click no longer closes modal when clicking on a child element (anti-bubble)' },
+      ],
+    },
+    {
       version: '0.9.87',
       date: '2026-05-07',
       time: '19:00',
