@@ -53,21 +53,52 @@ const Modal = (() => {
 
   // ── Étape 2 : Image ─────────────────────────────────────────────────────────
 
+  // Validation magic bytes — anti-MIME spoofing.
+  // Le MIME type côté navigateur est facilement falsifiable ; on vérifie la
+  // signature binaire (4-12 premiers octets) pour confirmer qu'il s'agit
+  // bien d'une image légitime.
+  function isValidImageMagicBytes(bytes) {
+    if (bytes.length < 12) return false;
+    // PNG : 89 50 4E 47 0D 0A 1A 0A
+    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) return true;
+    // JPEG : FF D8 FF
+    if (bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) return true;
+    // GIF87a / GIF89a : 47 49 46 38
+    if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) return true;
+    // WEBP : RIFF....WEBP (RIFF = 52 49 46 46, then 4 bytes size, then 57 45 42 50)
+    if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+        bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) return true;
+    // BMP : 42 4D
+    if (bytes[0] === 0x42 && bytes[1] === 0x4D) return true;
+    return false;
+  }
+
   function loadImageFile(file) {
     if (!file) return;
     if (!file.type.startsWith('image/')) { UI.toast('Format non supporté — utilise une image (PNG, JPG…)', true); return; }
     if (file.size > 10 * 1024 * 1024)   { UI.toast('Image trop lourde (max 10 Mo)', true); return; }
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const b64 = ev.target.result.split(',')[1];
-      capturedImage = b64;
-      $('wPreviewImg').src             = 'data:image/png;base64,' + b64;
-      $('wDropPrompt').style.display   = 'none';
-      $('wImagePreview').style.display = '';
-      $('wDropZone').classList.add('has-image');
-      analyzeImage();
-    };
-    reader.readAsDataURL(file);
+
+    // Vérification magic bytes avant lecture complète (évite de charger un fichier malicieux)
+    file.slice(0, 12).arrayBuffer().then(buf => {
+      const head = new Uint8Array(buf);
+      if (!isValidImageMagicBytes(head)) {
+        UI.toast('Fichier invalide — l\'image semble corrompue ou son extension a été modifiée.', true);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const b64 = ev.target.result.split(',')[1];
+        capturedImage = b64;
+        $('wPreviewImg').src             = 'data:image/png;base64,' + b64;
+        $('wDropPrompt').style.display   = 'none';
+        $('wImagePreview').style.display = '';
+        $('wDropZone').classList.add('has-image');
+        analyzeImage();
+      };
+      reader.readAsDataURL(file);
+    }).catch(() => {
+      UI.toast('Erreur de lecture du fichier.', true);
+    });
   }
 
   function clearImage() {

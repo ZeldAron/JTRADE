@@ -5,6 +5,21 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.81',
+      date: '2026-05-07',
+      time: '07:00',
+      tags: ['security'],
+      title: 'Pentester pass — durcissement avancé',
+      titleEn: 'Pentester pass — advanced hardening',
+      items: [
+        { type: 'security', text: 'Permissions-Policy étendue à 25+ APIs (idle-detection, screen-wake-lock, autoplay, picture-in-picture, encrypted-media, FedCM, browsing-topics, ad APIs…)', textEn: 'Permissions-Policy extended to 25+ APIs (idle-detection, screen-wake-lock, autoplay, picture-in-picture, encrypted-media, FedCM, browsing-topics, ad APIs…)' },
+        { type: 'security', text: 'Validation par magic bytes des screenshots uploadés — empêche un attaquant de renommer un fichier malveillant en .png', textEn: 'Magic bytes validation on uploaded screenshots — prevents an attacker from renaming a malicious file as .png' },
+        { type: 'security', text: 'Déconnexion automatique après 30 minutes d\'inactivité (mouseover / clavier / scroll resettent le timer)', textEn: 'Automatic logout after 30 minutes of inactivity (mouseover / keyboard / scroll reset the timer)' },
+        { type: 'security', text: 'Cache-Control: no-cache, no-store ajouté — empêche le cache HTTP de retenir des pages avec données sensibles', textEn: 'Cache-Control: no-cache, no-store added — prevents HTTP cache from holding pages with sensitive data' },
+        { type: 'security', text: 'format-detection meta : empêche les navigateurs de détecter automatiquement les emails/téléphones et de créer des liens cliquables', textEn: 'format-detection meta: prevents browsers from auto-detecting emails/phones and creating clickable links' },
+      ],
+    },
+    {
       version: '0.9.80',
       date: '2026-05-07',
       time: '06:00',

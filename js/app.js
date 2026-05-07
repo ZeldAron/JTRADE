@@ -186,4 +186,18 @@ function initApp() {
       if (currentPage === 'dashboard') UI.renderDashboard();
     }
   }, 60_000); // vérifie chaque minute
+
+  // ── AUTO-LOGOUT après inactivité (sécurité contre vol de session sur appareil partagé) ──
+  let _lastActivity = Date.now();
+  const IDLE_LIMIT_MS = 30 * 60_000; // 30 minutes
+  const resetActivity = () => { _lastActivity = Date.now(); };
+  ['mousedown','keydown','scroll','touchstart','click'].forEach(ev => {
+    window.addEventListener(ev, resetActivity, { passive: true });
+  });
+  setInterval(() => {
+    if (Date.now() - _lastActivity > IDLE_LIMIT_MS) {
+      try { Store.clearLocalCache(); } catch {}
+      Auth.logout().finally(() => location.reload());
+    }
+  }, 60_000); // check chaque minute
 }
