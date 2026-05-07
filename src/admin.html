@@ -6,11 +6,11 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src  'self' https://www.gstatic.com;
+    script-src  'self' https://www.gstatic.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com/recaptcha/;
     style-src   'self' 'unsafe-inline';
-    connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://firebase.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://firestore.googleapis.com;
-    img-src     'self' data:;
-    frame-src   'none';
+    connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://firebase.googleapis.com https://firebaseappcheck.googleapis.com https://content-firebaseappcheck.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://firestore.googleapis.com https://www.google.com https://www.recaptcha.net;
+    img-src     'self' data: https://www.gstatic.com/recaptcha/;
+    frame-src   https://www.google.com https://www.recaptcha.net;
     frame-ancestors 'none';
     form-action 'self';
     object-src  'none';
@@ -477,6 +477,7 @@
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" integrity="sha384-ajMUFBUFMCyjh8uxJg6bkGcKe9RTolyjwbxB3yES0QQMenP3Oztj/W9vA2SJPcIh" crossorigin="anonymous"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js" integrity="sha384-HTm9DHQcJ0avSI5BWVmeKtm3+YULHbl/wgtLQaMGgYEZLQ8cINY+UF+ZsliUaBvK" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js" integrity="sha384-xD1t9dGSVKobUztxDkv6xUI0H4AnFz0NxwlgDJJ7FDlblG9xxr1Z9iauCZuJYj6p" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" integrity="sha384-XMIl1b2Ez9tKAM0R5q67/iLdfnlLBl9kfo40X5WMtCPb+3OLplrjnOxZTYCg1SKY" crossorigin="anonymous"></script>
   <script src="js/firebase.js"></script>
