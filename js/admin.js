@@ -84,10 +84,16 @@ const Admin = (() => {
     // Charge les plans en parallèle
     const plans = await Promise.all(users.map(u => getUserPlan(u.uid)));
 
+    const currentAdminUid = _fbAuth.currentUser?.uid || '';
+
     const rows = users.map((u, i) => {
       const plan = plans[i];
       const isPro = plan?.plan === 'pro';
       const activatedAt = isPro ? formatDate(plan.activatedAt) : '—';
+      const isSelf = u.uid === currentAdminUid;
+      const deleteBtn = isSelf
+        ? '<button class="btn-delete" disabled title="Vous ne pouvez pas vous supprimer vous-même">Supprimer</button>'
+        : `<button class="btn-delete" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}">Supprimer</button>`;
       return `<tr>
         <td>${esc(u.username)}</td>
         <td>${esc(u.email)}</td>
@@ -96,18 +102,22 @@ const Admin = (() => {
         <td>${formatDate(u.lastSeen)}</td>
         <td>
           <button class="btn-gen" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}">Générer code</button>
+          ${deleteBtn}
         </td>
       </tr>`;
     }).join('');
 
     wrap.innerHTML = `
       <table class="admin-table">
-        <thead><tr><th>Pseudo</th><th>Email</th><th>Plan</th><th>Activé le</th><th>Dernière connexion</th><th>Action</th></tr></thead>
+        <thead><tr><th>Pseudo</th><th>Email</th><th>Plan</th><th>Activé le</th><th>Dernière connexion</th><th>Actions</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>`;
 
     wrap.querySelectorAll('.btn-gen').forEach(btn => {
       btn.addEventListener('click', () => openGenModal(btn.dataset.uid, btn.dataset.email));
+    });
+    wrap.querySelectorAll('.btn-delete[data-uid]').forEach(btn => {
+      btn.addEventListener('click', () => openDeleteModal(btn.dataset.uid, btn.dataset.email));
     });
   }
 
@@ -194,6 +204,53 @@ const Admin = (() => {
       toast('Code copié !');
     } catch {
       toast('Sélectionne le code manuellement.', true);
+    }
+  }
+
+  // ── Modale suppression utilisateur ───────────────────────────────────────────
+  function openDeleteModal(uid, email) {
+    $('delTargetUid').value     = uid;
+    $('delTargetEmail').textContent = email;
+    $('delConfirmInput').value  = '';
+    $('delError').textContent   = '';
+    $('btnDoDelete').disabled   = true;
+    $('btnDoDelete').textContent = 'Supprimer définitivement';
+    $('deleteModal').style.display = 'flex';
+    setTimeout(() => $('delConfirmInput').focus(), 50);
+  }
+
+  function closeDeleteModal() {
+    $('deleteModal').style.display = 'none';
+  }
+
+  function onConfirmInputChange() {
+    $('btnDoDelete').disabled = $('delConfirmInput').value.trim() !== 'SUPPRIMER';
+  }
+
+  async function doDeleteUser() {
+    const uid   = $('delTargetUid').value;
+    const email = $('delTargetEmail').textContent;
+    if ($('delConfirmInput').value.trim() !== 'SUPPRIMER') return;
+    if (!_fbFunctions) {
+      $('delError').textContent = 'SDK Functions non chargé.';
+      return;
+    }
+    const btn = $('btnDoDelete');
+    btn.disabled    = true;
+    btn.textContent = 'Suppression…';
+    $('delError').textContent = '';
+    try {
+      const callable = _fbFunctions.httpsCallable('deleteUserAccount');
+      await callable({ uid });
+      toast(`Utilisateur ${email} supprimé.`);
+      closeDeleteModal();
+      renderUsers();
+    } catch (e) {
+      console.warn('[Admin] deleteUser failed', e);
+      const msg = (e && e.message) ? e.message : 'Erreur lors de la suppression.';
+      $('delError').textContent = msg;
+      btn.disabled    = false;
+      btn.textContent = 'Supprimer définitivement';
     }
   }
 
@@ -330,6 +387,10 @@ const Admin = (() => {
     $('btnCopyCode').addEventListener('click', copyCode);
     $('btnCloseModal').addEventListener('click', closeGenModal);
     $('adminModal').addEventListener('click', e => { if (e.target === $('adminModal')) closeGenModal(); });
+    $('btnCloseDelete').addEventListener('click', closeDeleteModal);
+    $('btnDoDelete').addEventListener('click', doDeleteUser);
+    $('delConfirmInput').addEventListener('input', onConfirmInputChange);
+    $('deleteModal').addEventListener('click', e => { if (e.target === $('deleteModal')) closeDeleteModal(); });
   }
 
   return { init };
