@@ -5,6 +5,17 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.93',
+      date: '2026-05-09',
+      time: '12:00',
+      tags: ['fix'],
+      title: 'Fix critique : activation Pro bloquée pour comptes existants',
+      titleEn: 'Critical fix: Pro activation blocked for existing accounts',
+      items: [
+        { type: 'fix', text: 'Règle Firestore plan : create-only bloquait l\'activation Pro si un doc plan existait déjà (legacy). Passage en write avec mêmes validations (codeHash → uid)', textEn: 'plan Firestore rule: create-only was blocking Pro activation if a plan doc already existed (legacy). Switched to write with same validations (codeHash → uid)' },
+      ],
+    },
+    {
       version: '0.9.90',
       date: '2026-05-08',
       time: '10:00',
