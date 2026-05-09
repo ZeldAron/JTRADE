@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.94',
+      date: '2026-05-09',
+      time: '14:00',
+      tags: ['feat', 'admin'],
+      title: 'Console admin : suppression complète d\'un utilisateur',
+      titleEn: 'Admin console: full user deletion',
+      items: [
+        { type: 'feat', text: 'Bouton "Supprimer" dans la liste des utilisateurs (admin) — confirmation par saisie de SUPPRIMER, supprime Firestore (trades, comptes, settings, plan, codes) + compte Firebase Auth via Cloud Function deleteUserAccount', textEn: 'New "Delete" button in admin user list — type SUPPRIMER to confirm, deletes Firestore data (trades, accounts, settings, plan, codes) + Firebase Auth account via deleteUserAccount Cloud Function' },
+        { type: 'security', text: 'Cloud Function deleteUserAccount : admin uniquement, App Check obligatoire, garde-fou anti auto-suppression, validation stricte de l\'uid', textEn: 'deleteUserAccount Cloud Function: admin only, App Check required, anti-self-deletion guard, strict uid validation' },
+      ],
+    },
+    {
       version: '0.9.93',
       date: '2026-05-09',
       time: '12:00',
