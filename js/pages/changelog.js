@@ -5,6 +5,23 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.96',
+      date: '2026-05-10',
+      time: '16:00',
+      tags: ['security', 'hardening'],
+      title: '4e ultraréview — hardening résiduel post-audit',
+      titleEn: '4th ultra-review — residual hardening post-audit',
+      items: [
+        { type: 'security', text: 'addGroup/updateGroup : strict spread (anti-injection champs depuis DevTools), nouveau _sanitizeGroupData (whitelist name + accountIds avec regex), nom de groupe whitelist alphanumérique strict', textEn: 'addGroup/updateGroup: strict spread (anti DevTools field injection), new _sanitizeGroupData (whitelist name + accountIds with regex), strict alphanumeric group name whitelist' },
+        { type: 'security', text: '_plan : whitelist STRICTE des champs lus depuis Firestore (anti-injection si une future CF écrivait isAdmin/unlimited/etc.)', textEn: '_plan: strict whitelist of fields loaded from Firestore (prevents injection if a future CF wrote isAdmin/unlimited/etc.)' },
+        { type: 'security', text: 'localStorage tampering : trades/myAccounts/groups sanitisés au load (un attaquant qui modifie localStorage à la main ne peut plus injecter de données non-validées)', textEn: 'localStorage tampering: trades/myAccounts/groups sanitized at load (an attacker modifying localStorage manually can no longer inject unvalidated data)' },
+        { type: 'security', text: 'revokeProCode étendu : tronque myAccounts à 1 élément lors du downgrade Pro→Basic (évite l\'UX cassée où le user a 100 comptes en lecture seule)', textEn: 'revokeProCode extended: truncates myAccounts to 1 item on Pro→Basic downgrade (avoids broken UX where the user has 100 read-only accounts)' },
+        { type: 'security', text: 'Cloud Functions : maxInstances ajouté (analyzeChart:10, contact:5, signup:5, delete:2, revoke:2) — budget DoS plafonné. consumeAppCheckToken:true sur toutes (token utilisable 1 fois, anti-replay). Retrait de localhost:8080 d\'ALLOWED_ORIGINS', textEn: 'Cloud Functions: maxInstances added (analyzeChart:10, contact:5, signup:5, delete:2, revoke:2) — DoS budget capped. consumeAppCheckToken:true on all (token usable once, anti-replay). localhost:8080 removed from ALLOWED_ORIGINS' },
+        { type: 'security', text: 'deleteUserAccount : audit log écrit AVANT toute action destructive (in_progress status) puis mis à jour à la fin (completed/partial) — garantit la traçabilité même si la fonction crash en cours', textEn: 'deleteUserAccount: audit log written BEFORE any destructive action (in_progress status) then updated at end (completed/partial) — guarantees traceability even if the function crashes mid-way' },
+        { type: 'fix', text: '_sanitizeTrade : dates antérieures à 2010-01-01 rejetées (anti pollution stats via epoch=0), addMyAccount : check canAddAccount() côté Store (cohérence Pro côté client). payment.html ?v= aligné sur la version courante', textEn: '_sanitizeTrade: dates before 2010-01-01 rejected (anti stats pollution via epoch=0), addMyAccount: canAddAccount() check at Store level (Pro consistency client-side). payment.html ?v= aligned with current version' },
+      ],
+    },
+    {
       version: '0.9.95',
       date: '2026-05-10',
       time: '10:00',
