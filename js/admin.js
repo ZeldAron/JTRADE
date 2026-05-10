@@ -254,21 +254,29 @@ const Admin = (() => {
     }
   }
 
-  // ── Révoquer un code ──────────────────────────────────────────────────────────
+  // ── Révoquer un code (via Cloud Function pour atomicité) ──────────────────────
+  let _revokeInFlight = false;
   async function revokeCode(id, uid, email, isActive) {
+    if (_revokeInFlight) return;
     const msg = isActive
       ? `Révoquer le code ET désactiver l'abonnement Pro de ${email} ?`
       : `Supprimer le code non utilisé de ${email} ?`;
     if (!confirm(msg)) return;
+    if (!_fbFunctions) {
+      toast('SDK Functions non chargé.', true);
+      return;
+    }
+    _revokeInFlight = true;
     try {
-      if (isActive) {
-        await _fbDb.collection('users').doc(uid).collection('data').doc('plan').delete();
-      }
-      await _fbDb.collection('proCodeHashes').doc(id).delete();
+      const callable = _fbFunctions.httpsCallable('revokeProCode');
+      await callable({ codeHash: id, uid });
       toast(isActive ? 'Abonnement Pro révoqué.' : 'Code supprimé.');
       renderCodes();
-    } catch {
-      toast('Erreur lors de la révocation — réessaie.', true);
+    } catch (e) {
+      console.warn('[Admin] revokeCode failed', e);
+      toast((e && e.message) || 'Erreur lors de la révocation.', true);
+    } finally {
+      _revokeInFlight = false;
     }
   }
 

@@ -5,6 +5,24 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.95',
+      date: '2026-05-10',
+      time: '10:00',
+      tags: ['security', 'fix'],
+      title: '3e ultraréview — hardening complet backend + client',
+      titleEn: '3rd ultra-review — full backend + client hardening',
+      items: [
+        { type: 'security', text: 'deleteUserAccount durci : ordre inversé (Auth.deleteUser + revokeRefreshTokens AVANT cascade Firestore — empêche les writes zombies du user pendant la suppression), listDocuments dynamique au lieu de liste hardcodée (pas d\'orphelins futurs), protection anti-suppression d\'un autre admin, audit log immuable dans /auditLogs', textEn: 'deleteUserAccount hardened: reversed order (Auth.deleteUser + revokeRefreshTokens BEFORE Firestore cascade — prevents zombie writes during deletion), dynamic listDocuments (no future orphans), protection against admin-deleting-admin, immutable audit log in /auditLogs' },
+        { type: 'security', text: 'Cloud Function revokeProCode (transactionnelle) — révocation atomique du code Pro ET du plan en une seule opération. Plus de window d\'incohérence où le code reste valide alors que le plan est révoqué', textEn: 'revokeProCode Cloud Function (transactional) — atomic revocation of both Pro code AND plan in one operation. No more inconsistency window where the code stays valid while the plan is revoked' },
+        { type: 'security', text: 'analyzeChart : try/catch sur fetch Groq (rollback quota sur timeout réseau, plus de quota perdu pour rien), system prompt anti-prompt-injection, validation regex base64, réponse trimmée (pas de leak metadata Groq au client)', textEn: 'analyzeChart: try/catch on Groq fetch (quota rollback on network timeout, no more wasted quota), anti prompt-injection system prompt, base64 regex validation, trimmed response (no Groq metadata leak to client)' },
+        { type: 'security', text: 'Firestore rules : isAdmin() exige email_verified, fix bug spreadsByFirm (request.resource.size() → data.size() valide), validation userEmails username regex stricte + blocklist (admin, zeldtrade, support…), proCodeHashes en create-only avec validation des champs, nouvelle collection /auditLogs (read admin, write impossible côté client)', textEn: 'Firestore rules: isAdmin() now requires email_verified, fix spreadsByFirm bug (request.resource.size() → data.size()), strict userEmails username regex + blocklist (admin, zeldtrade, support…), proCodeHashes create-only with field validation, new /auditLogs collection (admin-read, no client write)' },
+        { type: 'security', text: '_sanitizeTrade : escape HTML setup/notes dès le stockage (fail-safe — même si un renderer oublie escHtml, pas de XSS stocké), manualPnl borné dynamiquement à 50× le risque calculé (au lieu de ±1 milliard absurde), reject dates futures', textEn: '_sanitizeTrade: HTML escape setup/notes at storage (fail-safe — even if a renderer forgets escHtml, no stored XSS), manualPnl bounded dynamically to 50× calculated risk (instead of absurd ±1B), reject future dates' },
+        { type: 'security', text: '_safeNum gère la virgule décimale (cohérent avec CSV import), addMyAccount/updateMyAccount strict spread (plus de bypass via champs injectés depuis DevTools), _sanitizeAccountName whitelist alphanumérique strict', textEn: '_safeNum handles decimal comma (consistent with CSV import), addMyAccount/updateMyAccount strict spread (no more bypass via DevTools-injected fields), _sanitizeAccountName strict alphanumeric whitelist' },
+        { type: 'security', text: 'activatePro : lock anti-double-clic (empêche 2 activations parallèles qui désynchronisaient l\'UI). Store.purgeForeignCache au login : supprime les clés ztrade_* d\'autres uids dans localStorage (anti data-leakage sur appareil partagé)', textEn: 'activatePro: anti-double-click lock (prevents 2 parallel activations that would desync the UI). Store.purgeForeignCache on login: removes ztrade_* keys of other uids from localStorage (anti data-leakage on shared device)' },
+        { type: 'security', text: 'Console admin : révocation Pro passe par la Cloud Function transactionnelle revokeProCode (atomicité garantie côté serveur)', textEn: 'Admin console: Pro revocation now goes through the transactional revokeProCode Cloud Function (server-side atomicity guaranteed)' },
+      ],
+    },
+    {
       version: '0.9.94',
       date: '2026-05-09',
       time: '14:00',

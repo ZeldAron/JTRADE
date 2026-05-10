@@ -147,6 +147,8 @@ const Store = (() => {
     spreads       = { ...DEFAULT_SPREADS };
     spreadsByFirm = Object.fromEntries(Object.keys(DEFAULT_SPREADS_BY_FIRM).map(k => [k, { ...DEFAULT_SPREADS_BY_FIRM[k] }]));
     groups        = [];
+    // Purge les clés localStorage d'autres uids (anti data-leakage sur device partagé)
+    purgeForeignCache();
     _loadFromLocalStorage();
     _loadFromFirestore().then(_migrateLegacyData).catch(() => _migrateLegacyData());
   }
@@ -310,29 +312,61 @@ const Store = (() => {
   const DIRS     = new Set(['long', 'short']);
   const OUTCOMES = new Set(['win', 'loss', 'be', 'open']);
   function _safeNum(v, min, max, def) {
-    const n = parseFloat(v);
+    // Accepte virgule décimale (CSV européens) ET valeurs notation scientifique
+    // raisonnable. Reject Infinity, NaN, et tout ce qui ne parse pas en finite.
+    const s = typeof v === 'string' ? v.replace(',', '.') : v;
+    const n = parseFloat(s);
     if (!isFinite(n)) return def;
     return Math.max(min, Math.min(max, n));
   }
+  // Escape HTML : appliqué dès le storage sur les champs libres (setup, notes)
+  // → invariant fail-safe : même si un renderer oublie escHtml, pas de XSS stocké.
+  function _escHtmlStore(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
   function _sanitizeTrade(raw) {
+    // Borne manualPnl en fonction du risque calculable (anti-injection P&L absurde) :
+    // si on peut estimer le risk en $, on borne ±50× ce risque ; sinon ±100k$ (1 trade plafond).
+    const ctx = (function() {
+      const e = _safeNum(raw.entry, -1e7, 1e7, null);
+      const s = _safeNum(raw.sl,    -1e7, 1e7, null);
+      const c = _safeNum(raw.contracts, 0.01, 999, 1);
+      if (e == null || s == null) return 1e5;
+      const pts  = Math.abs(e - s);
+      const inst = String(raw.instrument || 'MES1');
+      const pv   = (typeof Calc !== 'undefined' && Calc.pointValue) ? Calc.pointValue(inst) : 5;
+      return Math.max(100, Math.min(1e6, pts * pv * c * 50));
+    })();
     const out = {
       instrument: String(raw.instrument || '').replace(/[^A-Za-z0-9/. _-]/g, '').slice(0, 20) || 'MES1',
       direction:  DIRS.has(raw.direction)    ? raw.direction : 'long',
       outcome:    OUTCOMES.has(raw.outcome)  ? raw.outcome   : 'open',
       contracts:  Math.max(0.01, Math.min(999, parseFloat(raw.contracts) || 0.01)),
-      setup:      String(raw.setup  || '').slice(0, 500),
-      notes:      String(raw.notes  || '').slice(0, 2000),
+      // setup/notes : escape HTML au stockage (fail-safe contre future XSS si un renderer oublie escHtml)
+      setup:      _escHtmlStore(raw.setup).slice(0, 500),
+      notes:      _escHtmlStore(raw.notes).slice(0, 2000),
       apex:       String(raw.apex   || '').replace(/[^A-Za-z0-9 _-]/g, '').slice(0, 100),
-      date:       (() => { try { const d = new Date(raw.date); return (isFinite(d) && /^\d{4}-\d{2}-\d{2}T/.test(raw.date)) ? raw.date : new Date().toISOString(); } catch { return new Date().toISOString(); } })(),
+      date:       (() => {
+        try {
+          const d = new Date(raw.date);
+          const now = Date.now();
+          // Rejette dates dans le futur (>1 jour) ou pas au format ISO attendu
+          if (isFinite(d) && /^\d{4}-\d{2}-\d{2}T/.test(raw.date) && d.getTime() <= now + 24*3600*1000)
+            return raw.date;
+          return new Date().toISOString();
+        } catch { return new Date().toISOString(); }
+      })(),
       entry:      raw.entry      != null ? _safeNum(raw.entry,      -1e7, 1e7, null) : null,
       sl:         raw.sl         != null ? _safeNum(raw.sl,         -1e7, 1e7, null) : null,
       tp1:        raw.tp1        != null ? _safeNum(raw.tp1,        -1e7, 1e7, null) : null,
       tp2:        raw.tp2        != null ? _safeNum(raw.tp2,        -1e7, 1e7, null) : null,
       tp3:        raw.tp3        != null ? _safeNum(raw.tp3,        -1e7, 1e7, null) : null,
       exitPrice:  raw.exitPrice  != null ? _safeNum(raw.exitPrice,  -1e7, 1e7, null) : null,
-      // manualPnl ne s'applique QU'aux trades fermés (forcé à null si open)
+      // manualPnl ne s'applique QU'aux trades fermés (forcé à null si open) + borné par ctx
       manualPnl:  (raw.manualPnl != null && (raw.outcome && raw.outcome !== 'open'))
-                    ? _safeNum(raw.manualPnl, -1e9, 1e9, null) : null,
+                    ? _safeNum(raw.manualPnl, -ctx, ctx, null) : null,
       // Snapshot du compte au moment du trade — préservé pour cohérence historique
       capital:    raw.capital    != null ? _safeNum(raw.capital,     0,    1e9, null) : null,
       feePerSide: raw.feePerSide != null ? _safeNum(raw.feePerSide,  0,    100, null) : null,
@@ -433,7 +467,9 @@ const Store = (() => {
   }
 
   function _sanitizeAccountName(name) {
-    return String(name || '').replace(/[<>"]/g, '').trim().slice(0, 50);
+    // Whitelist stricte : alphanumérique + . _ - espace (anti-injection HTML/CSS,
+    // anti-formule CSV, anti-bidi Unicode).
+    return String(name || '').replace(/[^A-Za-z0-9._\- ]/g, '').trim().slice(0, 50);
   }
   function _sanitizeAccount(data) {
     const s = {};
@@ -459,7 +495,9 @@ const Store = (() => {
     if (_isAccountNameTaken(sanitized.name)) {
       throw new Error('Un compte avec ce nom existe déjà.');
     }
-    const a = { ...data, ...sanitized, id: 'acc-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6) };
+    // STRICT : on ne spread PAS `data` (sinon n'importe quel champ injecté
+    // depuis l'UI/DevTools serait persisté dans Firestore — bypass sanitize).
+    const a = { ...sanitized, id: 'acc-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6) };
     myAccounts.push(a);
     _saveMyAccounts();
     return a;
@@ -471,6 +509,7 @@ const Store = (() => {
     if (sanitized.name && _isAccountNameTaken(sanitized.name, id)) {
       throw new Error('Un autre compte porte déjà ce nom.');
     }
+    // STRICT : merge sanitized par-dessus l'existant SEULEMENT (pas de data brut).
     myAccounts[i] = { ...myAccounts[i], ...sanitized };
     _saveMyAccounts();
     return myAccounts[i];
@@ -528,8 +567,13 @@ const Store = (() => {
 
   let _proAttempts = 0;
   let _proThrottleUntil = 0;
+  let _proInFlight = false;
   async function activatePro(code) {
     if (Date.now() < _proThrottleUntil) return 'throttled';
+    // Lock anti-double-clic : empêche 2 activations parallèles (qui pourraient
+    // dispatch 2 events planChanged et désynchroniser l'UI).
+    if (_proInFlight) return 'throttled';
+    _proInFlight = true;
     try {
       const normalized = code.trim().toUpperCase().replace(/[-\s]/g, '');
       if (!normalized) return false;
@@ -565,6 +609,8 @@ const Store = (() => {
       if (_proAttempts >= 3) { _proThrottleUntil = Date.now() + 60_000; _proAttempts = 0; }
       console.warn('[Store] activatePro error', e);
       return false;
+    } finally {
+      _proInFlight = false;
     }
   }
 
@@ -616,8 +662,24 @@ const Store = (() => {
     });
   }
 
+  // Purge toutes les clés ztrade_* d'AUTRES uids (anti data-leakage sur appareil
+  // partagé : un user qui se reconnecte ne laisse pas traîner les données de
+  // l'utilisateur précédent dans localStorage).
+  function purgeForeignCache() {
+    if (!_uid || _uid === 'default') return;
+    const prefix = `ztrade_${_uid}_`;
+    try {
+      const toRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('ztrade_') && !k.startsWith(prefix)) toRemove.push(k);
+      }
+      toRemove.forEach(k => { try { localStorage.removeItem(k); } catch {} });
+    } catch {}
+  }
+
   return {
-    initForUser, clearLocalCache,
+    initForUser, clearLocalCache, purgeForeignCache,
     getTrades, getTradeById, addTrade, updateTrade, deleteTrade, importTrades, clearTrades, exportJSON,
     getSettings, getGroqKey, updateSettings,
     getAccountTypes, getAccountByName, updateAccountTypes,
