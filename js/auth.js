@@ -100,6 +100,13 @@ const Auth = (() => {
       await Promise.all(snap.docs.map(d => d.ref.delete()));
       await _fbDb.collection('userEmails').doc(user.uid).delete().catch(() => {});
 
+      // RGPD : supprime aussi les proCodeHashes attribués à cet uid (sinon
+      // l'email reste dans la base après suppression du compte).
+      try {
+        const codesSnap = await _fbDb.collection('proCodeHashes').where('uid', '==', user.uid).get();
+        await Promise.all(codesSnap.docs.map(d => d.ref.delete().catch(() => null)));
+      } catch (e) { console.warn('[Auth] deleteAccount proCodeHashes', e); }
+
       // Nettoie le cache local
       try { Store.clearLocalCache(); } catch {}
 

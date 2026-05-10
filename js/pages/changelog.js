@@ -5,6 +5,25 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.97',
+      date: '2026-05-10',
+      time: '20:00',
+      tags: ['security', 'admin', 'rgpd'],
+      title: '5e ultraréview — hardening admin chain + RGPD + soft-delete',
+      titleEn: '5th ultra-review — admin chain hardening + GDPR + soft-delete',
+      items: [
+        { type: 'security', text: 'NOUVELLE Cloud Function generateProCode : rate-limit 10 codes/h/admin (anti-abus si compte admin compromis), cap 5 codes actifs par user cible, audit log obligatoire. La génération côté client est désormais bloquée par les rules (proCodeHashes en CF-only)', textEn: 'NEW generateProCode Cloud Function: rate-limit 10 codes/h/admin (anti-abuse if admin account is compromised), cap of 5 active codes per target user, mandatory audit log. Client-side generation now blocked by rules (proCodeHashes is CF-only)' },
+        { type: 'security', text: 'deleteUserAccount : SOFT-DELETE — toutes les données du user supprimé sont archivées 30j dans /deletedUsers/{uid}/ avant purge définitive (cron à venir). Permet une restauration manuelle en cas d\'erreur admin', textEn: 'deleteUserAccount: SOFT-DELETE — all deleted user data is archived for 30 days in /deletedUsers/{uid}/ before permanent purge. Allows manual restore if admin made a mistake' },
+        { type: 'security', text: 'revokeProCode : audit log "in_progress" écrit AVANT la transaction (traçabilité même si crash en cours)', textEn: 'revokeProCode: "in_progress" audit log written BEFORE the transaction (traceability even on mid-crash)' },
+        { type: 'security', text: 'sendContactMessage : throttle réservé EN TRANSACTION ATOMIQUE avant l\'envoi Web3Forms (anti-race : spam-clic en parallèle ne bypass plus le 60s). Logs Web3Forms purgés de la PII (plus de body en clair dans Cloud Logging)', textEn: 'sendContactMessage: throttle reserved in ATOMIC TRANSACTION before Web3Forms call (anti-race: parallel spam-clicks no longer bypass the 60s). Web3Forms logs purged of PII (no more plaintext body in Cloud Logging)' },
+        { type: 'security', text: 'Auth.deleteAccount (côté user) supprime aussi les proCodeHashes attribués (RGPD : plus d\'email orphelin après suppression de compte). Rule proCodeHashes : delete autorisé pour le destinataire (self-delete RGPD)', textEn: 'Auth.deleteAccount (user-side) also deletes attributed proCodeHashes (GDPR: no more orphan email after account deletion). proCodeHashes rule: delete allowed for the owner (GDPR self-delete)' },
+        { type: 'fix', text: 'Store.fbSet : erreurs Firestore remontent à l\'UI via event store:saveFailed (un user qui dépasse 1 MiB ou perd la connexion est désormais notifié au lieu de croire à un faux sentiment de sécurité)', textEn: 'Store.fbSet: Firestore errors propagate to UI via store:saveFailed event (a user hitting the 1 MiB limit or losing connection is now notified instead of having a false sense of safety)' },
+        { type: 'security', text: 'Store : anti-corruption sync — si Firestore renvoie un payload trades anormalement réduit (>50% perte vs cache local sur >10 trades), pas d\'overwrite + event store:syncConflict (anti-bug catastrophique où une mauvaise sync efface l\'historique)', textEn: 'Store: anti-corruption sync — if Firestore returns an abnormally reduced trades payload (>50% loss vs local cache on >10 trades), no overwrite + store:syncConflict event (protects against catastrophic bug erasing history)' },
+        { type: 'feat', text: 'Store.exportFullJSON : export RGPD complet (trades + settings + comptes + groupes + spreads + plan) pour le droit à la portabilité', textEn: 'Store.exportFullJSON: complete GDPR export (trades + settings + accounts + groups + spreads + plan) for the right to data portability' },
+        { type: 'rgpd', text: 'privacy.html enrichi : déclaration explicite de Web3Forms (envoi messages), hCaptcha (anti-bot), reCAPTCHA Enterprise (App Check), GitHub Pages (hébergement). Mention du Data Privacy Framework EU-US et des CCT. Mention "pas de DPO" justifiée par l\'absence de traitement à grande échelle', textEn: 'privacy.html enriched: explicit declaration of Web3Forms (message sending), hCaptcha (anti-bot), reCAPTCHA Enterprise (App Check), GitHub Pages (hosting). Mention of EU-US Data Privacy Framework and SCCs. "No DPO" mention justified by absence of large-scale processing' },
+      ],
+    },
+    {
       version: '0.9.96',
       date: '2026-05-10',
       time: '16:00',

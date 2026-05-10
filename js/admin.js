@@ -174,23 +174,27 @@ const Admin = (() => {
     btn.disabled    = true;
     btn.textContent = '…';
     $('genError').textContent = '';
+    if (!_fbFunctions) {
+      $('genError').textContent = 'SDK Functions non chargé.';
+      btn.disabled = false; btn.textContent = 'Générer';
+      return;
+    }
     try {
       const code       = generateCode();
       const normalized = code.replace(/[-\s]/g, '').toUpperCase();
       const hash       = await sha256(normalized);
 
-      await _fbDb.collection('proCodeHashes').doc(hash).set({
-        uid,
-        email,
-        createdAt: Date.now(),
-      });
+      // Passe par Cloud Function : audit log + rate-limit + cap par user
+      const callable = _fbFunctions.httpsCallable('generateProCode');
+      await callable({ codeHash: hash, uid, email });
 
       $('genCode').textContent    = code;
       $('genResult').style.display = 'block';
       toast('Code généré avec succès !');
       renderCodes();
-    } catch {
-      $('genError').textContent = 'Erreur lors de la génération — réessaie.';
+    } catch (e) {
+      console.warn('[Admin] generateProCode failed', e);
+      $('genError').textContent = (e && e.message) || 'Erreur lors de la génération — réessaie.';
     } finally {
       btn.disabled    = false;
       btn.textContent = 'Générer';
