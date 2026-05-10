@@ -199,16 +199,35 @@ const Store = (() => {
     const ma = lsGet(k.myAccounts);
     const spf = lsGet(k.spreadsByFirm);
     const g  = lsGet(k.groups);
-    if (t)   trades   = t;
+    // SANITIZE au load : empêche un attaquant qui modifie localStorage manuellement
+    // d'injecter du contenu non-validé (XSS via instrument, manualPnl absurde, etc.).
+    if (Array.isArray(t)) {
+      trades = t
+        .filter(x => x && typeof x === 'object' && DIRS.has(x.direction) && OUTCOMES.has(x.outcome))
+        .map(x => ({ ..._sanitizeTrade(x), id: String(x.id || _newTradeId()).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || _newTradeId() }))
+        .slice(0, 10000);
+    }
     if (s) {
       const { groqKey: _gk, ...safeS } = s;
       settings = { ...DEFAULT_SETTINGS, ...safeS };
     }
-    if (ma)  myAccounts   = ma;
+    if (Array.isArray(ma)) {
+      myAccounts = ma
+        .filter(x => x && typeof x === 'object' && typeof x.id === 'string')
+        .map(x => ({ ..._sanitizeAccount(x), id: String(x.id).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) }))
+        .filter(x => x.id)
+        .slice(0, 100);
+    }
     if (spf) Object.keys(DEFAULT_SPREADS_BY_FIRM).forEach(fk => {
       if (spf[fk]) spreadsByFirm[fk] = { ...DEFAULT_SPREADS_BY_FIRM[fk], ...spf[fk] };
     });
-    if (g)   groups = g;
+    if (Array.isArray(g)) {
+      groups = g
+        .filter(x => x && typeof x === 'object' && typeof x.id === 'string')
+        .map(x => ({ ..._sanitizeGroupData(x), id: String(x.id).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) }))
+        .filter(x => x.id)
+        .slice(0, 100);
+    }
     // _plan and _aiUsage are intentionally NOT loaded from localStorage:
     // always start as Basic/empty so localStorage manipulation cannot grant
     // temporary Pro access (e.g. adding extra accounts) before Firestore syncs.
@@ -262,9 +281,15 @@ const Store = (() => {
       }
       if (gSnap.exists)  { groups = gSnap.data().items || []; changed = true; }
       if (planSnap.exists) {
-        const planData = planSnap.data();
+        const raw = planSnap.data() || {};
         const wasPro = _plan.plan === 'pro';
-        _plan = { plan: 'basic', ...planData };
+        // Whitelist STRICTE des champs lus depuis Firestore (anti-injection si
+        // une CF future écrivait des champs arbitraires : isAdmin, unlimited, etc.)
+        _plan = {
+          plan:        raw.plan === 'pro' ? 'pro' : 'basic',
+          activatedAt: (typeof raw.activatedAt === 'number' && isFinite(raw.activatedAt)) ? raw.activatedAt : null,
+          codeHash:    typeof raw.codeHash === 'string' ? raw.codeHash.slice(0, 128) : null,
+        };
         if ((_plan.plan === 'pro') !== wasPro) {
           window.dispatchEvent(new CustomEvent('store:planChanged'));
         }
@@ -352,8 +377,13 @@ const Store = (() => {
         try {
           const d = new Date(raw.date);
           const now = Date.now();
-          // Rejette dates dans le futur (>1 jour) ou pas au format ISO attendu
-          if (isFinite(d) && /^\d{4}-\d{2}-\d{2}T/.test(raw.date) && d.getTime() <= now + 24*3600*1000)
+          const floor = new Date('2010-01-01').getTime();
+          // Rejette dates futures (>1 jour), dates antérieures à 2010 (epoch 0 etc.),
+          // et formats ISO non attendus
+          if (isFinite(d)
+              && /^\d{4}-\d{2}-\d{2}T/.test(raw.date)
+              && d.getTime() <= now + 24*3600*1000
+              && d.getTime() >= floor)
             return raw.date;
           return new Date().toISOString();
         } catch { return new Date().toISOString(); }
@@ -491,6 +521,10 @@ const Store = (() => {
   }
 
   function addMyAccount(data) {
+    // Enforce quota Pro côté Store (l'UI le check aussi, et Firestore en backup)
+    if (!canAddAccount()) {
+      throw new Error('Quota atteint : passe en Pro pour ajouter plus d\'un compte.');
+    }
     const sanitized = _sanitizeAccount(data);
     if (_isAccountNameTaken(sanitized.name)) {
       throw new Error('Un compte avec ce nom existe déjà.');
@@ -538,10 +572,25 @@ const Store = (() => {
   }
 
   function _sanitizeGroupName(name) {
-    return String(name || '').replace(/[<>"]/g, '').trim().slice(0, 50);
+    // Whitelist stricte (anti-injection HTML/CSV/bidi). Cohérent avec _sanitizeAccountName.
+    return String(name || '').replace(/[^A-Za-z0-9._\- ]/g, '').trim().slice(0, 50);
+  }
+  function _sanitizeGroupData(data) {
+    // STRICT : aucun champ arbitraire n'est passé (anti-injection via DevTools/import).
+    const s = {};
+    if (data.name !== undefined) s.name = _sanitizeGroupName(data.name);
+    if (Array.isArray(data.accountIds)) {
+      s.accountIds = data.accountIds
+        .filter(id => typeof id === 'string')
+        .map(id => id.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64))
+        .filter(Boolean)
+        .slice(0, 100);
+    }
+    return s;
   }
   function addGroup(data) {
-    const g = { ...data, name: _sanitizeGroupName(data.name), id: 'grp-' + Date.now() };
+    const clean = _sanitizeGroupData(data);
+    const g = { ...clean, id: 'grp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6) };
     groups.push(g);
     _saveGroups();
     return g;
@@ -549,7 +598,7 @@ const Store = (() => {
   function updateGroup(id, data) {
     const i = groups.findIndex(g => g.id === id);
     if (i < 0) return null;
-    const clean = data.name !== undefined ? { ...data, name: _sanitizeGroupName(data.name) } : data;
+    const clean = _sanitizeGroupData(data);
     groups[i] = { ...groups[i], ...clean };
     _saveGroups();
     return groups[i];
