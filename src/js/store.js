@@ -124,7 +124,17 @@ const Store = (() => {
   }
 
   function fbSet(name, data) {
-    userDoc(name).set(data).catch(e => console.warn('[Store] Firestore write error', e));
+    userDoc(name).set(data).catch(e => {
+      console.warn('[Store] Firestore write error', name, e);
+      // Remonte à l'UI : un user qui hit la limite 1 MiB ou qui perd la connexion
+      // doit savoir que ses données ne sont PAS synchronisées (sinon faux sentiment
+      // de sécurité — il croit que c'est sauvegardé alors que c'est juste localStorage).
+      try {
+        window.dispatchEvent(new CustomEvent('store:saveFailed', {
+          detail: { collection: name, error: (e && e.message) || 'unknown' }
+        }));
+      } catch {}
+    });
   }
 
   function lsSet(key, val) {
@@ -252,7 +262,24 @@ const Store = (() => {
         userDoc('aiUsage').get(),
       ]), 10000);
       let changed = false;
-      if (tSnap.exists)   { trades      = tSnap.data().items  || [];  changed = true; }
+      if (tSnap.exists) {
+        const remoteTrades = Array.isArray(tSnap.data().items) ? tSnap.data().items : [];
+        // Anti-corruption : si la version remote est anormalement réduite par rapport
+        // au cache local (>50% perte sur >10 trades existants), on ne remplace PAS
+        // et on dispatch un event pour alerter l'UI (modal "conflit de sync").
+        const localCount = Array.isArray(trades) ? trades.length : 0;
+        if (localCount > 10 && remoteTrades.length < localCount * 0.5) {
+          console.warn('[Store] Anomalie sync trades : remote=' + remoteTrades.length + ' << local=' + localCount + '. Pas d\'overwrite.');
+          try {
+            window.dispatchEvent(new CustomEvent('store:syncConflict', {
+              detail: { collection: 'trades', local: localCount, remote: remoteTrades.length }
+            }));
+          } catch {}
+        } else {
+          trades = remoteTrades;
+        }
+        changed = true;
+      }
       if (sSnap.exists) {
         const raw = sSnap.data();
         settings = {
@@ -459,6 +486,19 @@ const Store = (() => {
   }
   function clearTrades()     { trades = []; _saveTrades(); }
   function exportJSON()      { return JSON.stringify(trades, null, 2); }
+  // Export complet RGPD-compatible (droit à la portabilité, art. 20)
+  function exportFullJSON() {
+    return JSON.stringify({
+      exportedAt:     new Date().toISOString(),
+      uid:            _uid,
+      plan:           { plan: _plan.plan, activatedAt: _plan.activatedAt || null },
+      settings,
+      trades,
+      myAccounts,
+      groups,
+      spreadsByFirm,
+    }, null, 2);
+  }
 
   // ── Settings ─────────────────────────────────────────────────────────────────
   function getSettings()        { return { ...settings }; }
@@ -729,7 +769,7 @@ const Store = (() => {
 
   return {
     initForUser, clearLocalCache, purgeForeignCache,
-    getTrades, getTradeById, addTrade, updateTrade, deleteTrade, importTrades, clearTrades, exportJSON,
+    getTrades, getTradeById, addTrade, updateTrade, deleteTrade, importTrades, clearTrades, exportJSON, exportFullJSON,
     getSettings, getGroqKey, updateSettings,
     getAccountTypes, getAccountByName, updateAccountTypes,
     getPropFirms, getPropFirmByKey,
