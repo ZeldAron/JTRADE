@@ -204,6 +204,17 @@ const UI = (() => {
          </div>`
       : '';
 
+    // Screenshot du trade (s'il existe) — cliquable pour lightbox plein écran
+    const screenshotCard = t.screenshotPath
+      ? `<div class="info-card" style="margin-top:14px">
+           <h4 style="margin-bottom:10px">📸 Screenshot</h4>
+           <div class="trade-screenshot-wrap" style="position:relative;background:var(--bg-deeper,#0a0a0a);border-radius:8px;overflow:hidden;cursor:zoom-in;min-height:180px;display:flex;align-items:center;justify-content:center">
+             <img id="tradeShotImg" alt="Screenshot du trade" style="max-width:100%;max-height:400px;display:block;border-radius:8px;opacity:0;transition:opacity 0.2s">
+             <div id="tradeShotLoading" style="position:absolute;color:var(--muted);font-size:13px">Chargement…</div>
+           </div>
+         </div>`
+      : '';
+
     const cfd = Calc.isCFD(t.instrument);
     const contractLabel = cfd ? 'lots' : (t.contracts > 1 ? i18n.t('ui.contracts') : i18n.t('ui.contract'));
     const contractDisplay = cfd ? t.contracts.toFixed(2) : t.contracts;
@@ -275,7 +286,31 @@ const UI = (() => {
         </div>
 
         ${infoCard}
+        ${screenshotCard}
       </div>`;
+
+    // Charge l'image du screenshot async dès que le panel est rendu
+    if (t.screenshotPath) {
+      const imgEl     = $('tradeShotImg');
+      const loadingEl = $('tradeShotLoading');
+      Store.getTradeScreenshotUrl(t.screenshotPath).then(url => {
+        if (url && imgEl) {
+          imgEl.src = url;
+          imgEl.onload = () => {
+            imgEl.style.opacity = '1';
+            if (loadingEl) loadingEl.style.display = 'none';
+          };
+          imgEl.onerror = () => {
+            if (loadingEl) loadingEl.textContent = 'Image introuvable';
+          };
+          // Click pour lightbox plein écran
+          const wrap = imgEl.parentElement;
+          if (wrap) wrap.addEventListener('click', () => openLightbox(url));
+        } else if (loadingEl) {
+          loadingEl.textContent = 'Screenshot indisponible';
+        }
+      });
+    }
 
     // Bouton retour mobile
     const backBtn = $('detailBackBtn');
@@ -322,6 +357,30 @@ const UI = (() => {
         <div class="lc-price">${tp.price.toFixed(2)}</div>
         ${tp.ticks ? `<div class="lc-ticks">${tp.ticks} ticks</div>` : ''}
       </div>`).join('');
+  }
+
+  // ── Lightbox : affichage plein écran d'une image ─────────────────────────────
+  function openLightbox(url) {
+    if (!url) return;
+    // Évite les doublons si on rouvre rapidement
+    closeLightbox();
+    const overlay = document.createElement('div');
+    overlay.id = 'lightboxOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:24px;animation:lightboxFadeIn 0.15s ease-out';
+    overlay.innerHTML = `
+      <img src="${url}" alt="Screenshot" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 0 40px rgba(0,0,0,0.8)">
+      <button style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Fermer (Échap)">×</button>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', closeLightbox);
+    document.addEventListener('keydown', _lightboxKeyHandler);
+  }
+  function closeLightbox() {
+    const el = $('lightboxOverlay');
+    if (el) el.remove();
+    document.removeEventListener('keydown', _lightboxKeyHandler);
+  }
+  function _lightboxKeyHandler(e) {
+    if (e.key === 'Escape') closeLightbox();
   }
 
   return {
