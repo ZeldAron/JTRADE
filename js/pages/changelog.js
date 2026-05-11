@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.98',
+      date: '2026-05-11',
+      time: '14:00',
+      tags: ['feat'],
+      title: 'Screenshots persistants par trade (Firebase Storage)',
+      titleEn: 'Persistent trade screenshots (Firebase Storage)',
+      items: [
+        { type: 'feat', text: 'Nouvelle zone "Screenshot du trade" dans le wizard de création/édition : Ctrl+V pour coller, drag&drop ou file picker. Compression automatique en JPEG (max 1920×1080, qualité 0.85→0.4 si nécessaire) pour rester sous 2 MB. Stocké à vie dans Firebase Storage tant que le trade existe', textEn: 'New "Trade screenshot" zone in the create/edit wizard: Ctrl+V to paste, drag&drop or file picker. Auto-compression to JPEG (max 1920×1080, quality 0.85→0.4 as needed) to stay under 2 MB. Stored forever in Firebase Storage as long as the trade exists' },
+        { type: 'feat', text: 'Mode édition : le screenshot existant est rechargé automatiquement depuis Storage à l\'ouverture du trade. Boutons Remplacer / Supprimer disponibles', textEn: 'Edit mode: existing screenshot is auto-reloaded from Storage when opening the trade. Replace / Delete buttons available' },
+        { type: 'security', text: 'Storage rules : owner only (lecture + écriture limitées à users/{uid}/trades/{tradeId}/), taille max 2 MB, content-type whitelist (jpeg/png/webp), default-deny global', textEn: 'Storage rules: owner only (read + write restricted to users/{uid}/trades/{tradeId}/), 2 MB max, content-type whitelist (jpeg/png/webp), global default-deny' },
+        { type: 'security', text: 'deleteUserAccount (admin) supprime aussi tous les screenshots Storage du user. deleteTrade supprime automatiquement le screenshot associé. RGPD : aucune image orpheline après suppression', textEn: 'deleteUserAccount (admin) also deletes all the user\'s Storage screenshots. deleteTrade auto-deletes the associated screenshot. GDPR: no orphan images after deletion' },
+      ],
+    },
+    {
       version: '0.9.97',
       date: '2026-05-10',
       time: '20:00',

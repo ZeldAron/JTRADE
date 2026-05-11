@@ -436,6 +436,12 @@ const Store = (() => {
       const safe = String(raw.groupId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
       if (safe) out.groupId = safe;
     }
+    // screenshotPath optionnel : path Storage du screenshot attaché au trade
+    // Format strict : users/{uid}/trades/{tradeId}/screenshot.jpg
+    if (raw.screenshotPath && typeof raw.screenshotPath === 'string') {
+      const safe = raw.screenshotPath.replace(/[^a-zA-Z0-9/_.\-]/g, '').slice(0, 200);
+      if (safe.startsWith('users/') && safe.includes('/trades/')) out.screenshotPath = safe;
+    }
     return out;
   }
 
@@ -446,7 +452,11 @@ const Store = (() => {
   }
 
   function addTrade(trade) {
-    const t = { ..._sanitizeTrade(trade), id: _newTradeId() };
+    // Si `trade.id` est fourni et bien formé, on le réutilise (utile pour le flow
+    // screenshot où on génère l'ID avant l'upload). Sinon ID auto-généré.
+    const providedId = trade && trade.id && /^[a-zA-Z0-9_-]{1,64}$/.test(String(trade.id))
+                         ? String(trade.id) : null;
+    const t = { ..._sanitizeTrade(trade), id: providedId || _newTradeId() };
     if (!t.date) t.date = new Date().toISOString();
     trades.unshift(t);
     _saveTrades();
@@ -466,8 +476,50 @@ const Store = (() => {
   }
 
   function deleteTrade(id) {
+    const t = trades.find(tr => tr.id === id);
+    // Supprimer aussi le screenshot Storage si présent (best-effort, async fire-and-forget)
+    if (t && t.screenshotPath) {
+      deleteTradeScreenshot(t.screenshotPath).catch(() => null);
+    }
     trades = trades.filter(t => t.id !== id);
     _saveTrades();
+  }
+
+  // ── Screenshots de trades (Firebase Storage) ────────────────────────────────
+  // Upload un Blob (image compressée en JPEG) pour un trade donné.
+  // Retourne le path Storage à stocker dans le trade.screenshotPath.
+  async function uploadTradeScreenshot(tradeId, blob) {
+    if (!_fbStorage || !_uid || _uid === 'default') throw new Error('Storage non disponible');
+    if (!tradeId || !/^[a-zA-Z0-9_-]{1,64}$/.test(tradeId)) throw new Error('Invalid tradeId');
+    if (!(blob instanceof Blob)) throw new Error('Invalid blob');
+    if (blob.size > 2 * 1024 * 1024) throw new Error('Image trop grande (>2 MB)');
+    const path = `users/${_uid}/trades/${tradeId}/screenshot.jpg`;
+    const ref  = _fbStorage.ref(path);
+    await ref.put(blob, { contentType: 'image/jpeg', cacheControl: 'private, max-age=31536000' });
+    return path;
+  }
+
+  // Récupère l'URL signée (téléchargement) du screenshot d'un trade.
+  async function getTradeScreenshotUrl(path) {
+    if (!_fbStorage || !path) return null;
+    try {
+      return await _fbStorage.ref(path).getDownloadURL();
+    } catch (e) {
+      console.warn('[Store] getTradeScreenshotUrl', e && e.message);
+      return null;
+    }
+  }
+
+  // Supprime un screenshot Storage (best-effort).
+  async function deleteTradeScreenshot(path) {
+    if (!_fbStorage || !path) return;
+    try { await _fbStorage.ref(path).delete(); }
+    catch (e) {
+      // 404 (déjà supprimé) ou permission → on log et on ignore
+      if (e && e.code !== 'storage/object-not-found') {
+        console.warn('[Store] deleteTradeScreenshot', e && e.message);
+      }
+    }
   }
 
   function importTrades(arr) {
@@ -770,6 +822,7 @@ const Store = (() => {
   return {
     initForUser, clearLocalCache, purgeForeignCache,
     getTrades, getTradeById, addTrade, updateTrade, deleteTrade, importTrades, clearTrades, exportJSON, exportFullJSON,
+    newTradeId: _newTradeId, uploadTradeScreenshot, getTradeScreenshotUrl, deleteTradeScreenshot,
     getSettings, getGroqKey, updateSettings,
     getAccountTypes, getAccountByName, updateAccountTypes,
     getPropFirms, getPropFirmByKey,
