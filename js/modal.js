@@ -607,16 +607,40 @@ const Modal = (() => {
     clearShotPreview();
   }
 
+  // Tracking de l'objectURL courant pour le révoquer avant remplacement
+  let _shotPreviewUrl = null;
+
   async function handleShotFromBlob(rawBlob) {
     const status = $('wShotStatus');
+    // Garde-fou taille avant tout (anti-DoS décodage d'un fichier énorme)
+    if (rawBlob.size > 10 * 1024 * 1024) {
+      status.style.color = 'var(--red)';
+      status.textContent = 'Fichier trop lourd (max 10 MB avant compression)';
+      return;
+    }
+    // Validation magic bytes (anti MIME-spoofing — un PDF ne passera pas)
+    try {
+      const head = new Uint8Array(await rawBlob.slice(0, 12).arrayBuffer());
+      if (!isValidImageMagicBytes(head)) {
+        status.style.color = 'var(--red)';
+        status.textContent = 'Fichier invalide — utilise un PNG/JPG/WEBP/GIF';
+        return;
+      }
+    } catch {
+      status.style.color = 'var(--red)';
+      status.textContent = 'Image illisible';
+      return;
+    }
     status.style.color = 'var(--muted)';
     status.textContent = 'Compression en cours…';
     try {
       const compressed = await compressImage(rawBlob);
       shotBlob = compressed;
-      shotPendingDelete = false; // un nouveau screenshot annule un éventuel pending delete
-      const url = URL.createObjectURL(compressed);
-      setShotPreview(url);
+      shotPendingDelete = false;
+      // Révoque l'ancien objectURL (anti memory leak si paste/replace en boucle)
+      if (_shotPreviewUrl) { try { URL.revokeObjectURL(_shotPreviewUrl); } catch {} }
+      _shotPreviewUrl = URL.createObjectURL(compressed);
+      setShotPreview(_shotPreviewUrl);
       const kb = Math.round(compressed.size / 1024);
       status.style.color = 'var(--green)';
       status.textContent = `Prêt (${kb} KB) — sera enregistré au save`;
@@ -760,6 +784,8 @@ const Modal = (() => {
     editingId     = null;
     capturedImage = null;
     parsedTrade   = null;
+    // Révoque l'objectURL du preview screenshot (anti-leak mémoire)
+    if (_shotPreviewUrl) { try { URL.revokeObjectURL(_shotPreviewUrl); } catch {} _shotPreviewUrl = null; }
   }
 
   // ── Save ────────────────────────────────────────────────────────────────────
@@ -808,15 +834,22 @@ const Modal = (() => {
       manualPnl:  $('wManualPnl').value.trim() !== '' && !isNaN(parseFloat($('wManualPnl').value))
                     ? parseFloat($('wManualPnl').value)
                     : null,
-      // Partial close : seulement si checkbox cochée ET les 2 champs valides
-      partialPercent: $('wPartialEnable').checked
-                      && !isNaN(parseFloat($('wPartialPercent').value))
-                      && !isNaN(parseFloat($('wPartialPrice').value))
-                        ? parseFloat($('wPartialPercent').value) : null,
-      partialPrice:   $('wPartialEnable').checked
-                      && !isNaN(parseFloat($('wPartialPercent').value))
-                      && !isNaN(parseFloat($('wPartialPrice').value))
-                        ? parseFloat($('wPartialPrice').value) : null,
+      // Partial close : seulement si checkbox cochée ET valeurs strictement valides
+      // (1 < % < 100, sinon ça n'a aucun sens — 100% = sortie complète = utiliser exitPrice)
+      partialPercent: (() => {
+        if (!$('wPartialEnable').checked) return null;
+        const p = parseFloat($('wPartialPercent').value);
+        const v = parseFloat($('wPartialPrice').value);
+        if (isNaN(p) || isNaN(v) || p <= 0 || p >= 100) return null;
+        return p;
+      })(),
+      partialPrice: (() => {
+        if (!$('wPartialEnable').checked) return null;
+        const p = parseFloat($('wPartialPercent').value);
+        const v = parseFloat($('wPartialPrice').value);
+        if (isNaN(p) || isNaN(v) || p <= 0 || p >= 100) return null;
+        return v;
+      })(),
     };
 
     try {
