@@ -195,8 +195,11 @@ const UI = (() => {
          </div>`
       : '';
 
+    // Si manualPnl override → le partial est ignoré dans le calcul, mais on l'affiche
+    // quand même comme info contextuelle (avec mention "ignoré").
+    const hasManualOverride = t.manualPnl != null && t.manualPnl !== '' && !isNaN(Number(t.manualPnl)) && t.outcome !== 'open';
     const partialRow = c.hasPartial
-      ? `<div class="info-row"><span class="info-key">Partial close</span><span class="info-val" style="color:var(--purple-l)">${c.partialPercent}% à ${c.partialPrice.toFixed(2)}</span></div>`
+      ? `<div class="info-row"><span class="info-key">Partial close</span><span class="info-val" style="color:var(--purple-l)">${c.partialPercent}% à ${c.partialPrice.toFixed(2)}${hasManualOverride ? ' <span style="color:var(--muted);font-size:11px">(ignoré — P&L manuel)</span>' : ''}</span></div>`
       : '';
 
     const infoCard = (t.setup || t.notes || t.apex || c.hasPartial)
@@ -365,18 +368,30 @@ const UI = (() => {
   }
 
   // ── Lightbox : affichage plein écran d'une image ─────────────────────────────
+  // Construction via DOM API (jamais d'innerHTML interpolant l'URL — defense-in-depth)
   function openLightbox(url) {
     if (!url) return;
-    // Évite les doublons si on rouvre rapidement
     closeLightbox();
     const overlay = document.createElement('div');
     overlay.id = 'lightboxOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:24px;animation:lightboxFadeIn 0.15s ease-out';
-    overlay.innerHTML = `
-      <img src="${url}" alt="Screenshot" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 0 40px rgba(0,0,0,0.8)">
-      <button style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Fermer (Échap)">×</button>`;
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:24px';
+
+    const img = document.createElement('img');
+    img.alt = 'Screenshot';
+    img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 0 40px rgba(0,0,0,0.8)';
+    img.src = url;  // setter src : encodage automatique, pas d'interprétation HTML
+    overlay.appendChild(img);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = '×';
+    btn.title = 'Fermer (Échap)';
+    btn.style.cssText = 'position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center';
+    btn.addEventListener('click', closeLightbox);
+    overlay.appendChild(btn);
+
     document.body.appendChild(overlay);
-    overlay.addEventListener('click', closeLightbox);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeLightbox(); });
     document.addEventListener('keydown', _lightboxKeyHandler);
   }
   function closeLightbox() {

@@ -5,6 +5,23 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.102',
+      date: '2026-05-11',
+      time: '23:30',
+      tags: ['security', 'fix'],
+      title: '6e ultraréview — hardening post-audit + débloquer Pro',
+      titleEn: '6th ultra-review — post-audit hardening + Pro unblock',
+      items: [
+        { type: 'fix', text: 'URGENT : enforceAppCheck désactivé temporairement sur deleteUserAccount / generateProCode / revokeProCode (App Check cassé bloquait le flow admin "Activer Pro"). isAdmin() + transactions atomiques restent en place', textEn: 'URGENT: enforceAppCheck temporarily disabled on deleteUserAccount / generateProCode / revokeProCode (broken App Check was blocking admin "Activate Pro" flow). isAdmin() + atomic transactions still in place' },
+        { type: 'security', text: 'screenshotPath validé STRICTEMENT contre l\'uid courant (anti cross-tenant : un attaquant ne peut plus injecter via DevTools un trade qui référence le screenshot d\'un autre user). Regex stricte sur l\'extension', textEn: 'screenshotPath STRICTLY validated against current uid (anti cross-tenant: an attacker can no longer inject via DevTools a trade referencing another user\'s screenshot). Strict regex on extension' },
+        { type: 'security', text: 'RGPD : self-delete user supprime maintenant TOUS les screenshots Storage des trades du user avant user.delete() (sans ça les images restaient à vie dans le bucket — violation article 17)', textEn: 'GDPR: self-delete user now removes ALL trade Storage screenshots before user.delete() (without this, images stayed forever in the bucket — article 17 violation)' },
+        { type: 'security', text: 'Validation magic bytes ajoutée sur le screenshot persistant (handleShotFromBlob) — anti MIME-spoofing. Cohérent avec le flow IA Groq. Garde-fou taille avant décodage (max 10 MB raw)', textEn: 'Magic bytes validation added to persistent screenshot (handleShotFromBlob) — anti MIME-spoofing. Consistent with Groq AI flow. Size guard before decoding (max 10 MB raw)' },
+        { type: 'security', text: 'Lightbox : suppression de innerHTML avec URL interpolée → reconstruction via DOM API (createElement/setter src). Defense-in-depth contre XSS théorique', textEn: 'Lightbox: removed innerHTML with interpolated URL → rebuilt via DOM API (createElement/src setter). Defense-in-depth against theoretical XSS' },
+        { type: 'fix', text: 'Partial close : rejet strict des valeurs hors [1, 99]% (avant : 100% acceptait à tort un partial sans sens). Affichage "ignoré — P&L manuel" si manualPnl override le calcul', textEn: 'Partial close: strict rejection of values outside [1, 99]% (before: 100% wrongly accepted a meaningless partial). Display "ignored — manual P&L" if manualPnl overrides calculation' },
+        { type: 'fix', text: 'Object URL preview screenshot révoqué entre paste (anti memory-leak si l\'utilisateur paste/replace 10× de suite) + révoqué à la fermeture du modal', textEn: 'Screenshot preview object URL revoked between pastes (anti memory-leak if user pastes/replaces 10× in a row) + revoked on modal close' },
+      ],
+    },
+    {
       version: '0.9.101',
       date: '2026-05-11',
       time: '23:00',

@@ -442,10 +442,14 @@ const Store = (() => {
       if (safe) out.groupId = safe;
     }
     // screenshotPath optionnel : path Storage du screenshot attaché au trade
-    // Format strict : users/{uid}/trades/{tradeId}/screenshot.jpg
-    if (raw.screenshotPath && typeof raw.screenshotPath === 'string') {
+    // Validation STRICTE : doit appartenir au user courant (anti cross-tenant)
+    // et format attendu users/{uid}/trades/{tradeId}/screenshot.(jpg|png|webp)
+    if (raw.screenshotPath && typeof raw.screenshotPath === 'string' && _uid && _uid !== 'default') {
       const safe = raw.screenshotPath.replace(/[^a-zA-Z0-9/_.\-]/g, '').slice(0, 200);
-      if (safe.startsWith('users/') && safe.includes('/trades/')) out.screenshotPath = safe;
+      const expectedPrefix = `users/${_uid}/trades/`;
+      if (safe.startsWith(expectedPrefix) && /\/screenshot\.(jpe?g|png|webp)$/.test(safe)) {
+        out.screenshotPath = safe;
+      }
     }
     return out;
   }

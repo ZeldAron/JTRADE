@@ -107,6 +107,17 @@ const Auth = (() => {
         await Promise.all(codesSnap.docs.map(d => d.ref.delete().catch(() => null)));
       } catch (e) { console.warn('[Auth] deleteAccount proCodeHashes', e); }
 
+      // RGPD : supprime tous les screenshots Storage des trades du user
+      // (sans ça, les images restent à vie dans le bucket → violation art. 17)
+      try {
+        const trades = Store.getTrades();
+        await Promise.allSettled(
+          trades
+            .filter(t => t.screenshotPath)
+            .map(t => Store.deleteTradeScreenshot(t.screenshotPath))
+        );
+      } catch (e) { console.warn('[Auth] deleteAccount screenshots', e); }
+
       // Nettoie le cache local
       try { Store.clearLocalCache(); } catch {}
 
