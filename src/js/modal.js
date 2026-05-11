@@ -12,6 +12,16 @@ const Modal = (() => {
   let spreadCost    = 0;
   let firmKey       = 'apex';
 
+  // Screenshot du trade (persistant — Firebase Storage)
+  // shotBlob : Blob compressé en mémoire au paste, uploadé au save
+  // shotExistingPath : path Storage si on édite un trade qui a déjà un screenshot
+  // shotPendingDelete : true si user a cliqué Supprimer sur un screenshot existant
+  let shotBlob          = null;
+  let shotExistingPath  = null;
+  let shotPendingDelete = false;
+  // Pré-génère un ID trade pour le mode création (utile pour upload Storage avant save)
+  let pendingTradeId    = null;
+
   function getSpreadForInstrument(fk, instr) {
     const sp = Store.getSpreadsByFirm(fk || 'apex');
     return sp[instr] != null ? sp[instr] : 0;
@@ -537,6 +547,98 @@ const Modal = (() => {
     }
   }
 
+  // ── Screenshot persistant (Firebase Storage) ────────────────────────────────
+  // Compresse une image en JPEG (max dimension + quality) pour rester sous 2 MB.
+  // Retourne un Blob JPEG prêt à upload.
+  async function compressImage(blobOrFile, maxDim = 1920, quality = 0.85) {
+    const img = await new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blobOrFile);
+      const i = new Image();
+      i.onload  = () => { URL.revokeObjectURL(url); resolve(i); };
+      i.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image illisible')); };
+      i.src = url;
+    });
+    let w = img.naturalWidth, h = img.naturalHeight;
+    if (w > maxDim || h > maxDim) {
+      const r = Math.min(maxDim / w, maxDim / h);
+      w = Math.round(w * r); h = Math.round(h * r);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    let q = quality;
+    let blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', q));
+    // Si toujours > 2 MB, on baisse la qualité jusqu'à passer (ou min 0.4)
+    while (blob && blob.size > 2 * 1024 * 1024 && q > 0.4) {
+      q -= 0.1;
+      blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', q));
+    }
+    if (!blob) throw new Error('Compression échouée');
+    if (blob.size > 2 * 1024 * 1024) throw new Error('Image trop lourde même après compression');
+    return blob;
+  }
+
+  function setShotPreview(srcUrl) {
+    $('wShotPlaceholder').style.display = 'none';
+    $('wShotPreview').style.display     = '';
+    $('wShotImg').src                   = srcUrl;
+  }
+  function clearShotPreview() {
+    $('wShotPlaceholder').style.display = '';
+    $('wShotPreview').style.display     = 'none';
+    $('wShotImg').src                   = '';
+    $('wShotStatus').textContent        = '';
+  }
+
+  // Reset complet du state screenshot
+  function resetShotState() {
+    shotBlob          = null;
+    shotExistingPath  = null;
+    shotPendingDelete = false;
+    clearShotPreview();
+  }
+
+  async function handleShotFromBlob(rawBlob) {
+    const status = $('wShotStatus');
+    status.style.color = 'var(--muted)';
+    status.textContent = 'Compression en cours…';
+    try {
+      const compressed = await compressImage(rawBlob);
+      shotBlob = compressed;
+      shotPendingDelete = false; // un nouveau screenshot annule un éventuel pending delete
+      const url = URL.createObjectURL(compressed);
+      setShotPreview(url);
+      const kb = Math.round(compressed.size / 1024);
+      status.style.color = 'var(--green)';
+      status.textContent = `Prêt (${kb} KB) — sera enregistré au save`;
+    } catch (e) {
+      status.style.color = 'var(--red)';
+      status.textContent = e.message || 'Erreur lors du traitement de l\'image';
+      shotBlob = null;
+    }
+  }
+
+  // Charge l'image existante d'un trade depuis Firebase Storage (mode édition).
+  async function loadExistingShot(path) {
+    if (!path) return;
+    shotExistingPath = path;
+    $('wShotStatus').textContent = 'Chargement du screenshot…';
+    try {
+      const url = await Store.getTradeScreenshotUrl(path);
+      if (url) {
+        setShotPreview(url);
+        $('wShotStatus').textContent = '';
+      } else {
+        $('wShotStatus').style.color = 'var(--red)';
+        $('wShotStatus').textContent = 'Screenshot introuvable (peut-être supprimé).';
+      }
+    } catch (e) {
+      $('wShotStatus').style.color = 'var(--red)';
+      $('wShotStatus').textContent = 'Impossible de charger le screenshot.';
+    }
+  }
+
   // ── Open / Close ────────────────────────────────────────────────────────────
   function open(id = null, savedCallback = null) {
     editingId = id;
@@ -549,6 +651,10 @@ const Modal = (() => {
     feePerSide    = 2.14;
     spreadCost    = 0;
     firmKey       = 'apex';
+
+    // Reset state screenshot + pré-génère un ID trade en mode création
+    resetShotState();
+    pendingTradeId = id ? null : Store.newTradeId();
 
     clearImage();
     $('wOptFields').style.display  = '';
@@ -607,6 +713,8 @@ const Modal = (() => {
       populateInstrumentSelect(firmKey, t.instrument);
       updateLotsInput(t.instrument);
       fillStep3FromParsed();
+      // Charge le screenshot existant (async, non bloquant)
+      if (t.screenshotPath) loadExistingShot(t.screenshotPath);
       goToStep(3);
     } else {
       // Mode création : étape 1
@@ -638,12 +746,17 @@ const Modal = (() => {
   const VALID_INSTRS    = new Set(['MES1','ES1','MNQ1','NQ1','MYM1','YM1','M2K1','RTY1','MGC1','GC1','QO1','MCL1','CL1','ZN1',
                                     'US500','US100','US30','GER40','UK100','XAUUSD','EURUSD','GBPUSD','USDJPY','USOIL']);
 
-  function save() {
+  let _saveInFlight = false;
+  async function save() {
+    if (_saveInFlight) return;
     const entry = parseFloat($('wEntry').value);
     const sl    = parseFloat($('wSL').value);
     const tp1   = parseFloat($('wTP1').value);
     if (!entry || !sl || !tp1) { UI.toast(i18n.t('modal.required'), true); return; }
     if (!$('wApex').value)     { UI.toast(i18n.t('err.no.account.sel'), true); return; }
+    _saveInFlight = true;
+    const saveBtn = $('wBtnSave');
+    if (saveBtn) saveBtn.disabled = true;
 
     const rawInstr   = $('wInstr').value;
     const rawOutcome = $('wOutcome').value;
@@ -676,39 +789,79 @@ const Modal = (() => {
                     : null,
     };
 
-    let saved;
-    if (editingId) {
-      saved = Store.updateTrade(editingId, data);
-      UI.toast(i18n.t('modal.trade.updated'));
-    } else if (data.apex && data.apex.startsWith('grp:')) {
-      // Sauvegarde sur tous les comptes du groupe
-      const groupId = data.apex.slice(4);
-      const grp     = Store.getGroupById(groupId);
-      if (grp && grp.accountIds && grp.accountIds.length) {
-        const trades = grp.accountIds.map(accId => {
-          const acc = Store.getMyAccountById(accId);
-          if (!acc) return null;
-          return Store.addTrade({
-            ...data,
-            apex:       acc.name,
-            capital:    acc.capital,
-            feePerSide: (acc.feePerSide != null ? acc.feePerSide : 2.14),
-            spreadCost: Store.getSpreadsByFirm(acc.firmKey || 'apex')[data.instrument] || 0,
-            groupId,
-          });
-        }).filter(Boolean);
-        saved = trades[0];
-        UI.toast(i18n.t('modal.trade.group', { n: trades.length, name: grp.name }));
+    try {
+      let saved;
+      if (editingId) {
+        // Gestion screenshot mode édition
+        const finalData = { ...data };
+        if (shotPendingDelete && shotExistingPath) {
+          // User a explicitement supprimé → on retire screenshotPath et on delete le fichier
+          finalData.screenshotPath = null;
+          Store.deleteTradeScreenshot(shotExistingPath).catch(() => null);
+        } else if (shotBlob) {
+          // Nouveau screenshot (paste/replace) → upload puis attache le path
+          try {
+            const path = await Store.uploadTradeScreenshot(editingId, shotBlob);
+            finalData.screenshotPath = path;
+            // Si on remplace un screenshot existant à un path différent, on supprime l'ancien
+            if (shotExistingPath && shotExistingPath !== path) {
+              Store.deleteTradeScreenshot(shotExistingPath).catch(() => null);
+            }
+          } catch (e) {
+            UI.toast('Upload screenshot échoué : ' + (e.message || 'erreur'), true);
+            return;  // ne pas sauver le trade si l'upload a échoué
+          }
+        } else if (shotExistingPath) {
+          // Aucun changement : conserver le path existant
+          finalData.screenshotPath = shotExistingPath;
+        }
+        saved = Store.updateTrade(editingId, finalData);
+        UI.toast(i18n.t('modal.trade.updated'));
+      } else if (data.apex && data.apex.startsWith('grp:')) {
+        // Sauvegarde sur tous les comptes du groupe (pas de screenshot en mode groupe)
+        const groupId = data.apex.slice(4);
+        const grp     = Store.getGroupById(groupId);
+        if (grp && grp.accountIds && grp.accountIds.length) {
+          const trades = grp.accountIds.map(accId => {
+            const acc = Store.getMyAccountById(accId);
+            if (!acc) return null;
+            return Store.addTrade({
+              ...data,
+              apex:       acc.name,
+              capital:    acc.capital,
+              feePerSide: (acc.feePerSide != null ? acc.feePerSide : 2.14),
+              spreadCost: Store.getSpreadsByFirm(acc.firmKey || 'apex')[data.instrument] || 0,
+              groupId,
+            });
+          }).filter(Boolean);
+          saved = trades[0];
+          UI.toast(i18n.t('modal.trade.group', { n: trades.length, name: grp.name }));
+        } else {
+          UI.toast(i18n.t('modal.group.empty'), true);
+          return;
+        }
       } else {
-        UI.toast(i18n.t('modal.group.empty'), true);
-        return;
+        // Mode création : utilise pendingTradeId pour upload AVANT addTrade
+        let screenshotPath = null;
+        if (shotBlob && pendingTradeId) {
+          try {
+            screenshotPath = await Store.uploadTradeScreenshot(pendingTradeId, shotBlob);
+          } catch (e) {
+            UI.toast('Upload screenshot échoué : ' + (e.message || 'erreur'), true);
+            return;
+          }
+        }
+        const dataWithId = { ...data, id: pendingTradeId };
+        if (screenshotPath) dataWithId.screenshotPath = screenshotPath;
+        saved = Store.addTrade(dataWithId);
+        UI.toast(i18n.t('modal.trade.saved'));
       }
-    } else {
-      saved = Store.addTrade(data);
-      UI.toast(i18n.t('modal.trade.saved'));
+      close();
+      if (onSaved) onSaved(saved);
+    } finally {
+      _saveInFlight = false;
+      if (saveBtn) saveBtn.disabled = false;
     }
-    close();
-    if (onSaved) onSaved(saved);
   }
 
   // ── Init ────────────────────────────────────────────────────────────────────
@@ -779,6 +932,87 @@ const Modal = (() => {
     // Step 3
     $('wBtnBack2').addEventListener('click', () => goToStep(2));
     $('wBtnSave').addEventListener('click',  save);
+
+    // Zone screenshot persistant (Ctrl+V image, drag&drop, click pour file picker)
+    const shotZone = $('wShotZone');
+    if (shotZone) {
+      // Paste image (Ctrl+V) — capté quand la zone a le focus, OU n'importe où dans le modal step 3
+      shotZone.addEventListener('paste', e => {
+        const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items || [];
+        for (const it of items) {
+          if (it.kind === 'file' && it.type.startsWith('image/')) {
+            e.preventDefault();
+            const file = it.getAsFile();
+            if (file) handleShotFromBlob(file);
+            return;
+          }
+        }
+      });
+      // Capturer aussi le paste sur le modal entier si la zone n'a pas le focus
+      // (mais on ne déclenche que si on est sur l'étape 3 ET qu'aucun input texte n'a le focus)
+      document.addEventListener('paste', e => {
+        if (!$('modalOverlay').classList.contains('open')) return;
+        if ($('wp3').style.display === 'none') return;
+        const active = document.activeElement;
+        // Si l'utilisateur paste dans un input/textarea, on laisse passer (texte)
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+          // Sauf si la clipboard contient une image — alors on intercepte quand même
+          const items = (e.clipboardData)?.items || [];
+          const hasImage = Array.from(items).some(it => it.kind === 'file' && it.type.startsWith('image/'));
+          if (!hasImage) return;
+        }
+        const items = (e.clipboardData)?.items || [];
+        for (const it of items) {
+          if (it.kind === 'file' && it.type.startsWith('image/')) {
+            e.preventDefault();
+            const file = it.getAsFile();
+            if (file) handleShotFromBlob(file);
+            return;
+          }
+        }
+      });
+      // Click sur la zone (placeholder visible) → ouvre file picker
+      $('wShotFileLink').addEventListener('click', e => {
+        e.preventDefault();
+        $('wShotFile').click();
+      });
+      $('wShotFile').addEventListener('change', e => {
+        const file = e.target.files && e.target.files[0];
+        if (file) handleShotFromBlob(file);
+        e.target.value = ''; // reset pour permettre re-sélection même fichier
+      });
+      // Drag & drop
+      shotZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        shotZone.style.borderColor = 'var(--purple-l)';
+        shotZone.style.background  = 'rgba(124,58,237,0.05)';
+      });
+      shotZone.addEventListener('dragleave', () => {
+        shotZone.style.borderColor = '';
+        shotZone.style.background  = '';
+      });
+      shotZone.addEventListener('drop', e => {
+        e.preventDefault();
+        shotZone.style.borderColor = '';
+        shotZone.style.background  = '';
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) handleShotFromBlob(file);
+      });
+      // Replace / Delete
+      $('wShotReplace').addEventListener('click', e => {
+        e.stopPropagation();
+        $('wShotFile').click();
+      });
+      $('wShotDelete').addEventListener('click', e => {
+        e.stopPropagation();
+        // Si on édite un trade qui a déjà un screenshot, on marque pending delete
+        if (shotExistingPath && !shotBlob) shotPendingDelete = true;
+        shotBlob = null;
+        clearShotPreview();
+        $('wShotStatus').style.color = 'var(--muted)';
+        $('wShotStatus').textContent = shotPendingDelete ? 'Sera supprimé au save' : '';
+      });
+    }
 
     $('wInstr').addEventListener('change', () => {
       spreadCost = getSpreadForInstrument(firmKey, $('wInstr').value);

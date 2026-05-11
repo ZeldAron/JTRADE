@@ -25,3 +25,4 @@ try {
 const _fbAuth      = firebase.auth();
 const _fbDb        = firebase.firestore();
 const _fbFunctions = firebase.functions ? firebase.app().functions('europe-west1') : null;
+const _fbStorage   = firebase.storage ? firebase.storage() : null;
