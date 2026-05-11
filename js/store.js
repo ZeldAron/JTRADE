@@ -424,6 +424,11 @@ const Store = (() => {
       // manualPnl ne s'applique QU'aux trades fermés (forcé à null si open) + borné par ctx
       manualPnl:  (raw.manualPnl != null && (raw.outcome && raw.outcome !== 'open'))
                     ? _safeNum(raw.manualPnl, -ctx, ctx, null) : null,
+      // Partial close (scale-out) : sortir X% de la position à partialPrice,
+      // laisser le reste tourner jusqu'à exitPrice/SL/TP/BE.
+      // Bornes : 1-99% (0=pas de partial, 100=sortie complète=exitPrice classique)
+      partialPercent: raw.partialPercent != null ? _safeNum(raw.partialPercent, 1, 99, null) : null,
+      partialPrice:   raw.partialPrice   != null ? _safeNum(raw.partialPrice,  -1e7, 1e7, null) : null,
       // Snapshot du compte au moment du trade — préservé pour cohérence historique
       capital:    raw.capital    != null ? _safeNum(raw.capital,     0,    1e9, null) : null,
       feePerSide: raw.feePerSide != null ? _safeNum(raw.feePerSide,  0,    100, null) : null,

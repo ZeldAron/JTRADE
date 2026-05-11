@@ -47,7 +47,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=0.9.100">
+  <link rel="stylesheet" href="css/style.css?v=0.9.101">
 </head>
 <body>
 
@@ -749,7 +749,7 @@
 
           <div class="settings-section">
             <h3 data-i18n="set.about">À propos</h3>
-            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.100</span></div>
+            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.101</span></div>
             <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
           </div>
         </div>
@@ -927,12 +927,34 @@
             </div>
           </div>
 
+          <!-- Sortie partielle (scale-out) — prendre X% à un prix, laisser le reste tourner -->
+          <div class="form-field" style="margin-top:10px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:rgba(124,58,237,0.04)">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+              <input type="checkbox" id="wPartialEnable" style="cursor:pointer">
+              <span><strong>Sortie partielle</strong> (scale-out)</span>
+              <span style="color:var(--muted);font-size:11px;font-weight:400">— ex : prendre 50% à mi-chemin, reste à BE</span>
+            </label>
+            <div id="wPartialFields" style="display:none;margin-top:10px">
+              <div class="form-grid form-grid-2">
+                <div class="form-field">
+                  <label class="form-label">% pris en partial</label>
+                  <input class="form-input mono" type="number" min="1" max="99" step="1" id="wPartialPercent" placeholder="ex : 50" autocomplete="off">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Prix de la sortie partielle</label>
+                  <input class="form-input mono" type="number" step="any" id="wPartialPrice" placeholder="ex : 6810" autocomplete="off">
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Le reste sort au prix d'Exit ci-dessus (ou TP1 si encore Open).</div>
+            </div>
+          </div>
+
           <!-- P&L manuel optionnel — override le P&L calculé -->
           <div class="form-grid form-grid-2">
             <div class="form-field">
               <label class="form-label">P&L net réel ($) <span style="color:var(--muted);font-weight:400;font-size:11px">— optionnel</span></label>
               <input class="form-input mono" type="number" step="0.01" id="wManualPnl" placeholder="ex : -125.50" autocomplete="off">
-              <div style="font-size:11px;color:var(--muted);margin-top:4px">Si rempli, remplace le P&L calculé.</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Si rempli, remplace tous les calculs (y compris partial).</div>
             </div>
             <div class="form-field"></div>
           </div>
@@ -977,28 +999,28 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" integrity="sha384-XMIl1b2Ez9tKAM0R5q67/iLdfnlLBl9kfo40X5WMtCPb+3OLplrjnOxZTYCg1SKY" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js" integrity="sha384-Cn425IPPqYFT0+lUg71+39dOh8zj/Ebpl97FkjUqrd+P37HLlysOYDvdw+N7tPuj" crossorigin="anonymous"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js" integrity="sha384-oFrOL1TiREYNET0lsYF3LjQuyi2gL7vhjH1X8vFr+umcmzAdPELopeSgbcrv4uRm" crossorigin="anonymous"></script>
-  <script src="js/firebase.js?v=0.9.100"></script>
+  <script src="js/firebase.js?v=0.9.101"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
-  <script src="js/i18n.js?v=0.9.100"></script>
-  <script src="js/auth.js?v=0.9.100"></script>
-  <script src="js/store.js?v=0.9.100"></script>
-  <script src="js/calc.js?v=0.9.100"></script>
-  <script src="js/modal.js?v=0.9.100"></script>
-  <script src="js/ui.js?v=0.9.100"></script>
-  <script src="js/pages/dashboard.js?v=0.9.100"></script>
-  <script src="js/pages/analytics.js?v=0.9.100"></script>
-  <script src="js/pages/settings.js?v=0.9.100"></script>
-  <script src="js/pages/goals.js?v=0.9.100"></script>
-  <script src="js/pages/calendar.js?v=0.9.100"></script>
-  <script src="js/pages/micro.js?v=0.9.100"></script>
-  <script src="js/pages/outils.js?v=0.9.100"></script>
-  <script src="js/pages/offers.js?v=0.9.100"></script>
-  <script src="js/pages/changelog.js?v=0.9.100"></script>
-  <script src="js/contact.js?v=0.9.100"></script>
-  <script src="js/app.js?v=0.9.100"></script>
+  <script src="js/i18n.js?v=0.9.101"></script>
+  <script src="js/auth.js?v=0.9.101"></script>
+  <script src="js/store.js?v=0.9.101"></script>
+  <script src="js/calc.js?v=0.9.101"></script>
+  <script src="js/modal.js?v=0.9.101"></script>
+  <script src="js/ui.js?v=0.9.101"></script>
+  <script src="js/pages/dashboard.js?v=0.9.101"></script>
+  <script src="js/pages/analytics.js?v=0.9.101"></script>
+  <script src="js/pages/settings.js?v=0.9.101"></script>
+  <script src="js/pages/goals.js?v=0.9.101"></script>
+  <script src="js/pages/calendar.js?v=0.9.101"></script>
+  <script src="js/pages/micro.js?v=0.9.101"></script>
+  <script src="js/pages/outils.js?v=0.9.101"></script>
+  <script src="js/pages/offers.js?v=0.9.101"></script>
+  <script src="js/pages/changelog.js?v=0.9.101"></script>
+  <script src="js/contact.js?v=0.9.101"></script>
+  <script src="js/app.js?v=0.9.101"></script>
 
-  <script src="js/app-bootstrap.js?v=0.9.100"></script>
+  <script src="js/app-bootstrap.js?v=0.9.101"></script>
 
   <!-- hCaptcha (anti-bot pour les formulaires register et contact)
        NOTE: pas de SRI car hCaptcha sert un bundle qui varie selon le User-Agent

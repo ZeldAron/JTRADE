@@ -484,11 +484,19 @@ const Modal = (() => {
     if (!entry || !sl || !tp1) { lc.style.display = 'none'; return; }
     lc.style.display = 'flex';
 
+    // Partial close — lu seulement si toggle activé ET 2 champs remplis
+    const partialEnabled = $('wPartialEnable').checked;
+    const rawPPct  = $('wPartialPercent').value.trim();
+    const rawPPrice = $('wPartialPrice').value.trim();
+    const partialPercent = partialEnabled && rawPPct  !== '' && !isNaN(parseFloat(rawPPct))  ? parseFloat(rawPPct)  : null;
+    const partialPrice   = partialEnabled && rawPPrice !== '' && !isNaN(parseFloat(rawPPrice)) ? parseFloat(rawPPrice) : null;
+
     const c = Calc.trade({
       direction, entry, sl, tp1,
       instrument, contracts, capital,
       feePerSide, spreadCost,
       exitPrice, manualPnl,
+      partialPercent, partialPrice,
     });
 
     // R:R théorique si pas de sortie, R réel si sortie
@@ -656,6 +664,12 @@ const Modal = (() => {
     resetShotState();
     pendingTradeId = id ? null : Store.newTradeId();
 
+    // Reset partial close
+    $('wPartialEnable').checked   = false;
+    $('wPartialFields').style.display = 'none';
+    $('wPartialPercent').value    = '';
+    $('wPartialPrice').value      = '';
+
     clearImage();
     $('wOptFields').style.display  = '';
     $('wOptToggle').textContent    = i18n.t('wiz.setup.close');
@@ -687,6 +701,13 @@ const Modal = (() => {
       $('wOutcome').value    = t.outcome;
       $('wExit').value       = t.exitPrice || '';
       $('wManualPnl').value  = t.manualPnl != null ? t.manualPnl : '';
+      // Partial close
+      if (t.partialPercent != null && t.partialPrice != null) {
+        $('wPartialEnable').checked        = true;
+        $('wPartialFields').style.display  = '';
+        $('wPartialPercent').value         = t.partialPercent;
+        $('wPartialPrice').value           = t.partialPrice;
+      }
       // Pré-remplir la date + heure depuis le trade existant
       const td = t.date ? t.date.slice(0, 10) : $('wTradeDate').value;
       const tt = t.date && t.date.length > 10 ? t.date.slice(11, 16) : '';
@@ -787,6 +808,15 @@ const Modal = (() => {
       manualPnl:  $('wManualPnl').value.trim() !== '' && !isNaN(parseFloat($('wManualPnl').value))
                     ? parseFloat($('wManualPnl').value)
                     : null,
+      // Partial close : seulement si checkbox cochée ET les 2 champs valides
+      partialPercent: $('wPartialEnable').checked
+                      && !isNaN(parseFloat($('wPartialPercent').value))
+                      && !isNaN(parseFloat($('wPartialPrice').value))
+                        ? parseFloat($('wPartialPercent').value) : null,
+      partialPrice:   $('wPartialEnable').checked
+                      && !isNaN(parseFloat($('wPartialPercent').value))
+                      && !isNaN(parseFloat($('wPartialPrice').value))
+                        ? parseFloat($('wPartialPrice').value) : null,
     };
 
     try {
@@ -932,6 +962,18 @@ const Modal = (() => {
     // Step 3
     $('wBtnBack2').addEventListener('click', () => goToStep(2));
     $('wBtnSave').addEventListener('click',  save);
+
+    // Toggle sortie partielle
+    $('wPartialEnable').addEventListener('change', e => {
+      $('wPartialFields').style.display = e.target.checked ? '' : 'none';
+      if (!e.target.checked) {
+        $('wPartialPercent').value = '';
+        $('wPartialPrice').value   = '';
+      }
+      wRecalc();
+    });
+    $('wPartialPercent').addEventListener('input', () => wRecalc());
+    $('wPartialPrice').addEventListener('input',   () => wRecalc());
 
     // Zone screenshot persistant (Ctrl+V image, drag&drop, click pour file picker)
     const shotZone = $('wShotZone');

@@ -195,10 +195,15 @@ const UI = (() => {
          </div>`
       : '';
 
-    const infoCard = (t.setup || t.notes || t.apex)
+    const partialRow = c.hasPartial
+      ? `<div class="info-row"><span class="info-key">Partial close</span><span class="info-val" style="color:var(--purple-l)">${c.partialPercent}% à ${c.partialPrice.toFixed(2)}</span></div>`
+      : '';
+
+    const infoCard = (t.setup || t.notes || t.apex || c.hasPartial)
       ? `<div class="info-card">
            <h4>${i18n.t('ui.analysis')}</h4>
            ${t.apex  ? `<div class="info-row"><span class="info-key">${i18n.t('ui.apex.account')}</span><span class="info-val">${escHtml(t.apex)}</span></div>` : ''}
+           ${partialRow}
            ${t.setup ? `<div class="info-row"><span class="info-key">${i18n.t('ui.setup')}</span><span class="info-val">${escHtml(t.setup)}</span></div>` : ''}
            ${t.notes ? `<div class="info-row"><span class="info-key">${i18n.t('ui.notes')}</span><span class="info-val">${escHtml(t.notes)}</span></div>` : ''}
          </div>`
