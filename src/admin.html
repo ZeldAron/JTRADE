@@ -294,6 +294,19 @@
     .btn-delete:hover { background: rgba(248,81,73,0.3); }
     .btn-delete:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    .btn-stripe {
+      background: rgba(99,91,255,0.15);
+      color: #a78bfa;
+      border: 1px solid rgba(124,58,237,0.5);
+      border-radius: 5px;
+      padding: 4px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-left: 6px;
+      transition: background 0.15s;
+    }
+    .btn-stripe:hover { background: rgba(124,58,237,0.3); }
+
     .btn-danger {
       background: var(--red);
       color: #fff;
@@ -551,6 +564,39 @@
       <div class="modal-actions">
         <button class="btn-secondary" id="btnCloseDelete">Annuler</button>
         <button class="btn-danger" id="btnDoDelete" disabled>Supprimer définitivement</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modale génération lien Stripe (admin uniquement, prix stealth) ────── -->
+  <div id="adminStripeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;z-index:100">
+    <div class="modal-card" style="width:480px">
+      <h3>💳 Générer un lien de paiement Stripe</h3>
+      <p>Pour <strong id="stripeTargetEmailLabel" style="color:var(--text)"></strong></p>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px">
+        Le lien généré ouvre directement la page de paiement Stripe (sans afficher les prix sur ZeldTrade).
+        Envoie-le par message direct au bêta-testeur. Une fois payé, le plan Pro est activé automatiquement via webhook.
+      </p>
+      <div style="margin:14px 0">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">Type d'abonnement</label>
+        <select id="stripeTier" class="confirm-input" style="font-family:inherit">
+          <option value="monthly">Mensuel — 19,90 €/mois</option>
+          <option value="yearly">Annuel — 179 €/an (≈ -25%)</option>
+          <option value="lifetime">Lifetime — 399 € (50 places Founding)</option>
+        </select>
+      </div>
+      <input type="hidden" id="stripeTargetUid">
+      <input type="hidden" id="stripeTargetEmail">
+      <div class="gen-error" id="stripeError"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btnCloseStripe">Fermer</button>
+        <button class="btn-primary" id="btnDoStripe" style="flex:2">Générer le lien</button>
+      </div>
+
+      <div id="stripeResult" style="display:none;margin-top:18px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <small style="font-size:11px;color:var(--muted);display:block;margin-bottom:8px">Lien checkout généré — valable 24h</small>
+        <input type="text" id="stripeUrl" readonly style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:'SF Mono',monospace;font-size:11px;margin-bottom:10px">
+        <button class="btn-copy" id="btnCopyStripeUrl">Copier le lien</button>
       </div>
     </div>
   </div>

@@ -102,6 +102,7 @@ const Admin = (() => {
         <td>${formatDate(u.lastSeen)}</td>
         <td>
           <button class="btn-gen" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}">Générer code</button>
+          <button class="btn-stripe" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}">💳 Lien Stripe</button>
           ${deleteBtn}
         </td>
       </tr>`;
@@ -115,6 +116,9 @@ const Admin = (() => {
 
     wrap.querySelectorAll('.btn-gen').forEach(btn => {
       btn.addEventListener('click', () => openGenModal(btn.dataset.uid, btn.dataset.email));
+    });
+    wrap.querySelectorAll('.btn-stripe').forEach(btn => {
+      btn.addEventListener('click', () => openStripeModal(btn.dataset.uid, btn.dataset.email));
     });
     wrap.querySelectorAll('.btn-delete[data-uid]').forEach(btn => {
       btn.addEventListener('click', () => openDeleteModal(btn.dataset.uid, btn.dataset.email));
@@ -208,6 +212,61 @@ const Admin = (() => {
       toast('Code copié !');
     } catch {
       toast('Sélectionne le code manuellement.', true);
+    }
+  }
+
+  // ── Modale génération de lien Stripe (admin uniquement) ─────────────────────
+  // Le user ne fait RIEN — il reçoit juste le lien par message direct (Discord/email)
+  // et clique → Stripe affiche le prix → il paie → webhook active Pro automatiquement.
+  function openStripeModal(uid, email) {
+    $('stripeTargetUid').value      = uid;
+    $('stripeTargetEmail').value    = email;
+    $('stripeTargetEmailLabel').textContent = email;
+    $('stripeResult').style.display = 'none';
+    $('stripeError').textContent    = '';
+    $('stripeUrl').value            = '';
+    $('stripeTier').value           = 'monthly';
+    $('btnDoStripe').disabled       = false;
+    $('btnDoStripe').textContent    = 'Générer le lien';
+    $('adminStripeModal').style.display = 'flex';
+  }
+  function closeStripeModal() {
+    $('adminStripeModal').style.display = 'none';
+  }
+  async function doGenerateStripeLink() {
+    const tier        = $('stripeTier').value;
+    const targetUid   = $('stripeTargetUid').value;
+    const targetEmail = $('stripeTargetEmail').value;
+    const btn         = $('btnDoStripe');
+    btn.disabled    = true;
+    btn.textContent = '…';
+    $('stripeError').textContent = '';
+    if (!_fbFunctions) {
+      $('stripeError').textContent = 'SDK Functions non chargé.';
+      btn.disabled = false; btn.textContent = 'Générer le lien';
+      return;
+    }
+    try {
+      const callable = _fbFunctions.httpsCallable('createCheckoutSession');
+      const res = await callable({ tier, targetUid, targetEmail });
+      $('stripeUrl').value = res.data.url;
+      $('stripeResult').style.display = 'block';
+      toast('Lien Stripe généré !');
+    } catch (e) {
+      console.warn('[Admin] createCheckoutSession failed', e);
+      $('stripeError').textContent = (e && e.message) || 'Erreur lors de la génération.';
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Générer le lien';
+    }
+  }
+  async function copyStripeUrl() {
+    const url = $('stripeUrl').value;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast('Lien copié — envoie-le par message au bêta-testeur');
+    } catch {
+      toast('Sélectionne le lien manuellement.', true);
     }
   }
 
@@ -403,6 +462,11 @@ const Admin = (() => {
     $('btnDoDelete').addEventListener('click', doDeleteUser);
     $('delConfirmInput').addEventListener('input', onConfirmInputChange);
     $('deleteModal').addEventListener('click', e => { if (e.target === $('deleteModal')) closeDeleteModal(); });
+    // Stripe modal
+    $('btnDoStripe').addEventListener('click', doGenerateStripeLink);
+    $('btnCloseStripe').addEventListener('click', closeStripeModal);
+    $('btnCopyStripeUrl').addEventListener('click', copyStripeUrl);
+    $('adminStripeModal').addEventListener('click', e => { if (e.target === $('adminStripeModal')) closeStripeModal(); });
   }
 
   return { init };
