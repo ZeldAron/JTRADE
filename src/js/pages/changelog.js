@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.101',
+      date: '2026-05-11',
+      time: '23:00',
+      tags: ['feat'],
+      title: 'Sortie partielle (scale-out) — 50% à mi-chemin, reste à BE',
+      titleEn: 'Partial close (scale-out) — 50% halfway, rest at BE',
+      items: [
+        { type: 'feat', text: 'Nouveau toggle "Sortie partielle (scale-out)" dans le step 3 du wizard : permet de prendre X% de la position à un prix donné, le reste tourne jusqu\'à exit/SL/TP/BE. P&L pondéré automatiquement (ex : 50% à 6810 + 50% à BE → profit positif sur trade marqué BE)', textEn: 'New "Partial close (scale-out)" toggle in wizard step 3: take X% of position at a given price, the rest runs until exit/SL/TP/BE. Auto-weighted P&L (e.g. 50% at 6810 + 50% at BE → positive profit on a trade marked BE)' },
+        { type: 'feat', text: 'Affichage du partial dans la vue détail Journal : ligne "Partial close: 50% à 6810" visible. P&L recalculé en temps réel dans le wizard. Sauvegardé à vie avec le trade', textEn: 'Partial displayed in Journal detail view: "Partial close: 50% at 6810" line. P&L recalculated live in wizard. Saved forever with the trade' },
+      ],
+    },
+    {
       version: '0.9.98',
       date: '2026-05-11',
       time: '14:00',

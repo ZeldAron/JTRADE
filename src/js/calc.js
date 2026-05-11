@@ -71,6 +71,13 @@ const Calc = (() => {
     // globales : un trade open ne doit pas compter dans le P&L réalisé)
     const hasManualPnl = t.manualPnl != null && t.manualPnl !== '' && !isNaN(Number(t.manualPnl)) && t.outcome !== 'open';
 
+    // Partial close (scale-out) : sortie partielle d'une fraction de la position
+    // à partialPrice, le reste continue jusqu'à exitPrice/outcome.
+    const hasPartial = t.partialPercent != null
+                    && t.partialPrice   != null
+                    && t.partialPercent > 0
+                    && t.partialPercent < 100;
+
     if (hasManualPnl) {
       // L'utilisateur a saisi un P&L net : il prime sur tout calcul
       netPnl    = Number(t.manualPnl);
@@ -83,8 +90,16 @@ const Calc = (() => {
         : t.outcome === 'be'   ? t.entry
         : t.tp1;   // open : P&L potentiel si TP atteint
       if (resolvedExit != null && resolvedExit !== undefined) {
-        const pts = isLong ? resolvedExit - t.entry : t.entry - resolvedExit;
-        pnl      = pts * pv * t.contracts;
+        if (hasPartial) {
+          // P&L pondéré : partial% × (partialPrice - entry) + (1-partial%) × (resolvedExit - entry)
+          const pFrac     = t.partialPercent / 100;
+          const partialPts = isLong ? t.partialPrice - t.entry : t.entry - t.partialPrice;
+          const restPts    = isLong ? resolvedExit - t.entry  : t.entry - resolvedExit;
+          pnl = (partialPts * pFrac + restPts * (1 - pFrac)) * pv * t.contracts;
+        } else {
+          const pts = isLong ? resolvedExit - t.entry : t.entry - resolvedExit;
+          pnl = pts * pv * t.contracts;
+        }
         netPnl   = pnl - totalFees;
         estimated = t.exitPrice == null;
       }
@@ -96,6 +111,9 @@ const Calc = (() => {
       riskTicks, rewardTicks,
       pv, feePerSide, commFees, spreadFees, totalFees,
       pnl, netPnl, estimated,
+      hasPartial,
+      partialPercent: t.partialPercent || null,
+      partialPrice:   t.partialPrice   || null,
       apexOk:   riskPct <= 2.0,
       apexWarn: riskPct > 1.5 && riskPct <= 2.0,
     };
