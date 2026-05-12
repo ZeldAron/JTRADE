@@ -10,17 +10,23 @@ const firebaseConfig = {
 
 const _fbApp = firebase.initializeApp(firebaseConfig);
 
-// ─── APP CHECK (reCAPTCHA Enterprise — anti-bot pour toutes les requêtes Firebase) ──
-try {
-  if (firebase.appCheck) {
-    firebase.appCheck().activate(
-      new firebase.appCheck.ReCaptchaEnterpriseProvider('6Lfm-N0sAAAAAIV7h-9K6eFnZI7pgy5ynHsvS0-v'),
-      true // auto-refresh tokens
-    );
-  }
-} catch (e) {
-  console.warn('[Firebase] App Check init failed:', e);
-}
+// ─── APP CHECK ────────────────────────────────────────────────────────────────
+// TEMP : init désactivée car reCAPTCHA Enterprise retourne 401 (config à débugger
+// dans Google Cloud Console). Tant que c'est cassé, le SDK ne doit PAS essayer
+// de récupérer un token sinon ça injecte des erreurs sur tous les appels Firebase.
+// À RÉACTIVER une fois la clé reCAPTCHA Enterprise réparée :
+//   1. Console GCP > Security > reCAPTCHA Enterprise > vérifier type "Score-based"
+//   2. Console Firebase > App Check > Apps > vérifier provider = reCAPTCHA Enterprise + même site key
+//   3. IAM > service-{projectNumber}@gcp-sa-firebase-appcheck → rôle "reCAPTCHA Enterprise Agent"
+//
+// try {
+//   if (firebase.appCheck) {
+//     firebase.appCheck().activate(
+//       new firebase.appCheck.ReCaptchaEnterpriseProvider('6Lfm-N0sAAAAAIV7h-9K6eFnZI7pgy5ynHsvS0-v'),
+//       true
+//     );
+//   }
+// } catch (e) { console.warn('[Firebase] App Check init failed:', e); }
 
 const _fbAuth      = firebase.auth();
 const _fbDb        = firebase.firestore();
