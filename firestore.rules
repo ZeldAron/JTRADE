@@ -3,7 +3,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'zeldtradepro@gmail.com';
+      return request.auth != null
+          && request.auth.token.email == 'zeldtradepro@gmail.com'
+          && request.auth.token.email_verified == true;
     }
 
     // Règle par défaut : tout refuser
@@ -24,16 +26,41 @@ service cloud.firestore {
                     && request.resource.data.email == request.auth.token.email
                     && request.resource.data.email.size() <= 254
                     && request.resource.data.username is string
+                    && request.resource.data.username.size() >= 2
                     && request.resource.data.username.size() <= 50
+                    // Caractères whitelist : alphanumérique + . _ - + espace (anti-injection email/HTML)
+                    && request.resource.data.username.matches('^[A-Za-z0-9._\\- ]+$')
+                    // Bloque les pseudos qui usurpent l'admin/staff (lecture admin trompeuse)
+                    && !request.resource.data.username.lower().matches('.*(admin|zeldtrade|zeldaron|support|staff|moderator|root|system).*')
                     && request.resource.data.lastSeen is int;
     }
 
-    // ── Codes Pro (hashes) — lecture limitée au destinataire (anti-énumération) ──
+    // ── Codes Pro (hashes) ───────────────────────────────────────────────────────
+    // La génération passe désormais par la Cloud Function `generateProCode` (admin SDK)
+    // qui enforce rate-limit + cap + audit log. Plus aucune écriture côté client.
+    // Note : `get` autorisé pour le destinataire afin que la rule plan puisse
+    // résoudre via `get(...)` lors de l'activation.
+    // Self-delete : un user peut delete les codes qui lui sont attribués (utile pour
+    // le droit à l'effacement RGPD — un user qui supprime son compte peut purger ses codes).
     match /proCodeHashes/{hash} {
-      // Le code est pré-assigné par admin à un uid précis : seul cet uid peut le lire
-      allow get:   if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
-      allow list:  if isAdmin();
-      allow write: if isAdmin();
+      allow get:    if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow list:   if isAdmin();
+      allow create, update: if false;  // CF only
+      allow delete: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+    }
+
+    // ── Rate-limit admin (writes via Cloud Function uniquement) ─────────────────
+    match /adminRateLimit/{action} {
+      allow read:   if isAdmin();
+      allow write, delete: if false;
+    }
+
+    // ── Soft-deleted users (archive 30j avant purge définitive) ─────────────────
+    // Écrit par Cloud Function lors d'un deleteUserAccount, accessible admin uniquement
+    // pour restauration manuelle dans les 30 jours. Aucun accès client.
+    match /deletedUsers/{uid}/{document=**} {
+      allow read:   if isAdmin();
+      allow write, delete: if false;
     }
 
     // ── Trades — seuls les champs attendus, limite taille ────────────────────────
@@ -96,7 +123,7 @@ service cloud.firestore {
       allow write: if request.auth != null
                    && request.auth.uid == userId
                    && request.resource.data.keys().hasOnly(['apex', 'topstep', 'ftmo', 'ftmo1step', 'lucid', 'fpips'])
-                   && request.resource.size() < 50000;
+                   && request.resource.data.size() <= 6;
     }
 
     // ── Groupes — Pro uniquement ─────────────────────────────────────────────────
@@ -133,11 +160,14 @@ service cloud.firestore {
       allow write, delete: if false;
     }
 
-    // ── Plan Pro — create only, code consommable une fois, lié à l'uid ─────────
+    // ── Plan Pro — write (create OR update), code consommable une fois, lié à l'uid ─
+    // On autorise update pour gérer les cas legacy où un doc plan existe déjà.
+    // Le code Pro DOIT être unconsumed (pas de consumedAt sur proCodeHashes) ou
+    // déjà consommé par CE même user (réactivation idempotente après reset client).
     match /users/{userId}/data/plan {
       allow read:   if (request.auth != null && request.auth.uid == userId) || isAdmin();
       allow delete: if isAdmin();
-      allow create: if request.auth != null
+      allow write:  if request.auth != null
                     && request.auth.uid == userId
                     && request.resource.data.keys().hasOnly(['plan', 'activatedAt', 'codeHash'])
                     && request.resource.data.plan == 'pro'
@@ -148,7 +178,18 @@ service cloud.firestore {
                     && request.resource.data.codeHash.size() <= 128
                     && exists(/databases/$(database)/documents/proCodeHashes/$(request.resource.data.codeHash))
                     && get(/databases/$(database)/documents/proCodeHashes/$(request.resource.data.codeHash)).data.uid == request.auth.uid;
-      allow update: if isAdmin();
+    }
+
+    // ── Audit logs (immuable, écrit uniquement par Cloud Function admin SDK) ────
+    match /auditLogs/{logId} {
+      allow read:   if isAdmin();
+      allow write, delete: if false;
+    }
+
+    // ── Subscription Stripe (read par owner + admin, write par webhook uniquement) ─
+    match /users/{userId}/data/stripe {
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow write, delete: if false;
     }
   }
 }
