@@ -84,13 +84,13 @@ const Store = (() => {
     ]},
   };
 
-  const DEFAULT_SPREADS = { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,QO1:6.25,MCL1:1.00,CL1:10.00 };
+  const DEFAULT_SPREADS = { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,MCL1:1.00,CL1:10.00 };
   const DEFAULT_SPREADS_BY_FIRM = {
-    apex:    { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,QO1:6.25,MCL1:1.00,CL1:10.00 },
-    topstep: { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,QO1:6.25,MCL1:1.00,CL1:10.00,ZN1:15.63 },
+    apex:    { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,MCL1:1.00,CL1:10.00 },
+    topstep: { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,MCL1:1.00,CL1:10.00,ZN1:15.63 },
     ftmo:      { US500:0.50,US100:1.50,US30:2.50,GER40:1.50,UK100:1.00,XAUUSD:0.35,EURUSD:1.00,GBPUSD:1.20,USDJPY:0.80,USOIL:3.00 },
     ftmo1step: { US500:0.50,US100:1.50,US30:2.50,GER40:1.50,UK100:1.00,XAUUSD:0.35,EURUSD:1.00,GBPUSD:1.20,USDJPY:0.80,USOIL:3.00 },
-    lucid:   { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,QO1:6.25,MCL1:1.00,CL1:10.00 },
+    lucid:   { MES1:1.25,ES1:12.50,MNQ1:0.50,NQ1:5.00,MYM1:0.50,YM1:5.00,M2K1:0.50,RTY1:5.00,MGC1:1.00,GC1:10.00,MCL1:1.00,CL1:10.00 },
     fpips:   { US500:0.40,US100:1.20,US30:2.00,GER40:1.20,UK100:0.80,XAUUSD:0.25,EURUSD:0.80,GBPUSD:1.00,USDJPY:0.70,USOIL:2.50 },
   };
 
@@ -472,6 +472,24 @@ const Store = (() => {
     return t;
   }
 
+  // Ajoute plusieurs trades d'un coup avec UN SEUL write Firestore.
+  // Utilisé par le mode groupe (1 trade dupliqué sur N comptes) — sans ça,
+  // chaque addTrade() faisait un write Firestore complet = N writes pour rien.
+  function addTradesBatch(tradeList) {
+    if (!Array.isArray(tradeList) || tradeList.length === 0) return [];
+    const created = tradeList.map(trade => {
+      const providedId = trade && trade.id && /^[a-zA-Z0-9_-]{1,64}$/.test(String(trade.id))
+                           ? String(trade.id) : null;
+      const t = { ..._sanitizeTrade(trade), id: providedId || _newTradeId() };
+      if (!t.date) t.date = new Date().toISOString();
+      return t;
+    });
+    // Insère tous les nouveaux en tête, puis 1 seul save
+    trades = [...created, ...trades];
+    _saveTrades();
+    return created;
+  }
+
   function updateTrade(id, data) {
     const idx = trades.findIndex(t => t.id === id);
     if (idx < 0) return null;
@@ -790,18 +808,31 @@ const Store = (() => {
   function canAddAccount() { return isPro() || myAccounts.length < 1; }
 
   // ── Stats ─────────────────────────────────────────────────────────────────────
+  // Winrate basé sur netPnl > 0 (cohérent avec UI.statsForTrades).
+  // Un trade `be` avec partial profitable compte comme gagnant.
+  // 1 seul passage par trade (perf : Calc.trade appelé 1 fois au lieu de 2-3).
   function getStats() {
-    const closed = trades.filter(t => t.outcome === 'win' || t.outcome === 'loss');
-    const wins   = closed.filter(t => t.outcome === 'win');
-    const totalPnL = trades.reduce((s, t) => { const c = Calc.trade(t); return s + (c.netPnl !== null ? c.netPnl : 0); }, 0);
+    let closedCount = 0, winsCount = 0, totalPnL = 0, rrSum = 0;
+    trades.forEach(t => {
+      const c = Calc.trade(t);
+      if (c.invalid) return;
+      if (Number.isFinite(c.netPnl)) totalPnL += c.netPnl;
+      if (Number.isFinite(c.rr))     rrSum    += c.rr;
+      if (t.outcome === 'win' || t.outcome === 'loss' || t.outcome === 'be') {
+        if (!c.estimated) {
+          closedCount++;
+          if (Number.isFinite(c.netPnl) && c.netPnl > 0) winsCount++;
+        }
+      }
+    });
     return {
       totalPnL,
-      winRate: closed.length ? (wins.length / closed.length) * 100 : null,
-      avgRR:   trades.length ? trades.reduce((s, t) => s + Calc.trade(t).rr, 0) / trades.length : 0,
+      winRate: closedCount ? (winsCount / closedCount) * 100 : null,
+      avgRR:   trades.length ? rrSum / trades.length : 0,
       total:   trades.length,
       open:    trades.filter(t => t.outcome === 'open').length,
-      wins:    wins.length,
-      losses:  closed.length - wins.length,
+      wins:    winsCount,
+      losses:  closedCount - winsCount,
     };
   }
 
@@ -830,7 +861,7 @@ const Store = (() => {
 
   return {
     initForUser, clearLocalCache, purgeForeignCache,
-    getTrades, getTradeById, addTrade, updateTrade, deleteTrade, importTrades, clearTrades, exportJSON, exportFullJSON,
+    getTrades, getTradeById, addTrade, addTradesBatch, updateTrade, deleteTrade, importTrades, clearTrades, exportJSON, exportFullJSON,
     newTradeId: _newTradeId, uploadTradeScreenshot, getTradeScreenshotUrl, deleteTradeScreenshot,
     getSettings, getGroqKey, updateSettings,
     getAccountTypes, getAccountByName, updateAccountTypes,

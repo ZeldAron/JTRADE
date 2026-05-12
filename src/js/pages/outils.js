@@ -17,7 +17,6 @@
     { id:'M2K1',   label:'M2K  — Micro Russell',    group:'futures', unit:'ticks',  vpv:0.50   },
     { id:'RTY1',   label:'RTY  — Russell 2000',     group:'futures', unit:'ticks',  vpv:5.00   },
     { id:'MGC1',   label:'MGC  — Micro Gold',       group:'futures', unit:'ticks',  vpv:1.00   },
-    { id:'QO1',    label:'QO   — Mini Gold',        group:'futures', unit:'ticks',  vpv:5.00   },
     { id:'GC1',    label:'GC   — Gold',             group:'futures', unit:'ticks',  vpv:10.00  },
     { id:'MCL1',   label:'MCL  — Micro Crude',      group:'futures', unit:'ticks',  vpv:1.00   },
     { id:'CL1',    label:'CL   — Crude Oil',        group:'futures', unit:'ticks',  vpv:10.00  },

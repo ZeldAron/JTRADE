@@ -375,7 +375,7 @@ const Modal = (() => {
   const INSTR_CAT = {
     MES1:'Indices Micro', ES1:'Indices Full', MNQ1:'Indices Micro', NQ1:'Indices Full',
     MYM1:'Indices Micro', YM1:'Indices Full', M2K1:'Indices Micro', RTY1:'Indices Full',
-    MGC1:'Métaux', GC1:'Métaux', QO1:'Métaux',
+    MGC1:'Métaux', GC1:'Métaux',
     MCL1:'Énergie', CL1:'Énergie', ZN1:'Taux',
     US500:'Indices CFD', US100:'Indices CFD', US30:'Indices CFD', GER40:'Indices CFD', UK100:'Indices CFD',
     XAUUSD:'Métaux CFD', EURUSD:'Forex', GBPUSD:'Forex', USDJPY:'Forex', USOIL:'Énergie CFD',
@@ -803,7 +803,11 @@ const Modal = (() => {
     if (!$('wApex').value)     { UI.toast(i18n.t('err.no.account.sel'), true); return; }
     _saveInFlight = true;
     const saveBtn = $('wBtnSave');
-    if (saveBtn) saveBtn.disabled = true;
+    const saveBtnOriginalText = saveBtn ? saveBtn.textContent : '';
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = i18n.t('wiz.saving') || 'Enregistrement…';
+    }
 
     const rawInstr   = $('wInstr').value;
     const rawOutcome = $('wOutcome').value;
@@ -882,21 +886,23 @@ const Modal = (() => {
         UI.toast(i18n.t('modal.trade.updated'));
       } else if (data.apex && data.apex.startsWith('grp:')) {
         // Sauvegarde sur tous les comptes du groupe (pas de screenshot en mode groupe)
+        // BATCH : 1 seul write Firestore au lieu de N (perf + coût)
         const groupId = data.apex.slice(4);
         const grp     = Store.getGroupById(groupId);
         if (grp && grp.accountIds && grp.accountIds.length) {
-          const trades = grp.accountIds.map(accId => {
+          const tradesToCreate = grp.accountIds.map(accId => {
             const acc = Store.getMyAccountById(accId);
             if (!acc) return null;
-            return Store.addTrade({
+            return {
               ...data,
               apex:       acc.name,
               capital:    acc.capital,
               feePerSide: (acc.feePerSide != null ? acc.feePerSide : 2.14),
               spreadCost: Store.getSpreadsByFirm(acc.firmKey || 'apex')[data.instrument] || 0,
               groupId,
-            });
+            };
           }).filter(Boolean);
+          const trades = Store.addTradesBatch(tradesToCreate);
           saved = trades[0];
           UI.toast(i18n.t('modal.trade.group', { n: trades.length, name: grp.name }));
         } else {
@@ -923,7 +929,10 @@ const Modal = (() => {
       if (onSaved) onSaved(saved);
     } finally {
       _saveInFlight = false;
-      if (saveBtn) saveBtn.disabled = false;
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = saveBtnOriginalText;
+      }
     }
   }
 

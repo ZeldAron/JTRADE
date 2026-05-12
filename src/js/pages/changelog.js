@@ -5,6 +5,24 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.106',
+      date: '2026-05-12',
+      time: '22:00',
+      tags: ['security', 'fix', 'perf'],
+      title: 'Sprint sécu + stats correctes + perf groupe',
+      titleEn: 'Sprint: security + correct stats + group perf',
+      items: [
+        { type: 'fix', text: 'Stats : winrate basé sur P&L net réel (un trade BE avec partial profitable compte enfin comme gagnant). Trades incomplets (entry/sl/tp1 manquants) ne pourrissent plus les stats (early-return zeros au lieu de NaN propagés)', textEn: 'Stats: winrate now based on actual net P&L (a BE trade with profitable partial finally counts as a win). Incomplete trades (missing entry/sl/tp1) no longer poison stats (early-return zeros instead of propagating NaN)' },
+        { type: 'perf', text: 'Mode groupe (1 trade dupliqué sur N comptes) : 1 seul write Firestore au lieu de N (jusqu\'à 10× plus rapide pour un groupe de 10 comptes)', textEn: 'Group mode (1 trade duplicated across N accounts): 1 Firestore write instead of N (up to 10× faster for a group of 10 accounts)' },
+        { type: 'feat', text: 'Loading state au save trade : le bouton affiche "Enregistrement…" pendant upload + sauvegarde (plus de "rien se passe" sur connexion lente)', textEn: 'Save trade loading state: button shows "Saving…" during upload + save (no more "nothing happens" on slow connections)' },
+        { type: 'security', text: 'Cloud Function analyzeChart : validation magic bytes côté serveur (anti MIME-spoofing — un attaquant ne peut plus envoyer un PDF/exécutable encodé en base64 et le faire passer pour une image)', textEn: 'analyzeChart Cloud Function: server-side magic bytes validation (anti MIME-spoofing — an attacker can no longer send a PDF/executable encoded as base64 and pass it as an image)' },
+        { type: 'security', text: 'Vérification hCaptcha côté serveur (notifyNewSignup + sendContactMessage) — anti-bot strict si HCAPTCHA_SECRET configuré, sinon mode dégradé compatible avec l\'existant', textEn: 'Server-side hCaptcha verification (notifyNewSignup + sendContactMessage) — strict anti-bot if HCAPTCHA_SECRET configured, otherwise degraded mode compatible with existing setup' },
+        { type: 'security', text: '_sanitizeText durci : strip Unicode bidi (U+202E RLO, etc.) et zero-width chars (anti-spoofing emails admin où un attaquant pouvait renverser visuellement son nom)', textEn: '_sanitizeText hardened: strips Unicode bidi (U+202E RLO etc.) and zero-width chars (anti-spoofing admin emails where attacker could visually reverse their name)' },
+        { type: 'fix', text: 'QO1 (Mini Gold délisté CME 2017) retiré des UIs (wizard, outils, settings nouveaux). Préservé dans VALID_INSTRS et POINT_VALUES pour rétro-compat avec trades historiques', textEn: 'QO1 (Mini Gold delisted by CME 2017) removed from UIs (wizard, tools, new settings). Preserved in VALID_INSTRS and POINT_VALUES for legacy trades backward-compat' },
+        { type: 'fix', text: 'email_verified réactivé dans isAdmin() rules + 4 CFs admin (suite à la vérification de l\'email admin)', textEn: 'email_verified re-enabled in isAdmin() rules + 4 admin CFs (following admin email verification)' },
+      ],
+    },
+    {
       version: '0.9.102',
       date: '2026-05-11',
       time: '23:30',
