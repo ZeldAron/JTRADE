@@ -42,14 +42,31 @@ const UI = (() => {
   }
 
   function statsForTrades(trades) {
-    const closed   = trades.filter(t => t.outcome === 'win' || t.outcome === 'loss');
-    const wins     = closed.filter(t => t.outcome === 'win');
-    const totalPnL = trades.reduce((s, t) => s + (Calc.trade(t).netPnl || 0), 0);
-    const winRate  = closed.length ? (wins.length / closed.length) * 100 : null;
-    const avgRR    = trades.length ? trades.reduce((s, t) => s + Calc.trade(t).rr, 0) / trades.length : 0;
-    return { totalPnL, winRate, avgRR, total: trades.length,
-      open: trades.filter(t => t.outcome === 'open').length,
-      wins: wins.length, losses: closed.length - wins.length };
+    // Winrate basé sur netPnl > 0 (pas outcome) : un trade `be` avec partial profitable
+    // compte comme un gain. Cohérent avec ce que voit le user dans son P&L réel.
+    // Trades `open` exclus (résultat non final). manualPnl override pris en compte.
+    let closedCount = 0, winsCount = 0, totalPnL = 0, rrSum = 0;
+    trades.forEach(t => {
+      const c = Calc.trade(t);
+      if (c.invalid) return;
+      if (Number.isFinite(c.netPnl)) totalPnL += c.netPnl;
+      if (Number.isFinite(c.rr))     rrSum    += c.rr;
+      if (t.outcome === 'win' || t.outcome === 'loss' || t.outcome === 'be') {
+        if (!c.estimated) {
+          closedCount++;
+          if (Number.isFinite(c.netPnl) && c.netPnl > 0) winsCount++;
+        }
+      }
+    });
+    return {
+      totalPnL,
+      winRate: closedCount ? (winsCount / closedCount) * 100 : null,
+      avgRR:   trades.length ? rrSum / trades.length : 0,
+      total:   trades.length,
+      open:    trades.filter(t => t.outcome === 'open').length,
+      wins:    winsCount,
+      losses:  closedCount - winsCount,
+    };
   }
 
   // ── Toast ───────────────────────────────────────────────────────────────────

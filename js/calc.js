@@ -6,7 +6,7 @@ const Calc = (() => {
     // Futures CME
     MES1: 5, ES1: 50, MNQ1: 2, NQ1: 20,
     MYM1: 0.5, YM1: 5, M2K1: 5, RTY1: 50,
-    MGC1: 10, GC1: 100, QO1: 50,
+    MGC1: 10, GC1: 100, QO1: 50,  // QO1 délisté par CME en 2017 — gardé pour rétro-compat trades historiques uniquement
     MCL1: 100, CL1: 1000,
     ZN1: 1000,
     // CFD Indices MT4/MT5 ($ par lot par point d'index, lot size standard FTMO/FP)
@@ -39,8 +39,28 @@ const Calc = (() => {
     const pv     = pointValue(t.instrument);
     const isLong = t.direction === 'long';
 
-    const riskPts   = isLong ? t.entry - t.sl  : t.sl  - t.entry;
-    const rewardPts = isLong ? t.tp1  - t.entry : t.entry - t.tp1;
+    // Garde-fou : si entry/sl/tp1 manquants ou invalides, retourner des zeros
+    // (anti-NaN propagés dans les stats : un trade `open` créé sans entry doit
+    // compter 0$ partout au lieu de pourrir totalPnL/winrate/equity).
+    const ent  = (typeof t.entry === 'number' && isFinite(t.entry)) ? t.entry : null;
+    const slP  = (typeof t.sl    === 'number' && isFinite(t.sl))    ? t.sl    : null;
+    const tp1P = (typeof t.tp1   === 'number' && isFinite(t.tp1))   ? t.tp1   : null;
+    if (ent == null || slP == null || tp1P == null) {
+      return {
+        riskPts: 0, rewardPts: 0, rr: 0,
+        riskUSD: 0, rewardUSD: 0, netRewardUSD: 0, riskPct: 0,
+        riskTicks: 0, rewardTicks: 0,
+        pv, feePerSide: t.feePerSide != null ? t.feePerSide : 2.14,
+        commFees: 0, spreadFees: 0, totalFees: 0,
+        pnl: null, netPnl: null, estimated: false,
+        hasPartial: false, partialPercent: null, partialPrice: null,
+        apexOk: true, apexWarn: false,
+        invalid: true,  // flag pour signaler un trade incomplet
+      };
+    }
+
+    const riskPts   = isLong ? ent - slP : slP - ent;
+    const rewardPts = isLong ? tp1P - ent : ent - tp1P;
     const rr        = riskPts > 0 ? rewardPts / riskPts : 0;
 
     const riskUSD   = riskPts   * pv * t.contracts;
