@@ -160,7 +160,12 @@ const Store = (() => {
     // Purge les clés localStorage d'autres uids (anti data-leakage sur device partagé)
     purgeForeignCache();
     _loadFromLocalStorage();
-    _loadFromFirestore().then(_migrateLegacyData).catch(() => _migrateLegacyData());
+    // Q15 : retourne la promise pour que app-bootstrap puisse await avant le 1er render
+    // (évite le flicker UI sur data legacy puis migrée). Backward-compat : si l'appelant
+    // n'await pas, le comportement reste identique (load + migrate en arrière-plan).
+    return _loadFromFirestore()
+      .then(_migrateLegacyData)
+      .catch(() => _migrateLegacyData());
   }
 
   // Migration auto pour les données legacy :
@@ -378,6 +383,15 @@ const Store = (() => {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
+  // Inverse de _escHtmlStore — utilisé à l'import JSON pour éviter le double-escape
+  // (un export ZeldTrade contient des `&lt;` qui doivent redevenir `<` avant re-escape).
+  // Ordre crucial : `&amp;` en DERNIER sinon double-décodage.
+  function _unescHtmlStore(s) {
+    return String(s || '')
+      .replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+      .replace(/&gt;/g, '>').replace(/&lt;/g, '<')
+      .replace(/&amp;/g, '&');
+  }
   function _sanitizeTrade(raw) {
     // Borne manualPnl en fonction du risque calculable (anti-injection P&L absurde) :
     // si on peut estimer le risk en $, on borne ±50× ce risque ; sinon ±100k$ (1 trade plafond).
@@ -404,9 +418,10 @@ const Store = (() => {
         try {
           const d = new Date(raw.date);
           const now = Date.now();
-          const floor = new Date('2010-01-01').getTime();
-          // Rejette dates futures (>1 jour), dates antérieures à 2010 (epoch 0 etc.),
-          // et formats ISO non attendus
+          // Floor 1990 : couvre 35+ ans de trading. Anti epoch 0 / dates négatives,
+          // tout en laissant les traders expérimentés importer leur historique long.
+          const floor = new Date('1990-01-01').getTime();
+          // Rejette dates futures (>1 jour), dates antérieures à 1990, formats ISO non attendus
           if (isFinite(d)
               && /^\d{4}-\d{2}-\d{2}T/.test(raw.date)
               && d.getTime() <= now + 24*3600*1000
@@ -553,11 +568,18 @@ const Store = (() => {
     if (!Array.isArray(arr)) return 0;
     // Tous les trades importés passent par _sanitizeTrade — même validation
     // stricte que addTrade/updateTrade : ranges, regex, types, taille.
+    // Q52 : on UNESCAPE setup/notes AVANT le sanitize pour éviter le double-escape
+    // (un export ZeldTrade contient déjà des `&lt;` ; le sanitize re-escape → `&amp;lt;`).
     const sanitized = arr
       .filter(t => t && typeof t === 'object' && DIRS.has(t.direction) && OUTCOMES.has(t.outcome))
       .map(t => {
         const id = String(t.id || _newTradeId()).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || _newTradeId();
-        return { ..._sanitizeTrade(t), id };
+        const unescaped = {
+          ...t,
+          setup: typeof t.setup === 'string' ? _unescHtmlStore(t.setup) : t.setup,
+          notes: typeof t.notes === 'string' ? _unescHtmlStore(t.notes) : t.notes,
+        };
+        return { ..._sanitizeTrade(unescaped), id };
       });
     trades = [...sanitized, ...trades].slice(0, 10000);
     _saveTrades();
@@ -737,6 +759,9 @@ const Store = (() => {
   let _proThrottleUntil = 0;
   let _proInFlight = false;
   async function activatePro(code) {
+    // Garde-fou type : si code n'est pas une string non-vide, return false direct
+    // (sans toucher au throttle/lock, pour ne pas pénaliser un appel programmatique vide)
+    if (typeof code !== 'string' || !code.trim()) return false;
     if (Date.now() < _proThrottleUntil) return 'throttled';
     // Lock anti-double-clic : empêche 2 activations parallèles (qui pourraient
     // dispatch 2 events planChanged et désynchroniser l'UI).
