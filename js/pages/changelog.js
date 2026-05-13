@@ -5,6 +5,22 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.110',
+      date: '2026-05-14',
+      time: '00:30',
+      tags: ['fix', 'security'],
+      title: 'Robustesse data — pack hardening invisible (6 fixes)',
+      titleEn: 'Data robustness — invisible hardening pack (6 fixes)',
+      items: [
+        { type: 'fix', text: 'Date floor élargie : 2010 → 1990. Les traders avec plus de 15 ans d\'historique peuvent maintenant importer leur archive complète sans rejet silencieux.', textEn: 'Date floor extended: 2010 → 1990. Traders with 15+ years of history can now import their complete archive without silent rejection.' },
+        { type: 'fix', text: 'Store.activatePro() : garde-fou contre undefined/null/empty (plus de crash si appelé programmatiquement sans code, throttle préservé pour les vrais codes invalides)', textEn: 'Store.activatePro(): guard against undefined/null/empty (no more crash if called programmatically without code, throttle preserved for actual invalid codes)' },
+        { type: 'fix', text: 'Import JSON : plus de double-escape HTML. Si tu exportes puis ré-importes ton JSON, les setup/notes restent identiques au lieu de devenir `&amp;lt;` à chaque cycle. Idempotence restaurée.', textEn: 'JSON Import: no more HTML double-escape. If you export then re-import your JSON, setup/notes stay identical instead of becoming `&amp;lt;` each cycle. Idempotence restored.' },
+        { type: 'security', text: 'Race condition compression screenshots éliminée : si tu paste plusieurs images rapidement, seul le DERNIER paste s\'affiche (les compressions précédentes sont jetées silencieusement, plus de results désynchros à l\'écran)', textEn: 'Screenshot compression race condition eliminated: if you paste multiple images rapidly, only the LAST paste shows (previous compressions silently discarded, no more desync results on screen)' },
+        { type: 'fix', text: 'Paste handlers Ctrl+V dédupliqués (3 handlers → 1 handler unifié) : moins de mémoire, plus de comportement bizarre quand un paste arrive sur les step 2 + 3 simultanés. Le routing step 2/3 est explicite.', textEn: 'Ctrl+V paste handlers deduplicated (3 handlers → 1 unified handler): less memory, no more weird behavior when paste arrives on steps 2 + 3 simultaneously. Step 2/3 routing is explicit.' },
+        { type: 'fix', text: 'Store.initForUser() retourne maintenant une Promise — permet aux futurs callers d\'await le load Firestore avant le 1er render (anti flicker UI). Backward-compat : appelants sync continuent de marcher.', textEn: 'Store.initForUser() now returns a Promise — allows future callers to await the Firestore load before first render (anti UI flicker). Backward-compat: sync callers still work.' },
+      ],
+    },
+    {
       version: '0.9.109',
       date: '2026-05-13',
       time: '23:55',

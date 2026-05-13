@@ -609,11 +609,17 @@ const Modal = (() => {
 
   // Tracking de l'objectURL courant pour le révoquer avant remplacement
   let _shotPreviewUrl = null;
+  // Q49 : token incrémental pour cancel les compressions concurrentes.
+  // Si le user paste rapidement, seul le DERNIER paste doit gagner — les
+  // précédents sont jetés silencieusement (et leur status n'écrase plus l'UI).
+  let _shotCompressionToken = 0;
 
   async function handleShotFromBlob(rawBlob) {
+    const myToken = ++_shotCompressionToken;
     const status = $('wShotStatus');
     // Garde-fou taille avant tout (anti-DoS décodage d'un fichier énorme)
     if (rawBlob.size > 10 * 1024 * 1024) {
+      if (myToken !== _shotCompressionToken) return;
       status.style.color = 'var(--red)';
       status.textContent = 'Fichier trop lourd (max 10 MB avant compression)';
       return;
@@ -621,12 +627,14 @@ const Modal = (() => {
     // Validation magic bytes (anti MIME-spoofing — un PDF ne passera pas)
     try {
       const head = new Uint8Array(await rawBlob.slice(0, 12).arrayBuffer());
+      if (myToken !== _shotCompressionToken) return;  // abandonné par paste plus récent
       if (!isValidImageMagicBytes(head)) {
         status.style.color = 'var(--red)';
         status.textContent = 'Fichier invalide — utilise un PNG/JPG/WEBP/GIF';
         return;
       }
     } catch {
+      if (myToken !== _shotCompressionToken) return;
       status.style.color = 'var(--red)';
       status.textContent = 'Image illisible';
       return;
@@ -635,6 +643,10 @@ const Modal = (() => {
     status.textContent = 'Compression en cours…';
     try {
       const compressed = await compressImage(rawBlob);
+      if (myToken !== _shotCompressionToken) {
+        // Un paste plus récent a démarré — on jette ce résultat
+        return;
+      }
       shotBlob = compressed;
       shotPendingDelete = false;
       // Révoque l'ancien objectURL (anti memory leak si paste/replace en boucle)
@@ -645,6 +657,7 @@ const Modal = (() => {
       status.style.color = 'var(--green)';
       status.textContent = `Prêt (${kb} KB) — sera enregistré au save`;
     } catch (e) {
+      if (myToken !== _shotCompressionToken) return;
       status.style.color = 'var(--red)';
       status.textContent = e.message || 'Erreur lors du traitement de l\'image';
       shotBlob = null;
@@ -1014,18 +1027,47 @@ const Modal = (() => {
       if (file && file.type.startsWith('image/')) loadImageFile(file);
     });
 
-    // Paste global (⌘V) → capture image
+    // Q44 : UN SEUL handler paste global qui route selon le step actif.
+    // (Avant : 2 handlers document distincts → double déclenchement potentiel.)
     document.addEventListener('paste', e => {
       if (!$('modalOverlay').classList.contains('open')) return;
-      if ($('wp2').style.display === 'none') return;
       const items = e.clipboardData && e.clipboardData.items;
       if (!items) return;
+
+      const onStep2 = $('wp2') && $('wp2').style.display !== 'none';
+      const onStep3 = $('wp3') && $('wp3').style.display !== 'none';
+      if (!onStep2 && !onStep3) return;
+
+      // Trouve la première image dans le clipboard
+      let imgFile = null;
       for (const item of items) {
-        if (item.type.startsWith('image/')) {
-          e.preventDefault();
-          loadImageFile(item.getAsFile());
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          imgFile = item.getAsFile();
           break;
         }
+      }
+      if (!imgFile) return;
+
+      // Step 2 : analyse IA (loadImageFile)
+      if (onStep2) {
+        e.preventDefault();
+        loadImageFile(imgFile);
+        return;
+      }
+
+      // Step 3 : screenshot persistant (handleShotFromBlob)
+      // Mais si l'user paste dans un input/textarea texte, on laisse passer
+      // SAUF si la clipboard ne contient QUE de l'image (alors on capture)
+      if (onStep3) {
+        const active = document.activeElement;
+        const inText = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
+        // Si focus dans un text input ET clipboard a aussi du texte → laisser passer
+        if (inText) {
+          const hasText = Array.from(items).some(it => it.kind === 'string');
+          if (hasText) return;
+        }
+        e.preventDefault();
+        handleShotFromBlob(imgFile);
       }
     });
 
@@ -1045,44 +1087,10 @@ const Modal = (() => {
     $('wPartialPercent').addEventListener('input', () => wRecalc());
     $('wPartialPrice').addEventListener('input',   () => wRecalc());
 
-    // Zone screenshot persistant (Ctrl+V image, drag&drop, click pour file picker)
+    // Zone screenshot persistant (drag&drop, click pour file picker)
+    // Note : le paste Ctrl+V est géré par le handler unifié plus haut (Q44).
     const shotZone = $('wShotZone');
     if (shotZone) {
-      // Paste image (Ctrl+V) — capté quand la zone a le focus, OU n'importe où dans le modal step 3
-      shotZone.addEventListener('paste', e => {
-        const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items || [];
-        for (const it of items) {
-          if (it.kind === 'file' && it.type.startsWith('image/')) {
-            e.preventDefault();
-            const file = it.getAsFile();
-            if (file) handleShotFromBlob(file);
-            return;
-          }
-        }
-      });
-      // Capturer aussi le paste sur le modal entier si la zone n'a pas le focus
-      // (mais on ne déclenche que si on est sur l'étape 3 ET qu'aucun input texte n'a le focus)
-      document.addEventListener('paste', e => {
-        if (!$('modalOverlay').classList.contains('open')) return;
-        if ($('wp3').style.display === 'none') return;
-        const active = document.activeElement;
-        // Si l'utilisateur paste dans un input/textarea, on laisse passer (texte)
-        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
-          // Sauf si la clipboard contient une image — alors on intercepte quand même
-          const items = (e.clipboardData)?.items || [];
-          const hasImage = Array.from(items).some(it => it.kind === 'file' && it.type.startsWith('image/'));
-          if (!hasImage) return;
-        }
-        const items = (e.clipboardData)?.items || [];
-        for (const it of items) {
-          if (it.kind === 'file' && it.type.startsWith('image/')) {
-            e.preventDefault();
-            const file = it.getAsFile();
-            if (file) handleShotFromBlob(file);
-            return;
-          }
-        }
-      });
       // Click sur la zone (placeholder visible) → ouvre file picker
       $('wShotFileLink').addEventListener('click', e => {
         e.preventDefault();
