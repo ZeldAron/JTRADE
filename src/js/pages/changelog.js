@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.109',
+      date: '2026-05-13',
+      time: '23:55',
+      tags: ['feat', 'mobile', 'a11y'],
+      title: 'Touch targets ≥ 44×44 px sur mobile (accessibilité tactile)',
+      titleEn: 'Touch targets ≥ 44×44 px on mobile (tactile accessibility)',
+      items: [
+        { type: 'feat', text: 'Tous les éléments interactifs (boutons, chips, croix, nav, calendrier, inputs) respectent maintenant le standard tactile WCAG/Apple HIG de 44×44 px minimum sur mobile (<768px). Plus de mistaps sur les petits boutons.', textEn: 'All interactive elements (buttons, chips, close icons, nav, calendar, inputs) now meet the WCAG/Apple HIG 44×44 px tactile standard on mobile (<768px). No more mistaps on tiny buttons.' },
+        { type: 'fix', text: 'Inputs avec font-size 16px sur mobile (évite le zoom auto iOS qui agaçait lors du focus sur les champs)', textEn: 'Inputs with 16px font-size on mobile (prevents iOS auto-zoom on focus)' },
+      ],
+    },
+    {
       version: '0.9.108',
       date: '2026-05-13',
       time: '23:30',
