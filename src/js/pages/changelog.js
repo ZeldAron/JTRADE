@@ -5,6 +5,17 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.108',
+      date: '2026-05-13',
+      time: '23:30',
+      tags: ['feat'],
+      title: 'Wizard mémorise le dernier compte + instrument',
+      titleEn: 'Wizard remembers last account + instrument',
+      items: [
+        { type: 'feat', text: 'Le wizard de création de trade pré-sélectionne automatiquement le dernier compte (ou groupe) et le dernier instrument utilisés (gain de temps si tu trades toujours le même setup). Validation stricte : si le compte a été supprimé ou l\'instrument retiré, fallback sur le défaut.', textEn: 'The trade creation wizard auto-selects the last used account (or group) and instrument (time-saver if you always trade the same setup). Strict validation: if the account was deleted or instrument removed, fallback to default.' },
+      ],
+    },
+    {
       version: '0.9.107',
       date: '2026-05-13',
       time: '16:00',

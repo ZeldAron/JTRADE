@@ -843,6 +843,43 @@ const Store = (() => {
     });
   }
 
+  // ── Wizard preferences (last used apex + instrument) ───────────────────────
+  // Persisté en localStorage namespacé par uid. Lecture validée (compte doit
+  // toujours exister, instrument doit être dans la whitelist).
+  function _lastWizardKey() { return `ztrade_${_uid}_lastWizard`; }
+
+  function getLastWizardPrefs() {
+    if (!_uid || _uid === 'default') return null;
+    let raw;
+    try { raw = JSON.parse(localStorage.getItem(_lastWizardKey())); } catch { return null; }
+    if (!raw || typeof raw !== 'object') return null;
+    // Validation stricte : apex doit toujours exister dans myAccounts OU être un groupe valide
+    let validApex = null;
+    if (typeof raw.apex === 'string' && raw.apex.length <= 100) {
+      if (raw.apex.startsWith('grp:')) {
+        const gid = raw.apex.slice(4);
+        if (groups.some(g => g.id === gid)) validApex = raw.apex;
+      } else if (myAccounts.some(a => a.name === raw.apex)) {
+        validApex = raw.apex;
+      }
+    }
+    // Validation instrument : doit matcher le regex stricte du sanitize
+    let validInstr = null;
+    if (typeof raw.instrument === 'string' && /^[A-Za-z0-9/. _-]{1,20}$/.test(raw.instrument)) {
+      validInstr = raw.instrument;
+    }
+    return { apex: validApex, instrument: validInstr };
+  }
+
+  function setLastWizardPrefs({ apex, instrument }) {
+    if (!_uid || _uid === 'default') return;
+    const safe = {
+      apex:       typeof apex === 'string' ? apex.slice(0, 100) : null,
+      instrument: typeof instrument === 'string' ? instrument.slice(0, 20) : null,
+    };
+    try { localStorage.setItem(_lastWizardKey(), JSON.stringify(safe)); } catch {}
+  }
+
   // Purge toutes les clés ztrade_* d'AUTRES uids (anti data-leakage sur appareil
   // partagé : un user qui se reconnecte ne laisse pas traîner les données de
   // l'utilisateur précédent dans localStorage).
@@ -870,6 +907,7 @@ const Store = (() => {
     getSpreads, updateSpreads, getSpreadsByFirm, getAllSpreadsByFirm, updateSpreadsByFirm,
     getGroups, getGroupById, addGroup, updateGroup, deleteGroup,
     getPlanInfo, isPro, activatePro, canAnalyzeToday, recordAnalysis, refreshAiUsage, canAddAccount,
+    getLastWizardPrefs, setLastWizardPrefs,
     getStats,
   };
 })();

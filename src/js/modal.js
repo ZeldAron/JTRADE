@@ -765,13 +765,33 @@ const Modal = (() => {
       // Mode création : étape 1
       $('wBtnLong').className  = 'dir-btn';
       $('wBtnShort').className = 'dir-btn';
-      const accounts    = Store.getMyAccounts();
-      const defaultAcc  = accounts[0] || null;
-      populateApexSelect(defaultAcc ? defaultAcc.name : '');
+      const accounts = Store.getMyAccounts();
+      // U31 : essaie de pré-sélectionner le dernier compte utilisé (validé strict
+      // dans Store.getLastWizardPrefs : compte/groupe doit toujours exister)
+      const prefs = Store.getLastWizardPrefs ? Store.getLastWizardPrefs() : null;
+      let preferredAcc = null;
+      if (prefs && prefs.apex && !prefs.apex.startsWith('grp:')) {
+        preferredAcc = accounts.find(a => a.name === prefs.apex) || null;
+      }
+      const defaultAcc = preferredAcc || accounts[0] || null;
+      // Pour les groupes, on respecte la pref si elle est valide (validation déjà
+      // faite dans Store.getLastWizardPrefs contre la liste des groupes actuels)
+      const preferredApexValue = prefs && prefs.apex && prefs.apex.startsWith('grp:')
+        ? prefs.apex
+        : (defaultAcc ? defaultAcc.name : '');
+      populateApexSelect(preferredApexValue);
       if (defaultAcc) {
         capital    = defaultAcc.capital;
         feePerSide = (defaultAcc.feePerSide != null) ? defaultAcc.feePerSide : 2.14;
         firmKey    = defaultAcc.firmKey || 'apex';
+      }
+      // Mémorise aussi l'instrument préféré pour pré-sélection plus tard
+      // (au moment où populateInstrumentSelect sera appelé après step 2)
+      if (prefs && prefs.instrument) {
+        // On stocke temporairement dans parsedTrade pour que fillStep3FromParsed
+        // pré-sélectionne ce instrument si l'IA n'en renvoie pas un
+        parsedTrade = parsedTrade || {};
+        if (!parsedTrade.instrument) parsedTrade.instrument = prefs.instrument;
       }
       goToStep(1);
     }
@@ -924,6 +944,14 @@ const Modal = (() => {
         if (screenshotPath) dataWithId.screenshotPath = screenshotPath;
         saved = Store.addTrade(dataWithId);
         UI.toast(i18n.t('modal.trade.saved'));
+      }
+      // U31 : mémorise le dernier compte/groupe + instrument pour pré-sélection
+      // au prochain wizard (mode création uniquement, pas en édition)
+      if (!editingId && Store.setLastWizardPrefs) {
+        Store.setLastWizardPrefs({
+          apex:       data.apex,
+          instrument: data.instrument,
+        });
       }
       close();
       if (onSaved) onSaved(saved);
