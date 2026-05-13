@@ -5,6 +5,21 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.111',
+      date: '2026-05-14',
+      time: '01:00',
+      tags: ['feat', 'ux'],
+      title: 'Pack A — 5 quick wins UX',
+      titleEn: 'Pack A — 5 UX quick wins',
+      items: [
+        { type: 'feat', text: 'Dashboard : empty state guidé quand aucun trade. 3 étapes claires (configure compte → nouveau trade → wizard) + CTA "Créer mon premier trade" qui redirige Settings ou ouvre le wizard selon ton état.', textEn: 'Dashboard: guided empty state when no trades. 3 clear steps (configure account → new trade → wizard) + "Create my first trade" CTA that redirects to Settings or opens the wizard based on your state.' },
+        { type: 'feat', text: 'Journal : compteur "X / N trades" en haut de la liste quand un filtre/recherche est actif. Tu sais combien de trades sont masqués.', textEn: 'Journal: "X / N trades" counter at the top of the list when a filter/search is active. You know how many trades are hidden.' },
+        { type: 'feat', text: 'Calendrier : bouton "Aujourd\'hui" entre les chevrons pour revenir au mois courant en 1 clic (avant : il fallait cliquer N fois).', textEn: 'Calendar: "Today" button between the chevrons to return to the current month in 1 click (before: needed N clicks).' },
+        { type: 'feat', text: 'Wizard groupe : le sélecteur compte affiche maintenant le nombre de comptes du groupe (« ⬡ Mon Groupe (3 comptes) »). Quand sélectionné, hint visible « Ce groupe va créer 3 trades ». Plus de surprise quand le save crée plusieurs trades.', textEn: 'Wizard groups: the account selector now shows the count of accounts in the group ("⬡ My Group (3 accounts)"). When selected, visible hint "This group will create 3 trades". No more surprise when save creates multiple trades.' },
+        { type: 'fix', text: 'Scroll-to-top automatique au changement de page (Dashboard → Analytics ne reste plus scrollé en bas).', textEn: 'Auto scroll-to-top on page change (Dashboard → Analytics no longer stays scrolled to the bottom).' },
+      ],
+    },
+    {
       version: '0.9.110',
       date: '2026-05-14',
       time: '00:30',

@@ -28,6 +28,15 @@ function initApp() {
     $('topbarTitle').textContent = i18n.t(PAGE_KEYS[page] || page);
     $('searchWrap').style.display = page === 'journal' ? 'flex' : 'none';
     currentPage = page;
+    // U34 : scroll-to-top automatique au changement de page (sinon Analytics
+    // après scroll bas de Settings démarrait scrollé vers le bas selon le browser)
+    try { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); }
+    catch { window.scrollTo(0, 0); }
+    // Scroll aussi le contenu principal si c'est lui qui scroll (selon le layout)
+    const main = document.querySelector('main') || document.querySelector('.app-main');
+    if (main && typeof main.scrollTo === 'function') {
+      try { main.scrollTo({ top: 0, behavior: 'instant' }); } catch { main.scrollTop = 0; }
+    }
     if (page === 'dashboard') UI.renderDashboard();
     if (page === 'analytics') UI.renderAnalytics();
     if (page === 'goals')     UI.renderGoals();

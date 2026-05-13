@@ -3790,6 +3790,88 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   .calc-result-card { position: static; }
 }
 
+/* ─── U20 : Bouton "Aujourd'hui" calendrier ─────────────────────────────── */
+.cal-today-btn {
+  font-size: 12px;
+  padding: 6px 12px;
+  width: auto !important;
+  height: auto !important;
+  font-weight: 500;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+  margin: 0 8px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.cal-today-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ─── U24 : Compteur de résultats dans la liste journal (filtre actif) ──── */
+.list-counter {
+  padding: 8px 16px;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* ─── U21 : Dashboard empty state ───────────────────────────────────────── */
+.dash-empty {
+  max-width: 540px;
+  margin: 48px auto;
+  padding: 32px 24px;
+  text-align: center;
+}
+.dash-empty-icon { font-size: 56px; margin-bottom: 12px; }
+.dash-empty-title { font-size: 22px; margin: 0 0 8px; color: var(--text); font-weight: 600; }
+.dash-empty-text { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0 0 24px; }
+.dash-empty-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px auto 28px;
+  text-align: left;
+  max-width: 380px;
+}
+.dash-empty-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+.dash-empty-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.dash-empty-cta {
+  padding: 12px 24px;
+  font-size: 14px;
+}
+
 /* ─── U13 : Touch targets ≥ 44×44 px sur mobile (standard WCAG / Apple HIG) ─ */
 /* Évite les mistaps tactiles sur petits boutons / icônes. Activé < 768px. */
 @media (max-width: 768px) {
