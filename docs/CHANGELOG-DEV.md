@@ -37,6 +37,66 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.111 — Pack A : 5 quick wins UX (U34+U21+U24+U20+U27)
+
+**Type** : feat + ux
+**Fichiers** : `src/js/app.js`, `src/js/ui.js`, `src/js/pages/dashboard.js`, `src/js/pages/calendar.js`, `src/js/modal.js`, `src/css/style.css`
+
+### Contexte
+Pack A demandé par user — 5 fixes UX rapides à fort impact sur l'expérience.
+
+### Changements
+
+**U34** — Scroll-to-top au switchPage
+- `app.js switchPage()` : `window.scrollTo({top: 0, behavior: 'instant'})` après l'activation de page
+- Scroll aussi le `<main>` si présent (selon le layout)
+
+**U21** — Dashboard empty state
+- `pages/dashboard.js renderDashboard()` : early-return avec markup empty si `Store.getTrades().length === 0`
+- 3 étapes guidées + CTA intelligent (redirect Settings si pas de compte, sinon ouvre wizard)
+- CSS `.dash-empty*` ajouté
+
+**U24** — Compteur résultats journal
+- `ui.js renderList()` : `<div class="list-counter">X / N trades</div>` en sticky top si `filtered.length < total`
+- Échappe les nombres via interpolation simple (number type uniquement, pas user-controlled)
+- CSS `.list-counter` sticky top
+
+**U20** — Bouton "Aujourd'hui" calendrier
+- `pages/calendar.js` : nouveau `<button id="calToday">` entre les chevrons prev/next
+- Handler : reset `calMonth + calYear` au mois/année courant
+- CSS `.cal-today-btn` hover violet
+
+**U27** — Groupe wizard visible
+- `modal.js populateApexSelect()` : option groupe affiche `⬡ Nom (N comptes)` au lieu de juste `⬡ Nom`
+- Nouveau hint `wGroupHint` injecté lazy sous le select au change
+- Affiche "Ce groupe va créer N trades" avec escape strict du nom (regex anti-XSS)
+- Si groupe vide : warning rouge "Groupe vide — aucun trade ne sera créé"
+
+### Analyse sécurité (par fix)
+
+| Fix | Vecteur potentiel | Mitigation |
+|---|---|---|
+| U34 | `window.scrollTo` n'a pas de surface XSS | N/A |
+| U21 | Texte i18n statique, pas d'interpolation | Strings via `i18n.t()` ou littéraux |
+| U24 | Compteur = nombre de filtered.length / total.length | Pas de string user-controlled |
+| U20 | Click handler reset state | N/A |
+| U27 | Nom du groupe injecté dans hint via innerHTML | Escape regex inline `<>"'&` AVANT innerHTML |
+
+### Tests
+- `node test/calc.test.js` : 103/103 ✓
+- `node -c` syntax check : app.js, ui.js, modal.js, dashboard.js, calendar.js — OK
+
+### Déploiement
+- v0.9.111 push GitHub Pages (live)
+
+### À surveiller
+- Empty state Dashboard : si user ajoute son 1er trade puis le supprime, l'empty state réapparaît (comportement attendu)
+- Compteur recherche : sticky top peut overlap si scroll très rapide (acceptable)
+- Bouton "Aujourd'hui" : à tester sur écrans étroits — peut wrap si label long
+- Hint groupe : si nom de groupe contient des emojis multibytes, l'escape inline les laisse passer (OK, emojis pas dangereux)
+
+---
+
 ## 2026-05-14 — v0.9.110 — Pack C robustesse data (Q11+Q15+Q17+Q44+Q49+Q52)
 
 **Type** : fix + security

@@ -343,6 +343,12 @@ Redondant avec `frame-ancestors 'none'` + `X-Frame-Options DENY`. Defense-in-dep
 - **v0.9.103** : Backend Stripe stealth (admin only, prix jamais publics)
 - **v0.9.104** : App Check init désactivé côté client (reCAPTCHA Enterprise cassé)
 - **v0.9.105** : Admin access réparé (rules + CSP apis.google.com)
+- **v0.9.106** : Stats winrate corrigé (netPnl > 0) + NaN early-return + batch writes mode groupe + magic bytes serveur + hCaptcha vérif serveur + Unicode bidi strip
+- **v0.9.107** : Modale confirm custom (remplace `confirm()` natif) + cleanup orphelins admin + Dependabot
+- **v0.9.108** : Wizard mémorise dernier compte + instrument (gain de temps)
+- **v0.9.109** : Touch targets ≥ 44×44 px sur mobile (a11y WCAG) + inputs 16px (anti zoom iOS)
+- **v0.9.110** : Pack C robustesse data (date floor 1990, garde-fou activatePro, double-escape JSON fix, race compression cancel, paste handlers unifiés, initForUser awaitable)
+- **v0.9.111** : Pack A UX (dashboard empty state, compteur recherche, bouton Aujourd'hui calendrier, hint groupe wizard avec count, scroll-to-top auto)
 
 ---
 
@@ -350,6 +356,10 @@ Redondant avec `frame-ancestors 'none'` + `X-Frame-Options DENY`. Defense-in-dep
 
 | Feature | État | Note |
 |---|---|---|
+| **F1** Type de trading au signup (Fonds propres / Prop firm, multi-choix) | Specs validées | User précisera UX exact avant impl |
+| **F2** Crypto dans F1 | Futur | Après F1 stable |
+| **F3** Export PDF des trades (Pro only) | Planifié | jsPDF + html2canvas côté client |
+| **F4** Landing page propre | Planifié | Dark, responsive, sections hero/features/pricing |
 | Discord webhooks (remplacer Web3Forms) | En attente | User a serveur Discord setup |
 | Stripe activation complète | Backend prêt | User doit setup Stripe Dashboard + secrets |
 | App Check réactivé | Bloqué | Diagnostic reCAPTCHA Enterprise key type |

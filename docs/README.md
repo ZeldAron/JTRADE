@@ -3,7 +3,7 @@
 > **Trading journal SPA** pour traders prop firms (Apex, FTMO, Topstep, Lucid, Funding Pips).
 > Stack vanilla JS + Firebase + Groq Vision. Modèle privé / recrutement manuel.
 
-**Version actuelle** : 0.9.105 (mai 2026)
+**Version actuelle** : 0.9.111 (14 mai 2026)
 **Admin** : zeldtradepro@gmail.com (MFA TOTP activé)
 **URL prod** : https://zeldaron.github.io/zeldtrade/
 **URL admin** : https://zeldaron.github.io/zeldtrade/admin.html

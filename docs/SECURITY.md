@@ -186,21 +186,22 @@ C'est une **clé publique** — destinée à être visible dans le navigateur. L
 
 ---
 
-## 📊 Score sécurité actuel
+## 📊 Score sécurité actuel (au 2026-05-14, v0.9.111)
 
 | Domaine | Score | Bloqueur |
 |---|---|---|
 | Code XSS/injection | **9.5/10** | RAS — fail-safe escape partout |
-| Data integrity | **8/10** | RAS |
-| Rules Firestore | **9/10** | Sans email_verified |
+| Data integrity | **9/10** | Pack C v0.9.110 a éliminé NaN/double-escape/race compression |
+| Rules Firestore | **9.5/10** | `email_verified` réactivé v0.9.106 + admin bypass blocklist |
 | Rules Storage | **8.5/10** | OK |
-| Cloud Functions | **7/10** | App Check temporairement off |
-| Backup/résilience | **3/10** | **PITR + GCS à activer (manuel)** |
-| Infra HTTP | **5/10** | GitHub Pages limitation |
-| Admin chain | **7.5/10** | MFA Firebase Auth pas activé |
-| Supply chain | **6/10** | Dependabot pas activé, fb-functions v4 EOL |
+| Cloud Functions | **8/10** | App Check temporairement off (toujours) + magic bytes + hCaptcha vérif serveur (v0.9.106) |
+| Backup/résilience | **3/10** | **PITR + GCS à activer (manuel)** — inchangé |
+| Infra HTTP | **5/10** | GitHub Pages limitation — Firebase Hosting non migré |
+| Admin chain | **8.5/10** | MFA Gmail OK + email_verified strict (v0.9.106) |
+| Supply chain | **7.5/10** | Dependabot activé v0.9.107, fb-functions v4 toujours EOL |
+| UX mobile (a11y) | **8.5/10** | Touch targets ≥ 44×44 v0.9.109 |
 
-**Score global : 7.0/10** — solide pour bêta privée, plusieurs points faibles à régler avant ouverture commerciale.
+**Score global : 7.5/10** — gains réguliers depuis v0.9.105 (+0.5). Reste l'infra HTTP + résilience pour passer 9/10.
 
 ---
 

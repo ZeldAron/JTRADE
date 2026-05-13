@@ -98,7 +98,7 @@ Sans domaine `zeldtrade.com` :
 
 **Code (15)** : ~~Q11 date floor~~ ✅ 2026-05-14, Q16 anti-corruption check, ~~Q17 garde-fou null~~ ✅ 2026-05-14, Q18-20 dedup helpers, Q22-23 dead code, Q24/31 perf Calc.trade, Q25-26 no-op functions, Q27 spreadCost fallback, Q43 timezone, ~~Q44 paste handlers~~ ✅ 2026-05-14, ~~Q49 race compression~~ ✅ 2026-05-14, ~~Q52 double escape JSON~~ ✅ 2026-05-14, Q53-55 désynchros sanitize, Q61-62 N+1 queries, Q69 reset aiUsage downgrade
 
-**UX (15)** : U9 undo, U11 pills découvrables, U13 touch targets mobile, U14 bulle contact mobile, U15 seuil "Meilleure session", U16-17 partial UI, U21 dashboard empty, U22 couleurs harmonisées, U23 filtres combinables, U24 compteur recherche, U27 groupe visible, U28 CSV preview, U30 toast queue, ~~U31 mémo wizard~~ ✅ 2026-05-13 (v0.9.108), U32 confirm réanalyse
+**UX (15)** : U9 undo, U11 pills découvrables, ~~U13 touch targets mobile~~ ✅ 2026-05-13 (v0.9.109), U14 bulle contact mobile, U15 seuil "Meilleure session", U16-17 partial UI, ~~U20 bouton Aujourd'hui calendrier~~ ✅ 2026-05-14 (v0.9.111), ~~U21 dashboard empty~~ ✅ 2026-05-14 (v0.9.111), U22 couleurs harmonisées, U23 filtres combinables, ~~U24 compteur recherche~~ ✅ 2026-05-14 (v0.9.111), ~~U27 groupe visible~~ ✅ 2026-05-14 (v0.9.111), U28 CSV preview, U30 toast queue, ~~U31 mémo wizard~~ ✅ 2026-05-13 (v0.9.108), U32 confirm réanalyse, ~~U34 scroll-to-top~~ ✅ 2026-05-14 (v0.9.111)
 
 ---
 
