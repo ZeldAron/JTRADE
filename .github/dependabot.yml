@@ -1,0 +1,50 @@
+# Dependabot — audit + mises à jour automatiques des dépendances
+# Doc : https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Stratégie sécurité :
+#  - Schedule weekly (pas de PR spam quotidien)
+#  - Limit 5 PRs ouvertes max (sinon overflow review)
+#  - Major updates IGNORÉES sur les paquets sensibles (firebase-functions, firebase-admin, stripe)
+#    → faut un review manuel + tests avant migration majeure
+#  - Security updates restent prioritaires (Dependabot les ouvre même si major ignored)
+
+version: 2
+updates:
+  # Cloud Functions (Node.js)
+  - package-ecosystem: "npm"
+    directory: "/functions"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "functions"
+    commit-message:
+      prefix: "deps(functions)"
+      include: "scope"
+    # Ignore major updates sur les paquets critiques — review manuel obligatoire
+    ignore:
+      - dependency-name: "firebase-functions"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "firebase-admin"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "stripe"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "deps(actions)"

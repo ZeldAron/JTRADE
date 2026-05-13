@@ -54,7 +54,7 @@ Sans domaine `zeldtrade.com` :
 | ~~**Q1**~~ | ~~Race condition save trade en mode groupe → batch en 1 seul write Firestore~~ ✅ 2026-05-12 (v0.9.106) | 1h |
 | ~~**Q3**~~ | ~~Winrate : compter `c.netPnl > 0` au lieu de `outcome === 'win'`~~ ✅ 2026-05-12 (v0.9.106) | 30 min |
 | ~~**Q4-Q5**~~ | ~~Calc.trade : early-return si entry/sl null ou tp1=0~~ ✅ 2026-05-12 (v0.9.106) | 30 min |
-| **U1** | Remplacer `confirm()` natif par modale custom (i18n + mobile) | 1-2h |
+| ~~**U1**~~ | ~~Remplacer `confirm()` natif par modale custom~~ ✅ 2026-05-13 (v0.9.107) | 1-2h |
 | **U3** | Onboarding nouveau user : empty state "premier lancement" guidé | 2h |
 
 ---
@@ -65,7 +65,7 @@ Sans domaine `zeldtrade.com` :
 
 | # | Action | Effort | Coût |
 |---|---|---|---|
-| **I8** | Activer Dependabot + CodeQL sur GitHub | 15 min | 0€ |
+| ~~**I8**~~ | ~~Dependabot config~~ ✅ 2026-05-13 (`.github/dependabot.yml` créé) — il reste juste à cocher "Enable Dependabot alerts" dans GitHub Settings → Code security | 15 min | 0€ |
 | **I9** | Migrer Web3Forms → Discord webhooks (donne-moi les URLs après création) | 1h (toi) + 30 min (moi pour migration code) | 0€ |
 | **I11** | Compléter `privacy.html` : Groq, GitHub Pages, Stripe, Discord avec base légale RGPD | 1-2h | 0€ |
 | **I13** | Sentry / GCP Error Reporting alertes | 1h | 0€ (5k events/mois free) |
@@ -122,7 +122,7 @@ Détails dans le CHANGELOG-DEV audit consolidé. Sélection :
 |---|---|---|---|
 | ~~**B3**~~ | ~~Rule `userEmails` blocklist trop stricte bloque la recréation du userEmails admin~~ ✅ Résolu 2026-05-13 | Username "Admin" (ou contenant "admin"/"zeldtrade"/etc.) bloquait la rule `userEmails write` introduite en v0.9.95. Le compte admin lui-même ne pouvait plus créer son record `userEmails` après recréation. **Fix** : bypass de la blocklist si `request.auth.token.email == 'zeldtradepro@gmail.com'`. Rule redéployée. | ✅ Résolu |
 | ~~**B1**~~ | ~~Activation code Pro échoue pour le compte admin recréé~~ ✅ Résolu 2026-05-12 (Option A) | User a édité manuellement le doc `proCodeHashes/{hash}` dans Firebase Console pour mettre le bon UID. Activation OK confirmée. Cleanup B (suppression artefacts ancien UID) reste pertinent à terme. | ✅ Résolu |
-| **B2** | Prévenir le bug B1 — admin.html devrait détecter les doublons d'email | Quand `userEmails` contient 2 entrées avec le même email mais des UIDs différents (cas après recréation manuelle de compte), admin.html devrait alerter visuellement (badge "⚠ doublon — UID orphelin"). Ou mieux : Cloud Function de cleanup qui détecte et supprime les userEmails orphelins (= UID qui n'existe plus dans Firebase Auth) | À faire (~1h) |
+| ~~**B2**~~ | ~~Cloud Function cleanup userEmails orphelins~~ ✅ 2026-05-13 (v0.9.107) — `cleanupOrphanUserEmails` CF + UI admin Config tab (dry-run obligatoire avant suppression) | À faire (~1h) |
 
 ---
 

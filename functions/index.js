@@ -982,3 +982,154 @@ exports.stripeWebhook = onRequest(
   }
 );
 
+
+
+/**
+ * Cleanup des userEmails orphelins (admin uniquement).
+ *
+ * Cas couvert : si un user a été supprimé manuellement via Firebase Console
+ * (au lieu de la CF deleteUserAccount), son doc `userEmails/{uid}` reste
+ * orphelin (l'UID n'existe plus dans Firebase Auth). Cela pollue admin.html
+ * (doublons d'email) et a causé le bug B1 (code Pro attribué au mauvais UID).
+ *
+ * Cette CF :
+ *  1. Liste tous les userEmails
+ *  2. Pour chacun, vérifie si l'UID existe encore dans Firebase Auth
+ *  3. Si orphelin (auth/user-not-found) → supprime userEmails + proCodeHashes attribués
+ *
+ * Mode DRY-RUN par défaut (data.confirm=false) : retourne juste la liste sans rien supprimer.
+ * Vraie suppression seulement si data.confirm === true.
+ */
+exports.cleanupOrphanUserEmails = onCall(
+  {
+    enforceAppCheck: true,
+    consumeAppCheckToken: true,
+    maxInstances:    1,  // 1 seul admin, pas de raison de paralléliser
+    timeoutSeconds:  60,
+    memory:          '256MiB',
+    region:          'europe-west1',
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required');
+    }
+    if (request.auth.token.email !== ADMIN_EMAIL || !request.auth.token.email_verified) {
+      throw new HttpsError('permission-denied', 'Admin only');
+    }
+
+    const confirm = request.data?.confirm === true;
+    const db = admin.firestore();
+
+    // Audit log "in_progress" avant toute action destructive (même en dry-run pour traçabilité)
+    const auditRef = db.collection('auditLogs').doc();
+    try {
+      await auditRef.set({
+        action:  'cleanupOrphanUserEmails',
+        status:  confirm ? 'in_progress' : 'dry-run',
+        admin:   request.auth.token.email,
+        payload: { confirm },
+        at:      admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (e) { console.error('[auditLog] pre-cleanup failed', e && e.message); }
+
+    // 1. Lister tous les userEmails
+    let allEmails;
+    try {
+      allEmails = await db.collection('userEmails').get();
+    } catch (e) {
+      console.error('[cleanupOrphans] list failed', e && e.message);
+      throw new HttpsError('internal', 'List failed');
+    }
+
+    const orphans  = [];
+    const valid    = [];
+    const errors   = [];
+
+    // 2. Pour chaque doc, vérifier si Auth user existe
+    for (const doc of allEmails.docs) {
+      const uid   = doc.id;
+      const email = doc.data().email;
+      try {
+        await admin.auth().getUser(uid);
+        valid.push({ uid, email });
+      } catch (e) {
+        if (e.code === 'auth/user-not-found') {
+          orphans.push({ uid, email });
+        } else {
+          errors.push({ uid, email, error: e.message });
+        }
+      }
+    }
+
+    // Mode DRY-RUN : retourner sans rien supprimer
+    if (!confirm) {
+      try {
+        await auditRef.update({
+          status:      'dry-run-completed',
+          orphansFound: orphans.length,
+          validFound:   valid.length,
+          completedAt:  admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch (e) { /* swallow */ }
+      return {
+        ok: true,
+        dryRun: true,
+        orphans,   // liste des orphelins identifiés
+        valid:     valid.length,
+        errors,
+        message:   `Trouvé ${orphans.length} orphelin(s) sur ${allEmails.size} userEmails total. Appel avec confirm:true pour supprimer.`,
+      };
+    }
+
+    // 3. Mode CONFIRM : supprimer chaque orphelin + ses proCodeHashes
+    const deleted = [];
+    for (const orphan of orphans) {
+      const { uid } = orphan;
+      try {
+        // Supprimer userEmails/{uid}
+        await db.doc(`userEmails/${uid}`).delete();
+
+        // Supprimer aussi les proCodeHashes attribués à cet UID orphelin
+        const codesSnap = await db.collection('proCodeHashes').where('uid', '==', uid).get();
+        const codesDeleted = [];
+        for (const codeDoc of codesSnap.docs) {
+          await codeDoc.ref.delete();
+          codesDeleted.push(codeDoc.id);
+        }
+
+        // Supprimer aussi le doc users/{uid} et sa subcollection data (best effort)
+        try {
+          const dataCol  = db.collection(`users/${uid}/data`);
+          const dataDocs = await dataCol.listDocuments();
+          await Promise.allSettled(dataDocs.map(d => d.delete()));
+          await db.doc(`users/${uid}`).delete().catch(() => null);
+        } catch (e) {
+          console.warn('[cleanupOrphans] users/{uid} cleanup failed', uid, e && e.message);
+        }
+
+        deleted.push({ uid, email: orphan.email, codesRevoked: codesDeleted.length });
+      } catch (e) {
+        errors.push({ uid, email: orphan.email, error: e.message });
+        console.error('[cleanupOrphans] delete failed', uid, e && e.message);
+      }
+    }
+
+    try {
+      await auditRef.update({
+        status:       errors.length === 0 ? 'completed' : 'partial',
+        orphansFound: orphans.length,
+        deleted:      deleted.length,
+        errors,
+        completedAt:  admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (e) { /* swallow */ }
+
+    return {
+      ok:        true,
+      dryRun:    false,
+      deleted,
+      errors,
+      message:   `Supprimé ${deleted.length} orphelin(s). ${errors.length} erreur(s).`,
+    };
+  }
+);

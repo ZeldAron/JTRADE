@@ -37,6 +37,84 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-13 — v0.9.107 — Modale confirm custom + cleanup orphelins + Dependabot
+
+**Type** : security + feat + admin + docs
+**Fichiers** : `src/js/ui.js`, `src/js/admin.js`, `src/js/pages/settings.js`, `functions/index.js`, `.github/dependabot.yml`, `docs/HOSTING_MIGRATION.md`, `src/js/pages/changelog.js`
+
+### Contexte
+Sprint demandé par user pour atteindre "sécurisé et fonctionnel un minimum" sans dépendance manuelle. Approche paranoïaque : pour chaque ajout, lister les vecteurs d'attaque et les mitiger.
+
+### Changements
+
+**U1 — Modale confirm custom** :
+- `ui.js confirmModal({title, message, confirmText, cancelText, danger}) → Promise<bool>`
+- DOM API pure (`createElement` + `textContent`) — zéro `innerHTML` user-interpolé (anti-XSS fail-safe)
+- Focus par défaut sur **Cancel** (anti clic réflexe destructif)
+- Escape = cancel (UX standard, safer que confirm)
+- Single-modal : si une modale est déjà ouverte, on l'annule (résolve false)
+- Anti memory leak : `closeConfirmModal()` retire le keyboard handler global
+- Remplace `confirm()` natif dans : `ui.js` (delete trade), `settings.js` (delete account + delete group), `admin.js` (confirme uniquement le bouton supprime orphelins, on garde le natif intentionnellement pour la confirmation finale destructive)
+
+**B2 — cleanupOrphanUserEmails Cloud Function** :
+- Admin only (email + email_verified + isAdmin chain)
+- App Check enforced (anti-bot)
+- maxInstances=1 (admin solo, pas de raison de paralléliser)
+- Mode DRY-RUN obligatoire (`data.confirm:false`) avant vraie suppression
+- Audit log "in_progress" écrit AVANT toute action destructive (traçabilité même en crash)
+- Détecte les `userEmails` orphelins via `admin.auth().getUser(uid)` → catch `auth/user-not-found`
+- Si confirm:true : supprime `userEmails/{uid}` + `proCodeHashes` where uid + `users/{uid}/data/*` + `users/{uid}` (best effort)
+- UI admin (Config tab) : 2 boutons "Analyser" puis "Supprimer", le bouton Supprimer est désactivé jusqu'à dry-run réussi
+- Construction UI via DOM API (createElement + textContent) — pas d'innerHTML user-interpolé
+
+**I8 — Dependabot config** :
+- `.github/dependabot.yml` : weekly schedule (lundi 08:00 Europe/Paris)
+- `open-pull-requests-limit: 5` (anti spam)
+- `ignore` major updates sur firebase-functions, firebase-admin, stripe (review manuel obligatoire avant breaking migration)
+- Audit /functions (npm) + /  (github-actions)
+- Security updates restent prioritaires (Dependabot les sort même si major ignored)
+
+**Préparation Firebase Hosting** :
+- `docs/HOSTING_MIGRATION.md` créé avec :
+  - Config `firebase.json` complète prête à coller (8 headers strict)
+  - HSTS max-age 2 ans + preload
+  - CSP réelle (vs meta partiellement ignoré)
+  - COOP same-origin + CORP same-origin (anti spectre/cross-origin attacks)
+  - Permissions-Policy exhaustive
+  - Cache headers (HTML no-cache, assets 1h)
+  - X-Robots-Tag noindex sur `/admin.html`
+  - Plan en 9 étapes + rollback rapide
+  - Score sécurité attendu : Mozilla Observatory A+, SSL Labs A+
+- **Non déployé** — attend que user fasse `firebase init hosting` (interactif)
+
+### Sécurité — analyse vecteurs d'attaque mitigés
+
+| Vecteur | Mitigation |
+|---|---|
+| XSS via message confirmModal interpolé | textContent only, jamais innerHTML |
+| Memory leak handlers keyboard | removeEventListener dans closeConfirmModal |
+| Multiple modales superposées | _activeConfirmResolve unique, cancel l'ancien |
+| Clic réflexe destructif | Focus par défaut sur Cancel |
+| cleanupOrphanUserEmails appelé en boucle | maxInstances=1 + admin check + audit log |
+| Suppression user actif par erreur | DRY-RUN obligatoire + button désactivé après init |
+| getUser() throw autre erreur que not-found | check explicite `e.code === 'auth/user-not-found'` |
+| Dependabot PR malicieuse cassante | ignore major updates sur paquets critiques |
+
+### Tests
+- `node test/calc.test.js` : 103/103 ✓
+- `node -c` syntaxe : ui.js + admin.js + settings.js OK
+
+### Déploiement
+- Cloud Function `cleanupOrphanUserEmails` créée et déployée
+- Site v0.9.107 sur GitHub Pages
+
+### À surveiller / Activations manuelles user
+- Dependabot ne sera actif qu'après push sur GitHub (auto-discovery par GitHub)
+- Firebase Hosting attend `firebase init hosting` puis copy/paste du config
+- Bouton "Cleanup orphelins" admin testable maintenant (mode dry-run safe)
+
+---
+
 ## 2026-05-13 — B3 fix critique : rule userEmails blocklist bloquait l'admin
 
 **Type** : security fix
