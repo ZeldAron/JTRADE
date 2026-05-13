@@ -260,6 +260,36 @@
     const s      = UI.statsForTrades(trades);
     const isPro  = Store.isPro();
 
+    // U21 : empty state si aucun trade enregistré (premier lancement)
+    // Évite l'affichage de KPI à zéro et de graphes vides, guide vers la 1ère action
+    if (!all.length) {
+      el.innerHTML = `<div class="dash-empty">
+        <div class="dash-empty-icon">📊</div>
+        <h2 class="dash-empty-title">${t('dash.empty.title') || 'Bienvenue sur ZeldTrade'}</h2>
+        <p class="dash-empty-text">${t('dash.empty.text') || 'Ajoute ton premier trade pour voir tes stats, ta courbe d\'équité, et tes performances par compte.'}</p>
+        <div class="dash-empty-steps">
+          <div class="dash-empty-step"><span class="dash-empty-num">1</span><span>${t('dash.empty.step1') || 'Configure ton compte prop firm dans Réglages'}</span></div>
+          <div class="dash-empty-step"><span class="dash-empty-num">2</span><span>${t('dash.empty.step2') || 'Clique sur « + Nouveau trade » en bas de la sidebar'}</span></div>
+          <div class="dash-empty-step"><span class="dash-empty-num">3</span><span>${t('dash.empty.step3') || 'Suis le wizard 3 étapes (direction → screenshot → détails)'}</span></div>
+        </div>
+        <button class="btn-primary dash-empty-cta" id="dashEmptyCta">${t('dash.empty.cta') || '+ Créer mon premier trade'}</button>
+      </div>`;
+      const btn = $('dashEmptyCta');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          if (accs.length === 0) {
+            // Pas de compte → diriger vers Settings
+            document.querySelector('[data-page="settings"]')?.click();
+          } else {
+            // Ouvrir le wizard
+            const newTradeBtn = document.getElementById('btnNewTrade');
+            if (newTradeBtn) newTradeBtn.click();
+          }
+        });
+      }
+      return;
+    }
+
     const currentVal = dashFilter || 'all';
     let opts = `<option value="all"${currentVal==='all'?' selected':''}>${t('dash.all.accounts')}</option>`;
     if (accs.length) {

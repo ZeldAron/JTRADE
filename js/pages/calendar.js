@@ -207,13 +207,14 @@
       <div class="page-title">${t('page.calendar')}</div>
 
       <div class="cal-nav-row">
-        <button class="cal-nav-btn" id="calPrev">
+        <button class="cal-nav-btn" id="calPrev" aria-label="Mois précédent">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
         </button>
         <div class="cal-month-label">${months[calMonth]} ${calYear}</div>
-        <button class="cal-nav-btn" id="calNext">
+        <button class="cal-nav-btn cal-today-btn" id="calToday" title="Revenir au mois courant">${i18n.t('cal.today') || 'Aujourd\'hui'}</button>
+        <button class="cal-nav-btn" id="calNext" aria-label="Mois suivant">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
@@ -240,6 +241,17 @@
       calSelectedDate = null;
       UI.renderCalendar();
     });
+    // U20 : bouton "Aujourd'hui" pour revenir au mois courant en 1 clic
+    const todayBtn = $('calToday');
+    if (todayBtn) {
+      todayBtn.addEventListener('click', () => {
+        const now = new Date();
+        calMonth = now.getMonth();
+        calYear  = now.getFullYear();
+        calSelectedDate = null;
+        UI.renderCalendar();
+      });
+    }
 
     el.querySelectorAll('.cal-cell[data-date]').forEach(cell => {
       cell.addEventListener('click', () => {

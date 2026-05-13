@@ -112,10 +112,18 @@ const UI = (() => {
   function renderList() {
     const list     = $('tradeList');
     const filtered = getFiltered();
+    const total    = Store.getTrades().length;
+
+    // U24 : compteur "X / N trades" quand un filtre/recherche est actif
+    // (escape les nombres via toFixed ou Number — pas de user-controlled string)
+    const isFiltered = filtered.length < total;
+    const counterHtml = isFiltered
+      ? `<div class="list-counter">${filtered.length} / ${total} ${i18n.t('ui.trades.lbl') || 'trades'}</div>`
+      : '';
 
     if (!filtered.length) {
-      const msg = Store.getTrades().length ? i18n.t('ui.no.results') : i18n.t('ui.no.trades');
-      list.innerHTML = `
+      const msg = total ? i18n.t('ui.no.results') : i18n.t('ui.no.trades');
+      list.innerHTML = `${counterHtml}
         <div class="empty-list">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
             <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -127,7 +135,7 @@ const UI = (() => {
       return;
     }
 
-    list.innerHTML = filtered.map(t => {
+    list.innerHTML = counterHtml + filtered.map(t => {
       const c       = Calc.trade(t);
       const dc      = t.direction === 'long' ? 'var(--green)' : 'var(--red)';
       const rrC     = Calc.rrColor(c.rr);

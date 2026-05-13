@@ -417,10 +417,13 @@ const Modal = (() => {
       }).join('');
     }
     if (grps.length) {
-      html += '<optgroup label="── Groupes ──">';
+      html += '<optgroup label="── Groupes (multi-comptes) ──">';
       html += grps.map(g => {
         const val = 'grp:' + g.id;
-        return `<option value="${esc(val)}"${val === currentVal ? ' selected' : ''}>⬡ ${esc(g.name)}</option>`;
+        // U27 : afficher le nombre de comptes du groupe pour clarifier l'impact
+        const n = Array.isArray(g.accountIds) ? g.accountIds.length : 0;
+        const suffix = n > 0 ? ` (${n} compte${n > 1 ? 's' : ''})` : '';
+        return `<option value="${esc(val)}"${val === currentVal ? ' selected' : ''}>⬡ ${esc(g.name)}${suffix}</option>`;
       }).join('');
       html += '</optgroup>';
     }
@@ -1143,6 +1146,9 @@ const Modal = (() => {
 
     $('wApex').addEventListener('change', () => {
       const val = $('wApex').value;
+      // U27 : afficher un hint visible quand un groupe est sélectionné
+      // (rappel à l'user que ça va créer N trades, pas 1)
+      updateGroupHint(val);
       if (val.startsWith('grp:')) {
         // Groupe : on prend le premier compte du groupe pour le calcul
         const grp     = Store.getGroupById(val.slice(4));
@@ -1170,6 +1176,42 @@ const Modal = (() => {
       updateLotsInput($('wInstr').value);
       wRecalc();
     });
+
+    // U27 : hint qui affiche "→ Crée N trades (1 par compte du groupe)" si groupe sélectionné
+    function updateGroupHint(apexValue) {
+      let hint = $('wGroupHint');
+      // Crée l'élément hint s'il n'existe pas (injection lazy)
+      if (!hint) {
+        const apexSelect = $('wApex');
+        if (!apexSelect || !apexSelect.parentElement) return;
+        hint = document.createElement('div');
+        hint.id = 'wGroupHint';
+        hint.className = 'wiz-group-hint';
+        hint.style.cssText = 'display:none;font-size:11px;color:var(--accent);margin-top:4px;line-height:1.4';
+        apexSelect.parentElement.appendChild(hint);
+      }
+      if (apexValue && apexValue.startsWith('grp:')) {
+        const grp = Store.getGroupById(apexValue.slice(4));
+        const n = grp && Array.isArray(grp.accountIds) ? grp.accountIds.length : 0;
+        if (n > 0) {
+          // Texte safe : esc le nom du groupe (peut venir de user-controlled)
+          const gName = grp && grp.name ? String(grp.name).replace(/[<>"'&]/g, c => ({
+            '<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'
+          })[c]) : '';
+          hint.innerHTML = `⬡ Ce groupe va créer <strong>${n} trade${n>1?'s':''}</strong> (1 par compte de « ${gName} »)`;
+          hint.style.display = '';
+        } else {
+          hint.innerHTML = '⚠ Ce groupe est vide — aucun trade ne sera créé';
+          hint.style.color = 'var(--red)';
+          hint.style.display = '';
+        }
+      } else {
+        hint.style.display = 'none';
+      }
+    }
+    // Init hint à l'open si un groupe est déjà pré-sélectionné (mode édition ou U31 pref)
+    const initialApex = $('wApex').value;
+    if (initialApex && initialApex.startsWith('grp:')) updateGroupHint(initialApex);
 
     ['wContracts', 'wEntry', 'wSL', 'wTP1', 'wExit', 'wManualPnl'].forEach(id => {
       $(id).addEventListener('input',  wRecalc);
