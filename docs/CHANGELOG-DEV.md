@@ -37,6 +37,66 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.110 — Pack C robustesse data (Q11+Q15+Q17+Q44+Q49+Q52)
+
+**Type** : fix + security
+**Fichiers** : `src/js/store.js`, `src/js/modal.js`
+
+### Contexte
+Pack C demandé par user. 6 fixes silencieux de robustesse data, sans changement UX visible.
+
+### Changements détaillés
+
+**Q11** — `_sanitizeTrade` date floor : 2010-01-01 → 1990-01-01
+- Anti epoch 0 / dates négatives conservé
+- Mais accepte les imports d'archives 15+ ans
+
+**Q17** — `activatePro()` garde-fou type
+- Early-return false si `typeof code !== 'string' || !code.trim()` AVANT le throttle
+- Évite crash sur appel programmatique sans code
+- Pas de pénalité throttle pour un input vide
+
+**Q52** — Import JSON double-escape
+- Nouveau helper `_unescHtmlStore(s)` inverse de `_escHtmlStore` (ordre crucial : `&amp;` en dernier)
+- Dans `importTrades`, on unescape setup/notes AVANT le `_sanitizeTrade`
+- Idempotence restaurée : export → import = état stable
+
+**Q49** — Race compression screenshots
+- Token incrémental `_shotCompressionToken` dans `modal.js`
+- À chaque check après await : `if (myToken !== _shotCompressionToken) return;`
+- Seul le DERNIER paste écrit l'UI (les précédents abandonnés silencieusement)
+
+**Q44** — Paste handlers dédupliqués
+- Avant : 3 handlers (1 step 2 document.addEventListener + 1 step 3 document.addEventListener + 1 shotZone.addEventListener)
+- Après : 1 seul handler document qui route selon `wp2/wp3` visible
+- Logic step 3 préservée : si focus dans input texte + clipboard a du texte, on laisse passer
+
+**Q15** — `initForUser` await-able
+- Retourne maintenant la Promise (au lieu de fire-and-forget)
+- Backward-compat : `app-bootstrap.js launchApp` continue d'appeler sans await
+- Permet aux futurs callers d'await pour éviter le flicker UI au 1er render
+
+### Analyse sécurité (par fix)
+
+| Fix | Risque potentiel | Mitigation |
+|---|---|---|
+| Q11 | Dates négatives ou epoch 0 acceptées | Floor 1990 + check isFinite + regex ISO stricte |
+| Q17 | activatePro(0/false) bypass throttle | Check `typeof === 'string'` strict |
+| Q52 | _unescHtmlStore mal ordonnée → re-encode | Tests : `'&amp;lt;'` → `'<'` (vérifié manuellement) |
+| Q49 | Token reset au close modal | OK : token global session, reset implicite à chaque paste |
+| Q44 | Step 2/3 mal détectés → mauvais handler | Check `.style.display !== 'none'` strict, fallback `return` si ni step 2 ni step 3 |
+| Q15 | Breaking change si caller attendait sync return | Retourne Promise, le pattern fire-and-forget reste valide |
+
+### Tests
+- `node test/calc.test.js` : 103/103 ✓ (impacts data integrity pas Calc)
+
+### À surveiller
+- Si user paste 3 images rapidement, vérifier que la 3ème s'affiche (pas la 1ère)
+- Si user fait export JSON → import JSON, vérifier que `setup` reste identique
+- Sur mobile, vérifier que le paste step 2 (IA chart) marche toujours après dédupliquage
+
+---
+
 ## 2026-05-13 — v0.9.109 — Touch targets mobile ≥ 44×44 px (U13)
 
 **Type** : feat / a11y
