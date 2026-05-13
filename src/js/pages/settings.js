@@ -278,9 +278,17 @@
       });
 
       el.querySelectorAll('[data-ma-del]').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
           const acc = Store.getMyAccountById(btn.dataset.maDel);
-          if (!acc || !confirm(t('confirm.acc.delete'))) return;
+          if (!acc) return;
+          const ok = await UI.confirmModal({
+            title:       t('confirm.acc.title') || 'Supprimer le compte',
+            message:     t('confirm.acc.delete'),
+            confirmText: t('btn.delete') || 'Supprimer',
+            cancelText:  t('btn.cancel') || 'Annuler',
+            danger:      true,
+          });
+          if (!ok) return;
           Store.deleteMyAccount(btn.dataset.maDel);
           render();
           UI.toast(t('set.acc.deleted'));
@@ -593,9 +601,17 @@
       });
 
       el.querySelectorAll('[data-grp-del]').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
           const g = Store.getGroupById(btn.dataset.grpDel);
-          if (!g || !confirm(t('confirm.grp.delete'))) return;
+          if (!g) return;
+          const ok = await UI.confirmModal({
+            title:       t('confirm.grp.title') || 'Supprimer le groupe',
+            message:     t('confirm.grp.delete'),
+            confirmText: t('btn.delete') || 'Supprimer',
+            cancelText:  t('btn.cancel') || 'Annuler',
+            danger:      true,
+          });
+          if (!ok) return;
           Store.deleteGroup(btn.dataset.grpDel);
           render();
           UI.toast(t('set.grp.deleted'));

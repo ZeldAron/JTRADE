@@ -356,8 +356,15 @@ const UI = (() => {
       });
     });
 
-    $('detailBtnDelete').addEventListener('click', () => {
-      if (!confirm(i18n.t('confirm.trade.delete'))) return;
+    $('detailBtnDelete').addEventListener('click', async () => {
+      const ok = await confirmModal({
+        title:       i18n.t('confirm.trade.title') || 'Supprimer le trade',
+        message:     i18n.t('confirm.trade.delete'),
+        confirmText: i18n.t('btn.delete') || 'Supprimer',
+        cancelText:  i18n.t('btn.cancel')  || 'Annuler',
+        danger:      true,
+      });
+      if (!ok) return;
       Store.deleteTrade(t.id);
       selectedId = Store.getTrades()[0]?.id || null;
       const layout = document.querySelector('.journal-layout');
@@ -416,12 +423,111 @@ const UI = (() => {
     if (el) el.remove();
     document.removeEventListener('keydown', _lightboxKeyHandler);
   }
+  // ── Modale de confirmation custom ───────────────────────────────────────────
+  // Remplace le `confirm()` natif (look navigateur, pas i18n, look bizarre sur mobile).
+  // Construction via DOM API (createElement + textContent) — JAMAIS innerHTML user-interpolé.
+  // Focus par défaut sur "Annuler" (anti clic réflexe destructif).
+  // Escape = Annuler (UX standard, safer).
+  // Retourne une Promise<boolean> : true si Confirmer, false sinon.
+  let _activeConfirmResolve = null;
+  function confirmModal(opts) {
+    return new Promise((resolve) => {
+      // Si une modale déjà ouverte, on l'annule (l'ancienne résolve à false)
+      if (_activeConfirmResolve) {
+        const prev = _activeConfirmResolve;
+        _activeConfirmResolve = null;
+        try { prev(false); } catch {}
+        closeConfirmModal();
+      }
+      _activeConfirmResolve = resolve;
+
+      const title       = String(opts && opts.title       || 'Confirmer');
+      const message     = String(opts && opts.message     || '');
+      const confirmText = String(opts && opts.confirmText || 'Confirmer');
+      const cancelText  = String(opts && opts.cancelText  || 'Annuler');
+      const danger      = opts && opts.danger === true;
+
+      const overlay = document.createElement('div');
+      overlay.id = 'confirmModalOverlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-labelledby', 'confirmModalTitle');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px';
+
+      const card = document.createElement('div');
+      card.style.cssText = 'background:var(--surface,#161b22);border:1px solid var(--border,#30363d);border-radius:12px;padding:24px;max-width:440px;width:100%;color:var(--text,#e6edf3);box-shadow:0 20px 40px rgba(0,0,0,0.5)';
+      overlay.appendChild(card);
+
+      const h = document.createElement('h3');
+      h.id = 'confirmModalTitle';
+      h.style.cssText = 'margin:0 0 12px;font-size:16px;font-weight:600;' + (danger ? 'color:var(--red,#f85149)' : '');
+      h.textContent = title;  // textContent : pas d'XSS possible
+      card.appendChild(h);
+
+      if (message) {
+        const p = document.createElement('p');
+        p.style.cssText = 'margin:0 0 20px;font-size:13px;color:var(--muted,#8b949e);line-height:1.5';
+        p.textContent = message;  // textContent : pas d'XSS possible
+        card.appendChild(p);
+      }
+
+      const actions = document.createElement('div');
+      actions.style.cssText = 'display:flex;gap:10px;justify-content:flex-end';
+      card.appendChild(actions);
+
+      const btnCancel = document.createElement('button');
+      btnCancel.type = 'button';
+      btnCancel.style.cssText = 'padding:9px 18px;border-radius:6px;border:1px solid var(--border,#30363d);background:transparent;color:var(--muted,#8b949e);font-size:13px;cursor:pointer;font-family:inherit';
+      btnCancel.textContent = cancelText;
+      btnCancel.addEventListener('click', () => _resolveConfirm(false));
+      actions.appendChild(btnCancel);
+
+      const btnConfirm = document.createElement('button');
+      btnConfirm.type = 'button';
+      btnConfirm.style.cssText = 'padding:9px 18px;border-radius:6px;border:none;background:' + (danger ? 'var(--red,#f85149)' : 'var(--purple,#7c3aed)') + ';color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
+      btnConfirm.textContent = confirmText;
+      btnConfirm.addEventListener('click', () => _resolveConfirm(true));
+      actions.appendChild(btnConfirm);
+
+      // Click sur overlay (mais pas sur la card) = cancel
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) _resolveConfirm(false); });
+
+      // Keyboard : Enter = confirm, Escape = cancel
+      document.addEventListener('keydown', _confirmKeyHandler);
+
+      document.body.appendChild(overlay);
+
+      // Focus par défaut sur Cancel (safer — anti clic réflexe)
+      setTimeout(() => btnCancel.focus(), 50);
+    });
+  }
+  function _resolveConfirm(value) {
+    const r = _activeConfirmResolve;
+    _activeConfirmResolve = null;
+    closeConfirmModal();
+    if (r) try { r(value); } catch {}
+  }
+  function closeConfirmModal() {
+    const el = $('confirmModalOverlay');
+    if (el) el.remove();
+    document.removeEventListener('keydown', _confirmKeyHandler);
+  }
+  function _confirmKeyHandler(e) {
+    if (e.key === 'Escape') { e.preventDefault(); _resolveConfirm(false); }
+    else if (e.key === 'Enter') {
+      // Enter sur Cancel = cancel, sur Confirm = confirm (laisser le default click)
+      // Si focus sur autre chose (overlay) → on traite Enter comme Cancel par défaut (safer)
+      if (document.activeElement && document.activeElement.tagName === 'BUTTON') return;
+      e.preventDefault(); _resolveConfirm(false);
+    }
+  }
+
   function _lightboxKeyHandler(e) {
     if (e.key === 'Escape') closeLightbox();
   }
 
   return {
-    toast, updateStats, renderList, selectTrade, renderDetail,
+    toast, confirmModal, updateStats, renderList, selectTrade, renderDetail,
     // Shared utilities exposed for js/pages/*.js
     escHtml, localDay, localToday, statsForTrades,
     OB_CLASS, OB_LABEL, MICRO_RATES,
