@@ -37,6 +37,72 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-13 — v0.9.109 — Touch targets mobile ≥ 44×44 px (U13)
+
+**Type** : feat / a11y
+**Fichiers** : `src/css/style.css`
+
+### Contexte
+Pack E demandé par user. Tous les éléments interactifs (boutons, chips, croix, nav, calendrier, inputs) faisaient parfois <30 px sur mobile → mistaps fréquents.
+
+### Analyse sécurité
+| Vecteur | Mitigation |
+|---|---|
+| Casser layout desktop | `@media (max-width: 768px)` uniquement |
+| Touch trop large = clics accidentels | 44×44 est le standard WCAG/Apple HIG, pas plus |
+| Régression composants | `min-height/min-width` au lieu de `height/width` fixe (préserve contenu) |
+
+### Changements
+- `src/css/style.css` : bloc `@media (max-width: 768px)` ajouté en fin de fichier avec règles min 44×44 px sur :
+  - `.chip` (filtres journal)
+  - `.btn-ghost/.btn-primary/.btn-secondary/.btn-gen/.btn-delete/.btn-stripe/.btn-revoke/.btn-copy`
+  - `.wiz-close/.wi-clear-btn` (croix wizard, étaient 12×12 px)
+  - `.user-pill` (sidebar 56 px)
+  - `.nav-item`
+  - `.detail-back-btn`
+  - `.dir-btn` (LONG/SHORT, 56 px car action principale)
+  - `.wiz-pill` (pills éditables step 2)
+  - `.cal-day` (calendar)
+  - `.admin-tab/.stats-tab`
+  - `.cookie-banner button`
+  - `.modal-actions button`
+  - `.contact-bubble` (56 px)
+  - **Inputs : `font-size: 16px`** (évite le zoom auto iOS lors du focus, comportement par défaut < 16px)
+
+### Impact
+- Mobile UX : énorme gain — plus de touch frustrations
+- Desktop : aucun changement (média query)
+- iOS focus zoom : éliminé
+
+### À surveiller
+- Tester sur device réel iOS / Android pour valider qu'aucun composant ne déborde
+- Si user ouvre un trade dont le détail panel est en `bottom sheet` mobile, vérifier que tous les boutons sont scrollables
+
+---
+
+## 2026-05-13 — Features F3 (export PDF Pro) + F4 (landing page) ajoutées à la TODO
+
+**Type** : docs (TODO)
+
+### Contexte
+User demande 2 features à planifier :
+1. **F3** Export PDF des trades sur une période donnée (avec screenshots, valeurs) — **Pro only**
+2. **F4** Landing page clean pour visiteurs non-loggés
+
+### Specs validées
+- **F3** : période sélectionnable, PDF complet (screenshot inclus pour chaque trade), stats globales en page de garde, lib client-side (jsPDF + html2canvas) — pas de CF nécessaire
+- **F4** : design cohérent app (dark), responsive, sections hero/features/screenshots/pricing/FAQ/footer
+
+### Changements
+- `docs/TODO.md` : F3 + F4 ajoutées dans section "Nouvelles features demandées"
+
+### À surveiller
+- F3 : attention à la taille du PDF si user a 1000+ trades sur la période — paginer ou limiter
+- F3 : screenshots Firebase Storage doivent être convertis en base64 (CORS-aware) pour l'embed PDF
+- F4 : SEO important si on veut attirer du trafic organique plus tard (meta tags, OG, robots.txt actuellement noindex)
+
+---
+
 ## 2026-05-13 — v0.9.108 — Wizard mémorise dernier compte + instrument (U31)
 
 **Type** : feat
