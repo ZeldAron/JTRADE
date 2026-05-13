@@ -349,21 +349,132 @@ const Admin = (() => {
   // ni écriture client (rules Firestore : `allow read, write: if false`).
   async function renderConfig() {
     const wrap = $('tabConfig');
-    wrap.innerHTML = `
-      <div style="max-width:560px">
-        <h3 style="margin:0 0 6px;font-size:15px">Clé API Groq</h3>
-        <p style="font-size:12px;color:var(--muted);line-height:1.6">
-          La clé Groq est désormais stockée dans <strong>Google Secret Manager</strong> et utilisée
-          uniquement par la Cloud Function <code>analyzeChart</code>.<br>
-          Plus aucune lecture/écriture côté client — la clé n'est jamais exposée au navigateur.
-        </p>
-        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:14px;font-family:monospace;font-size:12px;color:var(--muted);line-height:1.7">
-          # Mettre à jour la clé Groq :<br>
-          <span style="color:var(--text)">firebase functions:secrets:set GROQ_API_KEY</span><br>
-          # Redéployer ensuite :<br>
-          <span style="color:var(--text)">firebase deploy --only functions</span>
-        </div>
+    // Construction via DOM API (pas innerHTML user-injection — sécurité)
+    wrap.textContent = '';
+
+    // Section 1 — Clé Groq (info)
+    const sectionGroq = document.createElement('div');
+    sectionGroq.style.cssText = 'max-width:560px;margin-bottom:32px';
+    sectionGroq.innerHTML = `
+      <h3 style="margin:0 0 6px;font-size:15px">Clé API Groq</h3>
+      <p style="font-size:12px;color:var(--muted);line-height:1.6">
+        La clé Groq est dans <strong>Google Secret Manager</strong>, utilisée uniquement par
+        la Cloud Function <code>analyzeChart</code>. Jamais exposée au client.
+      </p>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:14px;font-family:monospace;font-size:12px;color:var(--muted);line-height:1.7">
+        # Update :<br>
+        <span style="color:var(--text)">firebase functions:secrets:set GROQ_API_KEY</span>
       </div>`;
+    wrap.appendChild(sectionGroq);
+
+    // Section 2 — Cleanup userEmails orphelins
+    const sectionCleanup = document.createElement('div');
+    sectionCleanup.style.cssText = 'max-width:680px';
+
+    const h = document.createElement('h3');
+    h.style.cssText = 'margin:0 0 6px;font-size:15px';
+    h.textContent = 'Nettoyage des comptes orphelins';
+    sectionCleanup.appendChild(h);
+
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px';
+    p.textContent = 'Détecte et supprime les userEmails qui pointent vers un UID Firebase Auth supprimé (cas après recréation manuelle de compte). Mode "Analyse" (dry-run) d\'abord obligatoire avant suppression.';
+    sectionCleanup.appendChild(p);
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:10px;margin-bottom:14px';
+
+    const btnAnalyze = document.createElement('button');
+    btnAnalyze.className = 'btn-secondary';
+    btnAnalyze.id = 'btnCleanupAnalyze';
+    btnAnalyze.textContent = '🔍 Analyser (dry-run)';
+    btnRow.appendChild(btnAnalyze);
+
+    const btnConfirm = document.createElement('button');
+    btnConfirm.className = 'btn-danger';
+    btnConfirm.id = 'btnCleanupConfirm';
+    btnConfirm.textContent = '🗑 Supprimer les orphelins';
+    btnConfirm.disabled = true;  // activé seulement après dry-run
+    btnConfirm.style.opacity = '0.5';
+    btnConfirm.title = 'Lance d\'abord l\'analyse';
+    btnRow.appendChild(btnConfirm);
+
+    sectionCleanup.appendChild(btnRow);
+
+    const resultBox = document.createElement('div');
+    resultBox.id = 'cleanupResult';
+    resultBox.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:monospace;font-size:12px;line-height:1.7;color:var(--text);white-space:pre-wrap;min-height:80px';
+    resultBox.textContent = 'Lance "Analyser" pour voir les userEmails orphelins.';
+    sectionCleanup.appendChild(resultBox);
+
+    wrap.appendChild(sectionCleanup);
+
+    // Handlers
+    let lastDryRunOrphans = null;
+
+    btnAnalyze.addEventListener('click', async () => {
+      if (!_fbFunctions) { resultBox.textContent = 'SDK Functions non chargé.'; return; }
+      btnAnalyze.disabled = true;
+      btnAnalyze.textContent = 'Analyse...';
+      resultBox.textContent = 'Recherche en cours...';
+      try {
+        const callable = _fbFunctions.httpsCallable('cleanupOrphanUserEmails');
+        const res = await callable({ confirm: false });
+        const d = res.data;
+        lastDryRunOrphans = d.orphans || [];
+        let txt = d.message + '\n\n';
+        if (lastDryRunOrphans.length === 0) {
+          txt += '✅ Aucun orphelin détecté. Tout est propre.';
+          btnConfirm.disabled = true;
+          btnConfirm.style.opacity = '0.5';
+        } else {
+          txt += '❌ ORPHELINS À SUPPRIMER :\n';
+          lastDryRunOrphans.forEach(o => {
+            txt += `  • UID: ${o.uid}\n    Email: ${o.email}\n`;
+          });
+          btnConfirm.disabled = false;
+          btnConfirm.style.opacity = '1';
+        }
+        resultBox.textContent = txt;
+      } catch (e) {
+        resultBox.textContent = '❌ Erreur : ' + ((e && e.message) || 'inconnue');
+      } finally {
+        btnAnalyze.disabled = false;
+        btnAnalyze.textContent = '🔍 Analyser (dry-run)';
+      }
+    });
+
+    btnConfirm.addEventListener('click', async () => {
+      if (!lastDryRunOrphans || lastDryRunOrphans.length === 0) return;
+      if (!confirm(`Supprimer ${lastDryRunOrphans.length} userEmails orphelins + leurs proCodeHashes ? Action IRRÉVERSIBLE.`)) return;
+      btnConfirm.disabled = true;
+      btnConfirm.textContent = 'Suppression...';
+      try {
+        const callable = _fbFunctions.httpsCallable('cleanupOrphanUserEmails');
+        const res = await callable({ confirm: true });
+        const d = res.data;
+        let txt = d.message + '\n\n';
+        if (d.deleted && d.deleted.length) {
+          txt += '✅ SUPPRIMÉS :\n';
+          d.deleted.forEach(x => {
+            txt += `  • ${x.email} (UID: ${x.uid}) — ${x.codesRevoked} code(s) révoqué(s)\n`;
+          });
+        }
+        if (d.errors && d.errors.length) {
+          txt += '\n❌ ERREURS :\n';
+          d.errors.forEach(e => { txt += `  • ${e.email}: ${e.error}\n`; });
+        }
+        resultBox.textContent = txt;
+        lastDryRunOrphans = null;
+        toast('Cleanup terminé');
+      } catch (e) {
+        resultBox.textContent = '❌ Erreur : ' + ((e && e.message) || 'inconnue');
+      } finally {
+        btnConfirm.disabled = true;
+        btnConfirm.style.opacity = '0.5';
+        btnConfirm.textContent = '🗑 Supprimer les orphelins';
+      }
+    });
   }
 
   // ── Onglets ───────────────────────────────────────────────────────────────────

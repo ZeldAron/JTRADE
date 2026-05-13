@@ -5,6 +5,21 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.107',
+      date: '2026-05-13',
+      time: '16:00',
+      tags: ['security', 'feat', 'admin'],
+      title: 'Modale confirm custom + cleanup orphelins admin + Dependabot',
+      titleEn: 'Custom confirm modal + admin orphan cleanup + Dependabot',
+      items: [
+        { type: 'feat', text: 'Remplacement des confirm() natifs par une modale custom UI.confirmModal() — i18n, mobile-friendly, focus par défaut sur Annuler (anti clic réflexe), Escape = annuler, construction DOM API pure (zéro innerHTML user-interpolé)', textEn: 'Replaced native confirm() with custom UI.confirmModal() — i18n, mobile-friendly, default focus on Cancel (anti reflex click), Escape = cancel, pure DOM API construction (zero user-interpolated innerHTML)' },
+        { type: 'admin', text: 'Nouvelle Cloud Function cleanupOrphanUserEmails (admin only) : détecte les userEmails dont l\'UID n\'existe plus dans Firebase Auth (cas après recréation manuelle de compte), supprime userEmails + proCodeHashes + users/{uid}. Mode DRY-RUN obligatoire d\'abord, audit log avant action', textEn: 'New cleanupOrphanUserEmails Cloud Function (admin only): detects userEmails pointing to Firebase Auth UID that no longer exists (case after manual account recreation), removes userEmails + proCodeHashes + users/{uid}. DRY-RUN required first, audit log before action' },
+        { type: 'admin', text: 'Console admin → onglet Config : nouveau panneau "Nettoyage des comptes orphelins" avec boutons Analyser (dry-run) + Supprimer. Le bouton Supprimer reste désactivé tant que l\'analyse n\'a pas confirmé des orphelins', textEn: 'Admin console → Config tab: new "Orphan accounts cleanup" panel with Analyze (dry-run) + Delete buttons. Delete button stays disabled until dry-run confirms orphans exist' },
+        { type: 'security', text: 'Dependabot + audit deps : nouveau .github/dependabot.yml — weekly schedule, limite 5 PRs ouvertes, IGNORE des updates majeurs sur firebase-functions/firebase-admin/stripe (review manuel obligatoire avant migration breaking)', textEn: 'Dependabot + deps audit: new .github/dependabot.yml — weekly schedule, 5 PR open limit, IGNORE major updates on firebase-functions/firebase-admin/stripe (manual review required before breaking migration)' },
+        { type: 'docs', text: 'docs/HOSTING_MIGRATION.md : plan complet de migration GitHub Pages → Firebase Hosting (gratuit) avec vrais headers HTTP (HSTS, CSP réelle, X-Frame-Options, Permissions-Policy stricte, COOP/CORP). Config firebase.json prête à coller. Score Mozilla Observatory cible : A+', textEn: 'docs/HOSTING_MIGRATION.md: full plan to migrate GitHub Pages → Firebase Hosting (free) with real HTTP headers (HSTS, real CSP, X-Frame-Options, strict Permissions-Policy, COOP/CORP). Ready-to-paste firebase.json config. Target Mozilla Observatory score: A+' },
+      ],
+    },
+    {
       version: '0.9.106',
       date: '2026-05-12',
       time: '22:00',
