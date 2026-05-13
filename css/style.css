@@ -3789,3 +3789,118 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   }
   .calc-result-card { position: static; }
 }
+
+/* ─── U13 : Touch targets ≥ 44×44 px sur mobile (standard WCAG / Apple HIG) ─ */
+/* Évite les mistaps tactiles sur petits boutons / icônes. Activé < 768px. */
+@media (max-width: 768px) {
+  /* Chips de filtre journal (Tous / Win / Loss / B/E / Open) */
+  .chip {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  /* Boutons d'action génériques */
+  .btn-ghost,
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  /* Croix wizard + clear image (étaient ~12×12 — beaucoup trop petits) */
+  .wiz-close,
+  .wi-clear-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* User pill dans la sidebar */
+  .user-pill { min-height: 56px; }
+
+  /* Items nav sidebar */
+  .nav-item {
+    min-height: 44px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  /* Boutons d'action dans tables (admin + settings) */
+  .btn-gen,
+  .btn-delete,
+  .btn-stripe,
+  .btn-revoke,
+  .btn-copy {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin: 2px;
+  }
+
+  /* Detail panel back button mobile */
+  .detail-back-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  /* Inputs : font-size 16px évite le zoom auto iOS lors du focus */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  /* Wizard direction buttons (LONG / SHORT) */
+  .dir-btn {
+    min-height: 56px;
+    font-size: 16px;
+  }
+
+  /* Pills éditables wizard step 2 */
+  .wiz-pill {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+
+  /* Calendar day cells (touch pour ouvrir détail jour) */
+  .cal-day { min-height: 44px; }
+
+  /* Cookie banner */
+  .cookie-banner button {
+    min-height: 44px;
+    padding: 10px 18px;
+  }
+
+  /* Boutons modale */
+  .modal-actions button { min-height: 44px; }
+
+  /* Tab buttons admin / dashboard */
+  .admin-tab,
+  .stats-tab {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+
+  /* Contact bubble : agrandir le touch target */
+  .contact-bubble {
+    width: 56px;
+    height: 56px;
+  }
+
+  /* Outcome badges cliquables dans le journal */
+  .outcome-badge { min-height: 24px; }
+}
