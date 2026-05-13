@@ -37,6 +37,43 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-13 — v0.9.108 — Wizard mémorise dernier compte + instrument (U31)
+
+**Type** : feat
+**Fichiers** : `src/js/store.js`, `src/js/modal.js`
+
+### Contexte
+Demande user (TODO U31) : éviter de re-sélectionner manuellement le même compte + instrument à chaque trade quand on trade toujours le même setup.
+
+### Analyse sécurité avant implémentation
+
+| Vecteur | Mitigation |
+|---|---|
+| XSS via valeur stockée injectée | Pré-sélection via `select.value` (si pas dans options, ignoré) ; aucun innerHTML ✅ |
+| Cross-user leak | Clé localStorage namespacée `ztrade_${_uid}_lastWizard` + `purgeForeignCache` au login ✅ |
+| Compte supprimé persistant | Validation au read : `myAccounts.some(a => a.name === raw.apex)` sinon ignore ✅ |
+| Groupe supprimé persistant | Validation au read : `groups.some(g => g.id === gid)` sinon ignore ✅ |
+| Instrument retiré (ex QO1) | Regex stricte `/^[A-Za-z0-9/. _-]{1,20}$/` + tronqué 20 chars ✅ |
+| Manipulation localStorage par DevTools | Pré-sélection visuelle uniquement, sanitize stricte à la save trade ✅ |
+
+### Changements
+- `store.js` : nouveaux helpers `getLastWizardPrefs()` + `setLastWizardPrefs({apex, instrument})` avec clé namespacée + validation stricte au read
+- `modal.js open()` mode création : lit les prefs, pré-sélectionne le compte (ou groupe) + l'instrument via `parsedTrade.instrument` qui sera consommé par `fillStep3FromParsed`
+- `modal.js save()` mode création (pas édition) : appelle `setLastWizardPrefs` avec data.apex + data.instrument
+
+### Tests
+- `node test/calc.test.js` : 103/103 ✓ (pas d'impact sur calc)
+
+### Impact
+- UX : gain de temps significatif pour les traders qui trade toujours le même compte/instrument (cas le plus courant)
+- Sécu : aucun risque introduit, validation stricte protège contre les manipulations DevTools
+
+### À surveiller
+- Si user a 2 comptes "Apex 50K" et "Apex 50K bis" : la pref garde le dernier exact utilisé
+- Pas de migration nécessaire (clé localStorage absente = comportement actuel = fallback default)
+
+---
+
 ## 2026-05-13 — v0.9.107 — Modale confirm custom + cleanup orphelins + Dependabot
 
 **Type** : security + feat + admin + docs
