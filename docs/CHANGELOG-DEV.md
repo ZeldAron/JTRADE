@@ -37,6 +37,29 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-13 — B3 fix critique : rule userEmails blocklist bloquait l'admin
+
+**Type** : security fix
+**Fichiers** : `firestore.rules`
+
+### Contexte
+La blocklist username (`admin|zeldtrade|zeldaron|support|staff|moderator|root|system`) introduite en v0.9.95 bloquait également le compte admin lui-même. Quand l'admin a recréé son compte et tenté de se relogger sur l'app principale, `auth.js _storeUserEmail` essayait d'écrire `userEmails/{uid}` avec username "Admin" → rule rejette → admin.html n'affichait plus la ligne admin → impossible de générer un nouveau code Pro pour le bon UID.
+
+### Changements
+- `firestore.rules` `userEmails write` : ajout d'un bypass de la blocklist pour `request.auth.token.email == 'zeldtradepro@gmail.com'`. Le check whitelist caractères (`^[A-Za-z0-9._\- ]+$`) reste actif.
+
+### Impact
+- ✅ Admin peut maintenant recréer son `userEmails` au login
+- ✅ Bonus : prévient le bug à l'avenir si le user supprime/recrée son compte
+- ⚠️ Léger risque si l'email admin est compromis : il pourrait écrire un username "admin" (mais ça n'a pas de conséquence — il EST admin de toute façon)
+
+### À surveiller
+- User doit se relogger sur l'app principale après ce deploy pour que `_storeUserEmail` se déclenche
+- Vérifier que `userEmails/jGJReBgxVKMqe7bWkFi3mm7lMB22` existe ensuite dans Firestore
+- Refresh admin.html → ligne admin réapparaît
+
+---
+
 ## 2026-05-12 — B1 diagnostiqué : code Pro orphelin après recréation admin
 
 **Type** : bug investigation

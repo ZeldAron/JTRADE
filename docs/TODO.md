@@ -120,7 +120,8 @@ Détails dans le CHANGELOG-DEV audit consolidé. Sélection :
 
 | # | Bug | Description | Status |
 |---|---|---|---|
-| ~~**B1**~~ | ~~Activation code Pro échoue pour le compte admin recréé~~ ✅ Diagnostiqué 2026-05-12 | **Root cause identifié** : recréation du compte admin via Firebase Console n'a pas nettoyé `userEmails/{oldUid}` ni `proCodeHashes` où `uid = oldUid`. Du coup admin.html affichait 2 entrées pour le même email → l'admin a généré le code sur la mauvaise ligne. **Fix manuel** : Firebase Console → édite le doc `proCodeHashes/{hash}` pour mettre le bon UID, OU supprime tous les artefacts orphelins de l'ancien UID. | ✅ Diagnostiqué |
+| ~~**B3**~~ | ~~Rule `userEmails` blocklist trop stricte bloque la recréation du userEmails admin~~ ✅ Résolu 2026-05-13 | Username "Admin" (ou contenant "admin"/"zeldtrade"/etc.) bloquait la rule `userEmails write` introduite en v0.9.95. Le compte admin lui-même ne pouvait plus créer son record `userEmails` après recréation. **Fix** : bypass de la blocklist si `request.auth.token.email == 'zeldtradepro@gmail.com'`. Rule redéployée. | ✅ Résolu |
+| ~~**B1**~~ | ~~Activation code Pro échoue pour le compte admin recréé~~ ✅ Résolu 2026-05-12 (Option A) | User a édité manuellement le doc `proCodeHashes/{hash}` dans Firebase Console pour mettre le bon UID. Activation OK confirmée. Cleanup B (suppression artefacts ancien UID) reste pertinent à terme. | ✅ Résolu |
 | **B2** | Prévenir le bug B1 — admin.html devrait détecter les doublons d'email | Quand `userEmails` contient 2 entrées avec le même email mais des UIDs différents (cas après recréation manuelle de compte), admin.html devrait alerter visuellement (badge "⚠ doublon — UID orphelin"). Ou mieux : Cloud Function de cleanup qui détecte et supprime les userEmails orphelins (= UID qui n'existe plus dans Firebase Auth) | À faire (~1h) |
 
 ---

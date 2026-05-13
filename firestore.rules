@@ -31,7 +31,11 @@ service cloud.firestore {
                     // Caractères whitelist : alphanumérique + . _ - + espace (anti-injection email/HTML)
                     && request.resource.data.username.matches('^[A-Za-z0-9._\\- ]+$')
                     // Bloque les pseudos qui usurpent l'admin/staff (lecture admin trompeuse)
-                    && !request.resource.data.username.lower().matches('.*(admin|zeldtrade|zeldaron|support|staff|moderator|root|system).*')
+                    // SAUF pour le vrai compte admin lui-même (sinon il peut pas créer son userEmails)
+                    && (
+                      request.auth.token.email == 'zeldtradepro@gmail.com'
+                      || !request.resource.data.username.lower().matches('.*(admin|zeldtrade|zeldaron|support|staff|moderator|root|system).*')
+                    )
                     && request.resource.data.lastSeen is int;
     }
 
