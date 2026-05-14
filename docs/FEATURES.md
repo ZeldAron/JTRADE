@@ -354,6 +354,7 @@ Redondant avec `frame-ancestors 'none'` + `X-Frame-Options DENY`. Defense-in-dep
 - **v0.9.114** : Fix flash visuel — suppression de l'ancien `landingScreen` intégré dans `app.html` (-222 lignes). Quand non loggé sur `/app.html` → modal login direct sur fond dark, plus de flash de l'ancienne landing interne.
 - **v0.9.115** : Landing — tailles ajustées (hero 52→42px, container 1100→960px) pour éviter le rendu gigantesque sur grand écran (2000px+).
 - **v0.9.116** : **Responsive complet** — 5 breakpoints (1280/1024/768/480/360px), protection anti overflow horizontal globale (img/video/svg/word-wrap), support landscape mobile, `@media print` (impression journal), `prefers-reduced-motion` (a11y).
+- **v0.9.117** : **Landing v2 — visuels enrichis** — tailles réduites encore (body 14px, hero clamp 24-36px, container 880px), nouveau logo SVG (chart trending up), mockup app preview complet inline (sidebar avec icônes SVG, KPI row, graphe d'équité SVG dégradé violet→rose), bande stats (5 prop firms / ∞ trades / 100% EU / 0€ beta), grille de fond + glows radiaux ambiants, badge pulsant animé. CSP inchangée, zéro asset externe.
 
 ---
 
@@ -365,7 +366,8 @@ Redondant avec `frame-ancestors 'none'` + `X-Frame-Options DENY`. Defense-in-dep
 | **F2** Crypto dans F1 | Futur | Après F1 stable |
 | **F3** Export PDF des trades (Pro only) | Planifié | jsPDF + html2canvas côté client |
 | ~~**F4 v1** Landing page~~ | ✅ Déployée v0.9.112 (2026-05-14) | `landing.html` — hero "fait par un trader pour les traders" |
-| **F4 v2** Landing finitions | Planifié | Screenshots réels, témoignages, routing auto, logo custom |
+| ~~**F4 v2** Landing visuels~~ | ✅ Déployée v0.9.117 (2026-05-14) | Mockup app SVG + stats strip + grid pattern + glows + tailles réduites |
+| **F4 v3** Landing finitions | Planifié | Vrais screenshots app, témoignages bêta, routing auto loggé/non-loggé |
 | Discord webhooks (remplacer Web3Forms) | En attente | User a serveur Discord setup |
 | Stripe activation complète | Backend prêt | User doit setup Stripe Dashboard + secrets |
 | App Check réactivé | Bloqué | Diagnostic reCAPTCHA Enterprise key type |

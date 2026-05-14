@@ -37,6 +37,62 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.117 — Landing v2 : tailles réduites + visuels (mockup, stats, grid)
+
+**Type** : feat / ux
+**Fichiers** : `src/index.html`, `src/app.html` (bump v=), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.117 (CFs inchangées)
+
+### Contexte
+v0.9.115/116 : utilisateur signale encore que la landing est trop grosse sur grand écran et demande **« vraiment réduit c'est beaucoup trop gros et améliore la landing page peut-être avec des visuels cool »**. Il faut à la fois (a) réduire encore d'un cran les tailles globales, (b) ajouter des éléments visuels qui rendent la page plus engageante sans dépendre de captures externes (CSP stricte oblige, et on n'a pas encore de vraies UI screenshots presentables).
+
+### Changements
+- **Typographies réduites d'un cran** :
+  - body : 15 → **14px**
+  - hero-title : `clamp(26, 3.4vw, 42px)` → **`clamp(24, 2.6vw, 36px)`**
+  - hero-sub : `clamp(14, 1.4vw, 17px)` → **`clamp(13, 1.1vw, 15px)`**
+  - section-title : `clamp(22, 2.6vw, 30px)` → **`clamp(20, 2vw, 26px)`**
+  - feature-title : 15 → **14px**, feature-desc : 13 → **12.5px**
+  - pricing-title : 19 → **17px**
+  - container max-width : 960 → **880px**, hero max-width : 760px
+- **Visuels ajoutés (tout statique, aucun asset externe)** :
+  - **Grille de fond** subtile via `body::before` (pattern 56×56px, opacité 2.5 %, masquée en radial pour fade vers le bas)
+  - **Glows ambiants** via `body::after` (deux radiaux violet + rose, blur 40px) — atmosphère sans charger d'image
+  - **Bande stats** 4 cellules : « 5 / Prop firms supportées », « ∞ / Trades illimités », « 100% / Données en Europe », « 0 € / Pendant la beta »
+  - **Mockup app preview** complet : barre macOS (3 dots), titre `zeldtrade.app — Dashboard`, sidebar (5 nav items avec icônes SVG inline : Dashboard / Analytics / Calendrier / Journal / Objectifs), KPI row (Balance / P&L / Win rate), **graphe d'équité SVG** avec dégradé violet→rose + dégradé d'aire + grille pointillée + dot pulsant final
+  - **Badge hero** avec dot pulsant (`@keyframes pulse`)
+  - **Nouveau logo SVG** : chart trending up (au lieu du « Z » texte) — toujours dans un carré 28×28px avec gradient violet
+  - Boutons primaires avec **dégradé violet** + box-shadow douce, hover translateY-1px + shadow plus marquée
+  - Cartes feature : top accent line (linéaire violet) qui apparaît en hover + translateY-3px + shadow violette
+  - Pricing : top accent line dégradé violet→rose
+- **Responsive du mockup** :
+  - <768px : sidebar masquée, mockup compacte (KPIs en row), chart 140px
+  - <640px : nav links cachés, hero CTAs en colonne, padding réduits
+  - <380px : stats en 1 colonne
+- **Accessibilité** : `@media (prefers-reduced-motion: reduce)` désactive toutes les animations (pulse badge, transitions hover, smooth scroll)
+
+### Impact
+- **UX** : page beaucoup plus dense + plus « produit » (le mockup donne une idée concrète de l'app sans devoir naviguer)
+- **Sécu** : ZÉRO changement de surface d'attaque
+  - CSP inchangée : `script-src 'self'`, `img-src 'self' data:`, `connect-src 'none'`, `frame-src 'none'`
+  - Aucune ressource externe ajoutée (tous SVG sont inline, aucun `<img>`, aucun lien CDN)
+  - Aucune fonction JS ajoutée (page reste 100 % statique)
+  - Pas de stockage local, pas de cookies, pas de fetch → pas de fuite de données possible
+- **Perf** : HTML passe de ~570 → ~770 lignes (+35 %), mais reste un seul fichier statique servi par GitHub Pages. SVG inline = pas de round-trip. Grid + glows en `position: fixed` = repaints négligeables (transformés, pas reflowés)
+- **Compat** : `backdrop-filter` + `mask-image` ont des fallbacks gracieux (le contenu reste lisible si le navigateur ne les supporte pas — testé Safari 14, Firefox 90, Chrome 90)
+
+### Bump version
+- `src/app.html` : tous les `?v=0.9.116` → `?v=0.9.117` (20 scripts + 1 CSS) + texte affiché `0.9.116` → `0.9.117`
+- `src/index.html` : footer `v0.9.116` → `v0.9.117`
+- `src/js/pages/changelog.js` : nouvelle entrée 0.9.117 en tête de `ENTRIES`
+
+### À surveiller
+- Si un user signale encore que « c'est trop gros » → option : passer body à 13px et hero clamp(22, 2.2vw, 32px) — mais à ce stade on risque de pénaliser la lisibilité mobile
+- Si un user signale l'inverse (« c'est trop petit ») → augmenter container à 920px et body à 14.5px
+- Le mockup est une représentation, pas une vraie capture. À remplacer par un screenshot réel quand l'app aura des données démo crédibles (F4 v2 dans TODO)
+
+---
+
 ## 2026-05-14 — v0.9.116 — Responsive complet (5 breakpoints + print + a11y motion)
 
 **Type** : feat / mobile / a11y

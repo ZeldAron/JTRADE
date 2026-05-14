@@ -5,6 +5,21 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.117',
+      date: '2026-05-14',
+      time: '12:00',
+      tags: ['feat', 'ux'],
+      title: 'Landing v2 — tailles réduites + visuels (mockup app, stats, grille de fond)',
+      titleEn: 'Landing v2 — reduced sizes + visuals (app mockup, stats, background grid)',
+      items: [
+        { type: 'feat', text: 'Refonte visuelle de la landing : body 14px (au lieu de 15), hero 24-36px clamp (au lieu de 26-42), container 880px (au lieu de 960). Sur grand écran la page reste lisible sans paraître surdimensionnée.', textEn: 'Landing visual overhaul: body 14px (was 15), hero 24-36px clamp (was 26-42), container 880px (was 960). On large screens the page stays readable without feeling oversized.' },
+        { type: 'feat', text: 'Nouveau mockup d\'aperçu de l\'app (barre macOS, sidebar avec icônes SVG, 3 KPIs Balance/P&L/Win rate, graphe d\'équité SVG avec dégradé violet→rose, point pulsant à droite). 100% statique, aucune image externe.', textEn: 'New app preview mockup (macOS bar, sidebar with SVG icons, 3 KPIs Balance/P&L/Win rate, SVG equity chart with violet→pink gradient, pulsing dot on the right). 100% static, no external images.' },
+        { type: 'feat', text: 'Bande de chiffres (5 prop firms / ∞ trades / 100% EU / 0€ beta), grille de fond subtile en pattern 56px, deux glows radiaux violet+rose en arrière-plan, badge "beta" avec point pulsant animé.', textEn: 'Stats strip (5 prop firms / ∞ trades / 100% EU / 0€ beta), subtle 56px grid background pattern, two radial violet+pink glows behind, animated pulsing "beta" badge.' },
+        { type: 'feat', text: 'Nouveau logo SVG (icône chart trending up au lieu d\'un "Z" texte), boutons avec dégradé violet et shadow douce, cartes feature avec hover translateY + ligne d\'accent en haut.', textEn: 'New SVG logo (chart trending up icon instead of "Z" text), buttons with violet gradient and soft shadow, feature cards with hover translateY + top accent line.' },
+        { type: 'feat', text: 'Animation `pulse` du badge respecte `prefers-reduced-motion` (désactivée si l\'utilisateur a coché "réduire les animations" système). CSP inchangée (script-src \'self\', aucune ressource externe, tout SVG inline).', textEn: 'Badge `pulse` animation respects `prefers-reduced-motion` (disabled if user has "reduce animations" system setting). CSP unchanged (script-src \'self\', no external resources, all SVG inline).' },
+      ],
+    },
+    {
       version: '0.9.116',
       date: '2026-05-14',
       time: '10:00',
