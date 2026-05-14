@@ -220,7 +220,10 @@ const Modal = (() => {
         if (code === 'functions/resource-exhausted' || code === 'resource-exhausted')
           throw new Error(msg || 'Limite quotidienne atteinte. Passe Pro pour des analyses illimitées.');
         if (code === 'functions/failed-precondition' || code === 'failed-precondition')
-          throw new Error(i18n.t('modal.groq.invalid'));
+          // v0.9.141 : afficher le vrai message serveur (email non vérifié,
+          // captcha invalide, etc.) au lieu du mapping erroné "Clé Groq invalide"
+          // qui datait de l'époque où la clé Groq était côté client.
+          throw new Error(msg || 'Action non autorisée — vérifie ton compte.');
         if (code === 'functions/invalid-argument' || code === 'invalid-argument')
           throw new Error('Requête invalide : ' + msg);
         if (code === 'functions/internal' || code === 'internal')

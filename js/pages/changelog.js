@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.141',
+      date: '2026-05-15',
+      time: '03:00',
+      tags: ['fix', 'ux'],
+      title: 'Fix message "Clé Groq invalide" trompeur (vrai message d\'erreur affiché)',
+      titleEn: 'Fix misleading "Invalid Groq key" message (real server error shown)',
+      items: [
+        { type: 'fix', text: 'Bug : un utilisateur qui n\'avait pas vérifié son email recevait "Clé Groq invalide — vérifie dans Réglages" en tentant une analyse IA. Le message était trompeur car la clé Groq est server-side depuis longtemps. La vraie cause : depuis v0.9.122 (sécu S20), la CF `analyzeChart` exige `email_verified` et throw `failed-precondition` — que le client mappait par erreur à "clé invalide".', textEn: 'Bug: a user who hadn\'t verified their email got "Invalid Groq key — check Settings" when trying an AI analysis. Misleading because Groq key has been server-side for a while. Real cause: since v0.9.122 (security S20), the `analyzeChart` CF requires `email_verified` and throws `failed-precondition` — which the client erroneously mapped to "invalid key".' },
+        { type: 'fix', text: 'Fix : afficher directement le vrai message serveur pour `failed-precondition` (email non vérifié, captcha invalide, etc.) au lieu du mapping erroné. Côté CF, message rendu explicite en français : "Vérifie ton email avant d\'utiliser l\'IA (consulte ta boîte mail — clique sur le lien de vérification Firebase)".', textEn: 'Fix: directly show the real server message for `failed-precondition` (email not verified, invalid captcha, etc.) instead of the wrong mapping. CF-side, message explicit in French.' },
+      ],
+    },
+    {
       version: '0.9.140',
       date: '2026-05-15',
       time: '02:30',
