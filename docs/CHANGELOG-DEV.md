@@ -37,6 +37,57 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.116 — Responsive complet (5 breakpoints + print + a11y motion)
+
+**Type** : feat / mobile / a11y
+**Fichiers** : `src/css/style.css` (+~180 lignes en fin de fichier)
+
+### Contexte
+User demande "que toute l'application soit responsive selon l'écran". Avant : seul breakpoint 768px (mobile) + quelques 900px/500px isolés. Manquait : tablet, petit mobile, très petit mobile, print, accessibility motion.
+
+### Changements
+
+**Protection générique anti-overflow** (toujours appliquée) :
+- `html, body { overflow-x: hidden; max-width: 100vw }`
+- `img, video, iframe, canvas, svg { max-width: 100%; height: auto }`
+- `.trade-setup, .trade-item-meta, .info-val, .feature-desc, .pricing-text, .faq-item p { word-wrap: break-word }`
+- `.trade-item-body, .trade-item-meta, .info-row { min-width: 0 }` (flex children peuvent shrinker)
+- Wrapper tables : `width: 100%; max-width: 100%`
+
+**Breakpoints ajoutés** (en plus du 768px existant) :
+- **1280px** (large tablet / 13" laptop) : sidebar 200px, nav-item 13px
+- **1024px** (tablet portrait / petit laptop) : kpi-grid 2col, form-grid 1col, admin-table compact, modals 90vw
+- **480px** (mobile portrait) : kpi-grid 1col, levels-row 2col, tables horizontal scroll, modals full-width, contact-bubble 48px
+- **360px** (iPhone SE) : ultra-compact (padding 8px, font 10-12px, sidebar 200px)
+
+**Media queries spéciaux** :
+- `(max-width: 900px) and (orientation: landscape) and (max-height: 500px)` — landscape mobile (smartphones en mode paysage)
+- `@media print` — sidebar/topbar/contact-bubble cachés, fond blanc, texte noir → pour impression journal
+- `@media (prefers-reduced-motion: reduce)` — toutes animations forcées à 0.01ms → accessibility OS setting
+
+### Analyse sécurité
+- CSS uniquement, aucune surface JS
+- `overflow-x: hidden` sur body peut techniquement empêcher du contenu de déborder qui devrait l'être — vérifié : pas de cas où on veut overflow horizontal sur body
+- `word-wrap: break-word` peut couper des URLs longues en plein milieu — acceptable (déjà escape côté escHtml)
+
+### Tests
+- `node test/calc.test.js` : 103/103 ✓ (CSS pas concerné)
+- Visual : à valider user-side sur différents devices
+
+### À surveiller
+- iPhone SE 1ère gen (320×568) : tester que rien ne déborde
+- iPad portrait (768×1024) : tablet breakpoint actif, vérifier sidebar
+- Tables admin avec beaucoup de users : scroll horizontal sur mobile fonctionne
+- Charts Chart.js : `max-width: 100%` les contraint
+- Print preview : tester avec Cmd+P sur le journal
+
+### Évolutions futures possibles
+- Container queries (modern CSS) pour responsive basé sur le container parent au lieu du viewport
+- Dark/light theme toggle (actuellement forcé dark)
+- Layout grid plus moderne (CSS Grid template areas par breakpoint)
+
+---
+
 ## 2026-05-14 — v0.9.115 — Landing : ajustement tailles (anti gigantesque)
 
 **Type** : fix / ux

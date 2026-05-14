@@ -352,6 +352,8 @@ Redondant avec `frame-ancestors 'none'` + `X-Frame-Options DENY`. Defense-in-dep
 - **v0.9.112** : Landing page v1 publique (`landing.html`) avec hero "Un journal de trading complet fait par un trader pour les traders", 6 features, pricing stealth, FAQ, footer. 100% statique, CSP ultra-stricte.
 - **v0.9.113** : Landing devient la **page d'accueil principale** (`/zeldtrade/` → landing). L'app est maintenant à `/zeldtrade/app.html`. Renommage `index.html` → `app.html` + `landing.html` → `index.html`. Liens internes mis à jour.
 - **v0.9.114** : Fix flash visuel — suppression de l'ancien `landingScreen` intégré dans `app.html` (-222 lignes). Quand non loggé sur `/app.html` → modal login direct sur fond dark, plus de flash de l'ancienne landing interne.
+- **v0.9.115** : Landing — tailles ajustées (hero 52→42px, container 1100→960px) pour éviter le rendu gigantesque sur grand écran (2000px+).
+- **v0.9.116** : **Responsive complet** — 5 breakpoints (1280/1024/768/480/360px), protection anti overflow horizontal globale (img/video/svg/word-wrap), support landscape mobile, `@media print` (impression journal), `prefers-reduced-motion` (a11y).
 
 ---
 
