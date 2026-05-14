@@ -5,6 +5,27 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.137',
+      date: '2026-05-15',
+      time: '01:30',
+      tags: ['feat', 'ai'],
+      title: 'IA Groq : 3 patterns supportés (panel + lignes natives + zones)',
+      titleEn: 'Groq AI: 3 patterns supported (panel + native lines + zones)',
+      items: [
+        { type: 'feat', text: 'Le prompt Groq Vision a été restructuré pour gérer 3 patterns de screenshot par ordre de priorité : (A) **Order Panel** TradingView ("Position longue/courte" avec rows "Prix d\'entrée / NIVEAU DU STOP / NIVEAU DE PROFIT"), (B) **Lignes natives TradingView** (badges "SL -260 USD" / "TP +1935 USD" avec lignes horizontales — suivre jusqu\'à l\'axe droit pour le prix), (C) **Zones dessinées** (rectangles bleu/rouge — ancien comportement).', textEn: 'Groq Vision prompt restructured to handle 3 patterns by priority: (A) **TradingView Order Panel** ("Position longue/courte" with "Entry Price / Stop / Profit" rows), (B) **Native TradingView position lines** (badges "SL -260 USD" / "TP +1935 USD" — follow horizontal line to right axis for price), (C) **User-drawn zones** (blue/red rectangles — legacy behavior).' },
+        { type: 'feat', text: 'Nouvelle règle anti-confusion : les badges "SL X USD" / "TP Y USD" montrent le P&L en monnaie, JAMAIS le prix. Le prix doit toujours être lu sur l\'axe droit. Cette précision évite que l\'IA extraie -260 comme prix au lieu de 29 741.50.', textEn: 'New anti-confusion rule: "SL X USD" / "TP Y USD" badges show P&L in currency, NEVER the price. Price must always be read from the right axis. This avoids the AI extracting -260 as price instead of 29741.50.' },
+        { type: 'feat', text: 'Format européen géré explicitement : `29 741,50` est interprété comme `29741.50` (séparateurs espace/virgule normalisés). Liste étendue des éléments à ignorer (ticker live, "Ticks", "Taille du lot", "Effet de levier", etc.).', textEn: 'European number format explicitly handled: `29 741.50` is interpreted as `29741.50` (space/comma separators normalized). Extended list of elements to ignore (live ticker, "Ticks", "Lot size", "Leverage", etc.).' },
+      ],
+      user: {
+        title: 'L\'IA Groq analyse maintenant 3 types de screenshots',
+        items: [
+          { type: 'feat', text: 'Si tu envoies un panneau d\'ordre TradingView ("Position longue/courte"), l\'IA lit directement les champs Prix d\'entrée, Stop, Profit.' },
+          { type: 'feat', text: 'Si tu envoies un graphique avec des lignes SL/TP natives TradingView (badges "SL -260 USD" / "TP 1935 USD"), l\'IA suit la ligne jusqu\'au prix sur l\'axe droit.' },
+          { type: 'feat', text: 'Le pattern classique (zone bleue pour entry, zone rouge pour SL, label haut pour TP) continue de marcher comme avant.' },
+        ],
+      },
+    },
+    {
       version: '0.9.136',
       date: '2026-05-15',
       time: '00:50',
