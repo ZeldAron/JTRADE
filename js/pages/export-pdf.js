@@ -281,9 +281,8 @@ const ExportPDF = (() => {
     // 2. Récupère les trades + filtre
     const allTrades = (Store.getTrades && Store.getTrades()) || [];
     const trades = _filterTrades(allTrades, startMs, endMs, accountId);
-    if (trades.length === 0) {
-      throw new Error('Aucun trade trouvé dans la période sélectionnée.');
-    }
+    // Note : on autorise 0 trade — on génère quand même la page de garde
+    // avec stats vides (utile pour test ou compte fraîchement créé).
 
     // 3. Trie chronologiquement (plus récent d'abord)
     trades.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -310,11 +309,13 @@ const ExportPDF = (() => {
     // 7. Page de garde
     _drawCoverPage(doc, ctx);
 
-    // 8. Pages de trades (6 par page)
+    // 8. Pages de trades (6 par page) — skip si 0 trade (juste page de garde)
     const PER_PAGE = 6;
-    for (let i = 0; i < trades.length; i += PER_PAGE) {
-      doc.addPage();
-      _drawTradesPage(doc, trades.slice(i, i + PER_PAGE), i, username);
+    if (trades.length > 0) {
+      for (let i = 0; i < trades.length; i += PER_PAGE) {
+        doc.addPage();
+        _drawTradesPage(doc, trades.slice(i, i + PER_PAGE), i, username);
+      }
     }
 
     // 9. Footer sur toutes les pages
