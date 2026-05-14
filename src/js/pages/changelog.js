@@ -5,6 +5,17 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.124',
+      date: '2026-05-14',
+      time: '19:00',
+      tags: ['privacy', 'fix'],
+      title: 'Privacy : retrait de l\'email + UID dans le canal public #new-users',
+      titleEn: 'Privacy: removed email + UID from public #new-users channel',
+      items: [
+        { type: 'security', text: 'Le canal Discord #new-users est public (visible par tout le monde). L\'embed Discord ne diffuse plus l\'email ni l\'UID du nouvel inscrit. Si l\'utilisateur n\'a pas de pseudo Firebase, on prend la partie locale de l\'email (avant `@`) au lieu de l\'email complet. Message plus accueillant : "Bienvenue à **X** dans la communauté ZeldTrade ! 🎯". L\'embed `#support-tickets` (canal privé Fondateur) garde toutes les infos pour le support.', textEn: 'Discord #new-users channel is public (visible by everyone). The Discord embed no longer exposes the email or UID of the new signup. If user has no Firebase displayName, we take the email local part (before `@`) instead of the full email. More welcoming message: "Welcome **X** to the ZeldTrade community! 🎯". The #support-tickets embed (private Founder channel) keeps all info for support.' },
+      ],
+    },
+    {
       version: '0.9.123',
       date: '2026-05-14',
       time: '18:30',

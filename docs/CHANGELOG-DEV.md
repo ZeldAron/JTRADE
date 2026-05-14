@@ -37,6 +37,58 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.124 — Privacy : retrait email + UID dans #new-users public
+
+**Type** : privacy / fix
+**Fichiers** : `functions/index.js` (notifyNewSignup), `src/app.html` (bump v=), `src/index.html` (footer), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.124 + CF `notifyNewSignup` redéployée
+
+### Contexte
+User : « je veux quand il y a un nouvel utilisateurs vu que c'est vu par tout le monde je veux pas que l'on voit le mail ». Le canal Discord `#new-users` est visible par tout le serveur (effet "social proof"), il ne doit donc pas exposer d'email ou d'identifiant privé.
+
+### Changements (`functions/index.js` — `notifyNewSignup`)
+
+**Avant** :
+```js
+const name  = _sanitizeText(token.name || token.email || '', 100);
+const email = _sanitizeText(token.email || '', 254);
+embed.fields = [
+  { name: '👤 Pseudo', value: name },
+  { name: '📧 Email',  value: email },   // PII en clair dans canal public ❌
+];
+embed.footer = { text: `UID: ${uid}` };  // UID en clair ❌
+```
+
+**Après** :
+```js
+const localPart = (token.email || '').split('@')[0] || 'Anonyme';
+const name      = _sanitizeText(token.name || localPart, 100);
+// Plus de field email, plus de footer UID
+embed.description = `Bienvenue à **${name}** dans la communauté ZeldTrade ! 🎯`;
+```
+
+### Privacy
+- **Email** : retiré complètement de l'embed public
+- **Local-part fallback** : si `token.name` absent, on prend `aaron` (pour `aaron@gmail.com`) au lieu de l'email complet — évite la fuite indirecte
+- **UID** : retiré aussi (info technique, non pertinente publiquement, faciliterait une éventuelle énumération)
+- **`#support-ticket` (privé) inchangé** : si l'admin a besoin de l'email/UID pour le support, ça arrive toujours dans le canal privé via `sendContactMessage`
+
+### Bonus UX
+Le message devient plus accueillant : `Bienvenue à **Aaron** dans la communauté ZeldTrade ! 🎯` au lieu d'une fiche froide pseudo + email.
+
+### Impact
+- **Privacy** : RGPD-friendly. Les emails de nouveaux inscrits ne sont plus visibles publiquement par les autres membres
+- **UX** : meilleur "social proof" — la communauté voit grandir sans intrusion privée
+- **Support admin** : 0 régression (l'info reste dans le canal privé via le formulaire de contact)
+- **Coût** : neutre
+
+### Bump version
+- `src/app.html` : `?v=0.9.123` → `?v=0.9.124` (21 refs)
+- `src/index.html` : footer
+- `src/js/pages/changelog.js` : entrée 0.9.124
+
+---
+
 ## 2026-05-14 — v0.9.123 — Migration Web3Forms → Discord webhooks
 
 **Type** : infra / integration

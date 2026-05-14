@@ -462,8 +462,13 @@ exports.notifyNewSignup = onCall(
       throw e;
     }
 
-    const name         = _sanitizeText(request.auth.token.name || request.auth.token.email || '', 100);
-    const email        = _sanitizeText(request.auth.token.email || '', 254);
+    // Privacy : le canal #new-users est PUBLIC, donc on ne diffuse PAS l'email.
+    // Si l'user n'a pas de displayName, on prend la partie locale de l'email
+    // (avant `@`) plutôt que l'email complet — évite de leaker l'adresse.
+    const rawEmail   = String(request.auth.token.email || '');
+    const localPart  = rawEmail.split('@')[0] || 'Anonyme';
+    const rawName    = request.auth.token.name || localPart;
+    const name       = _sanitizeText(rawName, 100);
     const captchaToken = String(request.data?.captchaToken || '').slice(0, 4096);
 
     if (!captchaToken) throw new HttpsError('invalid-argument', 'Captcha manquant');
@@ -472,16 +477,12 @@ exports.notifyNewSignup = onCall(
     const captchaOk = await _verifyHcaptcha(captchaToken);
     if (!captchaOk) throw new HttpsError('failed-precondition', 'Captcha invalide');
 
-    // Embed Discord (canal #new-users)
+    // Embed Discord (canal #new-users, PUBLIC — pas d'email pour privacy)
     const embed = {
-      title: '🎉 Nouvel utilisateur inscrit',
-      color: DISCORD_COLOR_GREEN,
-      fields: [
-        { name: '👤 Pseudo', value: name,  inline: true },
-        { name: '📧 Email',  value: email, inline: true },
-      ],
-      footer:    { text: `UID: ${uid}` },
-      timestamp: new Date().toISOString(),
+      title:       '🎉 Nouvel utilisateur inscrit',
+      description: `Bienvenue à **${name}** dans la communauté ZeldTrade ! 🎯`,
+      color:       DISCORD_COLOR_GREEN,
+      timestamp:   new Date().toISOString(),
     };
 
     const result = await _postDiscordWebhook(DISCORD_SIGNUP_WEBHOOK.value(), embed);
