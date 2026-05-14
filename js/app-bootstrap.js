@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
   i18n.apply();
   Contact.init();
 
-  const landing   = $('landingScreen');
+  // landingScreen retiré en v0.9.114 (la landing publique est sur /index.html maintenant).
+  // Quand l'user arrive sur app.html : si pas loggé, on ouvre direct le modal login.
   const authModal = $('authModal');
   const loader    = $('loginLoader');
   let appLaunched = false;
@@ -54,13 +55,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  bindOpen('btnNavLogin',       'login');
-  bindOpen('btnNavRegister',    'register');
-  bindOpen('btnHeroCta',        'register');
-  bindOpen('btnHeroLogin',      'login');
-  bindOpen('btnLandingFree',    'register');
-  bindOpen('btnLandingPro',     'login',  () => sessionStorage.setItem('ztGoto', 'offers'));
-  bindOpen('btnLandingLifetime','login',  () => sessionStorage.setItem('ztGoto', 'offers'));
+  // bindOpen retirés pour les boutons inside landingScreen (supprimé en v0.9.114).
+  // bindOpen() est safe-on-missing-element, donc les laisser commentés est OK pour
+  // backward-compat si un jour on remet une landing interne. Pour l'instant on s'en passe.
+  // bindOpen('btnNavLogin', 'login');
+  // bindOpen('btnNavRegister', 'register');
+  // bindOpen('btnHeroCta', 'register');
+  // bindOpen('btnHeroLogin', 'login');
+  // bindOpen('btnLandingFree', 'register');
+  // bindOpen('btnLandingPro', 'login', () => sessionStorage.setItem('ztGoto', 'offers'));
+  // bindOpen('btnLandingLifetime', 'login', () => sessionStorage.setItem('ztGoto', 'offers'));
 
   $('authModalClose').addEventListener('click', e => { e.stopPropagation(); closeModal(); });
   // Click sur le backdrop : ne ferme QUE si le clic est sur le backdrop lui-même
@@ -93,9 +97,12 @@ document.addEventListener('DOMContentLoaded', () => {
     Store.initForUser(user.id);
     $('userPillName').textContent = user.username;
     $('userAvatar').textContent   = user.username[0].toUpperCase();
-    landing.style.transition = 'opacity 0.45s ease';
-    landing.style.opacity    = '0';
-    setTimeout(() => { landing.style.display = 'none'; loader.style.display = 'none'; }, 450);
+    // Fade-out du loader uniquement (landingScreen supprimé v0.9.114)
+    if (loader) {
+      loader.style.transition = 'opacity 0.45s ease';
+      loader.style.opacity    = '0';
+      setTimeout(() => { loader.style.display = 'none'; }, 450);
+    }
     initApp();
     window.addEventListener('store:synced', () => {
       try {
@@ -112,8 +119,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Firebase Auth state ─────────────────────────────────────────────────────
+  // landingScreen retiré en v0.9.114 : si non loggé, on ouvre direct le modal login
+  // (l'user arrive depuis index.html landing qui a déjà fait le pitch marketing).
   Auth.onAuthReady(user => {
-    if (user) { showLoader(user.username); setTimeout(() => launchApp(user), 1200); }
+    if (user) {
+      showLoader(user.username);
+      setTimeout(() => launchApp(user), 1200);
+    } else {
+      // Pas loggé → ouvre direct le modal login (pas de flash sur ancien content)
+      openModal('login');
+    }
   });
 
   // ── Rate-limiting ───────────────────────────────────────────────────────────
