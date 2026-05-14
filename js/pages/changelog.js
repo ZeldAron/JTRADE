@@ -5,6 +5,17 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.135',
+      date: '2026-05-15',
+      time: '00:30',
+      tags: ['fix'],
+      title: 'Fix Export PDF : event delegation pour le bouton (bulletproof)',
+      titleEn: 'Fix Export PDF: event delegation for the button (bulletproof)',
+      items: [
+        { type: 'fix', text: 'Le bind du bouton "Exporter PDF" via `$(\'btnExportPdf\').addEventListener` était dans le bloc `if (_settingsBound) return` d\'`UI.initSettings`. Si l\'user cliquait sur le bouton avant qu\'`initSettings()` ait eu le temps d\'être appelée (cas observé en prod), le handler n\'était jamais bindé → click sans effet. Fix : passer à event delegation sur `document.body` au top-level de l\'IIFE settings.js, bind UNE FOIS au load du script. Le `target.closest(\'#btnExportPdf\')` filtre par ID, robuste quel que soit le timing.', textEn: 'The "Export PDF" button bind via `$(\'btnExportPdf\').addEventListener` was inside the `if (_settingsBound) return` block of `UI.initSettings`. If user clicked before `initSettings()` had been called (observed in prod), the handler was never bound → click with no effect. Fix: switched to event delegation on `document.body` at IIFE top-level, bound ONCE at script load. `target.closest(\'#btnExportPdf\')` filters by ID, robust whatever the timing.' },
+      ],
+    },
+    {
       version: '0.9.134',
       date: '2026-05-15',
       time: '00:10',
