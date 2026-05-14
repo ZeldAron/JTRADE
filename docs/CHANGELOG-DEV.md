@@ -37,6 +37,60 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.114 — Fix flash ancien landingScreen au login
+
+**Type** : fix / ux
+**Fichiers** : `src/app.html` (suppression block 222 lignes), `src/js/app-bootstrap.js`
+
+### Contexte
+User signale qu'en cliquant "Se connecter" depuis la nouvelle landing publique (`/`), il voit brièvement (~200ms) l'ancien `landingScreen` interne d'`app.html` (hero "Le journal de trading pensé pour traders prop firm", preview, CTAs, FAQ) avant que Firebase Auth résolve et que le modal login apparaisse. Mauvaise UX double-landing.
+
+### Cause root
+`app.html` (ex-`index.html`) contenait un bloc `<div id="landingScreen">` (lignes 55-274) avec sa propre landing intégrée (créée avant qu'on ait la vraie landing externe). Au chargement de `app.html` :
+1. HTML parse → `landingScreen` affiché par défaut
+2. JS charge → Firebase Auth check (~300-800ms)
+3. Si user loggé → fade-out landingScreen + lance app
+4. Si pas loggé → landingScreen reste visible + user doit cliquer un de ses CTAs internes pour ouvrir le modal
+
+Maintenant qu'on a une vraie landing à `/index.html`, le double-landing crée un flash visuel + confusion.
+
+### Changements
+
+**`src/app.html`** :
+- Supprimé lignes 55-274 (`<!-- ══ LANDING PAGE -->` + `<div id="landingScreen">...</div>`) — 222 lignes total
+- Ajouté `<style>html,body{background:#0d1117}</style>` inline avant `</head>` pour forcer le background dark avant que `style.css` charge (anti flash blanc)
+
+**`src/js/app-bootstrap.js`** :
+- Retiré `const landing = $('landingScreen')` (référence morte)
+- Commenté les `bindOpen()` qui ciblaient les boutons inside landingScreen (btnNavLogin/btnNavRegister/btnHeroCta/btnHeroLogin/btnLandingFree/btnLandingPro/btnLandingLifetime)
+- `launchApp()` : retiré le fade-out de `landing.style`, garde seulement le fade-out du loader
+- `Auth.onAuthReady()` : ajouté `else { openModal('login'); }` — si pas loggé, ouvre directement le modal login au lieu d'afficher l'ancien landingScreen
+
+### Analyse sécurité
+- Pas de surface nouvelle créée
+- Suppression de DOM mort → réduit la surface XSS potentielle (moins de markup, moins de strings)
+- Pas de breaking change sur les flows existants (les boutons supprimés sont inside un bloc supprimé)
+- `bindOpen()` est safe-on-missing-element (vérifie `if (!el) return`) — donc les `bindOpen` commentés étaient déjà no-op après la suppression du DOM
+
+### Vérification
+- `node -c src/js/app-bootstrap.js` : syntax OK
+- `node test/calc.test.js` : 103/103 ✓ (impact data integrity pas Calc)
+- File size : `app.html` passé de 1180 lignes à 958 lignes (-19%)
+
+### Comportement utilisateur
+
+| Cas | Avant v0.9.114 | Après v0.9.114 |
+|---|---|---|
+| Visiteur clique "Se connecter" sur landing | Flash de l'ancien landingScreen → puis modal login | Modal login direct (clean) |
+| User loggé arrive sur `/app.html` direct | Flash de l'ancien landingScreen → puis app | Loader → app (clean) |
+| User déconnecté arrive sur `/app.html` direct | Voit l'ancien landingScreen (page entière) | Modal login affiché directement sur fond dark |
+
+### À surveiller
+- Si le user a un bookmark `/app.html` direct et veut juste voir une page d'accueil avant login, il tombe maintenant sur le modal login (cohérent — pour la marketing il y a `/`)
+- F4 v2 prévu : routing auto (loggé sur `/` → redirect vers `/app.html`) — pas encore implémenté
+
+---
+
 ## 2026-05-14 — v0.9.113 — Landing devient la page d'accueil principale
 
 **Type** : feat / refactor

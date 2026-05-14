@@ -351,6 +351,7 @@ Redondant avec `frame-ancestors 'none'` + `X-Frame-Options DENY`. Defense-in-dep
 - **v0.9.111** : Pack A UX (dashboard empty state, compteur recherche, bouton Aujourd'hui calendrier, hint groupe wizard avec count, scroll-to-top auto)
 - **v0.9.112** : Landing page v1 publique (`landing.html`) avec hero "Un journal de trading complet fait par un trader pour les traders", 6 features, pricing stealth, FAQ, footer. 100% statique, CSP ultra-stricte.
 - **v0.9.113** : Landing devient la **page d'accueil principale** (`/zeldtrade/` → landing). L'app est maintenant à `/zeldtrade/app.html`. Renommage `index.html` → `app.html` + `landing.html` → `index.html`. Liens internes mis à jour.
+- **v0.9.114** : Fix flash visuel — suppression de l'ancien `landingScreen` intégré dans `app.html` (-222 lignes). Quand non loggé sur `/app.html` → modal login direct sur fond dark, plus de flash de l'ancienne landing interne.
 
 ---
 
