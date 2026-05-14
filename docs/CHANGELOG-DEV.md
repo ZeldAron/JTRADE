@@ -37,6 +37,79 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.119 — App : réduction globale ~12 % (compact mode)
+
+**Type** : ui / compact
+**Fichiers** : `src/css/style.css`, `src/app.html` (bump v=), `src/index.html` (footer), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.119
+
+### Contexte
+User signale **« tout est trop gros putain remet comme avant »** sur l'app (Journal page). Après dialogue : viewport laptop 13-14" (768-1280px CSS), souhait de réduction globale ~10-15 %. Le contraste avec la landing compacte (body 14px, mockup nav 12px) faisait paraître l'app proportionnellement trop massive.
+
+### Changements (`src/css/style.css`)
+
+**Base styles (toutes tailles d'écran)** :
+- `.sidebar` : width 220 → **200px**
+- `.logo` : padding `22 20 18` → **`16 16 14`**, gap 10 → 9
+- `.logo-mark` : 28×28 → **24×24**, border-radius 7 → 6
+- `.logo-mark svg` : 14×14 → **12×12**
+- `.logo-text` : 15 → **13px**, letter-spacing 0.08em → 0.06em
+- `.nav` : padding 10 → **8px**
+- `.nav-item` : padding `8 10` → **`6 9`**, font 13 → **12px**, gap 9 → 8, margin-bottom 2 → 1
+- `.nav-item svg` : 15×15 → **13×13**
+- `.nav-divider` : margin `8 0` → `6 0`
+- `.sidebar-stats` : padding `14 16` → **`10 12`**, gap 8 → 5
+- `.stat-label` / `.stat-val` : 11 → **10px**
+- `.new-trade-btn` : margin `12 12 16` → **`8 8 12`**, padding `9 0` → **`7 0`**, font 13 → **12px**
+- `.topbar` : height 52 → **44px**, padding `0 24` → **`0 18`**, gap 12 → 10
+- `.topbar-title` : 14 → **13px**
+- `.search-wrap` : width 220 → **200px**, padding `6 12` → `5 10`, font 12 → **11px**
+- `.trade-list` : width 310 → **280px**
+- `.list-filters` : padding `10 10 8` → `8 10 6`, gap 5 → 4
+- `.chip` : padding `4 10` → **`3 9`**, font 11 → **10.5px**
+- `.trade-item` : padding `11 14` → **`9 12`**, gap 10 → 9
+
+**Media query <1280px (laptops 13-14")** — désormais plus aggressive (avant : juste sidebar 200 + nav-item 13) :
+- `.sidebar` : 180px de large
+- `.logo-text` : 12px
+- `.nav-item` : 11.5px font, padding `5 8`
+- `.nav-item svg` : 12×12
+- `.new-trade-btn` : font 11px, padding `6 0`
+- `.sidebar-stats` : `8 10` padding
+- `.stat-label` / `.stat-val` : 9.5px
+- `.topbar` : 40px de haut, padding `0 14`
+- `.topbar-title` : 12px
+- `.search-wrap` : 180px width
+- `.trade-list` : 260px
+- `.chip` : 10px font, padding `3 8`
+- `.trade-item` : padding `8 11`
+
+### Préservé intact
+- **Touch targets a11y (<768px)** : toutes les règles `min-height: 44px` (v0.9.109, U13) sont conservées. Sur mobile/tablette tactile, les boutons grandissent toujours à 44px min pour respecter les recommandations WCAG / Apple HIG
+- **Responsive <480px / <360px** (v0.9.116) : règles inchangées
+- **Stats, KPI, charts, modals, wizard** : non touchés (pas de régression sur ces zones)
+
+### Pourquoi ne pas baisser plus
+- À 11px on commence à pénaliser la lisibilité sur écran standard
+- Touch a11y < 768px doit rester ≥ 44px (donc le compact mode ne s'applique qu'aux écrans pointeur fin)
+
+### Impact
+- **UX** : l'app respire dans le sens "moins est plus" et s'aligne visuellement avec la landing. Plus de contenu visible sans scroll
+- **Sécu** : aucun impact, changements purement CSS de tailles. Pas de JS, pas de CSP, pas de nouvelle surface
+- **Compat** : a11y mobile préservée (touch targets), `prefers-reduced-motion` toujours respecté
+
+### Bump version
+- `src/app.html` : `?v=0.9.118` → `?v=0.9.119` (21 refs)
+- `src/index.html` : footer `v0.9.118` → `v0.9.119`
+- `src/js/pages/changelog.js` : entrée 0.9.119 en tête de `ENTRIES`
+
+### À surveiller
+- Si l'user dit "trop petit maintenant" → augmenter d'1 cran (nav-item 12.5px, etc.)
+- Si l'user dit "encore trop gros" → encore -1 cran (nav-item 11.5px, sidebar 180px de base)
+- Tester sur écran >1280px (juste pour vérifier que la base est OK sans la media query)
+
+---
+
 ## 2026-05-14 — v0.9.118 — Landing : mockup interactif 5 onglets (CSS-only, zéro JS)
 
 **Type** : feat / ux / security
