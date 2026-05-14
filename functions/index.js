@@ -79,7 +79,8 @@ exports.analyzeChart = onCall(
     }
     // S20 — exiger email vérifié avant toute consommation de quota IA
     if (!request.auth.token.email_verified) {
-      throw new HttpsError('failed-precondition', 'Email verification required');
+      throw new HttpsError('failed-precondition',
+        'Vérifie ton email avant d\'utiliser l\'IA (consulte ta boîte mail — clique sur le lien de vérification Firebase).');
     }
     const uid = request.auth.uid;
     const { model, prompt, imageB64 } = request.data || {};
