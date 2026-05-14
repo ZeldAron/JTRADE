@@ -94,7 +94,7 @@ Sans domaine `zeldtrade.com` :
 
 ### 🔧 CODE (40)
 
-**Sécurité (10)** : S12 headers HTTP, S13 TTL auditLogs, S15 plan schema, S16 audit pre-action, ~~S17 Unicode bidi~~ ✅ 2026-05-12, S18 pagination admin, S19 throttle persisté serveur, S20 email_verified signup, S21 isAdmin bypass myAccounts, S36 webhook idempotent
+**Sécurité (10)** : S12 headers HTTP, ~~S13 TTL auditLogs~~ ✅ 2026-05-14 (v0.9.122), ~~S15 plan schema~~ ✅ déjà OK (rules), S16 audit pre-action, ~~S17 Unicode bidi~~ ✅ 2026-05-12, ~~S18 pagination admin~~ ✅ 2026-05-14 (v0.9.122), S19 throttle persisté serveur, ~~S20 email_verified signup~~ ✅ 2026-05-14 (v0.9.122 — analyzeChart), ~~S21 isAdmin bypass myAccounts~~ ✅ 2026-05-14 (v0.9.122), ~~S36 webhook idempotent~~ ✅ 2026-05-14 (v0.9.122)
 
 **Code (15)** : ~~Q11 date floor~~ ✅ 2026-05-14, Q16 anti-corruption check, ~~Q17 garde-fou null~~ ✅ 2026-05-14, Q18-20 dedup helpers, Q22-23 dead code, Q24/31 perf Calc.trade, Q25-26 no-op functions, Q27 spreadCost fallback, Q43 timezone, ~~Q44 paste handlers~~ ✅ 2026-05-14, ~~Q49 race compression~~ ✅ 2026-05-14, ~~Q52 double escape JSON~~ ✅ 2026-05-14, Q53-55 désynchros sanitize, Q61-62 N+1 queries, Q69 reset aiUsage downgrade
 

@@ -96,22 +96,27 @@ service cloud.firestore {
     }
 
     // ── Mes comptes — 1 max Basic, 100 max Pro ───────────────────────────────────
+    // S21 (v0.9.122) : retrait du bypass `isAdmin() ||` sur `allow write`.
+    // L'admin garde le read pour l'audit/modération, mais ne peut plus écrire les
+    // myAccounts d'un autre user via les rules client. Si une action admin nécessite
+    // d'écrire ces données (support), elle doit passer par une Cloud Function avec
+    // l'admin SDK + audit log immuable (traçabilité). Cela ferme la porte à une
+    // compromission admin (XSS / token volé) qui aurait pu corrompre les comptes users.
     match /users/{userId}/data/myAccounts {
       allow read:   if (request.auth != null && request.auth.uid == userId) || isAdmin();
       allow delete: if request.auth != null && request.auth.uid == userId;
-      allow write: if isAdmin()
-                   || (request.auth != null
-                       && request.auth.uid == userId
-                       && request.resource.data.keys().hasOnly(['items'])
-                       && request.resource.data.items is list
-                       && (
-                         request.resource.data.items.size() <= 1
-                         || (
-                           exists(/databases/$(database)/documents/users/$(userId)/data/plan)
-                           && get(/databases/$(database)/documents/users/$(userId)/data/plan).data.plan == 'pro'
-                           && request.resource.data.items.size() <= 100
-                         )
-                       ));
+      allow write:  if request.auth != null
+                    && request.auth.uid == userId
+                    && request.resource.data.keys().hasOnly(['items'])
+                    && request.resource.data.items is list
+                    && (
+                      request.resource.data.items.size() <= 1
+                      || (
+                        exists(/databases/$(database)/documents/users/$(userId)/data/plan)
+                        && get(/databases/$(database)/documents/users/$(userId)/data/plan).data.plan == 'pro'
+                        && request.resource.data.items.size() <= 100
+                      )
+                    );
     }
 
     // ── Clé Groq globale — DEPRECATED, la clé est dans Google Secret Manager ────

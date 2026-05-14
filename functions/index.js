@@ -67,6 +67,10 @@ exports.analyzeChart = onCall(
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
+    // S20 — exiger email vérifié avant toute consommation de quota IA
+    if (!request.auth.token.email_verified) {
+      throw new HttpsError('failed-precondition', 'Email verification required');
+    }
     const uid = request.auth.uid;
     const { model, prompt, imageB64 } = request.data || {};
 
@@ -419,13 +423,18 @@ exports.notifyNewSignup = onCall(
 );
 
 // Helper : log d'audit immuable (collection auditLogs)
+// S13 — TTL 1 an : champ `expireAt` lu par la TTL policy Firestore (à activer en console
+// Firebase → Firestore → TTL → collection `auditLogs`, champ `expireAt`).
+// RGPD : suppression auto des logs après 1 an de rétention.
+const AUDIT_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 an
 async function _writeAuditLog(action, adminEmail, payload) {
   try {
     await admin.firestore().collection('auditLogs').add({
       action,
-      admin:   adminEmail,
-      payload: payload || {},
-      at:      admin.firestore.FieldValue.serverTimestamp(),
+      admin:    adminEmail,
+      payload:  payload || {},
+      at:       admin.firestore.FieldValue.serverTimestamp(),
+      expireAt: admin.firestore.Timestamp.fromMillis(Date.now() + AUDIT_TTL_MS),
     });
   } catch (e) {
     console.error('[auditLog] failed', action, e && e.message);
@@ -908,6 +917,32 @@ exports.stripeWebhook = onRequest(
     }
 
     const db = admin.firestore();
+
+    // S36 — Idempotency : Stripe peut retransmettre le même event (jusqu'à 3 jours).
+    // On utilise `.create()` qui échoue si le doc existe déjà → garantie atomique.
+    // TTL 30 jours via `expireAt` (TTL policy à activer côté console sur la collection).
+    const IDEMPOTENCY_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+    const eventId = String(event.id || '').replace(/[^A-Za-z0-9_]/g, '');
+    if (!eventId) {
+      console.warn("[stripeWebhook] missing event.id");
+      return res.status(400).send("Missing event id");
+    }
+    try {
+      await db.doc(`stripeWebhookEvents/${eventId}`).create({
+        type:     event.type,
+        at:       admin.firestore.FieldValue.serverTimestamp(),
+        expireAt: admin.firestore.Timestamp.fromMillis(Date.now() + IDEMPOTENCY_TTL_MS),
+      });
+    } catch (e) {
+      // Code 6 = ALREADY_EXISTS → event déjà traité, on répond 200 sans re-traiter
+      if (e.code === 6 || /already exists/i.test(e.message || '')) {
+        console.log("[stripeWebhook] duplicate event ignored", eventId, event.type);
+        return res.status(200).send("Already processed");
+      }
+      console.error("[stripeWebhook] idempotency check failed", e && e.message);
+      // En cas d'autre erreur Firestore, on continue le traitement (mieux qu'un faux positif)
+    }
+
     try {
       switch (event.type) {
         case "checkout.session.completed": {
@@ -1032,14 +1067,18 @@ exports.cleanupOrphanUserEmails = onCall(
       });
     } catch (e) { console.error('[auditLog] pre-cleanup failed', e && e.message); }
 
-    // 1. Lister tous les userEmails
+    // 1. Lister les userEmails — S18 : borné à 1000 docs pour éviter timeout / exhaustion.
+    // Pour un projet beta privé, 1000 est largement au-dessus du volume réel.
+    // Si on dépasse → l'admin doit lancer plusieurs fois (le résultat indiquera `truncated: true`).
+    const LIST_LIMIT = 1000;
     let allEmails;
     try {
-      allEmails = await db.collection('userEmails').get();
+      allEmails = await db.collection('userEmails').limit(LIST_LIMIT).get();
     } catch (e) {
       console.error('[cleanupOrphans] list failed', e && e.message);
       throw new HttpsError('internal', 'List failed');
     }
+    const truncated = allEmails.size >= LIST_LIMIT;
 
     const orphans  = [];
     const valid    = [];
@@ -1077,7 +1116,8 @@ exports.cleanupOrphanUserEmails = onCall(
         orphans,   // liste des orphelins identifiés
         valid:     valid.length,
         errors,
-        message:   `Trouvé ${orphans.length} orphelin(s) sur ${allEmails.size} userEmails total. Appel avec confirm:true pour supprimer.`,
+        truncated, // true si on a atteint la limite de 1000 — relancer pour suite
+        message:   `Trouvé ${orphans.length} orphelin(s) sur ${allEmails.size} userEmails ${truncated ? '(LIMITE 1000 atteinte — relance pour le reste)' : 'total'}. Appel avec confirm:true pour supprimer.`,
       };
     }
 

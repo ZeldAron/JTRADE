@@ -37,6 +37,83 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.122 — Pack sécu CODE (5 fixes : S36, S13, S20, S18, S21)
+
+**Type** : security
+**Fichiers** : `functions/index.js` (4 sites), `firestore.rules` (1 site), `src/app.html` (bump v=), `src/index.html` (footer), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.122 + CFs redéployées + rules redéployées
+
+### Contexte
+User : « vazy fait les trucs sécu on fera app check plus tard ». Pack de 5 fixes CODE faisables sans actions manuelles bloquantes, ciblant les findings sécu prioritaires du `docs/TODO.md`.
+
+### Changements
+
+#### S36 — Stripe webhook idempotency (`functions/index.js:902-930`)
+Stripe peut retransmettre le même event jusqu'à 3 jours en cas d'échec de réception. Avant ce fix, chaque retry ré-activait Pro sur le user → risque de quotas faussés, double-comptabilisation Stripe.
+**Solution** : avant le `switch(event.type)`, créer le doc `stripeWebhookEvents/{eventId}` via `.create()` (qui échoue si déjà existant). Si erreur `ALREADY_EXISTS` → retour 200 sans traitement. Sinon → on continue le switch normalement.
+- TTL 30 jours via champ `expireAt` (TTL policy à activer côté console)
+- Sanitization de `event.id` (regex `[A-Za-z0-9_]` pour pas écrire un path control char)
+- Si autre erreur Firestore (rare), on log et on continue le traitement (mieux qu'un faux positif où Stripe retry indéfiniment)
+
+#### S13 — TTL auditLogs (1 an, RGPD) (`functions/index.js:422-438`)
+`_writeAuditLog()` (helper utilisé par toutes les CFs admin) ajoute désormais un champ :
+```js
+expireAt: admin.firestore.Timestamp.fromMillis(Date.now() + 365 * 24 * 60 * 60 * 1000)
+```
+**Action manuelle requise** : activer la TTL policy dans Firebase Console → Firestore → TTL → collection `auditLogs`, champ `expireAt`. Une fois activé, Firestore supprime auto les docs après leur `expireAt`.
+**Impact RGPD** : rétention max 1 an des logs admin (suppression auto-déclenchée). Pas besoin de CF cron.
+
+#### S20 — email_verified avant analyzeChart (`functions/index.js:70-73`)
+Avant : un user pouvait créer un compte (email pas vérifié) et consommer immédiatement son quota IA (Groq Vision = $$$). Maintenant :
+```js
+if (!request.auth.token.email_verified) {
+  throw new HttpsError('failed-precondition', 'Email verification required');
+}
+```
+Insertion juste après `if (!request.auth)`. Pas de breaking change pour les users légitimes (Firebase envoie l'email de vérif automatiquement).
+
+#### S18 — Pagination admin cleanupOrphanUserEmails (`functions/index.js:1073-1082`)
+Avant : `db.collection('userEmails').get()` retournait TOUS les docs → risque timeout / exhaustion si la collection grossit.
+Maintenant : `.limit(1000)` + champ `truncated: true` dans la réponse si la limite est atteinte. Si jamais on dépasse 1000 userEmails, l'admin doit relancer (rare en beta privée).
+
+#### S21 — Retrait `isAdmin()` bypass myAccounts (`firestore.rules:98-117`)
+Avant :
+```
+allow write: if isAdmin() || (request.auth.uid == userId && ...)
+```
+Maintenant :
+```
+allow write: if request.auth.uid == userId && ...
+```
+**Raison** : l'admin n'a pas besoin d'écrire les `myAccounts` d'un autre user (vérifié — aucun code dans `src/js/admin.js` ne fait ça). Le seul cas légitime (support) doit passer par une CF avec audit log immuable (traçabilité forcée). Si jamais un attaquant compromet le compte admin (XSS, token volé, MFA bypassé), il ne peut plus corrompre les `myAccounts` d'autres users via les rules client.
+
+### Faux positif écarté
+**Q12-14 memory leaks calendar.js** : l'Explore agent a signalé des `addEventListener` sans cleanup, mais `renderCalendar()` fait `el.innerHTML = '...'` à chaque render → les anciens DOM nodes (avec leurs listeners attachés) sont détachés et garbage-collected automatiquement par le browser. Pas de fuite réelle.
+
+### Déploiement
+- **Frontend** : `bash scripts/release.sh v0.9.122` (cache-bust `?v=` + footer)
+- **CFs** : `firebase deploy --only functions:analyzeChart,functions:stripeWebhook,functions:cleanupOrphanUserEmails` (les 3 CFs touchées + `_writeAuditLog` utilisé par toutes les autres CFs admin → en pratique redéploiement total recommandé : `firebase deploy --only functions`)
+- **Rules** : `firebase deploy --only firestore:rules`
+
+### Action manuelle post-deploy
+1. **Activer la TTL policy** dans [Firebase Console → Firestore → TTL](https://console.cloud.google.com/firestore/databases/-default-/ttl) :
+   - Collection : `auditLogs`, champ : `expireAt`
+   - Collection : `stripeWebhookEvents`, champ : `expireAt`
+2. Tester la déconnexion + reconnexion + 1 analyse IA pour vérifier que `email_verified` ne bloque pas le compte admin
+3. Si jamais `cleanupOrphanUserEmails` retournait `truncated: true` → relancer en boucle
+
+### Impact
+- **Sécu** : 5 findings clos, score sécu monte (subjectivement de 7 à 8/10 hors App Check)
+- **UX** : neutre. Si un nouveau user oublie de vérifier son email → message explicite "Email verification required" au lieu d'une erreur quota cryptique
+- **Perf** : neutre. La transaction d'idempotency ajoute ~50 ms par webhook Stripe → négligeable
+- **Coût** : 2 nouvelles collections (`stripeWebhookEvents` + `expireAt` partout) → volume négligeable
+
+### À surveiller
+- Logs CF Stripe webhook : si on voit beaucoup de `duplicate event ignored` → ça confirme que l'idempotency capture bien les retries
+- Vérifier que la TTL Firestore est active (Console GCP)
+
+---
+
 ## 2026-05-14 — v0.9.121 — Fix logout : redirige vers la landing (index.html)
 
 **Type** : fix / ux

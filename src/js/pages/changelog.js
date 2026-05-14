@@ -5,6 +5,21 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.122',
+      date: '2026-05-14',
+      time: '17:30',
+      tags: ['security'],
+      title: 'Pack sécu CODE : Stripe idempotency + TTL auditLogs + email_verified IA + S21',
+      titleEn: 'Security CODE pack: Stripe idempotency + auditLogs TTL + email_verified AI + S21',
+      items: [
+        { type: 'security', text: 'S36 — Idempotency Stripe webhook : chaque `event.id` reçu est stocké en transaction atomique (`stripeWebhookEvents/{eventId}`). Si Stripe retransmet le même event (jusqu\'à 3 jours), il est ignoré silencieusement → plus de risque de double-activation Pro.', textEn: 'S36 — Stripe webhook idempotency: each `event.id` is stored atomically (`stripeWebhookEvents/{eventId}`). If Stripe retransmits the same event (up to 3 days), it\'s silently ignored → no more double Pro activation risk.' },
+        { type: 'security', text: 'S13 — RGPD : tous les `auditLogs` ont maintenant un champ `expireAt` (1 an depuis maintenant). TTL policy Firestore à activer manuellement côté console (Firebase → Firestore → TTL → collection `auditLogs`, champ `expireAt`).', textEn: 'S13 — GDPR: all `auditLogs` now have an `expireAt` field (1 year from now). Firestore TTL policy must be enabled manually in console (Firebase → Firestore → TTL → collection `auditLogs`, field `expireAt`).' },
+        { type: 'security', text: 'S20 — `analyzeChart` (CF Groq Vision) exige maintenant un email vérifié avant de consommer le quota IA. Un signup sans verif email ne peut plus brûler des analyses Groq.', textEn: 'S20 — `analyzeChart` (Groq Vision CF) now requires verified email before consuming AI quota. Unverified signups can no longer burn Groq analyses.' },
+        { type: 'security', text: 'S18 — Pagination admin : la CF `cleanupOrphanUserEmails` est désormais bornée à 1000 docs par appel (anti-timeout / anti-exhaustion). Champ `truncated: true` dans la réponse si la limite est atteinte.', textEn: 'S18 — Admin pagination: the `cleanupOrphanUserEmails` CF is now capped at 1000 docs per call (anti-timeout / anti-exhaustion). Response includes `truncated: true` if limit is reached.' },
+        { type: 'security', text: 'S21 — Retrait du bypass `isAdmin()` sur `allow write` de `users/{uid}/data/myAccounts` (Firestore rules). L\'admin garde le `read` pour modération, mais ne peut plus écrire les comptes d\'un autre user via les rules → ferme une faille en cas de compromission du compte admin (XSS, token volé).', textEn: 'S21 — Removed `isAdmin()` bypass on `allow write` of `users/{uid}/data/myAccounts` (Firestore rules). Admin keeps `read` for moderation, but can no longer write another user\'s accounts via rules → closes a hole if admin account is compromised (XSS, stolen token).' },
+      ],
+    },
+    {
       version: '0.9.121',
       date: '2026-05-14',
       time: '16:30',
