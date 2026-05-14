@@ -69,8 +69,19 @@ const Auth = (() => {
         console.warn('[register] storeUserEmail failed', e && e.code);
       }
 
-      // Email de vérification (non bloquant)
-      cred.user.sendEmailVerification().catch(() => {});
+      // v0.9.143 : Email de vérification — on AWAIT et on remonte le statut
+      // au caller pour informer l'user (ex: vérifier les spams). Avant le fix,
+      // le .catch(()=>{}) avalait toutes les erreurs silencieusement → user
+      // confus de ne rien recevoir, sans aucun signal côté front.
+      let emailSent = false;
+      let emailError = null;
+      try {
+        await cred.user.sendEmailVerification();
+        emailSent = true;
+      } catch (e) {
+        emailError = (e && e.code) || 'unknown';
+        console.warn('[register] sendEmailVerification failed:', emailError, e && e.message);
+      }
 
       // Notif admin via Cloud Function (Discord webhook → #new-users public)
       try {
@@ -80,12 +91,31 @@ const Auth = (() => {
         }
       } catch {}
 
-      return { user: { id: cred.user.uid, username: safeName } };
+      return {
+        user: { id: cred.user.uid, username: safeName },
+        emailSent,
+        emailError,
+        email: safeEmail,
+      };
     } catch (e) {
       if (e.code === 'auth/email-already-in-use') return { error: i18n.t('auth.err.taken') };
       if (e.code === 'auth/invalid-email')        return { error: i18n.t('auth.err.email') };
       if (e.code === 'auth/weak-password')        return { error: i18n.t('auth.err.weak') };
       return { error: i18n.t('auth.err.unknown') };
+    }
+  }
+
+  // v0.9.143 : helper pour renvoyer l'email de vérification post-signup.
+  // Utilisé depuis la modale "Compte créé" en app-bootstrap.js.
+  async function resendVerification() {
+    const user = _fbAuth.currentUser;
+    if (!user) return { error: 'not-authenticated' };
+    if (user.emailVerified) return { error: 'already-verified' };
+    try {
+      await user.sendEmailVerification();
+      return { ok: true };
+    } catch (e) {
+      return { error: (e && e.code) || 'unknown' };
     }
   }
 
@@ -154,5 +184,5 @@ const Auth = (() => {
   // Compat shim — plus utilisé mais évite les erreurs si appelé ailleurs
   function touchSession() {}
 
-  return { login, register, logout, getCurrentUser, onAuthReady, resetPassword, touchSession, deleteAccount };
+  return { login, register, logout, getCurrentUser, onAuthReady, resetPassword, resendVerification, touchSession, deleteAccount };
 })();

@@ -223,6 +223,29 @@ document.addEventListener('DOMContentLoaded', () => {
       $('registerError').textContent = result.error;
       return;
     }
+
+    // v0.9.143 : modale info post-signup — informer l'user sur l'email de
+    // vérification (souvent en spam sur Gmail / free.fr / Hotmail car expédié
+    // depuis noreply@<project>.firebaseapp.com). Avant : aucun feedback, l'user
+    // pensait que le système était cassé. Le resend reste accessible depuis
+    // Réglages → Vérification email (shipped v0.9.142).
+    const targetEmail = result.email || email;
+    const msg = result.emailSent
+      ? 'Un email de vérification vient d\'être envoyé à ' + targetEmail + '.\n\n'
+        + '⚠️ IMPORTANT : vérifie ta boîte de réception ET tes SPAMS. '
+        + 'Gmail / free.fr / Hotmail filtrent souvent les emails Firebase.\n\n'
+        + 'Sans cette vérification, l\'analyse IA des graphes ne fonctionnera pas. '
+        + 'Si tu ne le trouves pas, tu peux le renvoyer depuis Réglages → Vérification email.'
+      : 'Ton compte est créé, mais l\'envoi automatique de l\'email de vérification a échoué ('
+        + (result.emailError || 'inconnu') + ').\n\n'
+        + 'Va dans Réglages → Vérification email après connexion pour le renvoyer.';
+    await UI.confirmModal({
+      title: 'Compte créé ✅',
+      message: msg,
+      confirmText: 'OK, j\'ai compris',
+      cancelText: false,  // modale info pure — pas de bouton "Annuler"
+    });
+
     showLoader(result.user.username);
     setTimeout(() => launchApp(result.user), 1200);
   });

@@ -5,6 +5,26 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.143',
+      date: '2026-05-14',
+      time: '12:30',
+      tags: ['fix', 'ux'],
+      title: 'Fix signup : modale claire après création + log erreurs email',
+      titleEn: 'Signup fix: clear post-signup modal + email error logging',
+      items: [
+        { type: 'fix', text: 'Bug : un bêta-testeur signalait ne RIEN recevoir dans sa boîte mail après création de compte. Cause double : (1) dans `auth.js`, le `cred.user.sendEmailVerification().catch(() => {})` AVALAIT silencieusement toute erreur — aucun signal côté front si l\'envoi échouait ; (2) même quand l\'envoi réussissait, l\'email Firebase (`noreply@<project>.firebaseapp.com`) finit souvent dans les SPAMS sur Gmail / free.fr / Hotmail, et l\'user ne savait pas où chercher.', textEn: 'Bug: a beta tester reported NOT receiving anything in their inbox after signup. Two causes: (1) in `auth.js`, the `cred.user.sendEmailVerification().catch(() => {})` silently swallowed any error — no front-end signal if sending failed; (2) even when sending succeeded, the Firebase email (`noreply@<project>.firebaseapp.com`) often lands in SPAM on Gmail / free.fr / Hotmail, and users didn\'t know where to look.' },
+        { type: 'fix', text: 'Fix #1 : `register()` await maintenant `sendEmailVerification()` et capture les erreurs (log console + flag `emailSent` retourné au caller). Fix #2 : nouvelle modale info post-signup (`UI.confirmModal` étendu avec `cancelText: false` pour modale 1-bouton) qui explique clairement à l\'user : "email envoyé à X, VÉRIFIE TES SPAMS, redirection vers Réglages → Vérification email si pas reçu".', textEn: 'Fix #1: `register()` now awaits `sendEmailVerification()` and captures errors (console log + `emailSent` flag returned to caller). Fix #2: new post-signup info modal (`UI.confirmModal` extended with `cancelText: false` for 1-button info modal) that explicitly tells users: "email sent to X, CHECK YOUR SPAMS, redirect to Settings → Email verification if not received".' },
+        { type: 'fix', text: 'Helper `Auth.resendVerification()` exposé pour usage futur (utilisé en interne par la section Settings de v0.9.142). Aucun changement côté Cloud Function ou Firestore — fix purement front + UX.', textEn: 'Helper `Auth.resendVerification()` exposed for future use (used internally by v0.9.142 Settings section). No Cloud Function or Firestore changes — purely front-end + UX fix.' },
+      ],
+      user: {
+        title: 'Tu ne reçois pas l\'email de vérification ? Vérifie tes spams',
+        items: [
+          { type: 'fix', text: 'À la création de compte, une modale t\'indique maintenant clairement que l\'email de vérification a été envoyé et te rappelle de **vérifier tes spams** (Gmail, free.fr et Hotmail les filtrent souvent).' },
+          { type: 'fix', text: 'Si tu ne le trouves pas, va dans **Réglages → Vérification email** pour le renvoyer (ajouté en v0.9.142).' },
+        ],
+      },
+    },
+    {
       version: '0.9.142',
       date: '2026-05-14',
       time: '12:00',
