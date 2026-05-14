@@ -5,6 +5,27 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.127',
+      date: '2026-05-14',
+      time: '21:00',
+      tags: ['feat', 'integration'],
+      title: 'Annonces Discord des mises à jour côté user-facing',
+      titleEn: 'Discord announcements for user-facing updates',
+      items: [
+        { type: 'feat', text: 'Nouveau script `scripts/announce-update.js` qui POST un embed Discord propre dans le canal public `#mises-à-jour` du serveur ZeldTrade HQ. Format simplifié : titre user-friendly + bullets en français simple (pas de jargon technique), couleur brand, timestamp.', textEn: 'New `scripts/announce-update.js` script that POSTs a clean Discord embed in the public `#mises-à-jour` channel. Simplified format: user-friendly title + bullets in plain French, brand color, timestamp.' },
+        { type: 'feat', text: 'Schéma changelog enrichi : champ optionnel `user: { title, items: [...] }` dans chaque entrée. Le script announce-update ne POST QUE si ce champ existe — les modifs purement techniques (refactor, cleanup, sécu invisible) ne polluent pas Discord.', textEn: 'Enriched changelog schema: optional `user: { title, items: [...] }` field per entry. The announce-update script only POSTs if this field exists — purely technical changes (refactor, cleanup, invisible security) don\'t pollute Discord.' },
+        { type: 'feat', text: 'Export `Changelog.getEntries()` ajouté pour permettre au script Node de parser le changelog en sandbox VM. Aucun impact sur le rendu de la page Mises à jour côté app.', textEn: '`Changelog.getEntries()` export added to allow the Node script to parse the changelog in a VM sandbox. No impact on the in-app Updates page rendering.' },
+      ],
+      // ── Version user-facing simplifiée (FR uniquement, pas de jargon) ─────
+      user: {
+        title: 'Le canal #mises-à-jour est ouvert !',
+        items: [
+          { type: 'feat', text: 'À partir de maintenant, à chaque grosse nouveauté ou correction, tu reçois une annonce ici dans #mises-à-jour. Tu n\'as plus besoin d\'ouvrir l\'app pour voir ce qui change.' },
+          { type: 'feat', text: 'Les annonces resteront simples et claires — pas de termes techniques. Juste ce qui te concerne en tant qu\'utilisateur.' },
+        ],
+      },
+    },
+    {
       version: '0.9.126',
       date: '2026-05-14',
       time: '20:30',
@@ -1009,5 +1030,7 @@ const Changelog = (() => {
       </div>`;
   }
 
-  return { renderChangelog };
+  // getEntries() : utilisé par scripts/announce-update.js pour parser le changelog
+  // côté Node (sandbox VM) et générer l'embed Discord d'annonce de mise à jour.
+  return { renderChangelog, getEntries: () => ENTRIES };
 })();
