@@ -20,6 +20,10 @@ const GROQ_API_KEY      = defineSecret('GROQ_API_KEY');
 // `firebase functions:secrets:destroy WEB3FORMS_KEY` si désiré).
 const DISCORD_SUPPORT_WEBHOOK = defineSecret('DISCORD_SUPPORT_WEBHOOK');
 const DISCORD_SIGNUP_WEBHOOK  = defineSecret('DISCORD_SIGNUP_WEBHOOK');
+// Error reporting Discord (v0.9.129) — Sentry-lite gratuit. Toutes les CFs
+// critiques wrapent leur handler avec _wrapCF() qui catch les erreurs et POST
+// un embed rouge dans le canal privé #dev-logs.
+const DISCORD_ERRORS_WEBHOOK  = defineSecret('DISCORD_ERRORS_WEBHOOK');
 // hCaptcha — secret côté serveur pour vérifier les tokens captcha (optionnel)
 // Tant que pas setté avec une vraie valeur, le check est skipé (mode dégradé).
 const HCAPTCHA_SECRET       = defineSecret('HCAPTCHA_SECRET');
@@ -59,7 +63,7 @@ const ALLOWED_MODELS = new Set([
  */
 exports.analyzeChart = onCall(
   {
-    secrets:        [GROQ_API_KEY],
+    secrets:        [GROQ_API_KEY, DISCORD_ERRORS_WEBHOOK],
     // cors retiré : passer un array casse le preflight OPTIONS en firebase-functions v4.
     // Le default onCall gère CORS correctement (accepte tous origins, mais l'auth Firebase
     // + l'API key Groq côté serveur enforcent déjà la sécurité).
@@ -69,7 +73,7 @@ exports.analyzeChart = onCall(
     memory:         '256MiB',
     region:         'europe-west1',
   },
-  async (request) => {
+  _wrapCF('analyzeChart', async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
@@ -210,7 +214,7 @@ exports.analyzeChart = onCall(
     // Ne renvoyer que les `choices` (pas de leak metadata, usage, fingerprint, etc.)
     return { choices: Array.isArray(data.choices) ? data.choices : [] };
   }
-);
+));
 
 // ─── Anti-spam : rate-limit côté serveur via Firestore TRANSACTION ATOMIQUE ──
 // Commit le throttle AVANT l'envoi (anti-race : un attaquant qui spam-clic
@@ -328,6 +332,76 @@ async function _postDiscordWebhook(url, embed) {
 // Couleur brand ZeldTrade #6366f1 (utilisee par Discord embeds)
 const DISCORD_COLOR_BRAND = 0x6366f1;
 const DISCORD_COLOR_GREEN = 0x3fb950;
+const DISCORD_COLOR_RED   = 0xf85149;  // erreurs CF
+
+/**
+ * Sentry-lite : post un embed rouge dans #dev-logs quand une CF plante.
+ * Sécurité :
+ *  - Aucune PII dans le message (le caller doit déjà sanitize)
+ *  - Truncation 1800 chars sur stack/message (limite description Discord 4096)
+ *  - Silent fail si webhook non configuré (mode dégradé)
+ *  - Catch any error : ne JAMAIS bloquer la CF qui appelle ce helper
+ *  - Rate-limit Discord 30/min/webhook : si on dépasse, Discord renvoie 429
+ *    et l'erreur n'est pas reportée (acceptable pour anti-spam)
+ */
+async function _reportError(ctx) {
+  try {
+    const url = DISCORD_ERRORS_WEBHOOK.value();
+    if (!url) return; // Pas configuré → skip silent
+    const fn       = (ctx.fn       || 'unknown').slice(0, 80);
+    const code     = String(ctx.code || '500').slice(0, 32);
+    const uid      = ctx.uid ? ctx.uid.slice(0, 32) : '_anonyme_';
+    const errMsg   = (ctx.message || 'Unknown error').slice(0, 1800);
+    const errStack = ctx.stack ? '\n' + ctx.stack.split('\n').slice(0, 6).join('\n').slice(0, 1500) : '';
+    const embed = {
+      title:       `🔥 Erreur dans \`${fn}\``,
+      description: '```\n' + errMsg + errStack + '\n```',
+      color:       DISCORD_COLOR_RED,
+      fields: [
+        { name: 'Code',      value: code, inline: true },
+        { name: 'UID',       value: uid,  inline: true },
+        { name: 'Région',    value: 'europe-west1', inline: true },
+      ],
+      footer:    { text: 'ZeldTrade Errors · Sentry-lite' },
+      timestamp: new Date().toISOString(),
+    };
+    await _postDiscordWebhook(url, embed);
+  } catch (e) {
+    // Defensive : ne JAMAIS faire échouer une CF à cause du reporting
+    console.error('[_reportError] silent fail:', e && e.message);
+  }
+}
+
+/**
+ * Wrap un handler de Cloud Function pour catch + report erreurs serveur.
+ * Ne capture PAS les HttpsError (qui sont des erreurs métier attendues du
+ * client — invalid-argument, permission-denied, etc.) pour éviter le spam
+ * du canal #dev-logs avec des validations user normales. Seules les vraies
+ * erreurs serveur (Error, TypeError, etc.) sont reportées.
+ *
+ * Usage : exports.foo = onCall({...}, _wrapCF('foo', async (request) => { ... }))
+ */
+function _wrapCF(name, handler) {
+  return async (request) => {
+    try {
+      return await handler(request);
+    } catch (e) {
+      // HttpsError = erreur métier attendue, on ne report pas (sinon spam)
+      if (e && e.httpErrorCode) {
+        throw e;
+      }
+      // Vraie erreur serveur → report Discord + re-throw 'internal' au client
+      await _reportError({
+        fn:      name,
+        uid:     request.auth && request.auth.uid,
+        code:    (e && e.code) || '500',
+        message: (e && e.message) || String(e),
+        stack:   e && e.stack,
+      });
+      throw new HttpsError('internal', 'Erreur serveur — réessaie dans un instant.');
+    }
+  };
+}
 
 
 /**
@@ -340,14 +414,14 @@ const DISCORD_COLOR_GREEN = 0x3fb950;
  */
 exports.sendContactMessage = onCall(
   {
-    secrets:        [DISCORD_SUPPORT_WEBHOOK, HCAPTCHA_SECRET],
+    secrets:        [DISCORD_SUPPORT_WEBHOOK, HCAPTCHA_SECRET, DISCORD_ERRORS_WEBHOOK],
     // cors retiré : voir analyzeChart pour explication
     maxInstances:    5,
     timeoutSeconds:  20,
     memory:         '256MiB',
     region:         'europe-west1',
   },
-  async (request) => {
+  _wrapCF('sendContactMessage', async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
@@ -409,7 +483,7 @@ exports.sendContactMessage = onCall(
     }
     return { ok: true };
   }
-);
+));
 
 /**
  * Notifier l'admin d'une nouvelle inscription (appelée juste après register).
@@ -419,14 +493,14 @@ exports.sendContactMessage = onCall(
  */
 exports.notifyNewSignup = onCall(
   {
-    secrets:        [DISCORD_SIGNUP_WEBHOOK, HCAPTCHA_SECRET],
+    secrets:        [DISCORD_SIGNUP_WEBHOOK, HCAPTCHA_SECRET, DISCORD_ERRORS_WEBHOOK],
     // cors retiré : voir analyzeChart pour explication
     maxInstances:    5,
     timeoutSeconds:  10,
     memory:         '256MiB',
     region:         'europe-west1',
   },
-  async (request) => {
+  _wrapCF('notifyNewSignup', async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
@@ -491,7 +565,7 @@ exports.notifyNewSignup = onCall(
 
     return { ok: true };
   }
-);
+));
 
 // Helper : log d'audit immuable (collection auditLogs)
 // S13 — TTL 1 an : champ `expireAt` lu par la TTL policy Firestore (à activer en console
@@ -521,6 +595,7 @@ async function _writeAuditLog(action, adminEmail, payload) {
  */
 exports.deleteUserAccount = onCall(
   {
+    secrets:        [DISCORD_ERRORS_WEBHOOK],
     // cors retiré : voir analyzeChart pour explication
     // TEMP : enforceAppCheck désactivé (reCAPTCHA Enterprise 401 — à débugger)
     // La protection vient de isAdmin() côté serveur (email + email_verified)
@@ -531,7 +606,7 @@ exports.deleteUserAccount = onCall(
     memory:         '256MiB',
     region:         'europe-west1',
   },
-  async (request) => {
+  _wrapCF('deleteUserAccount', async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
@@ -692,7 +767,7 @@ exports.deleteUserAccount = onCall(
 
     return { ok: true, uid: targetUid, errors };
   }
-);
+));
 
 /**
  * Génération d'un code Pro (admin uniquement) — passe par CF pour :
@@ -706,6 +781,7 @@ exports.deleteUserAccount = onCall(
  */
 exports.generateProCode = onCall(
   {
+    secrets:        [DISCORD_ERRORS_WEBHOOK],
     // TEMP : enforceAppCheck désactivé (App Check cassé — workaround)
     // isAdmin() + rate-limit Firestore restent en place
     // enforceAppCheck: true,
@@ -715,7 +791,7 @@ exports.generateProCode = onCall(
     memory:         '256MiB',
     region:         'europe-west1',
   },
-  async (request) => {
+  _wrapCF('generateProCode', async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
@@ -783,7 +859,7 @@ exports.generateProCode = onCall(
 
     return { ok: true };
   }
-);
+));
 
 /**
  * Révocation atomique d'un code Pro (admin uniquement).
@@ -793,6 +869,7 @@ exports.generateProCode = onCall(
  */
 exports.revokeProCode = onCall(
   {
+    secrets:        [DISCORD_ERRORS_WEBHOOK],
     // TEMP : enforceAppCheck désactivé (App Check cassé — workaround)
     // isAdmin() reste en place + transaction atomique
     // enforceAppCheck: true,
@@ -802,7 +879,7 @@ exports.revokeProCode = onCall(
     memory:         '256MiB',
     region:         'europe-west1',
   },
-  async (request) => {
+  _wrapCF('revokeProCode', async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
@@ -870,7 +947,7 @@ exports.revokeProCode = onCall(
     } catch (e) { console.error('[auditLog] post-revoke failed', e && e.message); }
     return { ok: true };
   }
-);
+));
 
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -895,13 +972,13 @@ const PUBLIC_SITE_URL = "https://zeldaron.github.io/zeldtrade";
  */
 exports.createCheckoutSession = onCall(
   {
-    secrets: [STRIPE_SECRET_KEY, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_YEARLY, STRIPE_PRICE_LIFETIME],
+    secrets: [STRIPE_SECRET_KEY, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_YEARLY, STRIPE_PRICE_LIFETIME, DISCORD_ERRORS_WEBHOOK],
     maxInstances:    5,
     timeoutSeconds:  15,
     memory:          "256MiB",
     region:          "europe-west1",
   },
-  async (request) => {
+  _wrapCF('createCheckoutSession', async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Authentication required");
     if (request.auth.token.email !== ADMIN_EMAIL || !request.auth.token.email_verified) {
       throw new HttpsError("permission-denied", "Admin only");
@@ -949,7 +1026,7 @@ exports.createCheckoutSession = onCall(
 
     return { url: session.url, sessionId: session.id };
   }
-);
+));
 
 /**
  * Webhook Stripe — reçoit les events et met à jour le plan du user.
@@ -963,7 +1040,7 @@ exports.createCheckoutSession = onCall(
  */
 exports.stripeWebhook = onRequest(
   {
-    secrets: [STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET],
+    secrets: [STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, DISCORD_ERRORS_WEBHOOK],
     maxInstances:    5,
     timeoutSeconds:  20,
     memory:          "256MiB",
@@ -1108,6 +1185,7 @@ exports.stripeWebhook = onRequest(
  */
 exports.cleanupOrphanUserEmails = onCall(
   {
+    secrets:        [DISCORD_ERRORS_WEBHOOK],
     enforceAppCheck: true,
     consumeAppCheckToken: true,
     maxInstances:    1,  // 1 seul admin, pas de raison de paralléliser
@@ -1115,7 +1193,7 @@ exports.cleanupOrphanUserEmails = onCall(
     memory:          '256MiB',
     region:          'europe-west1',
   },
-  async (request) => {
+  _wrapCF('cleanupOrphanUserEmails', async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
@@ -1243,4 +1321,4 @@ exports.cleanupOrphanUserEmails = onCall(
       message:   `Supprimé ${deleted.length} orphelin(s). ${errors.length} erreur(s).`,
     };
   }
-);
+));

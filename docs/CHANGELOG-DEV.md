@@ -37,6 +37,123 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.129 — Error reporting CFs → Discord #dev-logs (Sentry-lite gratuit)
+
+**Type** : infra / security
+**Fichiers** : `functions/index.js` (helpers + secret + 9 CFs wrapped), `src/app.html` (bump v=), `src/index.html` (footer), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.129 + 9 CFs redéployées + 1 nouveau secret
+
+### Contexte
+User : « Bonus optionnel : ajouter #dev-logs avec error reporting CFs (Sentry-lite gratuit) ». Objectif : être alerté en temps réel quand une CF crashe en prod sans avoir à ouvrir GCP Logs.
+
+### Architecture
+
+#### 1. Nouveau canal Discord `#dev-logs`
+Créé dans la catégorie `🔧 ADMIN` (privé Fondateur). Webhook `ZeldTrade Errors` configuré. Reçoit des embeds rouges (color `0xf85149`).
+
+#### 2. Secret Firebase
+`DISCORD_ERRORS_WEBHOOK` stocké dans Secret Manager (chiffré, jamais en clair) via `firebase functions:secrets:set DISCORD_ERRORS_WEBHOOK --data-file -`. Attaché aux 9 CFs critiques.
+
+#### 3. Helper `_reportError(ctx)` (`functions/index.js`)
+```js
+async function _reportError(ctx) {
+  try {
+    const url = DISCORD_ERRORS_WEBHOOK.value();
+    if (!url) return;  // pas configuré → skip silent
+    const embed = {
+      title: `🔥 Erreur dans \`${ctx.fn}\``,
+      description: '```\n' + ctx.message + ctx.stack + '\n```',
+      color: 0xf85149,
+      fields: [
+        { name: 'Code',   value: ctx.code,   inline: true },
+        { name: 'UID',    value: ctx.uid,    inline: true },
+        { name: 'Région', value: 'europe-west1', inline: true },
+      ],
+      footer: { text: 'ZeldTrade Errors · Sentry-lite' },
+      timestamp: new Date().toISOString(),
+    };
+    await _postDiscordWebhook(url, embed);
+  } catch (e) {
+    // Defensive : ne JAMAIS faire échouer une CF à cause du reporting
+    console.error('[_reportError] silent fail:', e && e.message);
+  }
+}
+```
+
+#### 4. Wrapper `_wrapCF(name, handler)`
+```js
+function _wrapCF(name, handler) {
+  return async (request) => {
+    try {
+      return await handler(request);
+    } catch (e) {
+      // HttpsError = erreur métier attendue, on ne report pas (sinon spam)
+      if (e && e.httpErrorCode) throw e;
+      // Vraie erreur serveur → report Discord + re-throw 'internal' au client
+      await _reportError({
+        fn:      name,
+        uid:     request.auth && request.auth.uid,
+        code:    (e && e.code) || '500',
+        message: (e && e.message) || String(e),
+        stack:   e && e.stack,
+      });
+      throw new HttpsError('internal', 'Erreur serveur — réessaie dans un instant.');
+    }
+  };
+}
+```
+
+#### 5. 9 CFs wrappées
+| CF | Wrapper |
+|---|---|
+| `analyzeChart` | `_wrapCF('analyzeChart', ...)` |
+| `sendContactMessage` | `_wrapCF('sendContactMessage', ...)` |
+| `notifyNewSignup` | `_wrapCF('notifyNewSignup', ...)` |
+| `deleteUserAccount` | `_wrapCF('deleteUserAccount', ...)` |
+| `generateProCode` | `_wrapCF('generateProCode', ...)` |
+| `revokeProCode` | `_wrapCF('revokeProCode', ...)` |
+| `createCheckoutSession` | `_wrapCF('createCheckoutSession', ...)` |
+| `stripeWebhook` | (onRequest — pas wrap via _wrapCF qui est pour onCall, géré par try/catch existant) |
+| `cleanupOrphanUserEmails` | `_wrapCF('cleanupOrphanUserEmails', ...)` |
+
+`secrets: [DISCORD_ERRORS_WEBHOOK]` ajouté à chaque tableau secrets des CFs.
+
+### Sécurité
+
+**Anti-spam** :
+- HttpsError filtrées (validations user normales = pas reportées)
+- Discord rate-limit 30 req/min/webhook → si dépassé, 429 et erreur perdue (acceptable, mieux que DoS)
+
+**Anti-PII** :
+- Pas d'email loggué (juste UID)
+- Pas de token loggué
+- Pas de payload request (qui pourrait contenir un message support, une capture d'écran, etc.)
+- Truncation 1800 chars sur message + 1500 chars sur 6 lignes de stack
+
+**Anti-cascade** :
+- `_reportError` est elle-même dans un try/catch — si elle plante (réseau, Discord 5xx, etc.), elle log mais ne re-throw pas
+- Le client reçoit toujours une réponse `HttpsError('internal', ...)` — le reporting est transparent pour lui
+
+### Test de validation
+Curl direct au webhook avec un payload de test fictif → HTTP 204 confirmé → embed visible dans `#dev-logs`. Le format final est identique à ce qu'enverra `_reportError`. Test live "réel" : surviendra naturellement à la prochaine vraie erreur de CF (qu'on espère ne pas voir trop souvent !).
+
+### Impact
+- **Monitoring** : alertes temps réel sur ton phone Discord, plus besoin d'ouvrir GCP Logs
+- **Coût** : 0 €. Sentry coûte $26/mois pour 50k events, Discord webhook = gratuit illimité (sauf rate-limit)
+- **Perf** : +~50 ms sur une erreur (post HTTP). Aucun impact sur le path nominal (try réussit)
+- **Compat** : aucun breaking change pour les clients (l'API des CFs est inchangée)
+
+### À surveiller
+- Si volume d'erreurs > 30/min → Discord rate-limit, certaines erreurs perdues. À ce moment-là, passer sur Sentry vrai ou un système de dedup côté serveur.
+- Si stack trace contient des données sensibles (ne devrait pas arriver, à monitorer)
+
+### Bump version
+- `src/app.html` : `?v=0.9.128` → `?v=0.9.129` (21 refs)
+- `src/index.html` : footer
+- `src/js/pages/changelog.js` : entrée 0.9.129 (sans champ `user:` car infra admin pure, pas user-facing)
+
+---
+
 ## 2026-05-14 — v0.9.128 — Privacy : refonte RGPD complète
 
 **Type** : privacy / docs
