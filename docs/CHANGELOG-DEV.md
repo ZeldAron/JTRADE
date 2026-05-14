@@ -37,6 +37,98 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.132 — F3 : Export PDF des trades (Pro only)
+
+**Type** : feat / pro
+**Fichiers** : `src/js/lib/jspdf.umd.min.js` (nouveau, 357 KB), `src/js/pages/export-pdf.js` (nouveau), `src/js/pages/settings.js` (handler + modal), `src/app.html` (bouton + scripts), `src/js/i18n.js` (15 clés FR+EN), bump v=
+**Versions impactées** : front v0.9.132 (uniquement client, pas de CFs)
+
+### Contexte
+User : « F3 — Export PDF des trades Pro (Recommandé, autonome) ». Feature majeure du TODO depuis 2026-05-12. Gros chantier en ~3h (Phases 1-3 + 5-6, sans Phase 4 screenshots — gardée pour itération 2 si retour user positif).
+
+### Architecture
+- **Lib** : jsPDF v3.0.1 (357 KB minifié, MIT license), téléchargé depuis unpkg, **bundlé localement** dans `src/js/lib/jspdf.umd.min.js` (respect CSP `script-src 'self'`)
+- **Module** : `src/js/pages/export-pdf.js` — IIFE `ExportPDF` avec une seule API publique `generate({ startMs, endMs, accountId })`
+- **UI** : bouton dans Settings > Données (masqué si non-Pro), au click ouvre une modal créée dynamiquement (pas de pollution permanente du DOM)
+- **Génération** : 100% client-side. Aucun appel CF. Aucune donnée envoyée à un tiers.
+
+### Composants du PDF
+
+**Page de garde** :
+- Header violet brand avec "ZeldTrade" + nom user
+- Titre "Rapport de trades"
+- Période : "Du X → Au Y"
+- Compte (si filtré)
+- **6 KPIs en grille 2×3** : Trades total / Clôturés / Ouverts / P&L total / Win rate / R:R moyen
+- Détails : Wins/Losses/BE
+- Section "Extrêmes" : Meilleur trade + Pire trade (avec instrument et date)
+- Note bas de page : "Rapport généré localement par ZeldTrade. Aucune donnée transmise à un serveur tiers."
+
+**Pages trades** (6 par page) :
+- Cadre par trade avec bord arrondi
+- Ligne 1 : Date | Instrument | badge LONG/SHORT (vert/rouge) | P&L (couleur selon signe)
+- Ligne 2 : Entry / SL / TP1 | R:R à droite
+- Ligne 3 : Setup (tronqué 60 chars) + Notes (tronqué 90 chars)
+
+**Footer (toutes pages)** :
+- Ligne séparatrice
+- "ZeldTrade — Journal de trading prop firm — zeldaron.github.io/zeldtrade"
+- Pagination "Page X / Y"
+
+### Sécurité
+1. **Double garde Pro** :
+   - Visuelle : `rowExportPdf.style.display = Store.isPro() ? '' : 'none'` au render Settings
+   - Logique : `Store.isPro()` re-checké au click du bouton ET dans `ExportPDF.generate()` (anti DevTools bypass où un user désactiverait le `display:none` via inspecteur)
+2. **CSP intacte** : `script-src 'self'` respectée (jsPDF bundlé, pas de CDN)
+3. **Aucune fuite réseau** : `doc.save()` télécharge via blob URL local, pas de fetch externe
+4. **PII** : les données sont déjà chez l'user, aucune nouvelle transmission
+5. **HTML escape** : tous les inputs user passent par `UI.escHtml()` dans la modal pour éviter XSS
+
+### Modal date range
+- Inputs `<input type="date">` natifs (pas de lib externe)
+- Default : 30 derniers jours
+- Sélecteur compte : `<select>` avec option "Tous les comptes" + liste des comptes user
+- Validation côté client :
+  - Les deux dates doivent être renseignées
+  - Date début ≤ date fin
+- Bouton "Générer" devient "Génération…" et disabled pendant l'opération
+- Erreurs affichées dans une zone rouge non-bloquante
+- Fermeture : ESC, click hors modal, bouton "Annuler"
+
+### Format de sortie
+- A4 portrait, 21×29.7 cm
+- Filename : `zeldtrade-export-YYYY-MM-DD.pdf` (date du jour, pas la période)
+- Taille typique : ~50 KB pour 20 trades, ~200 KB pour 100 trades (sans screenshots)
+
+### Limites v1 (à itérer si demandé)
+- **Pas de screenshots embarqués** (Phase 4 reportée — nécessite fetch Cloud Storage + html2canvas ou conversion base64 + gestion de la taille). À ajouter en v2 si le user en a besoin.
+- **Pas de filtre par outcome** (win/loss/be) — on filtre uniquement par période + compte
+- **Pas de tri custom** (toujours plus récent d'abord)
+- **Pagination fixée à 6 trades/page** — pas configurable
+
+### Test (à faire post-deploy)
+1. Compte Pro → Réglages → Données → "Exporter PDF"
+2. Modal s'ouvre avec dates par défaut (30 derniers jours)
+3. Click "Générer PDF" → download auto
+4. Ouvrir le PDF → vérifier page de garde + pages trades + footer
+5. Compte Basic → bouton invisible (settings-row masquée)
+6. Compte Basic + DevTools `document.getElementById('rowExportPdf').style.display=''` puis click → toast d'erreur "Export PDF réservé aux utilisateurs Pro." (double garde fonctionnelle)
+
+### Bump version
+- `src/app.html` : `?v=0.9.131` → `?v=0.9.132` (22 refs maintenant : +1 pour export-pdf.js)
+- `src/js/lib/jspdf.umd.min.js` : `?v=3.0.1` (version de la lib jsPDF, pas la version app — la lib est stable)
+- `src/index.html` : footer
+- `src/js/pages/changelog.js` : entrée 0.9.132 avec champ `user:` (annonce user-facing)
+
+### Itération 2 future (Phase 4 — Screenshots)
+Si retour user positif sur la v1, on pourra ajouter les screenshots :
+1. Pour chaque trade avec `screenshotPath` : fetch image depuis Cloud Storage via download URL
+2. Convertir en base64 (jsPDF accepte JPEG/PNG)
+3. Embedder en 80×50mm à droite de chaque trade (ou en grande taille en page dédiée)
+4. Limite : éviter de dépasser 10 MB total (warning si > 50 trades avec screenshots)
+
+---
+
 ## 2026-05-14 — v0.9.131 — Limite IA Pro 200 → 20 / jour (anti-abus avant bêta)
 
 **Type** : security / pricing
