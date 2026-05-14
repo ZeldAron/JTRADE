@@ -3986,3 +3986,179 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   /* Outcome badges cliquables dans le journal */
   .outcome-badge { min-height: 24px; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE COMPLET (v0.9.116)
+   Stratégie : règles génériques anti-overflow + breakpoints additionnels.
+   Breakpoints :
+     - 1280px : large tablet / petit laptop
+     - 1024px : tablet portrait / petit laptop
+     - 768px  : mobile landscape (déjà couvert au-dessus)
+     - 480px  : mobile portrait standard
+     - 360px  : très petit mobile (iPhone SE 1ère gen, etc.)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Protection générique anti overflow horizontal ─── */
+html, body { overflow-x: hidden; max-width: 100vw; }
+img, video, iframe, canvas, svg { max-width: 100%; height: auto; }
+img { -webkit-user-drag: none; }
+/* Texte qui wrappe au lieu de pousser le layout */
+.trade-setup, .trade-item-meta, .info-val, .feature-desc,
+.dash-empty-text, .pricing-text, .faq-item p {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+/* Flex children peuvent shrinker */
+.trade-item-body, .trade-item-meta, .info-row { min-width: 0; }
+/* Tables avec wrapper scrollable horizontal sur petit écran */
+.admin-table, .recent-trade-table {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ─── Breakpoint 1280px : large tablet / 13" laptop ─── */
+@media (max-width: 1280px) {
+  .sidebar { width: 200px; min-width: 200px; }
+  .nav-item { font-size: 13px; }
+}
+
+/* ─── Breakpoint 1024px : tablet portrait / petit laptop ─── */
+@media (max-width: 1024px) {
+  /* Dashboard : moins de colonnes KPI */
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  /* Analytics : graphs full width */
+  .chart-card { padding: 14px; }
+  /* Settings : forms en colonne unique */
+  .form-grid.form-grid-2 { grid-template-columns: 1fr; }
+  /* Tables admin : font plus compacte */
+  .admin-table th, .admin-table td { padding: 8px 10px; font-size: 13px; }
+  /* Calendar : cases jours plus compactes */
+  .cal-day { font-size: 12px; min-height: 56px; }
+  /* Detail panel : plus serré */
+  .detail-content { padding: 16px; }
+  /* Modals : moins large */
+  .modal-card { max-width: 90vw; }
+}
+
+/* ─── Breakpoint 480px : mobile portrait standard ─── */
+@media (max-width: 480px) {
+  /* Padding écran serré */
+  .dash-page, .settings-page, .analytics-page, .calendar-page,
+  .goals-page, .outils-page, .micro-page, .offers-page, .changelog-page {
+    padding: 12px !important;
+  }
+
+  /* Topbar plus compact */
+  .topbar { padding: 0 8px; gap: 6px; min-height: 48px; }
+  .topbar-title { font-size: 12px; }
+  .topbar-actions { gap: 4px; }
+
+  /* Stats KPI : 1 seule colonne */
+  .kpi-grid { grid-template-columns: 1fr !important; }
+  .metrics-strip { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+  .metric-card { padding: 10px 12px; }
+  .mc-val { font-size: 17px; }
+
+  /* Levels (Entry / SL / TP) : 2 colonnes au lieu de 4-5 */
+  .levels-row { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+  .level-card { padding: 10px; }
+  .lc-price { font-size: 15px; }
+
+  /* Detail header : compact */
+  .detail-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .detail-actions { width: 100%; }
+  .detail-actions .btn-ghost { flex: 1; }
+
+  /* Wizard step 3 form : padding réduit */
+  .wp3-content { padding: 0 12px; }
+  .form-grid { gap: 8px; }
+
+  /* Calendar : 7 cellules par ligne pas changeables, mais compacter */
+  .cal-day { font-size: 11px; min-height: 48px; padding: 4px; }
+  .cal-day-num { font-size: 11px; }
+  .cal-day-pnl { font-size: 10px; }
+  .cal-nav-row { flex-wrap: wrap; gap: 6px; }
+  .cal-month-label { font-size: 14px; flex: 1; text-align: center; }
+  .cal-today-btn { padding: 4px 8px; font-size: 11px; margin: 0 4px; }
+
+  /* Settings tables : compact + scroll horizontal si débordement */
+  .admin-table, .recent-trade-table {
+    font-size: 11px;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-table th, .admin-table td { padding: 6px 8px; }
+
+  /* Modals : pleine largeur */
+  .modal-card {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    margin: 12px;
+    padding: 20px 16px;
+  }
+
+  /* Trade list compactée */
+  .trade-item { padding: 10px 12px; }
+  .trade-instr { font-size: 14px; }
+  .trade-item-meta { font-size: 11px; gap: 6px; flex-wrap: wrap; }
+  .trade-setup { font-size: 11px; }
+
+  /* Contact bubble : plus discret */
+  .contact-bubble { bottom: 70px; right: 16px; width: 48px; height: 48px; }
+
+  /* Cookie banner sur mobile */
+  .cookie-banner { padding: 12px 16px !important; flex-direction: column !important; gap: 10px !important; }
+
+  /* Sidebar mobile : drawer un peu plus étroit */
+  .sidebar { width: 220px !important; min-width: 220px !important; }
+
+  /* Bouton "Nouveau trade" reste accessible (sticky bottom) */
+  .btn-new-trade-wrap { padding: 8px 12px; }
+}
+
+/* ─── Breakpoint 360px : iPhone SE 1ère gen, très petits Android ─── */
+@media (max-width: 360px) {
+  .dash-page, .settings-page, .analytics-page, .calendar-page {
+    padding: 8px !important;
+  }
+  .kpi-grid { gap: 6px; }
+  .metric-card { padding: 8px 10px; }
+  .mc-val { font-size: 15px; }
+  .mc-label { font-size: 10px; }
+  .nav-item { padding: 8px 12px; font-size: 12px; }
+  .sidebar { width: 200px !important; min-width: 200px !important; }
+  .modal-card { padding: 16px 12px; }
+  /* Titres page plus petits */
+  .page-title { font-size: 15px !important; }
+  /* Cal day cells encore plus compactes */
+  .cal-day { min-height: 40px; font-size: 10px; }
+}
+
+/* ─── Landscape mobile (orientation paysage sur mobile) ─── */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+  /* En landscape sur mobile, on tente de garder la sidebar visible mais compacte */
+  .topbar { min-height: 40px; }
+  .modal-overlay { align-items: center; }
+  /* Wizard fullscreen reste OK */
+}
+
+/* ─── Print (au cas où user veut imprimer le journal pour archive prop firm) ─── */
+@media print {
+  .sidebar, .topbar, .contact-bubble, .cookie-banner, .modal-overlay { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .main { width: 100% !important; }
+  .trade-item, .metric-card, .info-card { break-inside: avoid; }
+  a { color: #000 !important; text-decoration: underline !important; }
+}
+
+/* ─── Réduit le motion pour accessibilité (prefers-reduced-motion) ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
