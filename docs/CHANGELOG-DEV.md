@@ -37,6 +37,50 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.131 — Limite IA Pro 200 → 20 / jour (anti-abus avant bêta)
+
+**Type** : security / pricing
+**Fichiers** : `functions/index.js` (analyzeChart), `src/js/i18n.js` (×2 EN+FR), `src/app.html` (sidebar copy + bump v=), `src/index.html` (FAQ + footer), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.131 + CF `analyzeChart` redéployée
+
+### Contexte
+User : « tu peux pas limiter l'appel à l'ia à 20 par jours c'est large asser pour un utilisateurs ? ». Préparation à l'ouverture bêta : 20 analyses/jour est largement suffisant pour un trader normal (600/mois) et limite l'exposition Groq en cas d'abus.
+
+### Changements
+
+#### `functions/index.js` — `analyzeChart`
+```js
+const BASIC_CAP   = 1;
+const PRO_CAP     = 20;   // ← était 200
+const cap         = isPro ? PRO_CAP : BASIC_CAP;
+```
+Le message d'erreur utilise déjà `${PRO_CAP}` interpolé → mis à jour automatiquement : `"Limite Pro de 20 analyses/jour atteinte. Réessaie demain."`.
+
+#### Copy aligné (sinon promesse trompeuse)
+- `src/js/i18n.js` ligne 495 (FR) : `'off.pro.f3': 'Analyses IA illimitées'` → `'Jusqu\'à 20 analyses IA/jour'`
+- `src/js/i18n.js` ligne 1065 (EN) : `'off.pro.f3': 'Unlimited AI analyses'` → `'Up to 20 AI analyses/day'`
+- `src/app.html:228` : sidebar upgrade hint "comptes illimités et l'IA sans limite" → "comptes illimités et 20 analyses IA/jour"
+- `src/index.html:1339` (FAQ landing) : "Pro débloque les analyses illimitées, multi-comptes..." → "Pro débloque 20 analyses IA/jour, multi-comptes..."
+
+### Impact business
+- **Pro** : avant 200/jour (illimité de fait), maintenant 20/jour. **Ratio Basic:Pro** reste fort : 1 vs 20 = ×20 d'incitation
+- **Coût Groq** : un Pro maxant son quota = 20 appels/jour × $0.005/appel ≈ $0.10/jour → $3/mois par user actif. 100 users Pro maxant = $300/mois. Avec 200/jour c'était $3000/mois théorique.
+- **Anti-abus** : un attacker auth peut DoS via 20 appels/jour seulement, pas 200. Réduction d'1 ordre de grandeur.
+
+### Aucun user impacté en bêta
+On a 7 users en prod actuellement. Probabilité qu'un fasse 20+/jour = quasi nulle (la valeur médiane historique est probablement < 5/jour). Aucun support à anticiper.
+
+### Bump version
+- `src/app.html` : `?v=0.9.130` → `?v=0.9.131` (20 refs)
+- `src/index.html` : footer
+- `src/js/pages/changelog.js` : entrée 0.9.131 avec champ `user:` pour annonce Discord (transparence sur le changement)
+
+### À surveiller
+- Si un user Pro hit le cap 20/jour régulièrement → considérer remontée à 30 ou tier "Pro+" à $19/mois pour les heavy traders
+- Monitor les events `resource-exhausted` côté Discord `#dev-logs`
+
+---
+
 ## 2026-05-14 — v0.9.130 — Retrait de la page "Mises à jour" de l'app (remplacée par Discord)
 
 **Type** : refactor / ux

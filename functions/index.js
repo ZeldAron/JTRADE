@@ -100,7 +100,7 @@ exports.analyzeChart = onCall(
     const planSnap    = await db.doc(`users/${uid}/data/plan`).get();
     const isPro       = planSnap.exists && planSnap.data().plan === 'pro';
     const BASIC_CAP   = 1;
-    const PRO_CAP     = 200;
+    const PRO_CAP     = 20;  // v0.9.131 : 200 → 20 (anti-abus Groq, suffisant pour usage normal)
     const cap         = isPro ? PRO_CAP : BASIC_CAP;
     const usageRef    = db.doc(`users/${uid}/data/aiUsage`);
     const today       = new Date().toISOString().split('T')[0];
