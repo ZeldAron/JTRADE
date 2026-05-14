@@ -2,15 +2,26 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5">
+  <meta name="description" content="ZeldTrade — Un journal de trading complet fait par un trader pour les traders. Spécialisé prop firms (Apex, FTMO, Topstep, Lucid, Funding Pips). Analyse IA, calculs précis, multi-comptes.">
+  <meta name="theme-color" content="#0d1117">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ZeldTrade — Journal de trading prop firm">
+  <meta property="og:description" content="Un journal de trading complet fait par un trader pour les traders.">
+  <meta property="og:url" content="https://zeldaron.github.io/zeldtrade/">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Sécurité : CSP stricte, page statique, aucune dépendance externe -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src  'self' https://www.gstatic.com https://cdnjs.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com/recaptcha/ https://apis.google.com;
-    style-src   'self' 'unsafe-inline' https://fonts.googleapis.com https://hcaptcha.com https://*.hcaptcha.com;
-    font-src    'self' https://fonts.gstatic.com;
-    connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://firebase.googleapis.com https://firebaseappcheck.googleapis.com https://content-firebaseappcheck.googleapis.com https://firebasestorage.googleapis.com https://*.firebasestorage.app https://*.firebaseio.com wss://*.firebaseio.com wss://firestore.googleapis.com https://europe-west1-zeldtrade.cloudfunctions.net https://*.run.app https://api.frankfurter.app https://hcaptcha.com https://*.hcaptcha.com https://www.google.com https://www.recaptcha.net;
-    img-src     'self' data: blob: https://www.gstatic.com/recaptcha/ https://firebasestorage.googleapis.com https://*.firebasestorage.app;
-    frame-src   https://hcaptcha.com https://*.hcaptcha.com https://www.google.com https://www.recaptcha.net https://zeldtrade.firebaseapp.com;
+    script-src  'self';
+    style-src   'self' 'unsafe-inline';
+    img-src     'self' data:;
+    font-src    'self';
+    connect-src 'none';
+    frame-src   'none';
     frame-ancestors 'none';
     form-action 'self';
     object-src  'none';
@@ -20,1160 +31,544 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=(), midi=(), serial=(), hid=(), idle-detection=(), screen-wake-lock=(), display-capture=(), picture-in-picture=(), autoplay=(), encrypted-media=(), publickey-credentials-get=(), publickey-credentials-create=(), interest-cohort=(), browsing-topics=(), join-ad-interest-group=(), run-ad-auction=(), attribution-reporting=(), private-state-token-issuance=(), private-state-token-redemption=()">
-  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=(), midi=(), serial=(), hid=(), idle-detection=(), screen-wake-lock=(), display-capture=(), picture-in-picture=(), autoplay=(), encrypted-media=(), interest-cohort=(), browsing-topics=(), join-ad-interest-group=(), run-ad-auction=()">
 
-  <title>ZeldTrade — Journal de trading pour traders en prop firm</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230a84ff'/%3E%3Cpolyline points='5,7 19,7 5,17 19,17' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <meta name="description" content="Journal de trading pensé pour les traders en prop firm. Suivi de performance, gestion des règles d'évaluation Apex, Topstep, FTMO, Lucid, calculatrice de position. Sans Excel.">
-  <meta name="keywords" content="journal de trading, prop firm, Apex, Topstep, FTMO, Lucid, day trading, S&P 500, performance trading, calculatrice position">
-  <meta name="author" content="Aaron Platon">
-  <meta name="theme-color" content="#0d0d0f">
+  <title>ZeldTrade — Journal de trading prop firm</title>
 
-  <!-- Open Graph -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="ZeldTrade — Journal de trading pour traders en prop firm">
-  <meta property="og:description" content="Suivi de performance, règles d'évaluation, calcul de position. Tout au même endroit, sans Excel.">
-  <meta property="og:url" content="https://zeldaron.github.io/zeldtrade">
-  <meta property="og:site_name" content="ZeldTrade">
-  <meta property="og:locale" content="fr_FR">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  <!-- Twitter / X -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ZeldTrade — Journal de trading pour traders en prop firm">
-  <meta name="twitter:description" content="Suivi de performance, règles d'évaluation, calcul de position. Tout au même endroit, sans Excel.">
+    :root {
+      --bg:        #0d1117;
+      --bg2:       #161b22;
+      --surface:   #1c2128;
+      --border:    #30363d;
+      --border2:   #444c56;
+      --text:      #e6edf3;
+      --text2:     #c9d1d9;
+      --muted:     #8b949e;
+      --accent:    #7c3aed;
+      --accent-l:  #a78bfa;
+      --green:     #3fb950;
+      --red:       #f85149;
+      --amber:     #d29922;
+    }
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=0.9.112">
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    a { color: var(--accent-l); text-decoration: none; }
+    a:hover { color: #fff; }
+
+    /* ── Nav ────────────────────────────────────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(13, 17, 23, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--accent-l);
+      letter-spacing: -0.3px;
+    }
+    .nav-brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), #5b21b6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .nav-link {
+      font-size: 14px;
+      color: var(--muted);
+      transition: color 0.15s;
+    }
+    .nav-link:hover { color: var(--text); }
+
+    /* ── Buttons ───────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s, background 0.15s;
+      border: none;
+      text-decoration: none;
+      min-height: 44px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      color: #fff;
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--text);
+    }
+    .btn-ghost:hover {
+      border-color: var(--accent-l);
+      color: var(--accent-l);
+    }
+
+    /* ── Hero ──────────────────────────────────────────────────────────── */
+    .hero {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 90px 24px 60px;
+      text-align: center;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .hero-badge {
+      display: inline-block;
+      padding: 5px 14px;
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--accent-l);
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+    .hero-title {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+    .hero-title .accent {
+      background: linear-gradient(135deg, var(--accent-l), #f0abfc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-sub {
+      font-size: clamp(15px, 2vw, 19px);
+      color: var(--muted);
+      max-width: 680px;
+      margin: 0 auto 36px;
+      line-height: 1.55;
+    }
+    .hero-ctas {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 60px;
+    }
+    .hero-trust {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .hero-trust-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hero-trust-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    /* ── Section générique ─────────────────────────────────────────────── */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 70px 24px;
+    }
+    .section-eyebrow {
+      font-size: 12px;
+      color: var(--accent-l);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: -0.8px;
+      margin-bottom: 14px;
+    }
+    .section-sub {
+      font-size: 16px;
+      color: var(--muted);
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 50px;
+    }
+
+    /* ── Features grid ─────────────────────────────────────────────────── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .feature {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .feature:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(124, 58, 237, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+    .feature-title {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .feature-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ── Pricing stealth ──────────────────────────────────────────────── */
+    .pricing {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 32px;
+      text-align: center;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .pricing-tag {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(124, 58, 237, 0.15);
+      color: var(--accent-l);
+      border-radius: 12px;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .pricing-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .pricing-text {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+      margin-bottom: 24px;
+    }
+
+    /* ── FAQ ──────────────────────────────────────────────────────────── */
+    .faq {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .faq-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 12px;
+    }
+    .faq-item summary {
+      font-weight: 600;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text);
+      font-size: 15px;
+    }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item summary::after {
+      content: '+';
+      color: var(--accent-l);
+      font-size: 22px;
+      font-weight: 400;
+      transition: transform 0.15s;
+    }
+    .faq-item[open] summary::after { transform: rotate(45deg); }
+    .faq-item p {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 40px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .footer-link {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .footer-link:hover { color: var(--text); }
+
+    /* ── Mobile tweaks ─────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .nav-inner { padding: 12px 16px; }
+      .nav-links { gap: 12px; }
+      .nav-link { font-size: 13px; }
+      .hero { padding: 60px 20px 40px; }
+      .hero-ctas { flex-direction: column; }
+      .hero-ctas .btn { width: 100%; }
+      .hero-trust { flex-direction: column; gap: 8px; }
+      .section { padding: 50px 20px; }
+      .pricing { padding: 28px 20px; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- ══ LANDING PAGE ═════════════════════════════════════════════════════════ -->
-  <div id="landingScreen" class="lp-screen">
-
-    <!-- Navbar -->
-    <nav class="lp-nav">
-      <div class="lp-nav-logo">
-        <div class="lp-nav-logo-mark">
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="5,6 19,6 5,18 19,18"/>
-          </svg>
-        </div>
-        ZeldTrade
+  <!-- ─── Nav ──────────────────────────────────────────────────────────── -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-brand-icon">Z</span>
+        <span>ZeldTrade</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features" class="nav-link">Fonctionnalités</a>
+        <a href="#pricing" class="nav-link">Accès</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+        <a href="app.html" class="btn btn-ghost" style="padding: 8px 16px; min-height: 36px;">Se connecter</a>
       </div>
-      <div class="lp-nav-actions">
-        <button type="button" class="lp-nav-link" id="btnNavLogin">Se connecter</button>
-        <button type="button" class="lp-nav-cta" id="btnNavRegister">Commencer</button>
-      </div>
-    </nav>
+    </div>
+  </nav>
 
-    <!-- Hero -->
-    <section class="lp-hero">
-      <h1>Le journal de trading,<br>pensé pour les traders<br>en prop firm.</h1>
-      <p>Suivi de performance, gestion des règles d'évaluation, calcul de position. Tout au même endroit, sans Excel.</p>
-      <div class="lp-cta-group">
-        <button type="button" class="lp-cta-btn lp-cta-primary" id="btnHeroCta">Commencer gratuitement</button>
-        <button type="button" class="lp-cta-text" id="btnHeroLogin">Déjà membre ?</button>
-      </div>
-      <div class="lp-hero-firms">
-        <span>Apex</span>
-        <span>·</span>
-        <span>Topstep</span>
-        <span>·</span>
-        <span>FTMO</span>
-        <span>·</span>
-        <span>Lucid</span>
-      </div>
-    </section>
-
-    <!-- Preview app — mini mockup dashboard -->
-    <section class="lp-preview">
-      <div class="lp-preview-frame">
-        <div class="lp-preview-bar">
-          <span class="lp-preview-dot" style="background:#ff5f57"></span>
-          <span class="lp-preview-dot" style="background:#febc2e"></span>
-          <span class="lp-preview-dot" style="background:#28c840"></span>
-          <span class="lp-preview-url">zeldtrade — Apex 50K · Eval</span>
-        </div>
-        <div class="lp-preview-body">
-          <div class="lp-preview-stats">
-            <div class="lp-preview-stat">
-              <div class="lp-preview-stat-lbl">P&L total</div>
-              <div class="lp-preview-stat-val" style="color:var(--green)">+$2,847</div>
-            </div>
-            <div class="lp-preview-stat">
-              <div class="lp-preview-stat-lbl">Win rate</div>
-              <div class="lp-preview-stat-val">58.3%</div>
-            </div>
-            <div class="lp-preview-stat">
-              <div class="lp-preview-stat-lbl">Profit factor</div>
-              <div class="lp-preview-stat-val">1.84</div>
-            </div>
-            <div class="lp-preview-stat">
-              <div class="lp-preview-stat-lbl">Drawdown</div>
-              <div class="lp-preview-stat-val" style="color:var(--red)">−$612</div>
-            </div>
-          </div>
-          <div class="lp-preview-chart">
-            <svg viewBox="0 0 600 140" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="lpChartGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="rgba(10,132,255,0.25)"/>
-                  <stop offset="100%" stop-color="rgba(10,132,255,0)"/>
-                </linearGradient>
-              </defs>
-              <path d="M0,110 L40,108 L80,95 L120,98 L160,82 L200,88 L240,72 L280,78 L320,60 L360,65 L400,48 L440,52 L480,40 L520,42 L560,28 L600,32 L600,140 L0,140 Z" fill="url(#lpChartGrad)"/>
-              <path d="M0,110 L40,108 L80,95 L120,98 L160,82 L200,88 L240,72 L280,78 L320,60 L360,65 L400,48 L440,52 L480,40 L520,42 L560,28 L600,32" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Features -->
-    <section class="lp-features">
-      <div class="lp-feat-grid">
-        <div class="lp-feat-item">
-          <svg class="lp-feat-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="3" width="16" height="18" rx="2"/>
-            <line x1="8" y1="8" x2="16" y2="8"/>
-            <line x1="8" y1="12" x2="16" y2="12"/>
-            <line x1="8" y1="16" x2="13" y2="16"/>
-          </svg>
-          <h3>Journal sans friction</h3>
-          <p>Saisie rapide, screenshot collé en un Cmd+V. L'IA extrait les niveaux automatiquement.</p>
-        </div>
-        <div class="lp-feat-item">
-          <svg class="lp-feat-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="3 17 9 11 13 15 21 7"/>
-            <polyline points="14 7 21 7 21 14"/>
-          </svg>
-          <h3>Performances en clair</h3>
-          <p>Win rate, profit factor, drawdown, expectancy. Pas de tableaux Excel à maintenir.</p>
-        </div>
-        <div class="lp-feat-item">
-          <svg class="lp-feat-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9"/>
-            <path d="M12 7v5l3 2"/>
-          </svg>
-          <h3>Règles prop firm</h3>
-          <p>Drawdown trailing, daily loss, consistency. Visualisé pour Apex, Topstep, FTMO et Lucid.</p>
-        </div>
-        <div class="lp-feat-item">
-          <svg class="lp-feat-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14"/>
-            <path d="M12 5v14"/>
-            <circle cx="12" cy="12" r="9"/>
-          </svg>
-          <h3>Calcul de position</h3>
-          <p>Capital, risque, instrument. La taille de position s'affiche en temps réel — 23 instruments.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Pricing -->
-    <section class="lp-pricing">
-      <div class="lp-section-eyebrow">Tarifs</div>
-      <h2>Commence gratuitement.</h2>
-      <p class="lp-pricing-sub">Passe Pro ou Lifetime quand tu es prêt — pas avant.</p>
-
-      <div class="offers-cards lp-offers-cards">
-
-        <div class="offer-card">
-          <div class="offer-badge-basic">Basic</div>
-          <div class="offer-name">Basic</div>
-          <div class="offer-price-hidden" style="color:var(--green)">Gratuit — pour toujours</div>
-          <ul class="offer-features">
-            <li class="ok">Journal de trading illimité</li>
-            <li class="ok">Dashboard performances</li>
-            <li class="ok">Calculatrice de position</li>
-            <li class="ok">Règles prop firms intégrées</li>
-            <li class="limit">1 compte prop firm</li>
-            <li class="limit">1 analyse IA / jour</li>
-            <li class="no">Analytics avancées</li>
-            <li class="no">Comptes illimités</li>
-          </ul>
-          <button type="button" class="offer-cta offer-cta-basic-landing" id="btnLandingFree">Créer un compte</button>
-        </div>
-
-        <div class="offer-card offer-pro">
-          <div class="offer-badge-pro">Le plus populaire</div>
-          <div class="offer-name" style="color:#a78bfa">Pro</div>
-          <div class="offer-price-hidden">Prix à venir</div>
-          <ul class="offer-features">
-            <li class="ok">Tout Basic, sans limites</li>
-            <li class="ok"><strong>Comptes illimités</strong></li>
-            <li class="ok"><strong>IA Vision Groq (screenshots)</strong></li>
-            <li class="ok"><strong>Simulateur fiscal micro-entrepreneur</strong></li>
-            <li class="ok">Analytics complètes (sessions, heures)</li>
-            <li class="ok">Groupes de comptes</li>
-            <li class="ok">Support prioritaire</li>
-          </ul>
-          <button type="button" class="offer-cta offer-cta-pro" id="btnLandingPro">Activer Pro</button>
-        </div>
-
-        <div class="offer-card offer-lifetime">
-          <div class="offer-badge-lifetime">Lifetime</div>
-          <div class="offer-name" style="color:#f59e0b">Lifetime</div>
-          <div class="offer-price-hidden">Prix à venir</div>
-          <ul class="offer-features">
-            <li class="ok">Tout Pro, sans limites</li>
-            <li class="ok"><strong>Accès à vie — pas d'abonnement</strong></li>
-            <li class="ok"><strong>Toutes les futures fonctionnalités</strong></li>
-            <li class="ok">Support prioritaire à vie</li>
-            <li class="ok">Badge Lifetime</li>
-            <li class="ok">Vote sur la roadmap</li>
-          </ul>
-          <button type="button" class="offer-cta offer-cta-lifetime" id="btnLandingLifetime">Activer Lifetime</button>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- FAQ -->
-    <section class="lp-faq">
-      <div class="lp-section-eyebrow">FAQ</div>
-      <h2>Questions fréquentes.</h2>
-      <div class="lp-faq-list">
-        <div class="lp-faq-item">
-          <h4>Mes données sont-elles sécurisées ?</h4>
-          <p>Oui. Chiffrées en transit (TLS), hébergées chez Firebase (Google Cloud). Tu peux exporter ou supprimer tes données à tout moment.</p>
-        </div>
-        <div class="lp-faq-item">
-          <h4>Puis-je l'utiliser sur mobile ?</h4>
-          <p>L'interface est pensée pour le desktop. Une vue mobile est en préparation.</p>
-        </div>
-        <div class="lp-faq-item">
-          <h4>Comment activer Pro pendant la bêta ?</h4>
-          <p>Les codes Pro sont distribués manuellement aux premiers utilisateurs. Contacte-moi via le formulaire intégré.</p>
-        </div>
-        <div class="lp-faq-item">
-          <h4>Qui développe ZeldTrade ?</h4>
-          <p>Aaron Platon, day trader sur le S&P 500. J'ai construit l'outil que je voulais avoir.</p>
-        </div>
-      </div>
-    </section>
-
-    <footer class="lp-footer">
-      <div class="lp-footer-inner">
-        <div class="lp-footer-left">
-          <div class="lp-footer-brand">ZeldTrade</div>
-          <div class="lp-footer-cr">© 2026 · Aaron Platon</div>
-        </div>
-        <div class="lp-footer-links">
-          <a href="legal.html">Mentions légales</a>
-          <a href="privacy.html">Confidentialité</a>
-          <a href="cgu.html">CGU / CGV</a>
-        </div>
-      </div>
-    </footer>
-
-  </div>
-
-  <!-- ══ BANNIÈRE COOKIES ══════════════════════════════════════════════════════ -->
-  <div id="cookieBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#131929;border-top:1px solid #1e2535;padding:16px 24px;z-index:9999;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-    <p style="margin:0;font-size:13px;color:#9ca3af;max-width:600px">
-      ZeldTrade utilise le stockage local de votre navigateur pour fonctionner (cache des données, session) ainsi que Firebase pour l'authentification.
-      <a href="privacy.html" style="color:#6366f1;text-decoration:none">En savoir plus</a>
+  <!-- ─── Hero ─────────────────────────────────────────────────────────── -->
+  <header class="hero">
+    <div class="hero-badge">✦ Beta privée — sur invitation</div>
+    <h1 class="hero-title">
+      Un journal de trading complet<br>
+      <span class="accent">fait par un trader pour les traders</span>
+    </h1>
+    <p class="hero-sub">
+      Spécialement conçu pour les traders en prop firm. Calculs précis Apex / FTMO / Topstep / Lucid / Funding Pips,
+      analyse IA des charts, multi-comptes, screenshots persistants. Aucune approximation.
     </p>
-    <button id="cookieAcceptBtn" style="background:#6366f1;color:#fff;border:none;border-radius:7px;padding:8px 20px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;flex-shrink:0">J'ai compris</button>
-  </div>
-  <!-- ══ AUTH MODAL ════════════════════════════════════════════════════════════ -->
-  <div id="authModal" class="auth-modal" style="display:none">
-    <div class="auth-modal-backdrop" id="authModalBackdrop"></div>
-    <div class="auth-modal-box">
-      <button type="button" class="auth-modal-close" id="authModalClose">✕</button>
-      <div class="login-card" id="loginCard">
-        <div class="login-logo">
-          <div class="logo-mark login-logo-mark">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="5,6 19,6 5,18 19,18"/>
-            </svg>
-          </div>
-          <div class="login-title">ZeldTrade</div>
-          <div class="login-subtitle" data-i18n="auth.subtitle">Journal de trading</div>
-        </div>
+    <div class="hero-ctas">
+      <a href="app.html" class="btn btn-primary">Accéder à l'app →</a>
+      <a href="#features" class="btn btn-ghost">Voir les fonctionnalités</a>
+    </div>
+    <div class="hero-trust">
+      <span class="hero-trust-item"><span class="hero-trust-dot"></span>Données chiffrées en EU</span>
+      <span class="hero-trust-item"><span class="hero-trust-dot"></span>Pas de tracking</span>
+      <span class="hero-trust-item"><span class="hero-trust-dot"></span>RGPD compliant</span>
+    </div>
+  </header>
 
-        <form id="loginFormEl" autocomplete="on">
-          <div class="login-fields">
-            <input type="email" class="form-input" id="loginUsername"
-              placeholder="Email" autocomplete="email" maxlength="254" required>
-            <input type="password" class="form-input" id="loginPassword"
-              placeholder="Mot de passe" autocomplete="current-password" maxlength="128" required>
-          </div>
-          <div class="login-error" id="loginError"></div>
-          <button type="submit" class="login-btn" data-i18n="auth.login.btn">Se connecter</button>
-          <div class="login-switch"><span id="showForgot" style="color:var(--muted);font-size:12px;cursor:pointer">Mot de passe oublié ?</span></div>
-          <div class="login-switch" style="margin-top:6px"><span data-i18n="auth.no.account">Pas de compte ?</span> <span id="showRegister" data-i18n="auth.register">Créer un compte</span></div>
-        </form>
-
-        <!-- Mot de passe oublié -->
-        <form id="forgotFormEl" autocomplete="on" style="display:none">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Entre ton email pour recevoir un lien de réinitialisation.</div>
-          <div class="login-fields">
-            <input type="email" class="form-input" id="forgotEmail" placeholder="Email" autocomplete="email" maxlength="254" required>
-          </div>
-          <div class="login-error" id="forgotError"></div>
-          <button type="submit" class="login-btn">Envoyer le lien</button>
-          <div class="login-switch"><span id="showLoginFromForgot" data-i18n="auth.back.login">← Retour à la connexion</span></div>
-        </form>
-
-        <form id="registerFormEl" autocomplete="on" style="display:none">
-          <div class="login-fields">
-            <input type="text"     class="form-input" id="regUsername"        placeholder="Pseudo"              autocomplete="username"     maxlength="30"  pattern="[a-zA-Z0-9_-]+" minlength="2" required>
-            <input type="email"    class="form-input" id="regEmail"           placeholder="Email"               autocomplete="email"        maxlength="254" required>
-            <input type="password" class="form-input" id="regPassword"        placeholder="Mot de passe"        autocomplete="new-password" maxlength="128" minlength="10" required>
-            <input type="password" class="form-input" id="regPasswordConfirm" placeholder="Confirmer le mot de passe" autocomplete="new-password" maxlength="128" minlength="10" required>
-          </div>
-          <!-- Honeypot anti-bot — invisible pour les humains -->
-          <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
-            <label>Website (laissez vide)</label>
-            <input type="text" id="regWebsite" name="website" tabindex="-1" autocomplete="off">
-          </div>
-          <!-- hCaptcha (Web3Forms partage la sitekey publique 50b2fe65-…) -->
-          <div class="h-captcha" data-captcha="true" data-sitekey="50b2fe65-b00b-4b9e-ad62-3ba471098be2" data-theme="dark" style="margin: 12px 0; display: flex; justify-content: center;"></div>
-          <div class="login-error" id="registerError"></div>
-          <button type="submit" class="login-btn" data-i18n="auth.create.btn">Créer le compte</button>
-          <div class="login-switch"><span id="showLogin" data-i18n="auth.back.login">← Retour à la connexion</span></div>
-        </form>
+  <!-- ─── Features ─────────────────────────────────────────────────────── -->
+  <section class="section" id="features">
+    <div class="section-eyebrow">Fonctionnalités</div>
+    <h2 class="section-title">Tout ce qu'un trader prop firm peut vouloir</h2>
+    <p class="section-sub">
+      Pas un journal générique adapté. Pas de bullshit. Conçu pour les contraintes spécifiques des comptes funded.
+    </p>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🎯</div>
+        <h3 class="feature-title">Spécialisé prop firms</h3>
+        <p class="feature-desc">
+          Trailing drawdown EOD précis pour Apex, Topstep, Lucid, Funding Pips. Static drawdown pour FTMO 2-Step.
+          Safety net, daily loss limit, max contracts intégrés.
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🤖</div>
+        <h3 class="feature-title">Analyse IA des charts</h3>
+        <p class="feature-desc">
+          Capture TradingView en Ctrl+V — Groq Vision extrait entry/SL/TP automatiquement.
+          Tu passes plus de temps à analyser qu'à recopier.
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📊</div>
+        <h3 class="feature-title">Multi-comptes natif</h3>
+        <p class="feature-desc">
+          Gère plusieurs comptes prop firms en parallèle (Apex 50k + FTMO 100k + …). Filtres par compte,
+          stats séparées, groupes pour répliquer un trade sur N comptes en 1 clic.
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📐</div>
+        <h3 class="feature-title">Calculs précis micro-futures</h3>
+        <p class="feature-desc">
+          POINT_VALUES corrects pour MES, MNQ, MGC, MCL, ES, NQ, GC, CL, ZN. CFD et forex aussi.
+          R:R, risk %, P&L net avec fees/spreads. Partial close (scale-out).
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📸</div>
+        <h3 class="feature-title">Screenshots à vie</h3>
+        <p class="feature-desc">
+          Ctrl+V ton chart au moment du trade → stocké à vie dans le cloud. Re-cliques sur le trade 6 mois plus tard,
+          le screenshot est toujours là. Compression auto, jamais d'images perdues.
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🇫🇷</div>
+        <h3 class="feature-title">Interface en français</h3>
+        <p class="feature-desc">
+          La quasi-totalité des journals trading sont en anglais. ZeldTrade est nativement bilingue FR/EN.
+          Documentation, support, légal — tout en français.
+        </p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ══ LOADER (après auth) ════════════════════════════════════════════════════ -->
-  <div id="loginLoader" class="lp-loader" style="display:none">
-    <div class="loader-logo">
-      <div class="logo-mark login-logo-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="5,6 19,6 5,18 19,18"/>
-        </svg>
-      </div>
-      <div class="login-title">ZeldTrade</div>
-      <div class="loader-user" id="loaderUser"></div>
-    </div>
-    <div class="loader-track">
-      <div class="loader-fill" id="loaderFill"></div>
-    </div>
-  </div>
-
-  <!-- SIDEBAR OVERLAY (mobile) -->
-  <div id="sidebarOverlay" class="sidebar-overlay"></div>
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="logo">
-      <div class="logo-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="5,6 19,6 5,18 19,18"/>
-        </svg>
-      </div>
-      <span class="logo-text">ZeldTrade</span>
-    </div>
-
-    <nav class="nav">
-      <div class="nav-item active" data-page="journal">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
-        <span data-i18n="nav.journal">Journal</span>
-      </div>
-      <div class="nav-item" data-page="dashboard">
-        <svg viewBox="0 0 24 24"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/><rect x="17" y="3" width="4" height="18"/></svg>
-        <span data-i18n="nav.dashboard">Dashboard</span>
-      </div>
-      <div class="nav-item" data-page="analytics">
-        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        <span data-i18n="nav.analytics">Analytics</span>
-      </div>
-      <div class="nav-item" data-page="goals">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-        <span data-i18n="nav.goals">Objectifs</span>
-      </div>
-      <div class="nav-item" data-page="calendar">
-        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span data-i18n="nav.calendar">Calendrier</span>
-      </div>
-      <div class="nav-item" data-page="outils">
-        <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        <span data-i18n="nav.outils">Outils</span>
-      </div>
-      <div class="nav-item" data-page="tutorial">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span data-i18n="nav.tutorial">Guide</span>
-      </div>
-      <div class="nav-divider"></div>
-      <div class="nav-item" data-page="settings">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span data-i18n="nav.settings">Réglages</span>
-      </div>
-      <div class="nav-item" data-page="changelog">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        <span data-i18n="nav.changelog">Mises à jour</span>
-      </div>
-      <div class="nav-item nav-item-offers" data-page="offers">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <span data-i18n="nav.offers">Offres</span>
-      </div>
-    </nav>
-
-    <div class="sidebar-stats">
-      <div class="stat-row">
-        <span class="stat-label" data-i18n="sidebar.pnl">P&L total</span>
-        <span class="stat-val" id="statPnL">—</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label" data-i18n="sidebar.wr">Win rate</span>
-        <span class="stat-val" id="statWR">—</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label" data-i18n="sidebar.trades">Trades</span>
-        <span class="stat-val" id="statCount">0</span>
-      </div>
-    </div>
-
-    <div class="user-pill">
-      <div class="user-pill-info">
-        <span class="user-pill-avatar" id="userAvatar">—</span>
-        <span class="user-pill-name" id="userPillName">—</span>
-        <span class="plan-badge" id="planBadge">BASIC</span>
-      </div>
-      <button class="user-logout-btn" id="btnLogout" title="Log out">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Upgrade CTA (Basic only — hidden by JS for Pro) -->
-    <div id="sidebarUpgrade" style="display:none" class="sidebar-upgrade">
-      <div class="sidebar-upgrade-text">Débloquez les analytics avancées, les comptes illimités et l'IA sans limite.</div>
-      <button class="sidebar-upgrade-btn" id="btnSidebarUpgrade">✦ Passer PRO</button>
-    </div>
-
-    <button class="new-trade-btn" id="btnNewTrade">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round">
-        <line x1="12" y1="5" x2="12" y2="19"/>
-        <line x1="5" y1="12" x2="19" y2="12"/>
-      </svg>
-      <span data-i18n="btn.newtrade">Nouveau trade</span>
-    </button>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main">
-    <div class="topbar">
-      <button class="hamburger-btn" id="btnSidebarToggle" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
-      <span class="topbar-title" id="topbarTitle">Journal</span>
-      <div class="search-wrap" id="searchWrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" id="searchInput" placeholder="Rechercher...">
-      </div>
-    </div>
-
-    <!-- JOURNAL -->
-    <div class="page active" id="page-journal">
-      <div class="journal-layout">
-        <div class="trade-list">
-          <div class="list-filters" id="listFilters">
-            <button class="chip active" data-filter="all" data-i18n="filter.all">Tous</button>
-            <button class="chip" data-filter="win" data-i18n="filter.win">Win</button>
-            <button class="chip" data-filter="loss" data-i18n="filter.loss">Loss</button>
-            <button class="chip" data-filter="be" data-i18n="filter.be">B/E</button>
-            <button class="chip" data-filter="open" data-i18n="filter.open">Open</button>
-          </div>
-          <div class="list-body" id="tradeList"></div>
-        </div>
-        <div class="detail-panel" id="detailPanel">
-          <div class="detail-empty">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
-            </svg>
-            <p data-i18n="ui.select.trade">Sélectionne un trade</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- DASHBOARD -->
-    <div class="page" id="page-dashboard">
-      <div class="dash-page" id="dashContent"></div>
-    </div>
-
-    <!-- GOALS -->
-    <div class="page" id="page-goals">
-      <div class="dash-page" id="goalsContent"></div>
-    </div>
-
-    <!-- CALENDAR -->
-    <div class="page" id="page-calendar">
-      <div class="dash-page" id="calContent"></div>
-    </div>
-
-    <!-- OUTILS -->
-    <div class="page" id="page-outils">
-      <div class="dash-page" id="outilsContent"></div>
-    </div>
-
-    <!-- ANALYTICS -->
-    <div class="page" id="page-analytics">
-      <div class="dash-page" id="analyticsContent"></div>
-    </div>
-
-    <!-- TUTORIAL -->
-    <div class="page" id="page-tutorial">
-      <div class="dash-page" style="max-width:780px;margin:0 auto">
-        <div class="page-title" data-i18n="page.tutorial">Guide ZeldTrade</div>
-        <p style="color:var(--muted);font-size:13px;margin-bottom:32px" data-i18n="tuto.subtitle">Tout ce qu'il faut savoir pour utiliser ZeldTrade en 5 étapes.</p>
-
-        <!-- ── STEP 1 ── -->
-        <div class="tuto-card">
-          <div class="tuto-step">1</div>
-          <div class="tuto-body">
-            <div class="tuto-title" data-i18n="tuto.s1.title">Créer un compte Prop Firm</div>
-            <p class="tuto-desc" data-i18n="tuto.s1.desc">Avant de saisir un trade, configure ton compte. ZeldTrade utilise ces infos pour calculer le drawdown, les frais et les règles.</p>
-            <div class="tuto-steps-list">
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s1.a" data-i18n-html="1">Va dans <b>Réglages → Mes Comptes</b></span></div>
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s1.b" data-i18n-html="1">Clique sur <b>+ Ajouter un compte</b></span></div>
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s1.c" data-i18n-html="1">Choisis un preset <b>Apex</b>, <b>Topstep</b>, <b>FTMO</b> ou <b>Lucid</b> et la taille du compte</span></div>
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s1.d" data-i18n-html="1">Donne-lui un nom (ex : <em>Apex 50K — Eval</em>) et enregistre</span></div>
-            </div>
-            <div class="tuto-tip" data-i18n="tuto.s1.tip">💡 Tu peux créer plusieurs comptes pour gérer plusieurs challenges en parallèle.</div>
-          </div>
-        </div>
-
-        <!-- ── STEP 2 ── -->
-        <div class="tuto-card">
-          <div class="tuto-step">2</div>
-          <div class="tuto-body">
-            <div class="tuto-title" data-i18n="tuto.s2.title">Saisir un nouveau trade</div>
-            <p class="tuto-desc" data-i18n="tuto.s2.desc">Chaque trade passe par un wizard en 3 étapes : direction → screenshot → détails.</p>
-            <div class="tuto-steps-list">
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s2.a" data-i18n-html="1">Clique sur <b>+ Nouveau trade</b> dans la sidebar (ou <kbd>⌘N</kbd>)</span></div>
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s2.b" data-i18n-html="1"><b>Étape 1</b> : choisis <b>LONG</b> ou <b>SHORT</b></span></div>
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s2.c" data-i18n-html="1"><b>Étape 2</b> : dépose ou colle (<kbd>⌘V</kbd>) un screenshot TradingView — l'IA détecte Entry / SL / TP automatiquement</span></div>
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s2.d" data-i18n-html="1"><b>Étape 3</b> : vérifie les niveaux, choisis l'instrument, le compte, le résultat et enregistre</span></div>
-            </div>
-            <div class="tuto-tip" data-i18n="tuto.s2.tip">💡 Sans screenshot, tu peux passer l'étape 2 et tout saisir manuellement à l'étape 3.</div>
-          </div>
-        </div>
-
-        <!-- ── STEP 3 ── -->
-        <div class="tuto-card">
-          <div class="tuto-step">3</div>
-          <div class="tuto-body">
-            <div class="tuto-title" data-i18n="tuto.s3.title">Activer l'analyse IA (Groq)</div>
-            <p class="tuto-desc" data-i18n="tuto.s3.desc">L'IA lit tes charts TradingView et remplit Entry, SL et TP automatiquement. Elle fonctionne avec les zones colorées dessinées sur le chart.</p>
-            <div class="tuto-steps-list">
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s3.a" data-i18n-html="1">Crée un compte gratuit sur <b>console.groq.com</b> et génère une clé API</span></div>
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s3.b" data-i18n-html="1">Dans <b>Réglages → Général</b>, colle ta clé Groq et sauvegarde</span></div>
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s3.c" data-i18n-html="1">Sur TradingView, dessine une <b>zone bleue</b> sur la zone d'entrée et une <b>zone/ligne rouge</b> pour le stop loss</span></div>
-              <div class="tuto-step-row"><span class="tuto-arrow">→</span><span data-i18n="tuto.s3.d" data-i18n-html="1">Fais un screenshot et colle-le dans ZeldTrade — l'IA aligne les zones avec les niveaux de prix à droite</span></div>
-            </div>
-            <div class="tuto-zones" style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-              <div class="tuto-zone-pill tuto-zone-blue" data-i18n="tuto.s3.zone.blue">Zone bleue = Entry</div>
-              <div class="tuto-zone-pill tuto-zone-red" data-i18n="tuto.s3.zone.red">Zone rouge = Stop Loss</div>
-              <div class="tuto-zone-pill tuto-zone-green" data-i18n="tuto.s3.zone.green">Label le plus haut = TP1</div>
-            </div>
-            <div class="tuto-tip" data-i18n="tuto.s3.tip">💡 Si l'IA se trompe, les valeurs sont éditables directement sur l'écran — clique sur le chiffre pour le corriger.</div>
-          </div>
-        </div>
-
-        <!-- ── STEP 4 ── -->
-        <div class="tuto-card">
-          <div class="tuto-step">4</div>
-          <div class="tuto-body">
-            <div class="tuto-title" data-i18n="tuto.s4.title">Suivre ses performances</div>
-            <p class="tuto-desc" data-i18n="tuto.s4.desc">ZeldTrade calcule tout automatiquement dès que tu enregistres tes trades.</p>
-            <div class="tuto-pages-grid">
-              <div class="tuto-page-card">
-                <div class="tuto-page-icon">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/><rect x="17" y="3" width="4" height="18"/></svg>
-                </div>
-                <div>
-                  <div class="tuto-page-name" data-i18n="tuto.s4.dash.name">Dashboard</div>
-                  <div class="tuto-page-desc" data-i18n="tuto.s4.dash.desc">Courbe equity, Max DD, Profit Factor, série en cours</div>
-                </div>
-              </div>
-              <div class="tuto-page-card">
-                <div class="tuto-page-icon">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                </div>
-                <div>
-                  <div class="tuto-page-name" data-i18n="tuto.s4.analytics.name">Analytics</div>
-                  <div class="tuto-page-desc" data-i18n="tuto.s4.analytics.desc">Win rate, P&amp;L par instrument, meilleure session</div>
-                </div>
-              </div>
-              <div class="tuto-page-card">
-                <div class="tuto-page-icon">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                </div>
-                <div>
-                  <div class="tuto-page-name" data-i18n="tuto.s4.goals.name">Objectifs</div>
-                  <div class="tuto-page-desc" data-i18n="tuto.s4.goals.desc">Suivi des règles Prop Firm : drawdown, daily loss, consistency</div>
-                </div>
-              </div>
-              <div class="tuto-page-card">
-                <div class="tuto-page-icon">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                </div>
-                <div>
-                  <div class="tuto-page-name" data-i18n="tuto.s4.cal.name">Calendrier</div>
-                  <div class="tuto-page-desc" data-i18n="tuto.s4.cal.desc">Vue mensuelle avec P&amp;L journalier et jours tradés</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── STEP 5 ── -->
-        <div class="tuto-card">
-          <div class="tuto-step">5</div>
-          <div class="tuto-body">
-            <div class="tuto-title" data-i18n="tuto.s5.title">Conseils pour bien démarrer</div>
-            <div class="tuto-steps-list">
-              <div class="tuto-step-row"><span class="tuto-check">✓</span><span data-i18n="tuto.s5.a" data-i18n-html="1">Configure <b>un compte par challenge</b> actif pour garder les stats séparées</span></div>
-              <div class="tuto-step-row"><span class="tuto-check">✓</span><span data-i18n="tuto.s5.b" data-i18n-html="1">Saisis chaque trade <b>juste après</b> sa clôture pendant que l'info est fraîche</span></div>
-              <div class="tuto-step-row"><span class="tuto-check">✓</span><span data-i18n="tuto.s5.c" data-i18n-html="1">Utilise le champ <b>Setup</b> pour taguer tes stratégies (FVG, OB, Breakout…) et analyser ce qui fonctionne</span></div>
-              <div class="tuto-step-row"><span class="tuto-check">✓</span><span data-i18n="tuto.s5.d" data-i18n-html="1">Vérifie <b>Objectifs</b> chaque matin pour voir où tu en es par rapport aux règles Prop Firm</span></div>
-              <div class="tuto-step-row"><span class="tuto-check">✓</span><span data-i18n="tuto.s5.e" data-i18n-html="1">Page <b>Outils</b> : calcule ta taille de position et ton risque avant d'entrer en trade</span></div>
-            </div>
-            <div class="tuto-cta">
-              <button class="btn-primary" id="btnTutoCta" data-i18n="tuto.cta">Commencer →</button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- OFFERS -->
-    <div class="page" id="page-offers">
-      <div class="dash-page" id="offersContent"></div>
-    </div>
-
-    <!-- CHANGELOG -->
-    <div class="page" id="page-changelog"></div>
-
-    <!-- SETTINGS -->
-    <div class="page" id="page-settings">
-      <div class="dash-page">
-        <div class="page-title" data-i18n="page.settings">Réglages</div>
-
-        <!-- Onglets settings -->
-        <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap">
-          <button class="chip active" data-settings-tab="accounts" data-i18n="set.tab.accounts">Mes Comptes</button>
-          <button class="chip" data-settings-tab="propfirms" data-i18n="set.tab.propfirms">Prop Firms</button>
-          <button class="chip" data-settings-tab="spreads" data-i18n="set.tab.spreads">Spreads</button>
-          <button class="chip" data-settings-tab="general" data-i18n="set.tab.general">Général</button>
-        </div>
-
-        <!-- Onglet : Mes Comptes -->
-        <div data-settings-pane="accounts">
-          <div id="settingsGroups"></div>
-          <div id="settingsMyAccounts"></div>
-        </div>
-
-        <!-- Onglet : Prop Firms -->
-        <div data-settings-pane="propfirms" style="display:none">
-          <div id="settingsPropFirms"></div>
-        </div>
-
-        <!-- Onglet : Spreads -->
-        <div data-settings-pane="spreads" style="display:none">
-          <div id="settingsSpreads"></div>
-        </div>
-
-        <!-- Onglet : Général -->
-        <div data-settings-pane="general" style="display:none">
-          <div class="settings-section">
-            <h3 data-i18n="set.ai">Intelligence Artificielle</h3>
-            <div class="settings-row" style="background:var(--green-dim);border-radius:8px;padding:10px 14px;flex-direction:column;align-items:flex-start;gap:6px">
-              <div style="font-size:13px;font-weight:600;color:var(--green)" data-i18n="set.groq.title">★ Groq Vision</div>
-              <span id="groqKeyStatus" style="font-size:12px;color:var(--muted)">Chargement…</span>
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <h3 data-i18n="set.lang">Langue</h3>
-            <div class="settings-row">
-              <label data-i18n="set.lang">Langue</label>
-              <button class="btn-ghost" id="btnToggleLang" data-i18n="set.lang.btn">Switch to English</button>
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <h3 data-i18n="set.data">Données</h3>
-            <div class="settings-row">
-              <label data-i18n="set.export">Exporter (JSON)</label>
-              <button class="btn-ghost" id="btnExport" data-i18n="set.export.btn">Exporter</button>
-            </div>
-            <div class="settings-row">
-              <label data-i18n="set.import">Importer (JSON)</label>
-              <button class="btn-ghost" id="btnImport" data-i18n="set.import.btn">Importer</button>
-            </div>
-            <input type="file" id="importFile" accept=".json" style="display:none">
-            <div class="settings-row">
-              <div>
-                <label data-i18n="set.import.csv">Importer CSV</label>
-                <p style="font-size:11px;color:var(--muted);margin-top:3px" data-i18n="set.import.csv.desc">Trades fermés depuis un fichier .csv (broker, NinjaTrader, etc.)</p>
-              </div>
-              <div style="display:flex;gap:8px">
-                <button class="btn-ghost" id="btnCsvTemplate" data-i18n="set.csv.template">Modèle</button>
-                <button class="btn-ghost" id="btnImportCsv" data-i18n="set.import.csv.btn">Importer</button>
-              </div>
-            </div>
-            <input type="file" id="importCsvFile" accept=".csv,.txt" style="display:none">
-            <div class="settings-row">
-              <label data-i18n="set.clear">Effacer toutes les données</label>
-              <button class="btn-ghost btn-danger" id="btnClearAll" data-i18n="set.clear.btn">Effacer</button>
-            </div>
-          </div>
-
-          <div class="settings-section" style="border-color:rgba(255,69,58,0.2)">
-            <h3 data-i18n="set.danger.zone" style="color:var(--red)">Zone de danger</h3>
-            <div class="settings-row">
-              <div>
-                <label data-i18n="set.delete.account">Supprimer mon compte</label>
-                <p style="font-size:11px;color:var(--muted);margin-top:3px" data-i18n="set.delete.account.desc">Supprime définitivement votre compte et toutes vos données.</p>
-              </div>
-              <button class="btn-ghost btn-danger" id="btnDeleteAccount" data-i18n="set.delete.account.btn">Supprimer mon compte</button>
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <h3 data-i18n="set.about">À propos</h3>
-            <div class="settings-row"><label data-i18n="set.version">Version</label><span style="color:var(--muted);font-size:12px">0.9.112</span></div>
-            <div class="settings-row"><label data-i18n="set.stack">Stack</label><span style="color:var(--muted);font-size:12px">HTML · CSS · JS vanilla</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- WIZARD TRADE ──────────────────────────────────────────────────────────── -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal trade-wizard">
-
-      <!-- En-tête fixe -->
-      <div class="wiz-header">
-        <div class="wiz-dots">
-          <div class="wdot active" id="wdot1"></div>
-          <div class="wdot-line" id="wline12"></div>
-          <div class="wdot" id="wdot2"></div>
-          <div class="wdot-line" id="wline23"></div>
-          <div class="wdot" id="wdot3"></div>
-        </div>
-        <button class="modal-close" id="btnWizClose">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
-
-      <!-- ── ÉTAPE 1 : Direction ──────────────────────────────────────────── -->
-      <div class="wiz-pane" id="wp1">
-        <div class="wiz-pane-title" data-i18n="wiz.step1">Direction du trade</div>
-        <div class="dir-choice">
-          <button class="dir-btn" id="wBtnLong">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
-            </svg>
-            LONG
-          </button>
-          <button class="dir-btn" id="wBtnShort">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
-            </svg>
-            SHORT
-          </button>
-        </div>
-      </div>
-
-      <!-- ── ÉTAPE 2 : Screenshot ────────────────────────────────────────── -->
-      <div class="wiz-pane" id="wp2" style="display:none">
-        <div class="wiz-pane-title">
-          Trade <span id="wDirBadge" class="wiz-dir-badge">LONG</span> <span data-i18n="wiz.step2.sfx">— capture d'écran</span>
-          <span id="groqStatusBadge" style="margin-left:auto;font-size:10px;color:var(--muted)"></span>
-        </div>
-
-        <div class="wizard-drop-zone" id="wDropZone">
-          <input type="file" id="wImageFile" accept="image/*" style="display:none">
-          <div id="wDropPrompt">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted)">
-              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-            </svg>
-            <span style="font-size:13px;color:var(--muted)" data-i18n="wiz.drop" data-i18n-html="1">Cliquer ou coller <kbd>⌘V</kbd></span>
-          </div>
-          <div id="wImagePreview" style="display:none;position:relative;width:100%">
-            <img id="wPreviewImg" alt="capture" style="max-width:100%;max-height:200px;border-radius:8px;display:block;margin:0 auto">
-            <button class="wi-clear-btn" id="wBtnClearImg">✕</button>
-          </div>
-        </div>
-
-        <!-- Complément texte si la lecture IA est imprécise -->
-        <div class="wiz-text-supplement">
-          <input class="form-input" type="text" id="wTextHint" maxlength="500"
-            placeholder="Optionnel : Entry 6804.5  SL 6808.50  TP 6795  60 lots">
-        </div>
-
-        <div id="wAnalysisStatus" class="wiz-analysis-status" style="display:none"></div>
-        <div id="wAnalysisResult" class="wiz-analysis-pills" style="display:none"></div>
-
-        <div class="wiz-nav">
-          <button class="btn-ghost" id="wBtnBack1" data-i18n="wiz.back">← Retour</button>
-          <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn-ghost" id="wBtnRetry" style="display:none" data-i18n="wiz.retry">↺ Réanalyser</button>
-            <button class="btn-primary" id="wBtnNext2" data-i18n="wiz.next">Continuer →</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── ÉTAPE 3 : Détails + calcul ─────────────────────────────────── -->
-      <div class="wiz-pane" id="wp3" style="display:none">
-        <div class="wiz-pane-title" data-i18n="wiz.confirm">Confirmer le trade</div>
-
-        <div class="form-grid form-grid-3" style="margin-bottom:12px">
-          <div class="form-field" style="grid-column:span 2">
-            <label class="form-label" data-i18n="wiz.date">Date du trade</label>
-            <div style="display:flex;gap:8px">
-              <input class="form-input" type="date" id="wTradeDate" style="flex:1;min-width:0">
-              <input class="form-input mono" type="time" id="wTradeTime" style="width:108px;flex-shrink:0" title="Heure du trade (UTC recommandé)">
-            </div>
-          </div>
-        </div>
-
-        <div class="form-grid form-grid-3" style="margin-bottom:6px">
-          <div class="form-field">
-            <label class="form-label">Instrument</label>
-            <select class="form-input" id="wInstr"></select>
-          </div>
-          <div class="form-field">
-            <label class="form-label">Lots</label>
-            <input class="form-input mono" type="number" id="wContracts" value="1" min="0.01" step="0.01">
-          </div>
-          <div class="form-field">
-            <label class="form-label" data-i18n="wiz.account.lbl">Compte</label>
-            <select class="form-input" id="wApex"><option value="">— Compte —</option></select>
-          </div>
-        </div>
-        <div style="margin-bottom:10px;font-size:11px;color:var(--text-muted)">
-          Spread : <span id="wSpreadInfo" style="color:var(--amber);font-weight:600">—</span>
-        </div>
-
-        <div class="form-grid form-grid-3 wiz-levels-grid" style="margin-bottom:12px">
-          <div class="form-field">
-            <label class="form-label" style="color:var(--blue)">Entry</label>
-            <input class="form-input mono" type="text" inputmode="decimal" id="wEntry" placeholder="ex: 7138.50" autocomplete="off">
-          </div>
-          <div class="form-field">
-            <label class="form-label" style="color:var(--red)">Stop Loss</label>
-            <input class="form-input mono" type="text" inputmode="decimal" id="wSL" placeholder="ex: 7130.25" autocomplete="off">
-          </div>
-          <div class="form-field">
-            <label class="form-label" style="color:var(--green)">TP1</label>
-            <input class="form-input mono" type="text" inputmode="decimal" id="wTP1" placeholder="ex: 7147.25" autocomplete="off">
-          </div>
-        </div>
-
-        <div class="live-calc" id="wLiveCalc" style="display:none">
-          <div class="lc-stat"><span class="lc-stat-label">R:R</span><span class="lc-stat-val" id="lcRR">—</span></div>
-          <div class="lc-stat"><span class="lc-stat-label">Risk $</span><span class="lc-stat-val" style="color:var(--red)" id="lcRisk">—</span></div>
-          <div class="lc-stat"><span class="lc-stat-label" id="lcRewardLabel">Reward $</span><span class="lc-stat-val" id="lcReward">—</span></div>
-          <div class="lc-stat"><span class="lc-stat-label">Risk %</span><span class="lc-stat-val" id="lcRiskPct">—</span></div>
-          <div class="lc-stat"><span class="lc-stat-label" data-i18n="wiz.fees">Frais A/R</span><span class="lc-stat-val" style="color:var(--amber)" id="lcFees">—</span></div>
-          <div class="lc-stat"><span class="lc-stat-label" id="lcNetLabel">Net reward</span><span class="lc-stat-val" id="lcNet">—</span></div>
-          <span id="lcApexWarn" style="display:none;font-size:11px;color:var(--red)">⚠ Hors limite</span>
-        </div>
-
-        <!-- Champs optionnels (dépliables) -->
-        <button class="wiz-opt-toggle" id="wOptToggle" data-i18n="wiz.setup">+ Setup / Notes / Résultat</button>
-        <div id="wOptFields" style="display:none;margin-top:10px">
-          <div class="form-grid form-grid-2" style="margin-bottom:8px">
-            <div class="form-field">
-              <label class="form-label">TP2 (opt.)</label>
-              <input class="form-input mono" type="text" inputmode="decimal" id="wTP2" placeholder="—" autocomplete="off">
-            </div>
-            <div class="form-field">
-              <label class="form-label">TP3 (opt.)</label>
-              <input class="form-input mono" type="text" inputmode="decimal" id="wTP3" placeholder="—" autocomplete="off">
-            </div>
-          </div>
-          <div class="form-field" style="margin-bottom:8px">
-            <label class="form-label">Setup</label>
-            <input class="form-input" type="text" id="wSetup" placeholder="ex: Breakout Order Block…">
-          </div>
-          <div class="form-field" style="margin-bottom:8px">
-            <label class="form-label">Notes</label>
-            <textarea class="form-input" id="wNotes" placeholder="Observations…" rows="2"></textarea>
-          </div>
-          <div class="form-grid form-grid-2">
-            <div class="form-field">
-              <label class="form-label" data-i18n="wiz.result">Résultat</label>
-              <select class="form-input" id="wOutcome">
-                <option value="open" data-i18n="wiz.outcome.open">Open</option><option value="win" data-i18n="wiz.outcome.win">Win</option>
-                <option value="loss" data-i18n="wiz.outcome.loss">Loss</option><option value="be" data-i18n="wiz.outcome.be">B/E</option>
-              </select>
-            </div>
-            <div class="form-field" id="wExitField" style="display:none">
-              <label class="form-label" data-i18n="wiz.exit.price">Prix de sortie</label>
-              <input class="form-input mono" type="text" inputmode="decimal" id="wExit" placeholder="0.00" autocomplete="off">
-            </div>
-          </div>
-
-          <!-- Sortie partielle (scale-out) — prendre X% à un prix, laisser le reste tourner -->
-          <div class="form-field" style="margin-top:10px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:rgba(124,58,237,0.04)">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
-              <input type="checkbox" id="wPartialEnable" style="cursor:pointer">
-              <span><strong>Sortie partielle</strong> (scale-out)</span>
-              <span style="color:var(--muted);font-size:11px;font-weight:400">— ex : prendre 50% à mi-chemin, reste à BE</span>
-            </label>
-            <div id="wPartialFields" style="display:none;margin-top:10px">
-              <div class="form-grid form-grid-2">
-                <div class="form-field">
-                  <label class="form-label">% pris en partial</label>
-                  <input class="form-input mono" type="number" min="1" max="99" step="1" id="wPartialPercent" placeholder="ex : 50" autocomplete="off">
-                </div>
-                <div class="form-field">
-                  <label class="form-label">Prix de la sortie partielle</label>
-                  <input class="form-input mono" type="number" step="any" id="wPartialPrice" placeholder="ex : 6810" autocomplete="off">
-                </div>
-              </div>
-              <div style="font-size:11px;color:var(--muted);margin-top:4px">Le reste sort au prix d'Exit ci-dessus (ou TP1 si encore Open).</div>
-            </div>
-          </div>
-
-          <!-- P&L manuel optionnel — override le P&L calculé -->
-          <div class="form-grid form-grid-2">
-            <div class="form-field">
-              <label class="form-label">P&L net réel ($) <span style="color:var(--muted);font-weight:400;font-size:11px">— optionnel</span></label>
-              <input class="form-input mono" type="number" step="0.01" id="wManualPnl" placeholder="ex : -125.50" autocomplete="off">
-              <div style="font-size:11px;color:var(--muted);margin-top:4px">Si rempli, remplace tous les calculs (y compris partial).</div>
-            </div>
-            <div class="form-field"></div>
-          </div>
-
-          <!-- Screenshot du trade (Ctrl+V image) — stocké à vie dans Firebase Storage -->
-          <div class="form-field" style="margin-top:14px">
-            <label class="form-label">Screenshot du trade <span style="color:var(--muted);font-weight:400;font-size:11px">— Ctrl+V pour coller</span></label>
-            <div id="wShotZone" tabindex="0" style="border:1px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;outline:none;transition:border-color 0.15s,background 0.15s">
-              <div id="wShotPlaceholder" style="color:var(--muted);font-size:13px">
-                <div style="font-size:24px;margin-bottom:6px">📸</div>
-                Clique ici puis <strong>Ctrl+V</strong> pour coller un screenshot<br>
-                <span style="font-size:11px">ou <a href="#" id="wShotFileLink" style="color:var(--purple-l);text-decoration:underline">choisir un fichier</a> (max 2 MB, JPG/PNG/WebP)</span>
-              </div>
-              <div id="wShotPreview" style="display:none">
-                <img id="wShotImg" alt="Screenshot" style="max-width:100%;max-height:200px;border-radius:6px;display:block;margin:0 auto 8px">
-                <div style="display:flex;gap:8px;justify-content:center;font-size:12px">
-                  <button type="button" id="wShotReplace" class="btn-ghost" style="padding:4px 12px;font-size:12px">Remplacer</button>
-                  <button type="button" id="wShotDelete" class="btn-ghost" style="padding:4px 12px;font-size:12px;color:var(--red)">Supprimer</button>
-                </div>
-              </div>
-              <input type="file" id="wShotFile" accept="image/jpeg,image/png,image/webp" style="display:none">
-            </div>
-            <div id="wShotStatus" style="font-size:11px;color:var(--muted);margin-top:4px;min-height:14px"></div>
-          </div>
-        </div>
-
-        <div class="wiz-nav wiz-nav-save">
-          <button class="btn-ghost" id="wBtnBack2" data-i18n="wiz.back">← Retour</button>
-          <button class="btn-primary" id="wBtnSave" data-i18n="wiz.save">Enregistrer</button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
-
-  <!-- Firebase SDK (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" integrity="sha384-ajMUFBUFMCyjh8uxJg6bkGcKe9RTolyjwbxB3yES0QQMenP3Oztj/W9vA2SJPcIh" crossorigin="anonymous"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js" integrity="sha384-HTm9DHQcJ0avSI5BWVmeKtm3+YULHbl/wgtLQaMGgYEZLQ8cINY+UF+ZsliUaBvK" crossorigin="anonymous"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js" integrity="sha384-xD1t9dGSVKobUztxDkv6xUI0H4AnFz0NxwlgDJJ7FDlblG9xxr1Z9iauCZuJYj6p" crossorigin="anonymous"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" integrity="sha384-XMIl1b2Ez9tKAM0R5q67/iLdfnlLBl9kfo40X5WMtCPb+3OLplrjnOxZTYCg1SKY" crossorigin="anonymous"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js" integrity="sha384-Cn425IPPqYFT0+lUg71+39dOh8zj/Ebpl97FkjUqrd+P37HLlysOYDvdw+N7tPuj" crossorigin="anonymous"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js" integrity="sha384-oFrOL1TiREYNET0lsYF3LjQuyi2gL7vhjH1X8vFr+umcmzAdPELopeSgbcrv4uRm" crossorigin="anonymous"></script>
-  <script src="js/firebase.js?v=0.9.112"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
-  <script src="js/i18n.js?v=0.9.112"></script>
-  <script src="js/auth.js?v=0.9.112"></script>
-  <script src="js/store.js?v=0.9.112"></script>
-  <script src="js/calc.js?v=0.9.112"></script>
-  <script src="js/modal.js?v=0.9.112"></script>
-  <script src="js/ui.js?v=0.9.112"></script>
-  <script src="js/pages/dashboard.js?v=0.9.112"></script>
-  <script src="js/pages/analytics.js?v=0.9.112"></script>
-  <script src="js/pages/settings.js?v=0.9.112"></script>
-  <script src="js/pages/goals.js?v=0.9.112"></script>
-  <script src="js/pages/calendar.js?v=0.9.112"></script>
-  <script src="js/pages/micro.js?v=0.9.112"></script>
-  <script src="js/pages/outils.js?v=0.9.112"></script>
-  <script src="js/pages/offers.js?v=0.9.112"></script>
-  <script src="js/pages/changelog.js?v=0.9.112"></script>
-  <script src="js/contact.js?v=0.9.112"></script>
-  <script src="js/app.js?v=0.9.112"></script>
-
-  <script src="js/app-bootstrap.js?v=0.9.112"></script>
-
-  <!-- hCaptcha (anti-bot pour les formulaires register et contact)
-       NOTE: pas de SRI car hCaptcha sert un bundle qui varie selon le User-Agent
-       (différents polyfills Promise/TextDecoder selon l'âge du navigateur).
-       Sécurité assurée par le CSP qui restreint le domaine et le HTTPS. -->
-  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
-
-  <!-- CONTACT WIDGET ──────────────────────────────────────────────────────── -->
-  <div id="contactWidget">
-    <button class="contact-bubble" id="contactBubble" title="Assistance">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
-        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/>
-        <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
-      </svg>
-      <span class="contact-bubble-dot"></span>
-    </button>
-    <div class="contact-panel" id="contactPanel">
-      <div class="contact-panel-header">
-        <div class="contact-panel-title">
-          <div class="contact-avatar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
-              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/>
-              <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
-            </svg>
-          </div>
-          <div>
-            <div class="contact-name">ZeldTrade Support</div>
-            <div class="contact-status"><span class="contact-online-dot"></span> Online</div>
-          </div>
-        </div>
-        <button class="contact-close" id="contactClose">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
-      <div class="contact-body">
-        <div class="contact-intro" data-i18n="contact.intro">Bonjour 👋 Une question ? Un bug ? On vous répond rapidement.</div>
-        <div class="contact-form" id="contactForm">
-          <div class="contact-field">
-            <label data-i18n="contact.name">Votre nom</label>
-            <input type="text" id="cName" placeholder="PRÉNOM" autocomplete="name" maxlength="100" />
-          </div>
-          <div class="contact-field">
-            <label data-i18n="contact.email">Votre email</label>
-            <input type="email" id="cEmail" placeholder="vous@email.com" autocomplete="email" maxlength="254" />
-          </div>
-          <div class="contact-field">
-            <label data-i18n="contact.msg">Message</label>
-            <textarea id="cMessage" rows="4" placeholder="Décrivez votre question ou problème…" maxlength="5000"></textarea>
-          </div>
-          <!-- Honeypot anti-bot — invisible pour les humains -->
-          <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
-            <label>Website (laissez vide)</label>
-            <input type="text" id="cWebsite" name="website" tabindex="-1" autocomplete="off">
-          </div>
-          <!-- hCaptcha — clé publique partagée par Web3Forms -->
-          <div class="h-captcha" data-captcha="true" data-sitekey="50b2fe65-b00b-4b9e-ad62-3ba471098be2" data-theme="dark" style="margin: 10px 0; display: flex; justify-content: center;"></div>
-          <div class="contact-error" id="cError"></div>
-          <button class="contact-send" id="cSend">
-            <span id="cSendLabel" data-i18n="contact.send">Envoyer</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </button>
-        </div>
-        <div class="contact-success" id="contactSuccess" style="display:none">
-          <div class="contact-success-icon">✓</div>
-          <div class="contact-success-title" data-i18n="contact.ok.title">Message envoyé !</div>
-          <div class="contact-success-sub" data-i18n="contact.ok.sub">On vous répond dans les plus brefs délais.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL SUPPRESSION COMPTE ─────────────────────────────────────────────── -->
-  <div id="deleteAccountOverlay" style="
-    display:none;position:fixed;inset:0;z-index:9100;
-    background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);
-    align-items:center;justify-content:center;
-  ">
-    <div style="
-      background:var(--bg2);border:1px solid rgba(255,69,58,0.25);
-      border-radius:14px;width:420px;max-width:calc(100vw - 40px);
-      padding:28px;box-shadow:0 40px 80px rgba(0,0,0,0.6);
-    ">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        <h2 style="font-size:16px;font-weight:700;color:var(--red)" data-i18n="del.modal.title">Supprimer votre compte</h2>
-      </div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6" data-i18n="del.modal.warn">
-        Cette action est irréversible. Tous vos trades, comptes et données seront définitivement supprimés.
+  <!-- ─── Pricing (stealth) ────────────────────────────────────────────── -->
+  <section class="section" id="pricing">
+    <div class="section-eyebrow">Accès</div>
+    <h2 class="section-title">Beta sur invitation</h2>
+    <p class="section-sub">
+      ZeldTrade est en accès anticipé. Les places sont limitées pour itérer proprement avec les premiers utilisateurs.
+    </p>
+    <div class="pricing">
+      <span class="pricing-tag">✦ Founding members</span>
+      <h3 class="pricing-title">Tu veux tester ?</h3>
+      <p class="pricing-text">
+        Contacte directement Aaron sur Discord ou par mail.<br>
+        Les 50 premiers bêta-testeurs bénéficient d'un statut <strong>Founding Member</strong> avec accès Pro à vie.
       </p>
-      <div class="form-field" style="margin-bottom:12px">
-        <label class="form-label" data-i18n="del.modal.email">Votre adresse email</label>
-        <input class="form-input" type="email" id="delEmail" autocomplete="email" placeholder="votre@email.com" maxlength="254">
-      </div>
-      <div class="form-field" style="margin-bottom:8px">
-        <label class="form-label" data-i18n="del.modal.pass">Votre mot de passe</label>
-        <input class="form-input" type="password" id="delPassword" autocomplete="current-password" placeholder="••••••••" maxlength="128">
-      </div>
-      <div id="delError" style="font-size:12px;color:var(--red);min-height:18px;margin-bottom:14px"></div>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn-ghost" id="delCancelBtn" data-i18n="del.modal.cancel">Annuler</button>
-        <button id="delConfirmBtn" style="
-          padding:7px 16px;border-radius:var(--r-sm);border:none;
-          background:var(--red);color:#fff;font-family:inherit;
-          font-size:13px;font-weight:700;cursor:pointer;
-          transition:opacity 0.15s;
-        " data-i18n="del.modal.confirm">Supprimer définitivement</button>
-      </div>
+      <a href="mailto:zeldtradepro@gmail.com?subject=Demande%20d%27acc%C3%A8s%20ZeldTrade" class="btn btn-primary">Demander un accès →</a>
     </div>
-  </div>
+  </section>
 
-  <!-- MODAL EFFACER TOUS LES TRADES ──────────────────────────────────────────── -->
-  <div id="clearTradesOverlay" style="
-    display:none;position:fixed;inset:0;z-index:9100;
-    background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);
-    align-items:center;justify-content:center;
-  ">
-    <div style="
-      background:var(--bg2);border:1px solid rgba(255,69,58,0.25);
-      border-radius:14px;width:420px;max-width:calc(100vw - 40px);
-      padding:28px;box-shadow:0 40px 80px rgba(0,0,0,0.6);
-    ">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        <h2 style="font-size:16px;font-weight:700;color:var(--red)">Effacer tous les trades</h2>
-      </div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">
-        Cette action est irréversible. Tous tes trades seront définitivement supprimés (comptes, paramètres, groupes conservés).
-      </p>
-      <div class="form-field" style="margin-bottom:8px">
-        <label class="form-label">Pour confirmer, tape <strong style="color:var(--red)">EFFACER</strong> ci-dessous</label>
-        <input class="form-input" type="text" id="clearTradesConfirmInput" placeholder="EFFACER" autocomplete="off" maxlength="20" spellcheck="false">
-      </div>
-      <div id="clearTradesError" style="font-size:12px;color:var(--red);min-height:18px;margin-bottom:14px"></div>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn-ghost" id="clearTradesCancelBtn">Annuler</button>
-        <button id="clearTradesConfirmBtn" style="
-          padding:7px 16px;border-radius:var(--r-sm);border:none;
-          background:var(--red);color:#fff;font-family:inherit;
-          font-size:13px;font-weight:700;cursor:pointer;
-          transition:opacity 0.15s;
-        ">Effacer définitivement</button>
-      </div>
+  <!-- ─── FAQ ──────────────────────────────────────────────────────────── -->
+  <section class="section" id="faq">
+    <div class="section-eyebrow">Questions fréquentes</div>
+    <h2 class="section-title">Tout ce qu'on me demande</h2>
+    <div class="faq">
+      <details class="faq-item">
+        <summary>C'est gratuit ?</summary>
+        <p>Le plan Basic est gratuit (1 compte, 1 analyse IA/jour). Le plan Pro débloque les analyses illimitées, multi-comptes, groupes, export PDF. Pendant la bêta, l'accès Pro est offert aux Founding Members.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Mes données sont sécurisées ?</summary>
+        <p>Oui. Données chiffrées at-rest (Firestore Google EU), accès par règles strictes (chaque user voit uniquement ses propres trades), MFA admin, audit logs immuables. Aucun tracking, aucun cookie tiers, RGPD compliant.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Ça marche avec quelle prop firm ?</summary>
+        <p>Apex Trader Funding, FTMO (1-Step + 2-Step), Topstep, Lucid Trading, Funding Pips. Les règles spécifiques (trailing EOD vs static, safety net, daily loss, max contracts) sont intégrées et configurables par compte.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Combien de comptes je peux gérer ?</summary>
+        <p>1 compte sur le plan Basic. Jusqu'à 100 comptes sur Pro, avec groupes pour répliquer un trade sur plusieurs comptes en 1 sauvegarde.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Je peux récupérer mes données si je quitte ?</summary>
+        <p>Oui — droit à la portabilité RGPD. Export JSON complet (trades + comptes + groupes + settings) disponible dans les Réglages. Tu peux aussi supprimer ton compte à tout moment (toutes les données sont alors effacées).</p>
+      </details>
+      <details class="faq-item">
+        <summary>Qui es-tu ?</summary>
+        <p>Aaron — micro-entrepreneur français, trader prop firm, dev solo. ZeldTrade est né du manque de bons outils français spécialisés prop firms. Tout est conçu et codé à la main, pas un copier-coller d'un SaaS US.</p>
+      </details>
     </div>
-  </div>
+  </section>
+
+  <!-- ─── Footer ───────────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="legal.html" class="footer-link">Mentions légales</a>
+      <a href="cgu.html" class="footer-link">CGU</a>
+      <a href="privacy.html" class="footer-link">Confidentialité</a>
+      <a href="mailto:zeldtradepro@gmail.com" class="footer-link">Contact</a>
+    </div>
+    <div>
+      © 2026 ZeldTrade — Aaron — <span style="color: var(--accent-l)">v0.9.113</span>
+    </div>
+  </footer>
+
 </body>
 </html>
