@@ -5,6 +5,17 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.115',
+      date: '2026-05-14',
+      time: '09:00',
+      tags: ['fix', 'ux'],
+      title: 'Landing : tailles ajustées (moins gigantesque sur grand écran)',
+      titleEn: 'Landing: sizes adjusted (less giant on large screens)',
+      items: [
+        { type: 'fix', text: 'Réduit les tailles du hero (52→42px), section titles (36→30px), body (16→15px), feature cards (17→15px), pricing (22→19px), FAQ (15→14px). Container 1100px → 960px. Sur grands écrans (2000px+) la landing paraissait disproportionnée — maintenant équilibrée.', textEn: 'Reduced hero sizes (52→42px), section titles (36→30px), body (16→15px), feature cards (17→15px), pricing (22→19px), FAQ (15→14px). Container 1100px → 960px. On large screens (2000px+) landing felt oversized — now balanced.' },
+      ],
+    },
+    {
       version: '0.9.114',
       date: '2026-05-14',
       time: '08:30',
