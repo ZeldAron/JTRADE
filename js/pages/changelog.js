@@ -5,6 +5,28 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.128',
+      date: '2026-05-14',
+      time: '21:30',
+      tags: ['privacy', 'docs'],
+      title: 'Privacy : refonte complète (Discord, Stripe, Cloud Storage, mineurs)',
+      titleEn: 'Privacy: full overhaul (Discord, Stripe, Cloud Storage, minors)',
+      items: [
+        { type: 'privacy', text: 'Refonte complète de `privacy.html` (politique de confidentialité) : ajout des sous-traitants manquants (Discord pour les notifs admin, Stripe Ireland pour les paiements à venir, Cloud Storage Firebase pour les screenshots, Google Fonts, GitHub Pages), section AuditLogs RGPD (TTL 1 an), section Mineurs (interdit <18 ans), section Conservation et suppression détaillée (soft-delete 30j). Date mise à jour : 14 mai 2026.', textEn: 'Full `privacy.html` (privacy policy) overhaul: added missing subprocessors (Discord for admin notifs, Stripe Ireland for upcoming payments, Cloud Storage Firebase for screenshots, Google Fonts, GitHub Pages), added AuditLogs GDPR section (1-year TTL), added Minors section (<18 prohibited), detailed Retention & Deletion section (30-day soft-delete). Date updated: May 14, 2026.' },
+        { type: 'privacy', text: 'Correction d\'une info inexacte : les captures d\'écran sont bien stockées dans Cloud Storage (`users/{uid}/screenshots/`) tant que le compte existe, et non "non conservées" comme indiqué précédemment. Documentation alignée avec la réalité du code.', textEn: 'Fixed inaccurate info: chart screenshots are actually stored in Cloud Storage (`users/{uid}/screenshots/`) for the lifetime of the account, not "not retained" as previously stated. Documentation aligned with code reality.' },
+        { type: 'docs', text: 'Mise à jour de `legal.html` : section sous-traitants principaux complétée (9 entrées vs 2 auparavant) avec renvoi vers `privacy.html` pour les détails. Dates `legal.html` et `cgu.html` mises à jour. Cleanup des commentaires "Web3Forms" résiduels dans `contact.js` et `app.html` (la migration a été faite en v0.9.123 mais les commentaires traînaient).', textEn: '`legal.html` updated: subprocessors section completed (9 entries vs 2 before) with link to `privacy.html` for details. `legal.html` and `cgu.html` dates updated. Cleanup of remaining "Web3Forms" comments in `contact.js` and `app.html` (migration was done in v0.9.123 but comments lingered).' },
+      ],
+      // ── Version user-facing simplifiée ────────────────────────────────────
+      user: {
+        title: 'Politique de confidentialité mise à jour',
+        items: [
+          { type: 'privacy', text: 'La politique de confidentialité a été complétée pour mentionner clairement toutes les entreprises tierces qui peuvent voir tes données (Firebase pour le compte, Discord pour les notifications admin, Stripe pour les paiements à venir, etc.).' },
+          { type: 'fix', text: 'Une info inexacte a été corrigée : les captures d\'écran que tu joins à tes trades sont bien conservées tant que ton compte existe. Elles sont privées et ne sont visibles que par toi.' },
+          { type: 'privacy', text: 'Tu peux à tout moment exporter toutes tes données (Réglages → Export JSON) ou demander la suppression de ton compte. La suppression efface définitivement tout après un délai de 30 jours.' },
+        ],
+      },
+    },
+    {
       version: '0.9.127',
       date: '2026-05-14',
       time: '21:00',

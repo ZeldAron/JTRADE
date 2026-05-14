@@ -1,5 +1,5 @@
 // ─── WIDGET CONTACT ───────────────────────────────────────────────────────────
-// Envoi via Cloud Function (clé Web3Forms côté serveur, jamais exposée client)
+// Envoi via Cloud Function vers Discord webhook (depuis v0.9.123, jamais exposé client)
 
 const Contact = (() => {
   let _lastSubmit = 0;
