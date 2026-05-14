@@ -46,10 +46,10 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
 
-/* ─── SIDEBAR ─── */
+/* ─── SIDEBAR ─── (v0.9.119 : réduction globale ~12% pour matcher la landing compacte) */
 .sidebar {
-  width: 220px;
-  min-width: 220px;
+  width: 200px;
+  min-width: 200px;
   background: linear-gradient(180deg, #141417 0%, #0d0d0f 100%);
   border-right: 1px solid var(--border);
   display: flex;
@@ -58,36 +58,36 @@ body {
 }
 
 .logo {
-  padding: 22px 20px 18px;
+  padding: 16px 16px 14px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .logo-mark {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   background: var(--accent);
-  border-radius: 7px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-.logo-mark svg { width: 14px; height: 14px; stroke: white; }
+.logo-mark svg { width: 12px; height: 12px; stroke: white; }
 
 .logo-text {
   font-family: 'Geist Mono', monospace;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--text);
 }
 
 .nav {
-  padding: 10px;
+  padding: 8px;
   flex: 1;
   overflow-y: auto;
 }
@@ -95,14 +95,14 @@ body {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 6px 9px;
   border-radius: var(--r-sm);
   cursor: pointer;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   transition: all 0.15s;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
   user-select: none;
   border: none;
   background: transparent;
@@ -111,8 +111,8 @@ body {
 }
 
 .nav-item svg {
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
   flex-shrink: 0;
   stroke: currentColor;
   fill: none;
@@ -125,33 +125,33 @@ body {
 .nav-item.active { color: var(--accent); background: rgba(10,132,255,0.12); font-weight: 500; }
 .nav-item.active svg { color: var(--accent); }
 
-.nav-divider { height: 1px; background: var(--border); margin: 8px 0; }
+.nav-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
 .sidebar-stats {
-  padding: 14px 16px;
+  padding: 10px 12px;
   border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
   flex-shrink: 0;
 }
 
 .stat-row { display: flex; justify-content: space-between; align-items: center; }
-.stat-label { font-size: 11px; color: var(--muted); }
-.stat-val { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500; }
+.stat-label { font-size: 10px; color: var(--muted); }
+.stat-val { font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 500; }
 
 .new-trade-btn {
-  margin: 12px 12px 16px;
+  margin: 8px 8px 12px;
   background: var(--accent);
   color: #fff;
   border: none;
   border-radius: var(--r-sm);
-  padding: 9px 0;
+  padding: 7px 0;
   font-family: 'Geist', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  width: calc(100% - 24px);
+  width: calc(100% - 16px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,36 +166,36 @@ body {
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
 .topbar {
-  height: 52px;
-  min-height: 52px;
+  height: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 18px;
   border-bottom: 1px solid var(--border);
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
-.topbar-title { font-size: 14px; font-weight: 500; flex: 1; }
+.topbar-title { font-size: 13px; font-weight: 500; flex: 1; }
 
 .search-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   background: var(--bg3);
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
-  padding: 6px 12px;
-  width: 220px;
+  padding: 5px 10px;
+  width: 200px;
 }
-.search-wrap svg { width: 13px; height: 13px; color: var(--muted); flex-shrink: 0; }
+.search-wrap svg { width: 12px; height: 12px; color: var(--muted); flex-shrink: 0; }
 .search-wrap input {
   background: none;
   border: none;
   outline: none;
   color: var(--text);
   font-family: 'Geist', sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   width: 100%;
 }
 .search-wrap input::placeholder { color: var(--muted); }
@@ -208,8 +208,8 @@ body {
 .journal-layout { display: flex; width: 100%; overflow: hidden; }
 
 .trade-list {
-  width: 310px;
-  min-width: 310px;
+  width: 280px;
+  min-width: 280px;
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -217,18 +217,18 @@ body {
 }
 
 .list-filters {
-  padding: 10px 10px 8px;
+  padding: 8px 10px 6px;
   display: flex;
-  gap: 5px;
+  gap: 4px;
   flex-wrap: wrap;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .chip {
-  padding: 4px 10px;
+  padding: 3px 9px;
   border-radius: 99px;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid var(--border);
@@ -243,12 +243,12 @@ body {
 .list-body { flex: 1; overflow-y: auto; }
 
 .trade-item {
-  padding: 11px 14px;
+  padding: 9px 12px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background 0.1s;
   display: flex;
-  gap: 10px;
+  gap: 9px;
   align-items: stretch;
 }
 .trade-item:hover { background: rgba(255,255,255,0.03); }
@@ -4016,10 +4016,23 @@ img { -webkit-user-drag: none; }
   max-width: 100%;
 }
 
-/* ─── Breakpoint 1280px : large tablet / 13" laptop ─── */
+/* ─── Breakpoint 1280px : large tablet / 13" laptop (v0.9.119 : plus serré) ─── */
 @media (max-width: 1280px) {
-  .sidebar { width: 200px; min-width: 200px; }
-  .nav-item { font-size: 13px; }
+  .sidebar { width: 180px; min-width: 180px; }
+  .logo { padding: 12px 14px 10px; gap: 8px; }
+  .logo-text { font-size: 12px; }
+  .nav-item { font-size: 11.5px; padding: 5px 8px; gap: 7px; }
+  .nav-item svg { width: 12px; height: 12px; }
+  .new-trade-btn { font-size: 11px; padding: 6px 0; margin: 6px 6px 10px; width: calc(100% - 12px); }
+  .sidebar-stats { padding: 8px 10px; gap: 4px; }
+  .stat-label, .stat-val { font-size: 9.5px; }
+  .topbar { height: 40px; min-height: 40px; padding: 0 14px; }
+  .topbar-title { font-size: 12px; }
+  .search-wrap { width: 180px; padding: 4px 9px; }
+  .search-wrap input { font-size: 11px; }
+  .trade-list { width: 260px; min-width: 260px; }
+  .chip { font-size: 10px; padding: 3px 8px; }
+  .trade-item { padding: 8px 11px; }
 }
 
 /* ─── Breakpoint 1024px : tablet portrait / petit laptop ─── */

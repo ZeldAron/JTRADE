@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.119',
+      date: '2026-05-14',
+      time: '14:30',
+      tags: ['ui', 'compact'],
+      title: 'App — réduction globale ~12% (sidebar, topbar, filtres, liste)',
+      titleEn: 'App — global ~12% size reduction (sidebar, topbar, filters, list)',
+      items: [
+        { type: 'feat', text: 'Toute l\'app est plus compacte pour matcher la nouvelle landing : sidebar 220→200px (180px <1280px), logo 15→13px, nav-items 13→12px (padding 8→6px), bouton "Nouveau trade" 13→12px, sidebar-stats 11→10px, topbar 52→44px (40px <1280px), filtres chips 11→10.5px, items du journal padding 11→9px.', textEn: 'Whole app is more compact to match the new landing: sidebar 220→200px (180px <1280px), logo 15→13px, nav-items 13→12px (padding 8→6px), "New trade" button 13→12px, sidebar-stats 11→10px, topbar 52→44px (40px <1280px), filter chips 11→10.5px, journal items padding 11→9px.' },
+        { type: 'feat', text: 'La media query <1280px (laptops 13-14") est désormais plus aggressive : sidebar 180px, fonts -1 cran de plus partout. Sur grand écran (>1280px) la version "compacte de base" s\'applique sans réduction additionnelle.', textEn: 'The <1280px media query (13-14" laptops) is now more aggressive: sidebar 180px, fonts -1 notch further everywhere. On large screens (>1280px) the "base compact" version applies without further reduction.' },
+        { type: 'fix', text: 'Aucune règle de touch-target (44px sur mobile <768px) n\'a été touchée — l\'accessibilité tactile reste préservée pour les utilisateurs mobiles / tablettes.', textEn: 'No touch-target rules (44px on mobile <768px) were touched — touch a11y remains preserved for mobile / tablet users.' },
+      ],
+    },
+    {
       version: '0.9.118',
       date: '2026-05-14',
       time: '13:30',
