@@ -37,6 +37,77 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.120 — Revert sizing v0.9.119 + fix i18n manquantes (dash.empty.*)
+
+**Type** : fix / revert
+**Fichiers** : `src/css/style.css` (revert), `src/js/i18n.js` (+6 clés × 2 langues), `src/app.html` (bump v=), `src/index.html` (footer), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.120
+
+### Contexte
+User envoie screenshot du Dashboard avec **les clés i18n brutes affichées en texte** (`dash.empty.title`, `dash.empty.text`, `dash.empty.step1/2/3`, `dash.empty.cta`). Ces clés sont utilisées dans `src/js/pages/dashboard.js` (U21 onboarding empty state, v0.9.111) avec `t('dash.empty.X') || 'fallback'` MAIS comme `t()` retourne la clé elle-même quand non trouvée (`(dict[lang] || dict.fr)[key] || (dict.fr[key] || key)` ligne 1145 de `i18n.js`), le `||` ne déclenche jamais. Résultat : les clés s'affichent en clair.
+
+User demande aussi de **revert les tailles** : « reveins à la version d'avant pour la grosseur avant que tu fasses les modifs pour le téléphone ».
+
+### Changements
+
+#### 1. Fix i18n (`src/js/i18n.js`)
+Ajout de 6 clés en FR + 6 en EN dans les dictionnaires `dict.fr` et `dict.en`, insérées après `'dash.in.progress'` pour grouper avec les autres `dash.*` :
+
+```js
+'dash.empty.title':  'Bienvenue sur ZeldTrade' / 'Welcome to ZeldTrade'
+'dash.empty.text':   'Ajoute ton premier trade pour voir tes stats...' / 'Add your first trade to see your stats...'
+'dash.empty.step1':  'Configure ton compte prop firm dans Réglages' / 'Set up your prop firm account in Settings'
+'dash.empty.step2':  'Clique sur « + Nouveau trade » en bas de la sidebar' / 'Click « + New trade » at the bottom of the sidebar'
+'dash.empty.step3':  'Suis le wizard 3 étapes (direction → screenshot → détails)' / 'Follow the 3-step wizard (direction → screenshot → details)'
+'dash.empty.cta':    '+ Créer mon premier trade' / '+ Create my first trade'
+```
+
+#### 2. Revert sizing (`src/css/style.css`)
+Toutes les valeurs modifiées en v0.9.119 reviennent aux valeurs d'avant :
+
+| Élément | v0.9.119 | v0.9.120 (revert) |
+|---|---|---|
+| `.sidebar` width | 200 / 180 (<1280) | **220** / 200 (<1280) |
+| `.logo` padding | `16 16 14` | **`22 20 18`** |
+| `.logo-mark` | 24×24 | **28×28** |
+| `.logo-text` | 13px | **15px** |
+| `.nav` padding | 8px | **10px** |
+| `.nav-item` font / padding | 12 / `6 9` | **13 / `8 10`** |
+| `.nav-item svg` | 13×13 | **15×15** |
+| `.sidebar-stats` | `10 12` | **`14 16`** |
+| `.stat-label`, `.stat-val` | 10px | **11px** |
+| `.new-trade-btn` | font 12 / pad 7 | **font 13 / pad 9** |
+| `.topbar` height | 44 / 40 (<1280) | **52** |
+| `.topbar-title` | 13px | **14px** |
+| `.search-wrap` width | 200 / 180 (<1280) | **220** |
+| `.trade-list` width | 280 / 260 (<1280) | **310** |
+| `.chip` font / padding | 10.5 / `3 9` | **11 / `4 10`** |
+| `.trade-item` padding | `9 12` | **`11 14`** |
+| Media <1280px | très aggressif | **minimaliste** (juste sidebar 200 + nav-item 13) |
+
+### Pourquoi ne pas avoir prévu le i18n manquant
+v0.9.111 (Pack A U21) a ajouté l'empty state dans `dashboard.js` avec des clés `t('dash.empty.X') || 'fallback'`. Pattern correct EN APPARENCE car le `||` semble protéger. Sauf que la fonction `t()` retourne `key` (le nom de la clé) en dernier recours, qui est truthy. Le `||` ne déclenche donc jamais.
+
+**Leçon** : à chaque nouvelle clé i18n ajoutée dans un fichier JS, ajouter immédiatement la clé dans `i18n.js`. Idéalement, écrire un test qui vérifie que toutes les `t('xxx')` du codebase ont une entrée dans `dict.fr` et `dict.en`.
+
+**Mitigation possible (future)** : modifier `t()` pour retourner empty string `''` au lieu de `key` quand introuvable, OU logger en console les clés manquantes en dev. À mettre dans TODO.
+
+### Impact
+- **UX** : l'empty state du Dashboard affiche enfin du français/anglais correct
+- **Sécu** : aucun impact. Les chaînes i18n sont littérales, statiques, échappées via `escHtml` quand passées dans innerHTML (`<h2>` reçoit du texte interpolé déjà)
+- **Compat** : sizing revient exactement à v0.9.118. Pas de régression sur le responsive ou le wizard
+
+### Bump version
+- `src/app.html` : `?v=0.9.119` → `?v=0.9.120` (21 refs)
+- `src/index.html` : footer
+- `src/js/pages/changelog.js` : entrée 0.9.120
+
+### À surveiller
+- Si user signale d'autres clés i18n raw → grep `t('` dans `src/js/**/*.js` et vérifier chaque clé existe dans `i18n.js`
+- Ajouter à TODO un test de cohérence i18n (script `node test/i18n-check.js` qui compare les `t('...')` aux clés du dict)
+
+---
+
 ## 2026-05-14 — v0.9.119 — App : réduction globale ~12 % (compact mode)
 
 **Type** : ui / compact

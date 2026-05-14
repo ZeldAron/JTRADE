@@ -317,6 +317,13 @@ const i18n = (() => {
       'dash.group':        'groupe',
       'dash.all.trades':   'tous trades',
       'dash.in.progress':  'en cours',
+      // Dashboard empty state (onboarding 3 étapes — v0.9.111 U21)
+      'dash.empty.title':  'Bienvenue sur ZeldTrade',
+      'dash.empty.text':   'Ajoute ton premier trade pour voir tes stats, ta courbe d\'équité, et tes performances par compte.',
+      'dash.empty.step1':  'Configure ton compte prop firm dans Réglages',
+      'dash.empty.step2':  'Clique sur « + Nouveau trade » en bas de la sidebar',
+      'dash.empty.step3':  'Suis le wizard 3 étapes (direction → screenshot → détails)',
+      'dash.empty.cta':    '+ Créer mon premier trade',
       // Analytics
       'analytics.no.data':       'Aucune donnée — ajoute des trades.',
       'analytics.setup.perf':    'Performance par setup',
@@ -876,6 +883,13 @@ const i18n = (() => {
       'dash.group':        'group',
       'dash.all.trades':   'all trades',
       'dash.in.progress':  'in progress',
+      // Dashboard empty state (onboarding 3 steps)
+      'dash.empty.title':  'Welcome to ZeldTrade',
+      'dash.empty.text':   'Add your first trade to see your stats, equity curve, and performance by account.',
+      'dash.empty.step1':  'Set up your prop firm account in Settings',
+      'dash.empty.step2':  'Click « + New trade » at the bottom of the sidebar',
+      'dash.empty.step3':  'Follow the 3-step wizard (direction → screenshot → details)',
+      'dash.empty.cta':    '+ Create my first trade',
       // Analytics
       'analytics.no.data':       'No data — add some trades.',
       'analytics.setup.perf':    'Performance by setup',

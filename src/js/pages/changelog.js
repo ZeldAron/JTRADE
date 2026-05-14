@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.120',
+      date: '2026-05-14',
+      time: '15:30',
+      tags: ['fix', 'revert'],
+      title: 'Revert sizing v0.9.119 + fix i18n manquantes (dash.empty.*)',
+      titleEn: 'Revert v0.9.119 sizing + fix missing i18n keys (dash.empty.*)',
+      items: [
+        { type: 'fix', text: 'Ajout des 6 clés i18n manquantes du dashboard empty state (dash.empty.title / text / step1 / step2 / step3 / cta) en français et anglais. Avant : la page Dashboard affichait littéralement "dash.empty.title" au lieu du texte traduit.', textEn: 'Added the 6 missing i18n keys for the dashboard empty state (dash.empty.title / text / step1 / step2 / step3 / cta) in French and English. Before: Dashboard literally displayed "dash.empty.title" instead of translated text.' },
+        { type: 'revert', text: 'Revert des réductions de tailles de v0.9.119 (compact mode). Sidebar retourne à 220px, logo à 15px, nav-items à 13px, topbar à 52px, chips à 11px, trade-list à 310px. La media query <1280px revient à sa version minimaliste (juste sidebar 200px + nav-item 13px).', textEn: 'Reverted size reductions from v0.9.119 (compact mode). Sidebar back to 220px, logo to 15px, nav-items to 13px, topbar to 52px, chips to 11px, trade-list to 310px. The <1280px media query is back to its minimal version (just sidebar 200px + nav-item 13px).' },
+      ],
+    },
+    {
       version: '0.9.119',
       date: '2026-05-14',
       time: '14:30',
