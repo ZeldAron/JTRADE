@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.133',
+      date: '2026-05-14',
+      time: '23:50',
+      tags: ['fix'],
+      title: 'Fix Export PDF : bouton restait masqué si plan Pro pas encore chargé',
+      titleEn: 'Fix Export PDF: button stayed hidden if Pro plan not yet loaded',
+      items: [
+        { type: 'fix', text: 'Le check `Store.isPro()` qui contrôle la visibilité du bouton "Exporter PDF" était fait UNE SEULE FOIS au first render Settings (dans le bloc `if (_settingsBound) return`). Si Firestore n\'avait pas encore chargé le doc plan à ce moment, `isPro()` retournait false → bouton masqué pour toujours, même après chargement du plan. Fix : déplacer le check en haut de `initSettings()` pour qu\'il s\'exécute à chaque render (cohérent avec ce que fait déjà la logique des chips Basic/Pro).', textEn: 'The `Store.isPro()` check controlling the "Export PDF" button visibility was done ONCE at first Settings render (in the `if (_settingsBound) return` block). If Firestore hadn\'t loaded the plan doc yet at that point, `isPro()` returned false → button hidden forever, even after plan loaded. Fix: move the check to the top of `initSettings()` so it runs on every render (consistent with the existing Basic/Pro chips logic).' },
+      ],
+      // Bug fix, pas user-facing en termes de feature → pas de champ `user:`
+    },
+    {
       version: '0.9.132',
       date: '2026-05-14',
       time: '23:30',

@@ -630,6 +630,13 @@
     try { renderPropFirmsSettings(); }  catch(e) { console.error('[Settings] propfirms error:', e); }
     try { renderSpreadsSettings(); }    catch(e) { console.error('[Settings] spreads error:', e); }
 
+    // v0.9.133 : refresh visibilité du bouton Export PDF à CHAQUE render (pas
+    // seulement au premier bind) — sinon si Store.isPro() retourne false au
+    // first render (plan pas encore chargé depuis Firestore), le bouton reste
+    // masqué pour toujours.
+    const _rowPdf = document.getElementById('rowExportPdf');
+    if (_rowPdf) _rowPdf.style.display = (Store.isPro && Store.isPro()) ? '' : 'none';
+
     if (_settingsBound) {
       updateGroqStatus();
       return;
@@ -666,11 +673,9 @@
     });
 
     // ── Export PDF (Pro only) ────────────────────────────────────────────────
-    // Masque la ligne entière si l'user n'est pas Pro (au lieu de juste désactiver
-    // le bouton — UX plus propre).
-    const rowExportPdf = $('rowExportPdf');
-    if (rowExportPdf) rowExportPdf.style.display = Store.isPro() ? '' : 'none';
-
+    // Note : la visibilité de #rowExportPdf est gérée en haut de initSettings()
+    // (à chaque render, pour éviter l'effet "masqué pour toujours" si isPro()
+    // retournait false au first render avant chargement du plan).
     $('btnExportPdf')?.addEventListener('click', () => {
       // Double check Pro (sécurité — même si bouton masqué, possible via DevTools)
       if (!Store.isPro()) {

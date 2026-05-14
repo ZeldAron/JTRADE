@@ -37,6 +37,57 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.133 — Fix Export PDF : check isPro() à chaque render
+
+**Type** : fix
+**Fichiers** : `src/js/pages/settings.js`, `src/app.html` (bump v=), `src/index.html` (footer), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.133
+
+### Bug
+User signale : son compte admin **est bien Pro** mais le bouton "Exporter PDF" dans Réglages → Général → Données n'apparaît pas. Investigation : le check `rowExportPdf.style.display = Store.isPro() ? '' : 'none'` était placé APRÈS `_settingsBound = true` → exécuté UNE SEULE FOIS au first render Settings.
+
+### Cause racine
+Quand l'user navigue dans l'app au démarrage :
+1. App boot → `Auth.onAuthReady(user)` confirme la session
+2. Store charge depuis Firestore : `users/{uid}/data/plan`, `trades`, etc. — c'est ASYNCHRONE
+3. L'user clique sur "Réglages" très vite après le boot → `initSettings()` s'exécute
+4. À cet instant, `Store.isPro()` retourne `false` car le doc plan n'est pas encore arrivé
+5. Mon check `_settingsBound = true` est posé → ligne masquée pour TOUJOURS
+6. Même après que le plan soit chargé et que `isPro()` retourne `true`, le bouton reste invisible
+
+### Fix
+Déplacer le check **avant** le `if (_settingsBound) return` :
+```js
+UI.initSettings = function () {
+  try { renderGroupsSettings(); } ...
+  try { renderSpreadsSettings(); } ...
+
+  // ← Check ici, exécuté à CHAQUE render Settings
+  const _rowPdf = document.getElementById('rowExportPdf');
+  if (_rowPdf) _rowPdf.style.display = (Store.isPro && Store.isPro()) ? '' : 'none';
+
+  if (_settingsBound) { updateGroqStatus(); return; }
+  _settingsBound = true;
+  ...
+};
+```
+
+Maintenant à chaque fois que l'user clique sur Réglages, la visibilité du bouton est re-calculée. Pattern cohérent avec le rendu Basic/Pro chips qui font la même chose (visible dans `renderMyAccountsSettings`).
+
+### Garde Pro toujours intacte
+Le `Store.isPro()` est re-checké :
+1. Au render Settings (visibilité)
+2. Au click du bouton (toast d'erreur si bypass DevTools)
+3. Dans `ExportPDF.generate()` (exception thrown si bypass)
+
+→ 3 niveaux de défense en profondeur.
+
+### Bump version
+- `src/app.html` : `?v=0.9.132` → `?v=0.9.133` (22 refs)
+- `src/index.html` : footer
+
+---
+
 ## 2026-05-14 — v0.9.132 — F3 : Export PDF des trades (Pro only)
 
 **Type** : feat / pro
