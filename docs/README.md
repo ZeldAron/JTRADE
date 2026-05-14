@@ -3,7 +3,8 @@
 > **Trading journal SPA** pour traders prop firms (Apex, FTMO, Topstep, Lucid, Funding Pips).
 > Stack vanilla JS + Firebase + Groq Vision. Modèle privé / recrutement manuel.
 
-**Version actuelle** : 0.9.111 (14 mai 2026)
+**Version actuelle** : 0.9.112 (14 mai 2026)
+**Landing page publique** : https://zeldaron.github.io/zeldtrade/landing.html
 **Admin** : zeldtradepro@gmail.com (MFA TOTP activé)
 **URL prod** : https://zeldaron.github.io/zeldtrade/
 **URL admin** : https://zeldaron.github.io/zeldtrade/admin.html
@@ -66,6 +67,7 @@ JTRADE/
 ├── src/                          # site déployé sur GitHub Pages
 │   ├── index.html                # app principale (SPA)
 │   ├── admin.html                # console admin (page séparée)
+│   ├── landing.html              # page d'accueil publique (marketing)
 │   ├── payment.html              # placeholder (Stripe stealth)
 │   ├── legal.html, cgu.html, privacy.html  # mentions légales
 │   ├── css/style.css

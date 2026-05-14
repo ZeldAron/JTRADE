@@ -37,6 +37,56 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.112 — Landing page v1 (F4)
+
+**Type** : feat
+**Fichiers** : `src/landing.html` (nouveau)
+
+### Contexte
+User demande F4 — page d'accueil publique. Spec validée du hero : « Un journal de trading complet fait par un trader pour les traders ». v1 minimaliste mais propre, déployable en l'état.
+
+### Changements
+- Nouveau fichier `src/landing.html` (770 lignes — HTML + CSS inline auto-contenu)
+- 100% statique : aucun JS Firebase, aucun script externe, CSS inline (pas de dépendance à style.css pour isoler la page)
+- CSP ultra-stricte : `default-src 'self'; script-src 'self'; connect-src 'none'; frame-src 'none'`
+- Sections : nav sticky → hero + badge bêta + 2 CTAs → 6 features → pricing stealth → FAQ 6 questions → footer
+- Design cohérent app (palette dark, accent violet, font-family système)
+- Responsive : breakpoint 640px (CTAs en stack vertical, nav allégée)
+- Liens internes : index.html (app), legal.html, cgu.html, privacy.html — déjà présents dans /src/
+- Mailto direct vers zeldtradepro@gmail.com pour demande d'accès
+
+### Analyse sécurité
+
+| Vecteur | Mitigation |
+|---|---|
+| XSS via params URL | Aucun JS dynamique, aucune lecture de query/hash params |
+| Tracking pixels | `connect-src 'none'` empêche toute requête externe |
+| Clickjacking | `X-Frame-Options DENY` + `frame-ancestors 'none'` |
+| Mailto malicieux | mailto fixe vers zeldtradepro@gmail.com hardcoded |
+| Liens externes opener | Pas de `target="_blank"` externes (uniquement liens internes /src/*.html) |
+| Police externe / fonts | font-family système uniquement, pas de Google Fonts |
+| Cookies tiers | Aucun JS, donc aucun cookie créé par cette page |
+| SEO leak (mention v0.9.112) | Footer affiche version — acceptable, déjà publique |
+
+### Décisions design
+- **Pas de routing automatique** entre landing.html et index.html dans cette v1 (pour ne pas casser index.html). À ajouter en v2 : si user loggé sur index → laisser ; si non loggé → optional redirect to landing.
+- **Pas de screenshots** dans v1 (placeholder design suggéré par sections vides). À ajouter quand on aura de vrais screens propres de l'app.
+- **Mailto plutôt que form contact** : évite la dépendance à `sendContactMessage` CF et au captcha. Direct = simple.
+
+### Déploiement
+- v0.9.112 push GitHub Pages
+- Accessible : https://zeldaron.github.io/zeldtrade/landing.html
+- Note : pas encore branché à la racine — user peut soit linker manuellement depuis ses canaux de promo, soit configurer GitHub Pages pour servir landing.html en page d'index.
+
+### Évolutions v2 prévues
+- Screenshots réels de l'app (Journal, Dashboard, Wizard) lazy-loaded
+- Témoignages bêta-testeurs (quand récoltés)
+- Routing auto : non-loggé → landing, loggé → app
+- Branding plus poussé (logo SVG custom, palette affinée)
+- Animations subtles (fade-in scroll, hover sur features cards)
+
+---
+
 ## 2026-05-14 — v0.9.111 — Pack A : 5 quick wins UX (U34+U21+U24+U20+U27)
 
 **Type** : feat + ux

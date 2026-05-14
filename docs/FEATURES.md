@@ -349,6 +349,7 @@ Redondant avec `frame-ancestors 'none'` + `X-Frame-Options DENY`. Defense-in-dep
 - **v0.9.109** : Touch targets ≥ 44×44 px sur mobile (a11y WCAG) + inputs 16px (anti zoom iOS)
 - **v0.9.110** : Pack C robustesse data (date floor 1990, garde-fou activatePro, double-escape JSON fix, race compression cancel, paste handlers unifiés, initForUser awaitable)
 - **v0.9.111** : Pack A UX (dashboard empty state, compteur recherche, bouton Aujourd'hui calendrier, hint groupe wizard avec count, scroll-to-top auto)
+- **v0.9.112** : Landing page v1 publique (`landing.html`) avec hero "Un journal de trading complet fait par un trader pour les traders", 6 features, pricing stealth, FAQ, footer. 100% statique, CSP ultra-stricte.
 
 ---
 
@@ -359,7 +360,8 @@ Redondant avec `frame-ancestors 'none'` + `X-Frame-Options DENY`. Defense-in-dep
 | **F1** Type de trading au signup (Fonds propres / Prop firm, multi-choix) | Specs validées | User précisera UX exact avant impl |
 | **F2** Crypto dans F1 | Futur | Après F1 stable |
 | **F3** Export PDF des trades (Pro only) | Planifié | jsPDF + html2canvas côté client |
-| **F4** Landing page propre | Planifié | Dark, responsive, sections hero/features/pricing |
+| ~~**F4 v1** Landing page~~ | ✅ Déployée v0.9.112 (2026-05-14) | `landing.html` — hero "fait par un trader pour les traders" |
+| **F4 v2** Landing finitions | Planifié | Screenshots réels, témoignages, routing auto, logo custom |
 | Discord webhooks (remplacer Web3Forms) | En attente | User a serveur Discord setup |
 | Stripe activation complète | Backend prêt | User doit setup Stripe Dashboard + secrets |
 | App Check réactivé | Bloqué | Diagnostic reCAPTCHA Enterprise key type |
