@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.129',
+      date: '2026-05-14',
+      time: '22:00',
+      tags: ['infra', 'security'],
+      title: 'Error reporting CFs → Discord #dev-logs (Sentry-lite)',
+      titleEn: 'Error reporting CFs → Discord #dev-logs (Sentry-lite)',
+      items: [
+        { type: 'infra', text: 'Nouveau canal admin `#dev-logs` reçoit en temps réel un embed rouge à chaque erreur serveur dans une Cloud Function (TypeError, ReferenceError, network down, Firestore quota, etc.). Format : nom de la CF, message d\'erreur tronqué (1800 chars), 6 premières lignes de stack trace, code HTTP, UID concerné, région.', textEn: 'New admin channel `#dev-logs` receives a red embed in real-time for each server error in a Cloud Function (TypeError, ReferenceError, network down, Firestore quota, etc.). Format: CF name, truncated error message (1800 chars), top 6 stack lines, HTTP code, affected UID, region.' },
+        { type: 'feat', text: 'Helper `_reportError(ctx)` + wrapper `_wrapCF(name, handler)` ajoutés dans `functions/index.js`. 9 CFs critiques wrappées : analyzeChart, sendContactMessage, notifyNewSignup, deleteUserAccount, generateProCode, revokeProCode, createCheckoutSession, stripeWebhook, cleanupOrphanUserEmails.', textEn: '`_reportError(ctx)` helper + `_wrapCF(name, handler)` wrapper added in `functions/index.js`. 9 critical CFs wrapped: analyzeChart, sendContactMessage, notifyNewSignup, deleteUserAccount, generateProCode, revokeProCode, createCheckoutSession, stripeWebhook, cleanupOrphanUserEmails.' },
+        { type: 'security', text: 'Sécurité : les `HttpsError` (erreurs métier client : `invalid-argument`, `permission-denied`, `failed-precondition`, etc.) NE sont PAS reportées — sinon le canal serait spammé par des validations user normales. Aucune PII : juste nom CF + code + UID + message tronqué + 6 lignes de stack. Le helper `_reportError` est lui-même dans un try/catch — il ne peut JAMAIS faire échouer une CF.', textEn: 'Security: `HttpsError` (client business errors: `invalid-argument`, `permission-denied`, `failed-precondition`, etc.) are NOT reported — otherwise the channel would be spammed by normal user validations. No PII: only CF name + code + UID + truncated message + 6 stack lines. The `_reportError` helper is itself wrapped in try/catch — it can NEVER fail a CF.' },
+      ],
+      // Cette mise à jour n'est PAS user-facing (infra admin uniquement) → pas de champ `user:`
+    },
+    {
       version: '0.9.128',
       date: '2026-05-14',
       time: '21:30',
