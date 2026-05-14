@@ -5,6 +5,17 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.113',
+      date: '2026-05-14',
+      time: '02:30',
+      tags: ['feat'],
+      title: 'Landing page devient la page d\'accueil principale',
+      titleEn: 'Landing page becomes the main homepage',
+      items: [
+        { type: 'feat', text: 'Renommage : `landing.html` → `index.html` (page d\'accueil publique), ancienne `index.html` (app) → `app.html`. Visiter `zeldaron.github.io/zeldtrade/` affiche maintenant la landing. L\'app reste accessible via `/app.html`. Tous les liens internes (legal, cgu, privacy, payment, mentions retour) pointent vers la landing comme home page. Routing auto (loggé → app, non-loggé → landing) prévu pour la v2.', textEn: 'Rename: `landing.html` → `index.html` (public homepage), former `index.html` (app) → `app.html`. Visiting `zeldaron.github.io/zeldtrade/` now shows the landing. App still accessible at `/app.html`. All internal links (legal, cgu, privacy, payment, return mentions) point to the landing as home. Auto routing (logged → app, not logged → landing) planned for v2.' },
+      ],
+    },
+    {
       version: '0.9.112',
       date: '2026-05-14',
       time: '02:00',
