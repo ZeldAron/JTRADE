@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.136',
+      date: '2026-05-15',
+      time: '00:50',
+      tags: ['fix'],
+      title: 'Export PDF : fix champs trades (date / pnl / rr / compte)',
+      titleEn: 'Export PDF: fix trade fields (date / pnl / rr / account)',
+      items: [
+        { type: 'fix', text: 'Le module ExportPDF utilisait `t.timestamp`, `t.netPnl`, `t.rr` et `t.account` — champs INEXISTANTS dans le schéma trade ZeldTrade. Résultat : tous les trades étaient filtrés OUT (timestamp = 0 toujours < startMs) → PDF vide. Fix : utiliser `t.date` (string ISO), `Calc.trade(t).netPnl` et `Calc.trade(t).rr` (P&L calculé dynamiquement), et `t.apex` (le nom du compte est stocké dans ce champ libre). Le sélecteur compte de la modal résoud maintenant accountId → accountName via `Store.getMyAccountById(id).name`.', textEn: 'The ExportPDF module used `t.timestamp`, `t.netPnl`, `t.rr` and `t.account` — fields that DON\'T EXIST in the ZeldTrade trade schema. Result: all trades were filtered OUT (timestamp = 0 always < startMs) → empty PDF. Fix: use `t.date` (ISO string), `Calc.trade(t).netPnl` and `Calc.trade(t).rr` (dynamically computed P&L), and `t.apex` (account name stored in this free field). The modal account selector now resolves accountId → accountName via `Store.getMyAccountById(id).name`.' },
+        { type: 'fix', text: 'Remplacement du caractère `→` par "du... au..." dans le label période — jsPDF helvetica par défaut ne supporte pas les caractères Unicode > 255 et affichait `!\'` à la place.', textEn: 'Replaced the `→` character with "du... au..." in the period label — default jsPDF helvetica doesn\'t support Unicode > 255 chars and was rendering `!\'` instead.' },
+      ],
+    },
+    {
       version: '0.9.135',
       date: '2026-05-15',
       time: '00:30',
