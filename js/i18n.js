@@ -81,14 +81,20 @@ const i18n = (() => {
       'btn.save':       'Sauvegarder',
       'btn.cancel':     'Annuler',
       // Confirm dialogs
+      'confirm.trade.title':  'Supprimer le trade',
       'confirm.trade.delete': 'Supprimer ce trade ?',
+      'confirm.acc.title':    'Supprimer le compte',
       'confirm.acc.delete':   'Supprimer ce compte ?',
+      'confirm.grp.title':    'Supprimer le groupe',
       'confirm.grp.delete':   'Supprimer ce groupe ?',
       // Units
-      'ui.day':    'jour',
-      'ui.days':   'jours',
-      'ui.trade':  'trade',
-      'ui.trades': 'trades',
+      'ui.day':        'jour',
+      'ui.days':       'jours',
+      'ui.trade':      'trade',
+      'ui.trades':     'trades',
+      'ui.trades.lbl': 'trades',
+      // Calendar
+      'cal.today': 'Aujourd\'hui',
       // Settings
       'set.lang':         'Langue',
       'set.lang.btn':     'Switch to English',
@@ -647,14 +653,20 @@ const i18n = (() => {
       'btn.save':       'Save',
       'btn.cancel':     'Cancel',
       // Confirm dialogs
+      'confirm.trade.title':  'Delete trade',
       'confirm.trade.delete': 'Delete this trade?',
+      'confirm.acc.title':    'Delete account',
       'confirm.acc.delete':   'Delete this account?',
+      'confirm.grp.title':    'Delete group',
       'confirm.grp.delete':   'Delete this group?',
       // Units
-      'ui.day':    'day',
-      'ui.days':   'days',
-      'ui.trade':  'trade',
-      'ui.trades': 'trades',
+      'ui.day':        'day',
+      'ui.days':       'days',
+      'ui.trade':      'trade',
+      'ui.trades':     'trades',
+      'ui.trades.lbl': 'trades',
+      // Calendar
+      'cal.today': 'Today',
       // Settings
       'set.lang':         'Language',
       'set.lang.btn':     'Passer en Français',
