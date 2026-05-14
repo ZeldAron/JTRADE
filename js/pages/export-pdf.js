@@ -26,8 +26,37 @@ const ExportPDF = (() => {
 
   function _fmtDate(d) {
     if (!d) return '—';
+    // d peut être : Date, string ISO, ou ms timestamp
     const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt.getTime())) return '—';
     return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+  // Récupère le ms timestamp d'un trade. Le champ stocké est `date` (string ISO),
+  // pas `timestamp`. Fallback sur 0 si invalide.
+  function _tradeMs(t) {
+    if (!t || !t.date) return 0;
+    const ms = new Date(t.date).getTime();
+    return isNaN(ms) ? 0 : ms;
+  }
+  // Récupère le netPnl d'un trade via Calc.trade() (pas stocké directement sur t).
+  // Fallback sur t.pnl si Calc indisponible.
+  function _tradePnl(t) {
+    if (typeof Calc !== 'undefined' && typeof Calc.trade === 'function') {
+      try {
+        const c = Calc.trade(t);
+        if (c && Number.isFinite(c.netPnl)) return c.netPnl;
+      } catch {}
+    }
+    return Number(t.pnl) || 0;
+  }
+  function _tradeRr(t) {
+    if (typeof Calc !== 'undefined' && typeof Calc.trade === 'function') {
+      try {
+        const c = Calc.trade(t);
+        if (c && Number.isFinite(c.rr)) return c.rr;
+      } catch {}
+    }
+    return Number(t.rr) || null;
   }
   function _fmtMoney(n) {
     if (n == null || isNaN(n)) return '—';
@@ -40,12 +69,14 @@ const ExportPDF = (() => {
   }
 
   // ── Filtrage + calcul stats ───────────────────────────────────────────────
-  function _filterTrades(allTrades, startMs, endMs, accountId) {
+  // accountName est le nom du compte (résolu depuis l'ID dans generate()) car
+  // les trades stockent le nom du compte dans le champ `apex` (string libre).
+  function _filterTrades(allTrades, startMs, endMs, accountName) {
     return allTrades.filter(t => {
       if (!t || t.invalid) return false;
-      const ts = Number(t.timestamp || 0);
+      const ts = _tradeMs(t);
       if (ts < startMs || ts > endMs) return false;
-      if (accountId && t.account !== accountId) return false;
+      if (accountName && String(t.apex || '').trim() !== accountName) return false;
       return true;
     });
   }
@@ -57,14 +88,15 @@ const ExportPDF = (() => {
     let best = -Infinity, worst = Infinity;
     let bestTrade = null, worstTrade = null;
     for (const t of trades) {
-      const pnl = Number(t.netPnl || 0);
+      const pnl = _tradePnl(t);
       totalPnl += pnl;
       if (t.outcome === 'open') open++;
       else if (pnl > 0.01) wins++;
       else if (pnl < -0.01) losses++;
       else breakeven++;
-      if (typeof t.rr === 'number' && isFinite(t.rr)) {
-        totalR += t.rr;
+      const rr = _tradeRr(t);
+      if (typeof rr === 'number' && isFinite(rr)) {
+        totalR += rr;
         rCount++;
       }
       if (pnl > best) { best = pnl; bestTrade = t; }
@@ -184,11 +216,11 @@ const ExportPDF = (() => {
     doc.setFontSize(10);
     doc.setTextColor(...COLOR_GREEN);
     doc.text(`Meilleur trade : ${_fmtMoney(stats.best)}` +
-      (stats.bestTrade ? ` (${stats.bestTrade.instrument || ''} le ${_fmtDate(stats.bestTrade.timestamp)})` : ''), 14, y);
+      (stats.bestTrade ? ` (${stats.bestTrade.instrument || ''} le ${_fmtDate(stats.bestTrade.date)})` : ''), 14, y);
     y += 7;
     doc.setTextColor(...COLOR_RED);
     doc.text(`Pire trade : ${_fmtMoney(stats.worst)}` +
-      (stats.worstTrade ? ` (${stats.worstTrade.instrument || ''} le ${_fmtDate(stats.worstTrade.timestamp)})` : ''), 14, y);
+      (stats.worstTrade ? ` (${stats.worstTrade.instrument || ''} le ${_fmtDate(stats.worstTrade.date)})` : ''), 14, y);
 
     // Note de bas de page
     doc.setFont('helvetica', 'italic');
@@ -212,11 +244,12 @@ const ExportPDF = (() => {
     y += 8;
 
     for (const t of trades) {
-      const pnl   = Number(t.netPnl || 0);
+      const pnl   = _tradePnl(t);
       const isWin = pnl > 0.01;
       const isLoss = pnl < -0.01;
       const direction = (t.direction === 'short') ? 'SHORT' : 'LONG';
       const dirColor  = (t.direction === 'short') ? COLOR_RED : COLOR_GREEN;
+      const tradeRr   = _tradeRr(t);
 
       // Cadre du trade
       doc.setDrawColor(...COLOR_BORDER);
@@ -227,7 +260,7 @@ const ExportPDF = (() => {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.setTextColor(...COLOR_TEXT);
-      doc.text(_fmtDate(t.timestamp), 18, y + 7);
+      doc.text(_fmtDate(t.date), 18, y + 7);
       doc.text(String(t.instrument || '—'), 50, y + 7);
 
       // Badge direction
@@ -252,8 +285,8 @@ const ExportPDF = (() => {
       doc.text(levels, 18, y + 15);
 
       // R:R à droite
-      if (typeof t.rr === 'number' && isFinite(t.rr)) {
-        doc.text(`R:R ${t.rr.toFixed(2)}`, doc.internal.pageSize.getWidth() - 18, y + 15, { align: 'right' });
+      if (typeof tradeRr === 'number' && isFinite(tradeRr)) {
+        doc.text(`R:R ${tradeRr.toFixed(2)}`, doc.internal.pageSize.getWidth() - 18, y + 15, { align: 'right' });
       }
 
       // Ligne 3 : Setup + Notes (tronqués)
@@ -278,14 +311,23 @@ const ExportPDF = (() => {
       throw new Error('Export PDF réservé aux utilisateurs Pro.');
     }
 
-    // 2. Récupère les trades + filtre
+    // 2. Résoud accountId → accountName (les trades stockent le nom dans `apex`,
+    // pas l'ID — donc on doit faire la conversion ici).
+    let accountName = null;
+    if (accountId) {
+      const acc = (Store.getMyAccountById && Store.getMyAccountById(accountId)) || null;
+      if (acc && acc.name) accountName = acc.name;
+    }
+
+    // 3. Récupère les trades + filtre
     const allTrades = (Store.getTrades && Store.getTrades()) || [];
-    const trades = _filterTrades(allTrades, startMs, endMs, accountId);
+    const trades = _filterTrades(allTrades, startMs, endMs, accountName);
     // Note : on autorise 0 trade — on génère quand même la page de garde
     // avec stats vides (utile pour test ou compte fraîchement créé).
 
-    // 3. Trie chronologiquement (plus récent d'abord)
-    trades.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    // 3. Trie chronologiquement (plus récent d'abord) — via _tradeMs car le
+    // champ stocké est `date` (string ISO), pas `timestamp`.
+    trades.sort((a, b) => _tradeMs(b) - _tradeMs(a));
 
     // 4. Calcule les stats
     const stats = _computeStats(trades);
@@ -299,7 +341,9 @@ const ExportPDF = (() => {
                 || (Store.getMyAccountByName && Store.getMyAccountByName(accountId));
       return acc ? `Compte : ${acc.name}` : null;
     })();
-    const periodLabel = `Période : ${_fmtDate(startMs)} → ${_fmtDate(endMs)}`;
+    // Note : jsPDF helvetica par défaut ne supporte pas certains caractères
+    // Unicode (flèches, etc.) → on utilise ' au ' à la place de '→'.
+    const periodLabel = `Période : du ${_fmtDate(startMs)} au ${_fmtDate(endMs)}`;
     const ctx = { username, periodLabel, accountLabel, stats };
 
     // 6. Init jsPDF
