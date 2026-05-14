@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.125',
+      date: '2026-05-14',
+      time: '19:30',
+      tags: ['fix', 'bug'],
+      title: 'Fix : comptes fantômes — `userEmails` créé immédiatement après signup',
+      titleEn: 'Fix: ghost accounts — `userEmails` doc created right after signup',
+      items: [
+        { type: 'fix', text: 'Bug détecté : 4/11 comptes Firebase Auth n\'avaient pas leur doc `userEmails` (donc invisibles dans la console admin). Cause : `_storeUserEmail()` était appelé uniquement via `onAuthStateChanged`, qui n\'a pas le temps de se déclencher si l\'utilisateur ferme l\'onglet trop vite après signup.', textEn: 'Bug detected: 4/11 Firebase Auth accounts had no `userEmails` doc (= invisible in admin console). Cause: `_storeUserEmail()` was only called via `onAuthStateChanged`, which doesn\'t have time to fire if the user closes the tab too fast after signup.' },
+        { type: 'fix', text: 'Fix : dans `register()` (auth.js), on `await` maintenant la création du doc `userEmails` directement après `createUserWithEmailAndPassword` + `updateProfile`. Garantit que tout nouveau compte apparaît dans l\'admin immédiatement, sans dépendance au timing du callback Firebase.', textEn: 'Fix: in `register()` (auth.js), we now `await` the `userEmails` doc creation right after `createUserWithEmailAndPassword` + `updateProfile`. Guarantees any new account appears in admin immediately, no dependency on Firebase callback timing.' },
+      ],
+    },
+    {
       version: '0.9.124',
       date: '2026-05-14',
       time: '19:00',

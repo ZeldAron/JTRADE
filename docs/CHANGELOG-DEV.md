@@ -37,6 +37,88 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.125 — Fix bug comptes fantômes (userEmails timing)
+
+**Type** : fix / bug
+**Fichiers** : `src/js/auth.js`, `src/app.html` (bump v=), `src/index.html` (footer), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.125
+
+### Contexte
+User signale qu'un compte test créé pour Discord n'apparaît pas dans la console admin. Investigation : 11 comptes Firebase Auth en prod, mais seulement 7 docs `userEmails` côté Firestore. **4 comptes fantômes** identifiés :
+- `aaronptn35@gmail.com` (test) — last_login: JAMAIS
+- `basic@prout.com` (basic) — last_login: JAMAIS
+- `larijames133@gmail.com` (Nino) — last_login: JAMAIS
+- `tuvaspasmevolermonemail@gmail.com` (Ludo) — last_login: JAMAIS
+
+Tous ont `last_login: JAMAIS` → ils ont créé un compte mais n'ont jamais réussi à compléter le 1er login (onglet fermé trop vite).
+
+### Cause racine
+Dans `src/js/auth.js`, `_storeUserEmail()` créait le doc `userEmails/{uid}` uniquement via `onAuthStateChanged` :
+```js
+function onAuthReady(cb) {
+  _fbAuth.onAuthStateChanged(user => {
+    if (user) _storeUserEmail(user);  // ← appelé seulement quand auth state change
+    cb(...);
+  });
+}
+```
+
+Or `register()` ne déclenche PAS forcément `onAuthStateChanged` immédiatement — c'est asynchrone et peut arriver plusieurs ms/secondes après `createUserWithEmailAndPassword` succès. Si l'utilisateur fermait l'onglet entre ces 2 events, le doc n'était jamais créé. Comme `_storeUserEmail` est wrappé dans `.catch(() => {})`, l'erreur passe silencieusement.
+
+### Fix
+Dans `register()` (auth.js), création directe et `await`-ée du doc `userEmails` juste après `updateProfile()` :
+```js
+const cred = await _fbAuth.createUserWithEmailAndPassword(safeEmail, password);
+await cred.user.updateProfile({ displayName: safeName });
+
+// v0.9.125 : crée immédiatement le doc userEmails (anti-race)
+try {
+  await _fbDb.collection('userEmails').doc(cred.user.uid).set({
+    uid:      cred.user.uid,
+    email:    safeEmail,
+    username: safeName,
+    lastSeen: Date.now(),
+  });
+} catch (e) {
+  console.warn('[register] storeUserEmail failed', e && e.code);
+}
+```
+
+Le `await` garantit que le doc est confirmé écrit AVANT que `register()` retourne. Même si l'utilisateur ferme l'onglet juste après → le doc existe.
+
+### Idempotence
+Si `onAuthStateChanged` se redéclenche plus tard (1er login post-signup), `_storeUserEmail()` est ré-appelé et le doc est juste réécrit avec les mêmes valeurs (+ `lastSeen` mis à jour). Pas de conflit.
+
+### Action de cleanup
+Les 4 comptes fantômes existants sont supprimés via Firebase Admin SDK (ou Firebase Console manuel) — voir section "Cleanup ad-hoc" plus bas.
+
+### Impact
+- **UX admin** : tous les nouveaux signups apparaissent maintenant dans la console admin immédiatement, sans skip
+- **Cohérence data** : plus de mismatch entre `Auth` et `Firestore.userEmails`
+- **Sécu** : neutre (pas de changement de surface d'attaque)
+- **Perf** : +1 round-trip Firestore au signup (~50 ms), négligeable
+
+### Cleanup ad-hoc (post-deploy)
+Les 4 comptes fantômes existants doivent être supprimés manuellement (à l'admin de choisir). Méthode rapide via firebase-admin standalone après `gcloud auth application-default login` :
+```js
+const admin = require('firebase-admin');
+admin.initializeApp({ projectId: 'zeldtrade' });
+const uids = ['Fjzn5A7T8DZPGnJmcrmJrF0a37c2', 'HjJctlIvtnQ7pcnNlB4yfd218Uz2', 'UUCnJzENc6aLuVYLPLEILZJLZoj2', 'Zc1v8oyifPW4EUY2pC7EXOEb2MG2'];
+for (const uid of uids) {
+  await admin.auth().deleteUser(uid);
+  await admin.firestore().recursiveDelete(admin.firestore().doc('users/' + uid));
+  await admin.firestore().doc('userEmails/' + uid).delete().catch(() => {});
+}
+```
+(Le script `_tmp_delete_ghosts.js` peut être recréé temporairement dans `functions/` puis supprimé.)
+
+### Bump version
+- `src/app.html` : `?v=0.9.124` → `?v=0.9.125` (21 refs)
+- `src/index.html` : footer
+- `src/js/pages/changelog.js` : entrée 0.9.125
+
+---
+
 ## 2026-05-14 — v0.9.124 — Privacy : retrait email + UID dans #new-users public
 
 **Type** : privacy / fix
