@@ -483,12 +483,18 @@ const UI = (() => {
       actions.style.cssText = 'display:flex;gap:10px;justify-content:flex-end';
       card.appendChild(actions);
 
-      const btnCancel = document.createElement('button');
-      btnCancel.type = 'button';
-      btnCancel.style.cssText = 'padding:9px 18px;border-radius:6px;border:1px solid var(--border,#30363d);background:transparent;color:var(--muted,#8b949e);font-size:13px;cursor:pointer;font-family:inherit';
-      btnCancel.textContent = cancelText;
-      btnCancel.addEventListener('click', () => _resolveConfirm(false));
-      actions.appendChild(btnCancel);
+      // v0.9.143 : passer `cancelText: false` (ou null) cache le bouton —
+      // utile pour les modales d'info pures (1 seul bouton "OK").
+      const hideCancel = (opts && (opts.cancelText === false || opts.cancelText === null));
+      let btnCancel = null;
+      if (!hideCancel) {
+        btnCancel = document.createElement('button');
+        btnCancel.type = 'button';
+        btnCancel.style.cssText = 'padding:9px 18px;border-radius:6px;border:1px solid var(--border,#30363d);background:transparent;color:var(--muted,#8b949e);font-size:13px;cursor:pointer;font-family:inherit';
+        btnCancel.textContent = cancelText;
+        btnCancel.addEventListener('click', () => _resolveConfirm(false));
+        actions.appendChild(btnCancel);
+      }
 
       const btnConfirm = document.createElement('button');
       btnConfirm.type = 'button';
@@ -505,8 +511,9 @@ const UI = (() => {
 
       document.body.appendChild(overlay);
 
-      // Focus par défaut sur Cancel (safer — anti clic réflexe)
-      setTimeout(() => btnCancel.focus(), 50);
+      // Focus par défaut sur Cancel (safer — anti clic réflexe) ;
+      // fallback sur Confirm si Cancel caché (modale info).
+      setTimeout(() => (btnCancel || btnConfirm).focus(), 50);
     });
   }
   function _resolveConfirm(value) {
