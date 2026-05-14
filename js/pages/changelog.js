@@ -5,6 +5,26 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.131',
+      date: '2026-05-14',
+      time: '23:00',
+      tags: ['security', 'pricing'],
+      title: 'Limite IA Pro abaissée à 20 analyses/jour (anti-abus)',
+      titleEn: 'Pro AI limit lowered to 20 analyses/day (anti-abuse)',
+      items: [
+        { type: 'security', text: 'Cap quotidien des analyses IA Groq Vision pour les utilisateurs Pro : `PRO_CAP` 200 → **20 / jour**. Suffisant pour un usage normal (20 trades analysés par jour = 600/mois). Limite la facture Groq en cas d\'abus + anti DoS financier avant l\'ouverture publique.', textEn: 'Pro daily AI quota for Groq Vision: `PRO_CAP` 200 → **20 / day**. Sufficient for normal use (20 trades/day = 600/month). Limits Groq billing in case of abuse + anti financial DoS before public opening.' },
+        { type: 'fix', text: 'Copy aligné partout : sidebar upgrade hint ("IA sans limite" → "20 analyses IA/jour"), FAQ landing ("analyses illimitées" → "20 analyses IA/jour"), i18n.js off.pro.f3 FR + EN ("Analyses IA illimitées" → "Jusqu\'à 20 analyses IA/jour"). Plus de promesse incohérente.', textEn: 'Copy aligned everywhere: sidebar upgrade hint, landing FAQ, i18n.js off.pro.f3 FR + EN. No more inconsistent promise.' },
+        { type: 'feat', text: 'Plan Basic inchangé (1 analyse IA/jour) — l\'incitation à upgrade Pro reste forte (×20 entre Basic et Pro). Plan Pro reste l\'option pour les traders actifs.', textEn: 'Basic plan unchanged (1 AI analysis/day) — Pro upgrade incentive remains strong (×20 between Basic and Pro). Pro stays the choice for active traders.' },
+      ],
+      user: {
+        title: 'Limite IA Pro ajustée à 20 analyses/jour',
+        items: [
+          { type: 'feat', text: 'Le plan Pro permettait jusqu\'à 200 analyses IA par jour, désormais c\'est 20 par jour. C\'est largement suffisant pour un usage normal (≈ 600 analyses/mois) et ça nous permet de garder le service stable et abordable.' },
+          { type: 'feat', text: 'Le plan Basic reste à 1 analyse par jour. Rien ne change pour toi si tu fais moins de 20 analyses par jour, ce qui couvre 99% des usages.' },
+        ],
+      },
+    },
+    {
       version: '0.9.130',
       date: '2026-05-14',
       time: '22:30',
