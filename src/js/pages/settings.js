@@ -622,6 +622,121 @@
     render();
   }
 
+  function _openExportPdfModal() {
+    // Crée le modal dynamiquement (pas de pollution permanente du DOM)
+    const existing = document.getElementById('exportPdfOverlay');
+    if (existing) existing.remove();
+
+    const today = new Date();
+    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const fmtInput = (d) => d.toISOString().split('T')[0];
+
+    const accounts = (Store.getMyAccounts && Store.getMyAccounts()) || [];
+    const accountOptions = accounts
+      .map(a => `<option value="${UI.escHtml(a.id)}">${UI.escHtml(a.name)}</option>`)
+      .join('');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'exportPdfOverlay';
+    overlay.className = 'modal-overlay';
+    overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;z-index:1000';
+    overlay.innerHTML = `
+      <div class="modal-card" style="max-width:440px;width:90vw;padding:24px;background:var(--bg2);border-radius:12px;border:1px solid var(--border)">
+        <h3 style="margin:0 0 6px;font-size:18px;color:var(--text)">${UI.escHtml(t('set.export.pdf.title') || 'Exporter les trades en PDF')}</h3>
+        <p style="margin:0 0 18px;font-size:13px;color:var(--muted)">${UI.escHtml(t('set.export.pdf.subtitle') || 'Sélectionne la période et le compte (optionnel).')}</p>
+
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <div style="flex:1">
+            <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">${UI.escHtml(t('set.export.pdf.start') || 'Du')}</label>
+            <input type="date" id="expPdfStart" value="${fmtInput(monthAgo)}" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
+          </div>
+          <div style="flex:1">
+            <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">${UI.escHtml(t('set.export.pdf.end') || 'Au')}</label>
+            <input type="date" id="expPdfEnd" value="${fmtInput(today)}" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
+          </div>
+        </div>
+
+        <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">${UI.escHtml(t('set.export.pdf.account') || 'Compte')}</label>
+        <select id="expPdfAccount" style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
+          <option value="">${UI.escHtml(t('set.export.pdf.all') || 'Tous les comptes')}</option>
+          ${accountOptions}
+        </select>
+
+        <div id="expPdfError" style="display:none;margin-top:12px;padding:8px 12px;background:rgba(248,81,73,0.1);border:1px solid rgba(248,81,73,0.3);border-radius:6px;color:var(--red);font-size:12px"></div>
+
+        <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+          <button class="btn-ghost" id="btnExpPdfCancel">${UI.escHtml(t('btn.cancel') || 'Annuler')}</button>
+          <button class="btn-primary" id="btnExpPdfGenerate">${UI.escHtml(t('set.export.pdf.btn') || 'Générer PDF')}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    function close() { overlay.remove(); }
+    $('btnExpPdfCancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', function onEsc(e) {
+      if (e.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); }
+    });
+
+    $('btnExpPdfGenerate').addEventListener('click', async () => {
+      const startStr = $('expPdfStart').value;
+      const endStr   = $('expPdfEnd').value;
+      const acc      = $('expPdfAccount').value || null;
+      const errEl    = $('expPdfError');
+      errEl.style.display = 'none';
+
+      if (!startStr || !endStr) {
+        errEl.textContent = t('set.export.pdf.err.dates') || 'Sélectionne les deux dates.';
+        errEl.style.display = '';
+        return;
+      }
+      const startMs = new Date(startStr + 'T00:00:00').getTime();
+      const endMs   = new Date(endStr   + 'T23:59:59').getTime();
+      if (startMs > endMs) {
+        errEl.textContent = t('set.export.pdf.err.order') || 'La date de début doit être avant la date de fin.';
+        errEl.style.display = '';
+        return;
+      }
+
+      const btn = $('btnExpPdfGenerate');
+      const originalLabel = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = t('set.export.pdf.loading') || 'Génération…';
+
+      try {
+        const result = await ExportPDF.generate({ startMs, endMs, accountId: acc });
+        UI.toast(
+          (t('set.export.pdf.ok') || 'PDF généré : %n trades sur %p pages.')
+            .replace('%n', result.count)
+            .replace('%p', result.pages)
+        );
+        close();
+      } catch (e) {
+        errEl.textContent = e.message || (t('set.export.pdf.err.generic') || 'Échec de la génération.');
+        errEl.style.display = '';
+        btn.disabled = false;
+        btn.textContent = originalLabel;
+      }
+    });
+  }
+
+  // v0.9.135 : event delegation pour le bouton Export PDF.
+  // Bindé UNE FOIS au load (pas dans initSettings — sinon problème de timing
+  // si initSettings() n'est pas encore appelée quand l'user clique).
+  // Le target.closest filtre par ID — robuste même si le DOM est recréé.
+  document.body.addEventListener('click', function (e) {
+    const target = e.target.closest('#btnExportPdf');
+    if (!target) return;
+    e.preventDefault();
+    // Double check Pro (sécurité — anti DevTools bypass)
+    if (!Store.isPro || !Store.isPro()) {
+      UI.toast(t('set.export.pdf.pro.only') || 'Export PDF réservé aux utilisateurs Pro.', true);
+      return;
+    }
+    _openExportPdfModal();
+  });
+
   let _settingsBound = false;
 
   UI.initSettings = function () {
@@ -676,113 +791,11 @@
     // Note : la visibilité de #rowExportPdf est gérée en haut de initSettings()
     // (à chaque render, pour éviter l'effet "masqué pour toujours" si isPro()
     // retournait false au first render avant chargement du plan).
-    $('btnExportPdf')?.addEventListener('click', () => {
-      // Double check Pro (sécurité — même si bouton masqué, possible via DevTools)
-      if (!Store.isPro()) {
-        UI.toast(t('set.export.pdf.pro.only') || 'Export PDF réservé aux utilisateurs Pro.', true);
-        return;
-      }
-      _openExportPdfModal();
-    });
+    //
+    // v0.9.135 : bind via event delegation sur document.body (bind une seule
+    // fois ci-dessous, hors du bloc _settingsBound). Plus robuste qu'un
+    // addEventListener direct qui dépendait du timing d'initSettings().
 
-    function _openExportPdfModal() {
-      // Crée le modal dynamiquement (pas de pollution permanente du DOM)
-      const existing = document.getElementById('exportPdfOverlay');
-      if (existing) existing.remove();
-
-      const today = new Date();
-      const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-      const fmtInput = (d) => d.toISOString().split('T')[0];
-
-      const accounts = (Store.getMyAccounts && Store.getMyAccounts()) || [];
-      const accountOptions = accounts
-        .map(a => `<option value="${UI.escHtml(a.id)}">${UI.escHtml(a.name)}</option>`)
-        .join('');
-
-      const overlay = document.createElement('div');
-      overlay.id = 'exportPdfOverlay';
-      overlay.className = 'modal-overlay';
-      overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;z-index:1000';
-      overlay.innerHTML = `
-        <div class="modal-card" style="max-width:440px;width:90vw;padding:24px;background:var(--bg2);border-radius:12px;border:1px solid var(--border)">
-          <h3 style="margin:0 0 6px;font-size:18px;color:var(--text)">${UI.escHtml(t('set.export.pdf.title') || 'Exporter les trades en PDF')}</h3>
-          <p style="margin:0 0 18px;font-size:13px;color:var(--muted)">${UI.escHtml(t('set.export.pdf.subtitle') || 'Sélectionne la période et le compte (optionnel).')}</p>
-
-          <div style="display:flex;gap:10px;margin-bottom:14px">
-            <div style="flex:1">
-              <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">${UI.escHtml(t('set.export.pdf.start') || 'Du')}</label>
-              <input type="date" id="expPdfStart" value="${fmtInput(monthAgo)}" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
-            </div>
-            <div style="flex:1">
-              <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">${UI.escHtml(t('set.export.pdf.end') || 'Au')}</label>
-              <input type="date" id="expPdfEnd" value="${fmtInput(today)}" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
-            </div>
-          </div>
-
-          <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">${UI.escHtml(t('set.export.pdf.account') || 'Compte')}</label>
-          <select id="expPdfAccount" style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
-            <option value="">${UI.escHtml(t('set.export.pdf.all') || 'Tous les comptes')}</option>
-            ${accountOptions}
-          </select>
-
-          <div id="expPdfError" style="display:none;margin-top:12px;padding:8px 12px;background:rgba(248,81,73,0.1);border:1px solid rgba(248,81,73,0.3);border-radius:6px;color:var(--red);font-size:12px"></div>
-
-          <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
-            <button class="btn-ghost" id="btnExpPdfCancel">${UI.escHtml(t('btn.cancel') || 'Annuler')}</button>
-            <button class="btn-primary" id="btnExpPdfGenerate">${UI.escHtml(t('set.export.pdf.btn') || 'Générer PDF')}</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-
-      function close() { overlay.remove(); }
-      $('btnExpPdfCancel').addEventListener('click', close);
-      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-      document.addEventListener('keydown', function onEsc(e) {
-        if (e.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); }
-      });
-
-      $('btnExpPdfGenerate').addEventListener('click', async () => {
-        const startStr = $('expPdfStart').value;
-        const endStr   = $('expPdfEnd').value;
-        const acc      = $('expPdfAccount').value || null;
-        const errEl    = $('expPdfError');
-        errEl.style.display = 'none';
-
-        if (!startStr || !endStr) {
-          errEl.textContent = t('set.export.pdf.err.dates') || 'Sélectionne les deux dates.';
-          errEl.style.display = '';
-          return;
-        }
-        const startMs = new Date(startStr + 'T00:00:00').getTime();
-        const endMs   = new Date(endStr   + 'T23:59:59').getTime();
-        if (startMs > endMs) {
-          errEl.textContent = t('set.export.pdf.err.order') || 'La date de début doit être avant la date de fin.';
-          errEl.style.display = '';
-          return;
-        }
-
-        const btn = $('btnExpPdfGenerate');
-        const originalLabel = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = t('set.export.pdf.loading') || 'Génération…';
-
-        try {
-          const result = await ExportPDF.generate({ startMs, endMs, accountId: acc });
-          UI.toast(
-            (t('set.export.pdf.ok') || 'PDF généré : %n trades sur %p pages.')
-              .replace('%n', result.count)
-              .replace('%p', result.pages)
-          );
-          close();
-        } catch (e) {
-          errEl.textContent = e.message || (t('set.export.pdf.err.generic') || 'Échec de la génération.');
-          errEl.style.display = '';
-          btn.disabled = false;
-          btn.textContent = originalLabel;
-        }
-      });
-    }
 
     $('btnImport').addEventListener('click', () => $('importFile').click());
 
