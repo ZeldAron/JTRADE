@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.139',
+      date: '2026-05-15',
+      time: '02:00',
+      tags: ['fix', 'ai'],
+      title: 'Groq AI : ignorer le prix actuel (⊕) + timer countdown',
+      titleEn: 'Groq AI: ignore current price (⊕) + countdown timer',
+      items: [
+        { type: 'fix', text: 'Sur certains screenshots TradingView, l\'IA prenait le **prix actuel** (label avec le symbole ⊕ ou +) comme valeur d\'entry, et le vrai entry comme SL. Bug typique sur les screenshots sans zones colorées explicites. Fix : règle anti-prix-actuel renforcée dans le prompt — JAMAIS lire un label contenant ⊕, +, ou un countdown timer (format HH:MM type "04:34" collé à un prix = timer bougie en cours).', textEn: 'On some TradingView screenshots, the AI was reading the **current price** (label with ⊕ or + symbol) as entry value, and the real entry as SL. Typical bug on screenshots without explicit colored zones. Fix: anti-current-price rule reinforced in prompt — NEVER read a label containing ⊕, +, or a countdown timer (HH:MM format like "04:34" stuck to a price = current bar timer).' },
+        { type: 'fix', text: 'Nouvelle règle anti-hallucination : si aucun des 3 patterns (Order Panel / Native lines / Drawn zones) ne matche clairement, l\'IA doit retourner `{"entry":null,"sl":null,"tp1":null}` plutôt que de deviner. Vaut mieux pas de niveau que des niveaux faux.', textEn: 'New anti-hallucination rule: if none of the 3 patterns (Order Panel / Native lines / Drawn zones) clearly matches, the AI must return `{"entry":null,"sl":null,"tp1":null}` rather than guessing. Better no levels than wrong levels.' },
+      ],
+    },
+    {
       version: '0.9.138',
       date: '2026-05-15',
       time: '01:45',
