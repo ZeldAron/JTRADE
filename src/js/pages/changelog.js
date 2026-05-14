@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.138',
+      date: '2026-05-15',
+      time: '01:45',
+      tags: ['fix', 'ai'],
+      title: 'Fix Groq AI : limite prompt 2000 → 5000 chars',
+      titleEn: 'Fix Groq AI: prompt limit 2000 → 5000 chars',
+      items: [
+        { type: 'fix', text: 'L\'erreur "Requête invalide : Prompt too long" apparaissait après l\'élargissement du prompt en v0.9.137 (3 patterns détaillés font ~3000 chars). La limite côté Cloud Function `analyzeChart` était fixée à 2000 chars (historique anti-abus). Passée à 5000 chars — large pour des prompts élaborés mais bloque toujours les payloads vraiment abusifs (>5 KB n\'a aucun sens légitime).', textEn: 'The "Invalid request: Prompt too long" error appeared after the v0.9.137 prompt expansion (3 detailed patterns ~3000 chars). The Cloud Function `analyzeChart` server-side limit was 2000 chars (legacy anti-abuse). Raised to 5000 chars — generous for elaborate prompts but still blocks truly abusive payloads (>5 KB has no legitimate use case).' },
+        { type: 'security', text: 'Aucun impact sécurité : le quota IA (1/jour Basic, 20/jour Pro) et la validation App Check restent inchangés. La limite prompt n\'était qu\'un garde-fou anti-payload, pas une mesure anti-DoS critique.', textEn: 'No security impact: AI quota (1/day Basic, 20/day Pro) and App Check validation unchanged. Prompt limit was just an anti-payload safeguard, not a critical anti-DoS measure.' },
+      ],
+    },
+    {
       version: '0.9.137',
       date: '2026-05-15',
       time: '01:30',

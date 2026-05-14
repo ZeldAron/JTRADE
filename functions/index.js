@@ -88,7 +88,10 @@ exports.analyzeChart = onCall(
     if (typeof model !== 'string' || !ALLOWED_MODELS.has(model)) {
       throw new HttpsError('invalid-argument', 'Invalid model');
     }
-    if (typeof prompt !== 'string' || prompt.length > 2000) {
+    // v0.9.138 : passé 2000 → 5000 pour accepter le prompt 3-patterns (Order panel
+    // + Lignes natives + Zones dessinées). 5000 reste raisonnable côté coût Groq
+    // (~1k tokens prompt) et bloque toujours les payloads abusifs.
+    if (typeof prompt !== 'string' || prompt.length > 5000) {
       throw new HttpsError('invalid-argument', 'Prompt too long');
     }
     if (typeof imageB64 !== 'string' || imageB64.length > 8 * 1024 * 1024) {
