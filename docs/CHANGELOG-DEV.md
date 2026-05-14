@@ -37,6 +37,98 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.127 — Annonces Discord pour les mises à jour user-facing
+
+**Type** : feat / integration
+**Fichiers** : `scripts/announce-update.js` (créé), `src/js/pages/changelog.js` (+ export `getEntries` + entrée user-facing), `~/.config/zeldtrade/updates_webhook` (hors repo, chmod 600), `src/app.html` (bump v=), `src/index.html` (footer)
+**Versions impactées** : front v0.9.127
+
+### Contexte
+User : « non je veux que cela soit pour les utilisateurs pour les grosses maj genre a chaque modificatiion tu me demande si c'est une grosse maj et si je dis oui tu envoie au webhook mais je veux que ça soit comme le truc que j'ai dans les mises à jour sur zeldtrade et quand ça sera bon tu enlève l'onglet mises à jour dans zeldtrade ».
+
+Pivot par rapport au workflow initial : pas de notifs admin pour `#déploiements`, mais des annonces **côté utilisateurs** dans un canal public, avec un format **simplifié sans jargon** (« Changement côté API » au lieu de « S36 — Stripe webhook idempotency »).
+
+### Architecture
+
+#### 1. Canal Discord public `#mises-à-jour`
+Créé dans `👋 ACCUEIL` (catégorie publique), visible par `@everyone`, écriture interdite sauf webhook. Permet d'avoir un fil d'annonces type "newsfeed" lisible par tous les visiteurs du serveur.
+
+#### 2. Webhook + secret
+Créé : `ZeldTrade Updates`. URL stockée dans `~/.config/zeldtrade/updates_webhook` (chmod 600, hors repo). Format URL validé par regex stricte côté script (anti SSRF/injection).
+
+#### 3. Schéma changelog enrichi (`src/js/pages/changelog.js`)
+Chaque entrée peut désormais avoir un champ optionnel :
+```js
+user: {
+  title: 'Titre simple sans jargon',
+  items: [
+    { type: 'feat', text: 'Description user-friendly en français.' },
+    ...
+  ],
+}
+```
+**Règle d'or** : si l'entrée a `user`, elle est annoncée sur Discord. Sinon → ignorée. Garantit que seules les vraies nouveautés user-facing remontent.
+
+Export ajouté : `return { renderChangelog, getEntries: () => ENTRIES };` — permet au script Node de parser le changelog en sandbox VM. La page Mises à jour de l'app continue de fonctionner exactement comme avant.
+
+#### 4. Script `scripts/announce-update.js`
+```bash
+node scripts/announce-update.js v0.9.X
+```
+- Lit l'URL webhook depuis `~/.config/zeldtrade/updates_webhook`
+- Vérifie chmod 600 (refuse si trop permissif)
+- Valide format URL Discord (regex)
+- Charge changelog.js en sandbox VM (lecture seule, timeout 2s)
+- Cherche l'entrée par version
+- **Si pas de champ `user`** → exit 1 avec message clair
+- Sinon construit l'embed :
+  - Titre : `🚀 vX.Y.Z — {user.title}`
+  - Description : bullets avec emojis selon type (`✨ feat`, `🐛 fix`, `🔒 security`, `♻️ refactor`, `🧹 cleanup`, etc.)
+  - Couleur brand `#6366f1`
+  - Footer "ZeldTrade · zeldaron.github.io/zeldtrade"
+  - Timestamp ISO
+- POST avec timeout 8s, gestion propre des codes HTTP (200-299 = OK, sinon log + exit 1)
+
+### Workflow opérationnel
+
+À chaque modif :
+1. Code + bump version + add entry dans `src/js/pages/changelog.js`
+2. **Si user-facing** : ajouter `user: { title, items: [...] }` dans l'entrée (français simple, sans jargon)
+3. `bash scripts/release.sh vX.Y.Z` (inchangé)
+4. Demander à l'user : "grosse maj ?" — si oui : `node scripts/announce-update.js vX.Y.Z`
+
+Pour les modifs purement techniques (refactor, cleanup, sécu invisible, etc.) : pas de section `user` → pas d'annonce Discord → pas de bruit pour les utilisateurs.
+
+### Style de rédaction `user.items`
+
+À écrire en français simple, sans jargon. Exemples de bons remplacements :
+
+| Technique | User-facing |
+|---|---|
+| « S36 — Stripe webhook idempotency : `event.id` stocké atomiquement, anti-replay 30 jours via TTL » | « Sécurité paiements renforcée — plus de risque de double-activation en cas de problème réseau » |
+| « `_storeUserEmail()` appelé maintenant directement après `createUserWithEmailAndPassword` » | « Création de compte plus fiable » |
+| « Clés i18n manquantes (cal.today, confirm.*.title) » | « Quelques textes corrigés (« Aujourd'hui » dans le calendrier, titres de modales) » |
+| « TTL `auditLogs` 1 an via champ `expireAt` » | « Les logs admin sont auto-supprimés au bout d'1 an (conformité RGPD) » |
+| « Migration Web3Forms → Discord webhooks server-side » | « Tes messages de contact arrivent maintenant instantanément à l'admin via Discord » |
+
+### Futur (post-validation user)
+
+Quand l'user confirmera que tout marche bien, on retirera la page « Mises à jour » de l'app (3 modifs : `app.html` nav-item, `app.js` routing, `pages/changelog.js` → garder uniquement pour le parser, retirer le rendu). Le canal Discord devient la source publique unique.
+
+### Sécurité
+- URL webhook = secret Google-style chmod 600 hors repo (jamais commité)
+- Validation regex côté script (anti corruption fichier)
+- Sandbox VM avec timeout 2s (anti boucle infinie si changelog.js corrompu)
+- Timeout HTTPS 8s (anti blocage si Discord down)
+- Pas de PII dans les logs (le script lit du changelog public, pas de données user)
+
+### Bump version
+- `src/app.html` : `?v=0.9.126` → `?v=0.9.127` (21 refs)
+- `src/index.html` : footer
+- `src/js/pages/changelog.js` : entrée 0.9.127 avec champ `user` exemplaire (sera la 1ère annonce du canal)
+
+---
+
 ## 2026-05-14 — v0.9.126 — Code cleanup (5 clés i18n + dead code retiré)
 
 **Type** : refactor / cleanup
