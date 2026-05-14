@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.118',
+      date: '2026-05-14',
+      time: '13:30',
+      tags: ['feat', 'ux'],
+      title: 'Landing — mockup interactif (5 onglets cliquables, CSS-only zéro JS)',
+      titleEn: 'Landing — interactive mockup (5 clickable tabs, CSS-only no JS)',
+      items: [
+        { type: 'feat', text: 'La sidebar du mockup d\'aperçu sur la landing est maintenant **cliquable** : 5 onglets (Dashboard / Analytics / Calendrier / Journal / Objectifs) avec chacun son propre aperçu différent. Animation fade subtile entre les onglets.', textEn: 'The mockup sidebar on the landing is now **clickable**: 5 tabs (Dashboard / Analytics / Calendar / Journal / Goals) each with its own preview. Subtle fade animation between tabs.' },
+        { type: 'feat', text: 'Aperçus dédiés : **Analytics** = barres de perf par instrument (MNQ/MES/MGC/CL/NQ avec P&L), **Calendrier** = grille mois mai colorée (winx/win/loss/empty), **Journal** = liste 6 trades récents (date/instrument/side/P&L), **Objectifs** = 3 progress bars (profit mensuel, trades/mois, win rate atteint).', textEn: 'Dedicated previews: **Analytics** = perf bars per instrument (MNQ/MES/MGC/CL/NQ with P&L), **Calendar** = colored May grid (winx/win/loss/empty), **Journal** = 6 recent trades list (date/instrument/side/P&L), **Goals** = 3 progress bars (monthly profit, trades/month, win rate achieved).' },
+        { type: 'feat', text: 'Sur mobile : sidebar transformée en **barre d\'onglets horizontale scrollable** en haut du mockup, pour garder l\'interactivité même <768px.', textEn: 'On mobile: sidebar becomes a **horizontal scrollable tab bar** at the top of the mockup, keeping interactivity even <768px.' },
+        { type: 'security', text: '**Implémentation 100% CSS** (radio buttons cachés + sélecteur `:checked ~`), aucun JavaScript ajouté. CSP inchangée (script-src \'self\'), zéro surface d\'attaque ajoutée, fonctionne même JS désactivé.', textEn: '**100% CSS implementation** (hidden radio buttons + `:checked ~` selector), no JavaScript added. CSP unchanged (script-src \'self\'), zero attack surface added, works even with JS disabled.' },
+      ],
+    },
+    {
       version: '0.9.117',
       date: '2026-05-14',
       time: '12:00',

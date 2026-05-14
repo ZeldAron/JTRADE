@@ -365,7 +365,7 @@
     .mockup-body {
       display: grid;
       grid-template-columns: 180px 1fr;
-      min-height: 320px;
+      min-height: 360px;
     }
     .mockup-sidebar {
       background: var(--surface);
@@ -381,20 +381,64 @@
       font-size: 12px;
       color: var(--muted);
       margin-bottom: 2px;
+      transition: background 0.15s, color 0.15s;
     }
-    .mockup-nav-item.active {
-      background: rgba(124, 58, 237, 0.15);
-      color: var(--accent-l);
+    label.mockup-nav-item {
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    label.mockup-nav-item:hover {
+      background: rgba(124, 58, 237, 0.08);
+      color: var(--text2);
     }
     .mockup-nav-icon {
       width: 14px;
       height: 14px;
       flex-shrink: 0;
-      opacity: 0.8;
+      opacity: 0.85;
     }
     .mockup-main {
       padding: 18px;
+      min-height: 340px;
     }
+
+    /* ── Tabs CSS-only (radio + :checked + sibling combinator) ─────────── */
+    .mockup-wrap > input[type="radio"] {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+      padding: 0;
+      margin: -1px;
+    }
+    .mockup-pane { display: none; }
+    #mt-dashboard:checked  ~ .mockup .mockup-pane[data-pane="dashboard"],
+    #mt-analytics:checked  ~ .mockup .mockup-pane[data-pane="analytics"],
+    #mt-calendrier:checked ~ .mockup .mockup-pane[data-pane="calendrier"],
+    #mt-journal:checked    ~ .mockup .mockup-pane[data-pane="journal"],
+    #mt-objectifs:checked  ~ .mockup .mockup-pane[data-pane="objectifs"] {
+      display: block;
+      animation: paneFade 0.25s ease-out;
+    }
+    @keyframes paneFade {
+      from { opacity: 0; transform: translateY(2px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    #mt-dashboard:checked  ~ .mockup label[for="mt-dashboard"],
+    #mt-analytics:checked  ~ .mockup label[for="mt-analytics"],
+    #mt-calendrier:checked ~ .mockup label[for="mt-calendrier"],
+    #mt-journal:checked    ~ .mockup label[for="mt-journal"],
+    #mt-objectifs:checked  ~ .mockup label[for="mt-objectifs"] {
+      background: rgba(124, 58, 237, 0.15);
+      color: var(--accent-l);
+    }
+
+    /* ── KPI row (shared by all panes) ──────────────────────────────────── */
     .mockup-kpis {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -421,15 +465,17 @@
     }
     .mockup-kpi-val.up   { color: var(--green); }
     .mockup-kpi-val.down { color: var(--red); }
-    .mockup-chart {
+
+    /* ── Block (shared frame for chart/bars/cal/list/goals) ─────────────── */
+    .mockup-block {
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 12px;
-      height: 200px;
       position: relative;
+      min-height: 200px;
     }
-    .mockup-chart-label {
+    .mockup-block-label {
       position: absolute;
       top: 10px;
       left: 14px;
@@ -438,7 +484,7 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    .mockup-chart-val {
+    .mockup-block-val {
       position: absolute;
       top: 10px;
       right: 14px;
@@ -446,11 +492,149 @@
       font-weight: 600;
       color: var(--green);
     }
-    .mockup-chart svg {
+
+    /* Dashboard equity chart */
+    .mockup-chart-svg {
       width: 100%;
-      height: 100%;
+      height: 180px;
       display: block;
+      margin-top: 22px;
     }
+
+    /* Analytics bars */
+    .mockup-bars {
+      margin-top: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mockup-bar-row {
+      display: grid;
+      grid-template-columns: 42px 1fr 70px;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+    }
+    .mockup-bar-name { color: var(--muted); font-weight: 500; }
+    .mockup-bar-track {
+      height: 7px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .mockup-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--pink));
+      border-radius: 3px;
+    }
+    .mockup-bar-fill.down {
+      background: linear-gradient(90deg, var(--red), #fb923c);
+    }
+    .mockup-bar-val {
+      text-align: right;
+      font-weight: 600;
+      color: var(--green);
+      font-variant-numeric: tabular-nums;
+    }
+    .mockup-bar-val.down { color: var(--red); }
+
+    /* Calendrier grid */
+    .mockup-cal-grid {
+      margin: 28px auto 0;
+      max-width: 380px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+    }
+    .mockup-cal-header {
+      text-align: center;
+      font-size: 9px;
+      color: var(--muted2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0 0 4px;
+    }
+    .mockup-cal-day {
+      height: 26px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--border);
+    }
+    .mockup-cal-day.win   { background: rgba(63, 185, 80, 0.22); border-color: rgba(63, 185, 80, 0.40); }
+    .mockup-cal-day.winx  { background: rgba(63, 185, 80, 0.45); border-color: rgba(63, 185, 80, 0.65); }
+    .mockup-cal-day.loss  { background: rgba(248, 81, 73, 0.22); border-color: rgba(248, 81, 73, 0.40); }
+    .mockup-cal-day.empty { background: transparent; opacity: 0.35; }
+
+    /* Journal trades list */
+    .mockup-trades {
+      margin-top: 28px;
+      display: flex;
+      flex-direction: column;
+    }
+    .mockup-trade {
+      display: grid;
+      grid-template-columns: 60px 50px 56px 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 4px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .mockup-trade:last-child { border-bottom: 0; }
+    .mockup-trade-date { color: var(--muted2); }
+    .mockup-trade-instr { font-weight: 600; color: var(--text); }
+    .mockup-trade-side {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+    .mockup-trade-side.long  { background: rgba(63, 185, 80, 0.15); color: var(--green); }
+    .mockup-trade-side.short { background: rgba(248, 81, 73, 0.15); color: var(--red); }
+    .mockup-trade-pnl {
+      text-align: right;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .mockup-trade-pnl.up   { color: var(--green); }
+    .mockup-trade-pnl.down { color: var(--red); }
+
+    /* Objectifs goals */
+    .mockup-goals {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .mockup-goal {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+    }
+    .mockup-goal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+      font-size: 11px;
+    }
+    .mockup-goal-name { color: var(--muted); }
+    .mockup-goal-val { color: var(--text); font-weight: 600; font-size: 12px; font-variant-numeric: tabular-nums; }
+    .mockup-goal-pct {
+      display: block;
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--accent-l);
+      text-align: right;
+      font-weight: 600;
+    }
+    .mockup-goal.done .mockup-bar-fill {
+      background: linear-gradient(90deg, var(--green), #34d399);
+    }
+    .mockup-goal.done .mockup-goal-pct { color: var(--green); }
 
     /* ── Section générique ─────────────────────────────────────────────── */
     .section {
@@ -646,11 +830,29 @@
     @media (max-width: 768px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .mockup-body { grid-template-columns: 1fr; min-height: 0; }
-      .mockup-sidebar { display: none; }
+      .mockup-sidebar {
+        display: flex;
+        overflow-x: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        padding: 8px 10px;
+        gap: 4px;
+        scrollbar-width: thin;
+      }
+      .mockup-sidebar::-webkit-scrollbar { height: 4px; }
+      .mockup-sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+      .mockup-nav-item {
+        flex-shrink: 0;
+        white-space: nowrap;
+        padding: 6px 10px;
+        font-size: 11px;
+        margin-bottom: 0;
+      }
       .mockup-kpis { grid-template-columns: repeat(3, 1fr); gap: 6px; }
       .mockup-kpi { padding: 8px; }
       .mockup-kpi-val { font-size: 13px; }
-      .mockup-chart { height: 140px; }
+      .mockup-chart-svg { height: 140px; }
+      .mockup-main { min-height: 280px; }
     }
     @media (max-width: 640px) {
       .nav-inner { padding: 10px 16px; }
@@ -664,6 +866,8 @@
       .mockup-wrap { padding: 0 18px; margin-top: 36px; }
       .section { padding: 44px 18px; }
       .pricing { padding: 24px 18px; }
+      .mockup-trade { grid-template-columns: 50px 44px 48px 1fr; gap: 6px; font-size: 10px; }
+      .mockup-bar-row { grid-template-columns: 36px 1fr 60px; font-size: 10px; }
     }
     @media (max-width: 380px) {
       .stats-grid { grid-template-columns: 1fr; }
@@ -749,82 +953,300 @@
     </div>
   </div>
 
-  <!-- ─── Mockup app preview ───────────────────────────────────────────── -->
+  <!-- ─── Mockup app preview (5 panes interactives, CSS-only tabs) ──────── -->
   <div class="mockup-wrap">
-    <div class="mockup" role="img" aria-label="Aperçu de l'application ZeldTrade">
+    <input type="radio" name="mockup-tab" id="mt-dashboard" checked>
+    <input type="radio" name="mockup-tab" id="mt-analytics">
+    <input type="radio" name="mockup-tab" id="mt-calendrier">
+    <input type="radio" name="mockup-tab" id="mt-journal">
+    <input type="radio" name="mockup-tab" id="mt-objectifs">
+
+    <div class="mockup" role="region" aria-label="Aperçu interactif de l'application ZeldTrade">
       <div class="mockup-bar">
         <span class="mockup-bar-dot red"></span>
         <span class="mockup-bar-dot amber"></span>
         <span class="mockup-bar-dot green"></span>
-        <span class="mockup-bar-title">zeldtrade.app — Dashboard</span>
+        <span class="mockup-bar-title">zeldtrade.app — Aperçu interactif</span>
       </div>
       <div class="mockup-body">
-        <aside class="mockup-sidebar">
-          <div class="mockup-nav-item active">
+        <aside class="mockup-sidebar" role="tablist">
+          <label for="mt-dashboard" class="mockup-nav-item" role="tab">
             <svg class="mockup-nav-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>
             Dashboard
-          </div>
-          <div class="mockup-nav-item">
+          </label>
+          <label for="mt-analytics" class="mockup-nav-item" role="tab">
             <svg class="mockup-nav-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 13L6 8L9 10L14 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Analytics
-          </div>
-          <div class="mockup-nav-item">
+          </label>
+          <label for="mt-calendrier" class="mockup-nav-item" role="tab">
             <svg class="mockup-nav-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M2 6h12M5 2v3M11 2v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
             Calendrier
-          </div>
-          <div class="mockup-nav-item">
-            <svg class="mockup-nav-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 4v4l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </label>
+          <label for="mt-journal" class="mockup-nav-item" role="tab">
+            <svg class="mockup-nav-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 2.5h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.4"/><path d="M5 6h6M5 8.5h6M5 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
             Journal
-          </div>
-          <div class="mockup-nav-item">
-            <svg class="mockup-nav-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 1.5L9.8 5.6L14 6.3L11 9.3L11.7 13.5L8 11.5L4.3 13.5L5 9.3L2 6.3L6.2 5.6L8 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          </label>
+          <label for="mt-objectifs" class="mockup-nav-item" role="tab">
+            <svg class="mockup-nav-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="8" r="0.8" fill="currentColor"/></svg>
             Objectifs
-          </div>
+          </label>
         </aside>
+
         <main class="mockup-main">
-          <div class="mockup-kpis">
-            <div class="mockup-kpi">
-              <div class="mockup-kpi-label">Balance</div>
-              <div class="mockup-kpi-val">52 340 $</div>
+
+          <!-- ── Dashboard pane ── -->
+          <div class="mockup-pane" data-pane="dashboard">
+            <div class="mockup-kpis">
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Balance</div>
+                <div class="mockup-kpi-val">52 340 $</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">P&amp;L Net</div>
+                <div class="mockup-kpi-val up">+ 2 340 $</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Win rate</div>
+                <div class="mockup-kpi-val">68 %</div>
+              </div>
             </div>
-            <div class="mockup-kpi">
-              <div class="mockup-kpi-label">P&amp;L Net</div>
-              <div class="mockup-kpi-val up">+ 2 340 $</div>
-            </div>
-            <div class="mockup-kpi">
-              <div class="mockup-kpi-label">Win rate</div>
-              <div class="mockup-kpi-val">68 %</div>
+            <div class="mockup-block">
+              <span class="mockup-block-label">Équité (30 j)</span>
+              <span class="mockup-block-val">↑ 4.68 %</span>
+              <svg class="mockup-chart-svg" viewBox="0 0 400 160" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="eqFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.40"/>
+                    <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+                  </linearGradient>
+                  <linearGradient id="eqLine" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%"   stop-color="#a78bfa"/>
+                    <stop offset="100%" stop-color="#f472b6"/>
+                  </linearGradient>
+                </defs>
+                <line x1="0" y1="40"  x2="400" y2="40"  stroke="#30363d" stroke-width="0.5" stroke-dasharray="3 4"/>
+                <line x1="0" y1="80"  x2="400" y2="80"  stroke="#30363d" stroke-width="0.5" stroke-dasharray="3 4"/>
+                <line x1="0" y1="120" x2="400" y2="120" stroke="#30363d" stroke-width="0.5" stroke-dasharray="3 4"/>
+                <path d="M0,130 L25,120 L50,124 L75,108 L100,114 L125,96 L150,102 L175,84 L200,90 L225,72 L250,80 L275,60 L300,68 L325,48 L350,56 L375,38 L400,30 L400,160 L0,160 Z" fill="url(#eqFill)"/>
+                <path d="M0,130 L25,120 L50,124 L75,108 L100,114 L125,96 L150,102 L175,84 L200,90 L225,72 L250,80 L275,60 L300,68 L325,48 L350,56 L375,38 L400,30" fill="none" stroke="url(#eqLine)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="400" cy="30" r="3.5" fill="#f472b6"/>
+                <circle cx="400" cy="30" r="6"   fill="#f472b6" opacity="0.25"/>
+              </svg>
             </div>
           </div>
-          <div class="mockup-chart">
-            <span class="mockup-chart-label">Équité (30 j)</span>
-            <span class="mockup-chart-val">↑ 4.68 %</span>
-            <svg viewBox="0 0 400 160" preserveAspectRatio="none" aria-hidden="true">
-              <defs>
-                <linearGradient id="eqFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.40"/>
-                  <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
-                </linearGradient>
-                <linearGradient id="eqLine" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%"   stop-color="#a78bfa"/>
-                  <stop offset="100%" stop-color="#f472b6"/>
-                </linearGradient>
-              </defs>
-              <!-- Grid lines -->
-              <line x1="0" y1="40"  x2="400" y2="40"  stroke="#30363d" stroke-width="0.5" stroke-dasharray="3 4"/>
-              <line x1="0" y1="80"  x2="400" y2="80"  stroke="#30363d" stroke-width="0.5" stroke-dasharray="3 4"/>
-              <line x1="0" y1="120" x2="400" y2="120" stroke="#30363d" stroke-width="0.5" stroke-dasharray="3 4"/>
-              <!-- Area fill -->
-              <path d="M0,130 L25,120 L50,124 L75,108 L100,114 L125,96 L150,102 L175,84 L200,90 L225,72 L250,80 L275,60 L300,68 L325,48 L350,56 L375,38 L400,30 L400,160 L0,160 Z"
-                    fill="url(#eqFill)"/>
-              <!-- Line -->
-              <path d="M0,130 L25,120 L50,124 L75,108 L100,114 L125,96 L150,102 L175,84 L200,90 L225,72 L250,80 L275,60 L300,68 L325,48 L350,56 L375,38 L400,30"
-                    fill="none" stroke="url(#eqLine)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <!-- End dot -->
-              <circle cx="400" cy="30" r="3.5" fill="#f472b6"/>
-              <circle cx="400" cy="30" r="6"   fill="#f472b6" opacity="0.25"/>
-            </svg>
+
+          <!-- ── Analytics pane ── -->
+          <div class="mockup-pane" data-pane="analytics">
+            <div class="mockup-kpis">
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Trades total</div>
+                <div class="mockup-kpi-val">142</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">R:R moyen</div>
+                <div class="mockup-kpi-val">2.4</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Profit factor</div>
+                <div class="mockup-kpi-val up">3.1</div>
+              </div>
+            </div>
+            <div class="mockup-block">
+              <span class="mockup-block-label">Perf par instrument</span>
+              <span class="mockup-block-val">7 instruments</span>
+              <div class="mockup-bars">
+                <div class="mockup-bar-row">
+                  <span class="mockup-bar-name">MNQ</span>
+                  <div class="mockup-bar-track"><div class="mockup-bar-fill" style="width:82%"></div></div>
+                  <span class="mockup-bar-val">+ 1 240 $</span>
+                </div>
+                <div class="mockup-bar-row">
+                  <span class="mockup-bar-name">MES</span>
+                  <div class="mockup-bar-track"><div class="mockup-bar-fill" style="width:64%"></div></div>
+                  <span class="mockup-bar-val">+ 860 $</span>
+                </div>
+                <div class="mockup-bar-row">
+                  <span class="mockup-bar-name">MGC</span>
+                  <div class="mockup-bar-track"><div class="mockup-bar-fill" style="width:48%"></div></div>
+                  <span class="mockup-bar-val">+ 540 $</span>
+                </div>
+                <div class="mockup-bar-row">
+                  <span class="mockup-bar-name">CL</span>
+                  <div class="mockup-bar-track"><div class="mockup-bar-fill" style="width:22%"></div></div>
+                  <span class="mockup-bar-val">+ 180 $</span>
+                </div>
+                <div class="mockup-bar-row">
+                  <span class="mockup-bar-name">NQ</span>
+                  <div class="mockup-bar-track"><div class="mockup-bar-fill down" style="width:18%"></div></div>
+                  <span class="mockup-bar-val down">− 120 $</span>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <!-- ── Calendrier pane ── -->
+          <div class="mockup-pane" data-pane="calendrier">
+            <div class="mockup-kpis">
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Mai 2026</div>
+                <div class="mockup-kpi-val">14 j actifs</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Best day</div>
+                <div class="mockup-kpi-val up">+ 540 $</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Worst day</div>
+                <div class="mockup-kpi-val down">− 220 $</div>
+              </div>
+            </div>
+            <div class="mockup-block">
+              <span class="mockup-block-label">Mai 2026</span>
+              <span class="mockup-block-val">↑ + 2 340 $</span>
+              <div class="mockup-cal-grid">
+                <span class="mockup-cal-header">L</span>
+                <span class="mockup-cal-header">M</span>
+                <span class="mockup-cal-header">M</span>
+                <span class="mockup-cal-header">J</span>
+                <span class="mockup-cal-header">V</span>
+                <span class="mockup-cal-header">S</span>
+                <span class="mockup-cal-header">D</span>
+                <span class="mockup-cal-day empty"></span>
+                <span class="mockup-cal-day empty"></span>
+                <span class="mockup-cal-day empty"></span>
+                <span class="mockup-cal-day win"></span>
+                <span class="mockup-cal-day winx"></span>
+                <span class="mockup-cal-day empty"></span>
+                <span class="mockup-cal-day empty"></span>
+                <span class="mockup-cal-day win"></span>
+                <span class="mockup-cal-day loss"></span>
+                <span class="mockup-cal-day winx"></span>
+                <span class="mockup-cal-day win"></span>
+                <span class="mockup-cal-day win"></span>
+                <span class="mockup-cal-day empty"></span>
+                <span class="mockup-cal-day empty"></span>
+                <span class="mockup-cal-day winx"></span>
+                <span class="mockup-cal-day win"></span>
+                <span class="mockup-cal-day loss"></span>
+                <span class="mockup-cal-day win"></span>
+                <span class="mockup-cal-day winx"></span>
+                <span class="mockup-cal-day empty"></span>
+                <span class="mockup-cal-day empty"></span>
+                <span class="mockup-cal-day win"></span>
+                <span class="mockup-cal-day win"></span>
+                <span class="mockup-cal-day"></span>
+                <span class="mockup-cal-day"></span>
+                <span class="mockup-cal-day"></span>
+                <span class="mockup-cal-day empty"></span>
+                <span class="mockup-cal-day empty"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Journal pane ── -->
+          <div class="mockup-pane" data-pane="journal">
+            <div class="mockup-kpis">
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Cette semaine</div>
+                <div class="mockup-kpi-val">8 trades</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Wins</div>
+                <div class="mockup-kpi-val up">6</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Losses</div>
+                <div class="mockup-kpi-val down">2</div>
+              </div>
+            </div>
+            <div class="mockup-block">
+              <span class="mockup-block-label">Trades récents</span>
+              <span class="mockup-block-val">+ 1 480 $</span>
+              <div class="mockup-trades">
+                <div class="mockup-trade">
+                  <span class="mockup-trade-date">14 mai</span>
+                  <span class="mockup-trade-instr">MNQ</span>
+                  <span class="mockup-trade-side long">LONG</span>
+                  <span class="mockup-trade-pnl up">+ 320 $</span>
+                </div>
+                <div class="mockup-trade">
+                  <span class="mockup-trade-date">14 mai</span>
+                  <span class="mockup-trade-instr">MES</span>
+                  <span class="mockup-trade-side short">SHORT</span>
+                  <span class="mockup-trade-pnl up">+ 180 $</span>
+                </div>
+                <div class="mockup-trade">
+                  <span class="mockup-trade-date">13 mai</span>
+                  <span class="mockup-trade-instr">MGC</span>
+                  <span class="mockup-trade-side long">LONG</span>
+                  <span class="mockup-trade-pnl up">+ 540 $</span>
+                </div>
+                <div class="mockup-trade">
+                  <span class="mockup-trade-date">13 mai</span>
+                  <span class="mockup-trade-instr">CL</span>
+                  <span class="mockup-trade-side long">LONG</span>
+                  <span class="mockup-trade-pnl down">− 120 $</span>
+                </div>
+                <div class="mockup-trade">
+                  <span class="mockup-trade-date">12 mai</span>
+                  <span class="mockup-trade-instr">MNQ</span>
+                  <span class="mockup-trade-side short">SHORT</span>
+                  <span class="mockup-trade-pnl up">+ 260 $</span>
+                </div>
+                <div class="mockup-trade">
+                  <span class="mockup-trade-date">12 mai</span>
+                  <span class="mockup-trade-instr">MES</span>
+                  <span class="mockup-trade-side long">LONG</span>
+                  <span class="mockup-trade-pnl up">+ 300 $</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Objectifs pane ── -->
+          <div class="mockup-pane" data-pane="objectifs">
+            <div class="mockup-kpis">
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Actifs</div>
+                <div class="mockup-kpi-val">3</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Atteints</div>
+                <div class="mockup-kpi-val up">1</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">En cours</div>
+                <div class="mockup-kpi-val">2</div>
+              </div>
+            </div>
+            <div class="mockup-goals">
+              <div class="mockup-goal">
+                <div class="mockup-goal-head">
+                  <span class="mockup-goal-name">Profit mensuel</span>
+                  <span class="mockup-goal-val">2 340 / 3 000 $</span>
+                </div>
+                <div class="mockup-bar-track"><div class="mockup-bar-fill" style="width:78%"></div></div>
+                <span class="mockup-goal-pct">78 %</span>
+              </div>
+              <div class="mockup-goal">
+                <div class="mockup-goal-head">
+                  <span class="mockup-goal-name">Trades / mois</span>
+                  <span class="mockup-goal-val">28 / 40</span>
+                </div>
+                <div class="mockup-bar-track"><div class="mockup-bar-fill" style="width:70%"></div></div>
+                <span class="mockup-goal-pct">70 %</span>
+              </div>
+              <div class="mockup-goal done">
+                <div class="mockup-goal-head">
+                  <span class="mockup-goal-name">Win rate cible</span>
+                  <span class="mockup-goal-val">68 % / 60 %</span>
+                </div>
+                <div class="mockup-bar-track"><div class="mockup-bar-fill" style="width:100%"></div></div>
+                <span class="mockup-goal-pct">✓ Atteint</span>
+              </div>
+            </div>
+          </div>
+
         </main>
       </div>
     </div>
@@ -948,7 +1370,7 @@
       <a href="mailto:zeldtradepro@gmail.com" class="footer-link">Contact</a>
     </div>
     <div>
-      © 2026 ZeldTrade — Aaron — <span style="color: var(--accent-l)">v0.9.117</span>
+      © 2026 ZeldTrade — Aaron — <span style="color: var(--accent-l)">v0.9.118</span>
     </div>
   </footer>
 
