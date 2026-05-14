@@ -5,6 +5,17 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.134',
+      date: '2026-05-15',
+      time: '00:10',
+      tags: ['fix'],
+      title: 'Export PDF : autoriser génération même avec 0 trade',
+      titleEn: 'Export PDF: allow generation even with 0 trade',
+      items: [
+        { type: 'fix', text: 'Avant : si la période sélectionnée ne contenait aucun trade, `ExportPDF.generate()` throw "Aucun trade trouvé". Maintenant : on autorise la génération du PDF avec juste la page de garde (stats vides). Utile pour tester, démontrer le format, ou pour un compte fraîchement créé.', textEn: 'Before: if the selected period contained no trade, `ExportPDF.generate()` threw "No trade found". Now: we allow generation of the PDF with just the cover page (empty stats). Useful for testing, demonstrating the format, or for a freshly created account.' },
+      ],
+    },
+    {
       version: '0.9.133',
       date: '2026-05-14',
       time: '23:50',
