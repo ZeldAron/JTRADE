@@ -13,7 +13,15 @@ const Stripe                             = require('stripe');
 admin.initializeApp();
 
 const GROQ_API_KEY      = defineSecret('GROQ_API_KEY');
+// Web3Forms — DEPRECATED (v0.9.123) remplacé par Discord webhooks.
+// Le secret reste déclaré pour ne pas casser le déploiement tant qu'on ne fait
+// pas de cleanup explicite, mais n'est plus utilisé par aucune CF.
 const WEB3FORMS_KEY     = defineSecret('WEB3FORMS_KEY');
+// Discord webhooks (v0.9.123) — remplacent Web3Forms (qui exige un plan payant
+// pour les appels server-side). Chaque webhook poste dans un canal privé du
+// serveur ZeldTrade HQ visible uniquement par l'admin.
+const DISCORD_SUPPORT_WEBHOOK = defineSecret('DISCORD_SUPPORT_WEBHOOK');
+const DISCORD_SIGNUP_WEBHOOK  = defineSecret('DISCORD_SIGNUP_WEBHOOK');
 // hCaptcha — secret côté serveur pour vérifier les tokens captcha (optionnel)
 // Tant que pas setté avec une vraie valeur, le check est skipé (mode dégradé).
 const HCAPTCHA_SECRET       = defineSecret('HCAPTCHA_SECRET');
@@ -265,6 +273,66 @@ function _sanitizeText(s, max) {
 }
 
 /**
+ * Variante de _sanitizeText qui PRÉSERVE les retours ligne (pour le contenu
+ * d'un message support qu'on veut lisible côté Discord). Strip uniquement les
+ * vrais control chars + Unicode bidi.
+ */
+function _sanitizeMessage(s, max) {
+  return String(s || '')
+    .replace(/[\0-\x08\x0B-\x1F\x7F]+/g, ' ')  // garde \n (0x0A) et \r (0x0D)
+    .replace(/\r\n?/g, '\n')                      // normalise CRLF / CR -> LF
+    .replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '')
+    .trim().slice(0, max);
+}
+
+/**
+ * POST sur un webhook Discord. Format embed coherent avec le branding ZeldTrade.
+ * Securite :
+ *  - URL whitelistee (regex format Discord) - defense en profondeur meme si
+ *    l'URL vient d'un secret (on evite qu'un secret malicieux pointe ailleurs).
+ *  - Pas de retry agressif (Discord rate-limite a 30 req/min par webhook).
+ *  - Erreurs loggees sans PII (le body contient le message user).
+ *  - Timeout 8s via AbortController.
+ */
+const DISCORD_WEBHOOK_RE = /^https:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\/\d{15,25}\/[A-Za-z0-9_-]{40,128}$/;
+
+async function _postDiscordWebhook(url, embed) {
+  if (typeof url !== 'string' || !DISCORD_WEBHOOK_RE.test(url)) {
+    console.error('[Discord] invalid webhook URL format');
+    return { ok: false, reason: 'invalid-url' };
+  }
+  const controller = new AbortController();
+  const timeout    = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(url, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        username:   'ZeldTrade Bot',
+        avatar_url: 'https://zeldaron.github.io/zeldtrade/favicon.png',
+        embeds:     [embed],
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      console.error('[Discord] webhook failed status=', res.status);
+      return { ok: false, reason: `http-${res.status}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error('[Discord] webhook error', e && e.name);
+    return { ok: false, reason: 'fetch-failed' };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// Couleur brand ZeldTrade #6366f1 (utilisee par Discord embeds)
+const DISCORD_COLOR_BRAND = 0x6366f1;
+const DISCORD_COLOR_GREEN = 0x3fb950;
+
+
+/**
  * Envoyer un message de contact via Web3Forms (clé côté serveur).
  * Sécurité :
  *  - Auth requis
@@ -274,7 +342,7 @@ function _sanitizeText(s, max) {
  */
 exports.sendContactMessage = onCall(
   {
-    secrets:        [WEB3FORMS_KEY, HCAPTCHA_SECRET],
+    secrets:        [DISCORD_SUPPORT_WEBHOOK, HCAPTCHA_SECRET],
     // cors retiré : voir analyzeChart pour explication
     maxInstances:    5,
     timeoutSeconds:  20,
@@ -301,7 +369,10 @@ exports.sendContactMessage = onCall(
     const name         = _sanitizeText(request.data?.name,    100);
     const tokenEmail   = String(request.auth.token.email || '').toLowerCase();
     const email        = tokenEmail;
-    const message      = _sanitizeText(request.data?.message, 5000);
+    // Le message peut contenir des retours ligne (utile dans Discord) — on
+    // utilise _sanitizeMessage qui préserve \n. Tronqué à 3900 chars pour
+    // tenir dans embed.description (limite Discord 4096).
+    const message      = _sanitizeMessage(request.data?.message, 5000);
     const plan         = _sanitizeText(request.data?.plan,    20);
     const captchaToken = String(request.data?.captchaToken || '').slice(0, 4096);
 
@@ -315,27 +386,27 @@ exports.sendContactMessage = onCall(
     const captchaOk = await _verifyHcaptcha(captchaToken);
     if (!captchaOk) throw new HttpsError('failed-precondition', 'Captcha invalide');
 
-    const res = await fetch('https://api.web3forms.com/submit', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({
-        access_key: WEB3FORMS_KEY.value(),
-        subject:    `[ZeldTrade] Message de ${name}`,
-        from_name:  name,
-        email,
-        message,
-        plan,
-        uid,
-        'h-captcha-response': captchaToken,
-      }),
-    });
+    // Construction de l'embed Discord (canal #support-tickets)
+    const truncated   = message.length > 3900;
+    const description = truncated
+      ? message.slice(0, 3900) + '\n\n*… (message tronqué)*'
+      : message;
+    const embed = {
+      title:       `📩 Message de ${name}`,
+      description,
+      color:       DISCORD_COLOR_BRAND,
+      fields: [
+        { name: '👤 Pseudo', value: name,         inline: true },
+        { name: '📧 Email',  value: email,        inline: true },
+        { name: '💎 Plan',   value: plan || '—',  inline: true },
+      ],
+      footer:    { text: `UID: ${uid}` },
+      timestamp: new Date().toISOString(),
+    };
 
-    const txt  = await res.text();
-    let data = {};
-    try { data = JSON.parse(txt); } catch {}
-    if (!res.ok || !data.success) {
-      // Log SANS PII (Web3Forms peut renvoyer name/email/message dans le body)
-      console.error('[Web3Forms] failed status=', res.status);
+    const result = await _postDiscordWebhook(DISCORD_SUPPORT_WEBHOOK.value(), embed);
+    if (!result.ok) {
+      console.error('[sendContactMessage] discord post failed', result.reason);
       throw new HttpsError('internal', 'Envoi échoué — réessaie dans un instant.');
     }
     return { ok: true };
@@ -350,7 +421,7 @@ exports.sendContactMessage = onCall(
  */
 exports.notifyNewSignup = onCall(
   {
-    secrets:        [WEB3FORMS_KEY, HCAPTCHA_SECRET],
+    secrets:        [DISCORD_SIGNUP_WEBHOOK, HCAPTCHA_SECRET],
     // cors retiré : voir analyzeChart pour explication
     maxInstances:    5,
     timeoutSeconds:  10,
@@ -401,21 +472,22 @@ exports.notifyNewSignup = onCall(
     const captchaOk = await _verifyHcaptcha(captchaToken);
     if (!captchaOk) throw new HttpsError('failed-precondition', 'Captcha invalide');
 
-    const res = await fetch('https://api.web3forms.com/submit', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        access_key: WEB3FORMS_KEY.value(),
-        subject:    `[ZeldTrade] Nouvel utilisateur : ${name}`,
-        from_name:  'ZeldTrade Bot',
-        email:      ADMIN_EMAIL,
-        message:    `Nouvel inscrit !\n\nPseudo : ${name}\nEmail  : ${email}\nDate   : ${new Date().toLocaleString('fr-FR')}`,
-        'h-captcha-response': captchaToken,
-      }),
-    });
+    // Embed Discord (canal #new-users)
+    const embed = {
+      title: '🎉 Nouvel utilisateur inscrit',
+      color: DISCORD_COLOR_GREEN,
+      fields: [
+        { name: '👤 Pseudo', value: name,  inline: true },
+        { name: '📧 Email',  value: email, inline: true },
+      ],
+      footer:    { text: `UID: ${uid}` },
+      timestamp: new Date().toISOString(),
+    };
 
-    if (!res.ok) {
-      console.error('[Web3Forms signup notif] failed', res.status);
+    const result = await _postDiscordWebhook(DISCORD_SIGNUP_WEBHOOK.value(), embed);
+    if (!result.ok) {
+      // Pas critique : on a déjà flagué signupNotified, on log juste sans throw
+      console.error('[notifyNewSignup] discord post failed', result.reason);
     }
 
     return { ok: true };

@@ -37,6 +37,83 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.123 — Migration Web3Forms → Discord webhooks
+
+**Type** : infra / integration
+**Fichiers** : `functions/index.js` (helpers + 2 CFs), `src/app.html` (bump v=), `src/index.html` (footer), `src/js/pages/changelog.js`, `docs/TODO.md`
+**Versions impactées** : front v0.9.123 + 2 CFs redéployées + 2 secrets ajoutés
+
+### Contexte
+Web3Forms gratuit n'autorise PAS les appels server-side (Pro plan $10/mois requis). Migration vers Discord webhooks : gratuit, illimité (rate-limit 30 req/min/webhook), notifs mobile/desktop instantanées via l'app Discord. Le serveur ZeldTrade HQ a déjà la structure (Carl-bot, rôles, canaux) — il restait juste à câbler.
+
+### Setup user (Discord)
+1. Catégorie privée `🔧 ADMIN` créée
+2. Canaux `#support-tickets` (privé) et `#new-users` (public — choix user pour visibilité communauté des inscriptions) créés
+3. 2 webhooks créés (`ZeldTrade Support` + `ZeldTrade Signups`)
+4. URLs transmises + stockées dans Secret Manager :
+   - `DISCORD_SUPPORT_WEBHOOK`
+   - `DISCORD_SIGNUP_WEBHOOK`
+
+### Changements code (`functions/index.js`)
+
+#### Nouveaux helpers
+- **`_sanitizeMessage(s, max)`** — variante de `_sanitizeText` qui préserve `\n` et `\r` (pour la lisibilité du message support dans l'embed Discord). Strip uniquement les vrais control chars + Unicode bidi.
+- **`_postDiscordWebhook(url, embed)`** — helper générique pour POST vers Discord. Sécurité :
+  - Regex `DISCORD_WEBHOOK_RE` valide le format `^https://(canary\.|ptb\.)?discord(app)?\.com/api/webhooks/<id 15-25>/<token 40-128>$`
+  - Timeout 8s via `AbortController`
+  - Logs sans PII (Discord embeds peuvent contenir name/email/message → on log uniquement le code HTTP)
+  - User-Agent custom : `ZeldTrade Bot` + avatar `favicon.png`
+  - Retourne `{ ok, reason }` (pas de throw — laisse le caller décider)
+
+#### `sendContactMessage`
+- `secrets`: `WEB3FORMS_KEY` → `DISCORD_SUPPORT_WEBHOOK`
+- `_sanitizeText(message)` → `_sanitizeMessage(message)` (pour préserver les sauts de ligne)
+- Suppression du `fetch('https://api.web3forms.com/submit', ...)` remplacé par construction d'embed + `_postDiscordWebhook()` :
+  - Titre : `📩 Message de {name}` (couleur brand `#6366f1`)
+  - Description : message complet (tronqué à 3900 chars, limite Discord embed.description = 4096)
+  - Fields : Pseudo / Email / Plan
+  - Footer : `UID: {uid}` + timestamp ISO
+
+#### `notifyNewSignup`
+- `secrets`: `WEB3FORMS_KEY` → `DISCORD_SIGNUP_WEBHOOK`
+- Suppression du `fetch web3forms` remplacé par embed Discord :
+  - Titre : `🎉 Nouvel utilisateur inscrit` (couleur green `#3fb950`)
+  - Fields : Pseudo / Email
+  - Footer : `UID: {uid}` + timestamp ISO
+- Le post Discord est `non-critique` : si le webhook échoue, on log et on retourne quand même `{ok: true}` (le signup ne doit pas échouer juste parce que la notif est tombée à l'eau)
+
+### Sécurité
+- **URLs webhooks = secrets** (Google Secret Manager, chiffrés at-rest, jamais exposés au client)
+- **Regex de validation** sur l'URL avant tout fetch (défense en profondeur)
+- **No PII dans les logs** côté serveur
+- **Captcha hCaptcha toujours actif** côté CF (préservation du flow anti-bot existant)
+- **Email vérifié toujours requis** sur `sendContactMessage` (v0.9.106)
+- **Idempotency `signupNotified`** préservée sur `notifyNewSignup` (anti-double notif)
+- **CSP frontend inchangée** : seul le serveur (CF) parle à Discord, le client ne voit jamais l'URL webhook
+
+### Rotation préconisée
+Les URLs ont été transmises en clair dans la conversation. Recommandation : régénérer les 2 webhooks dans Discord (panel webhook → "Régénérer l'URL") puis re-set les secrets via `firebase functions:secrets:set NAME --data-file -` (stdin). Coût : 1 min.
+
+### Cleanup futur
+- Le secret `WEB3FORMS_KEY` reste déclaré (`defineSecret`) mais n'est plus attaché à aucune CF — pas d'impact. À retirer plus tard avec `firebase functions:secrets:destroy WEB3FORMS_KEY` (libère 1 secret slot)
+- Pas de modification frontend nécessaire : les CFs gardent la même API (`name`, `message`, `plan`, `captchaToken`)
+
+### Test
+1. **Support** : `/contact` dans l'app → remplir form → envoyer → embed doit apparaître dans `#support-tickets`
+2. **Signup** : créer un compte test → embed doit apparaître dans `#new-users`
+
+### Impact
+- **UX admin** : notifs Discord temps réel (mobile + desktop) au lieu d'emails → meilleure réactivité
+- **Coût** : -$10/mois (Web3Forms Pro évité)
+- **Sécu** : neutre / légèrement positive (validation regex en plus, mais Discord webhooks acceptent par défaut n'importe quel POST signé → on dépend de la confidentialité du secret comme avec Web3Forms)
+- **Compat** : pas de breaking change client
+
+### À surveiller
+- Si Discord change le format d'URL webhook (improbable mais possible) → le regex `DISCORD_WEBHOOK_RE` devra être mis à jour
+- Rate-limit Discord (30 req/min par webhook) → improbable pour un usage normal mais à monitorer si on ouvre largement
+
+---
+
 ## 2026-05-14 — v0.9.122 — Pack sécu CODE (5 fixes : S36, S13, S20, S18, S21)
 
 **Type** : security

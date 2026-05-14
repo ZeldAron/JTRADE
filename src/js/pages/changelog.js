@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.123',
+      date: '2026-05-14',
+      time: '18:30',
+      tags: ['infra', 'integration'],
+      title: 'Migration Web3Forms → Discord webhooks (#support-tickets + #new-users)',
+      titleEn: 'Migration Web3Forms → Discord webhooks (#support-tickets + #new-users)',
+      items: [
+        { type: 'feat', text: 'Les messages du formulaire de contact arrivent désormais en embed Discord dans le canal `#support-tickets` du serveur ZeldTrade HQ (avant : email via Web3Forms qui nécessitait un plan payant pour les appels server-side).', textEn: 'Contact form messages now arrive as Discord embeds in `#support-tickets` channel of ZeldTrade HQ server (was: email via Web3Forms which required paid plan for server-side calls).' },
+        { type: 'feat', text: 'Les notifications de nouvelles inscriptions arrivent en embed Discord dans `#new-users` (titre vert, pseudo + email + UID). Pratique pour suivre la croissance bêta.', textEn: 'New signup notifications arrive as Discord embeds in `#new-users` (green title, pseudo + email + UID). Useful for tracking beta growth.' },
+        { type: 'security', text: 'Helper `_postDiscordWebhook()` valide chaque URL via regex stricte (`^https://discord.com/api/webhooks/<id>/<token>$`) avant tout fetch — défense en profondeur même si un secret venait à être mal configuré. Timeout 8s via AbortController, logs sans PII.', textEn: '`_postDiscordWebhook()` helper validates each URL via strict regex before any fetch — defense in depth even if a secret were misconfigured. 8s timeout via AbortController, logs without PII.' },
+      ],
+    },
+    {
       version: '0.9.122',
       date: '2026-05-14',
       time: '17:30',

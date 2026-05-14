@@ -66,7 +66,7 @@ Sans domaine `zeldtrade.com` :
 | # | Action | Effort | Coût |
 |---|---|---|---|
 | ~~**I8**~~ | ~~Dependabot config~~ ✅ 2026-05-13 (`.github/dependabot.yml` créé) — il reste juste à cocher "Enable Dependabot alerts" dans GitHub Settings → Code security | 15 min | 0€ |
-| **I9** | Migrer Web3Forms → Discord webhooks (donne-moi les URLs après création) | 1h (toi) + 30 min (moi pour migration code) | 0€ |
+| ~~**I9**~~ | ~~Migrer Web3Forms → Discord webhooks~~ ✅ 2026-05-14 (v0.9.123) — 2 webhooks setup (#support-tickets + #new-users), helper `_postDiscordWebhook()` avec regex validation, secrets `DISCORD_SUPPORT_WEBHOOK` + `DISCORD_SIGNUP_WEBHOOK` stockés et CFs redéployées | ✅ Fait |
 | **I11** | Compléter `privacy.html` : Groq, GitHub Pages, Stripe, Discord avec base légale RGPD | 1-2h | 0€ |
 | **I13** | Sentry / GCP Error Reporting alertes | 1h | 0€ (5k events/mois free) |
 | **I15** | Compte Stripe FR + KYC (lance tôt, attente 1-7j) | 2-3h + attente | 0€ (no fee sans vente) |
