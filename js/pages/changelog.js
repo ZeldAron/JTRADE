@@ -5,6 +5,28 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.132',
+      date: '2026-05-14',
+      time: '23:30',
+      tags: ['feat', 'pro'],
+      title: 'F3 — Export PDF des trades (Pro only)',
+      titleEn: 'F3 — Trades PDF export (Pro only)',
+      items: [
+        { type: 'feat', text: 'Nouveau bouton "Exporter en PDF" dans Settings → Données (Pro uniquement). Génère un rapport PDF complet sur une période donnée : page de garde avec stats globales (P&L total, win rate, R:R moyen, best/worst trade) + chaque trade en détail (instrument, direction LONG/SHORT, date, entry/SL/TP, P&L, R:R, setup, notes).', textEn: 'New "Export as PDF" button in Settings → Data (Pro only). Generates a full PDF report for a given period: cover page with global stats (total P&L, win rate, avg R:R, best/worst trade) + each trade in detail (instrument, LONG/SHORT direction, date, entry/SL/TP, P&L, R:R, setup, notes).' },
+        { type: 'feat', text: 'Modal de sélection : date début + date fin (défaut = 30 derniers jours), choix du compte (ou "Tous les comptes"). Format : A4 portrait, 6 trades par page, page de garde + N pages, footer avec pagination + URL ZeldTrade.', textEn: 'Selection modal: start date + end date (default = last 30 days), account picker (or "All accounts"). Format: A4 portrait, 6 trades per page, cover page + N pages, footer with pagination + ZeldTrade URL.' },
+        { type: 'security', text: 'Génération 100% côté client (jsPDF v3.0.1 bundlé localement, pas de CDN externe — respecte la CSP `script-src \'self\'`). Aucune donnée envoyée à un serveur tiers. Double garde Pro (bouton masqué + check `Store.isPro()` au moment du click — anti DevTools bypass).', textEn: 'Generation 100% client-side (jsPDF v3.0.1 bundled locally, no external CDN — respects CSP `script-src \'self\'`). No data sent to a third-party server. Double Pro guard (button hidden + `Store.isPro()` check at click time — anti DevTools bypass).' },
+        { type: 'feat', text: 'i18n FR + EN complet (15 nouvelles clés `set.export.pdf.*`). Filename : `zeldtrade-export-YYYY-MM-DD.pdf`.', textEn: 'Full FR + EN i18n (15 new `set.export.pdf.*` keys). Filename: `zeldtrade-export-YYYY-MM-DD.pdf`.' },
+      ],
+      user: {
+        title: 'Nouveau pour les Pro : Export PDF complet de tes trades',
+        items: [
+          { type: 'feat', text: 'Tu peux maintenant générer un rapport PDF complet de tes trades sur la période de ton choix. Page de garde avec tes stats globales (P&L total, win rate, meilleur/pire trade), puis chaque trade détaillé. Idéal pour ta comptabilité prop firm, le partage avec un coach, ou tes archives perso.' },
+          { type: 'feat', text: 'Va dans **Réglages → Données → Exporter PDF**, choisis ta période et ton compte. Le PDF est généré directement sur ton appareil (aucune donnée envoyée ailleurs).' },
+          { type: 'feat', text: 'Cette feature est réservée au plan Pro. Les bêta-testeurs Founding Members y ont accès gratuitement.' },
+        ],
+      },
+    },
+    {
       version: '0.9.131',
       date: '2026-05-14',
       time: '23:00',
