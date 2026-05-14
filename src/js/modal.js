@@ -146,35 +146,47 @@ const Modal = (() => {
   async function analyzeWithGroq(imageB64, _unusedApiKey, direction) {
     const isLong = direction !== 'short';
     const prompt =
-      `You are analyzing a TradingView trading chart. Direction: ${isLong ? 'LONG' : 'SHORT'}.\n` +
-      `Extract exactly 3 price levels: entry, sl (stop loss), tp1 (take profit).\n\n` +
+      `You are analyzing a TradingView screenshot. Direction: ${isLong ? 'LONG' : 'SHORT'}.\n` +
+      `Extract 3 price levels: entry, sl (stop loss), tp1 (take profit).\n\n` +
 
-      `== IF you see a TradingView ORDER TICKET panel (a box with rows) ==\n` +
-      `  entry = "Prix d'entrée" or "Entry Price" row\n` +
-      `  sl    = "Prix" inside "NIVEAU DU STOP" or "Stop Loss" section\n` +
-      `  tp1   = "Prix" inside "NIVEAU DE PROFIT" or "Profit Target" section\n\n` +
+      `Try patterns in this PRIORITY order. Use the FIRST pattern that matches.\n\n` +
 
-      `== IF you see an ANNOTATED CHART ==\n` +
-      `There are colored ZONES drawn on the chart (rectangles or shaded areas) AND colored price labels on the RIGHT AXIS.\n` +
-      `The colored labels on the right axis are aligned horizontally with the zone boundaries on the chart.\n\n` +
-      `METHOD — match zones to right-axis labels:\n` +
-      `  1. BLUE zone (rectangle or shaded area) = the PROFIT / ENTRY zone\n` +
-      `     → Look at the right axis at the vertical position of the BLUE zone edges\n` +
-      `     → The colored label(s) on the right axis that align with the blue zone = entry price\n\n` +
-      `  2. RED zone or red horizontal line = the STOP LOSS zone\n` +
-      `     → Look at the right axis at the vertical position of the RED zone/line\n` +
-      `     → The red colored label on the right axis that aligns with the red zone = sl price\n\n` +
-      `  3. TP1 = the colored label on the right axis that is ${isLong ? 'HIGHEST (furthest up)' : 'LOWEST (furthest down)'}, far from entry\n` +
-      `     → This is often a blue or green label at the ${isLong ? 'top' : 'bottom'} of the right axis\n\n` +
-      `RULES:\n` +
-      `  - Match zones to axis labels by their VERTICAL POSITION on the chart\n` +
-      `  - NEVER use the live price ticker box (/MGC, /ES, /NQ etc.)\n` +
-      `  - Copy numbers EXACTLY digit by digit from the right axis labels\n` +
-      `  - ${isLong ? 'sl < entry < tp1' : 'tp1 < entry < sl'} must be true\n\n` +
+      `═══ PATTERN A — ORDER PANEL (highest priority) ═══\n` +
+      `A floating box/popup titled "Position longue", "Position courte", "Long Position", "Short Position",\n` +
+      `or any "Order ticket" with rows of labels and numeric inputs.\n` +
+      `  entry = number in "Prix d'entrée" / "Entry Price" row\n` +
+      `  sl    = number in "Prix" row inside "NIVEAU DU STOP" / "STOP" / "Stop Loss" section\n` +
+      `  tp1   = number in "Prix" row inside "NIVEAU DE PROFIT" / "PROFIT" / "Take Profit" section\n` +
+      `Ignore: "Ticks", "Taille du lot", "Risque", "Effet de levier", "Taille du compte".\n\n` +
+
+      `═══ PATTERN B — NATIVE TRADINGVIEW POSITION LINES ═══\n` +
+      `Horizontal colored lines drawn natively by TradingView (NOT user-drawn rectangles).\n` +
+      `Look for small text badges on the LEFT side of the chart with format like:\n` +
+      `  • "SL  -260.00 USD" or "SL -123 €" → this is the STOP LOSS line (badge usually red/orange)\n` +
+      `  • "TP  1935.00 USD" or "TP +500 €" → this is the TAKE PROFIT line (badge usually green/blue)\n` +
+      `  • "LIMIT", "ENTRY" or just a price → entry line\n` +
+      `For each badge, follow its horizontal line all the way to the RIGHT AXIS and read the PRICE label there.\n` +
+      `  sl    = price on right axis aligned with the SL badge's horizontal line\n` +
+      `  tp1   = price on right axis aligned with the TP badge's horizontal line\n` +
+      `  entry = price on right axis aligned with the entry/limit badge's line (or null if not visible)\n` +
+      `The badges show monetary P&L (USD/EUR), NOT prices. Always get the PRICE from the right axis.\n\n` +
+
+      `═══ PATTERN C — USER-DRAWN ZONES ═══\n` +
+      `Colored rectangles/shaded zones drawn by the user on the chart, plus colored price labels on the right axis.\n` +
+      `  • BLUE zone = entry. Read the right-axis label aligned with the blue zone.\n` +
+      `  • RED zone or red horizontal line = sl. Read the right-axis label aligned with it.\n` +
+      `  • tp1 = the colored right-axis label that is ${isLong ? 'HIGHEST (furthest up)' : 'LOWEST (furthest down)'}, far from entry.\n\n` +
+
+      `═══ UNIVERSAL RULES ═══\n` +
+      `  • NEVER use the live price ticker (top-left box like "/MGC", "/ES", "ENQM26", "B:", "C:", "Ch:").\n` +
+      `  • NEVER invent numbers. Copy EXACTLY digit by digit from the chart.\n` +
+      `  • European number format may use ", " or " " thousands separator (29 741,50 = 29741.50).\n` +
+      `  • Constraint: ${isLong ? 'sl < entry < tp1' : 'tp1 < entry < sl'} (if entry is null this is skipped).\n` +
+      `  • If a value is unreadable or absent, return null for that value.\n\n` +
 
       `Respond with ONLY this JSON on one line:\n` +
       `{"entry":0.00,"sl":0.00,"tp1":0.00}\n` +
-      `Use null for values you cannot read with certainty.`;
+      `Use null for any value you cannot read with certainty.`;
 
     const GROQ_MODELS = [
       'meta-llama/llama-4-scout-17b-16e-instruct',
