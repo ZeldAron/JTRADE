@@ -5,6 +5,28 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.142',
+      date: '2026-05-14',
+      time: '12:00',
+      tags: ['feat', 'ux'],
+      title: 'Renvoyer l\'email de vérification depuis Réglages',
+      titleEn: 'Resend verification email from Settings',
+      items: [
+        { type: 'feat', text: 'Nouveau bloc « Vérification email » dans Réglages → Général : affiche le statut (vérifié / non vérifié) avec ton email. Si non vérifié, deux boutons : **Renvoyer l\'email** (appelle `firebase.auth().currentUser.sendEmailVerification()`) et **J\'ai vérifié** (appelle `user.reload()` puis rafraîchit l\'UI).', textEn: 'New "Email verification" section in Settings → General: shows status (verified / not verified) with your email. If unverified, two buttons: **Resend email** (calls `firebase.auth().currentUser.sendEmailVerification()`) and **I verified** (calls `user.reload()` then refreshes UI).' },
+        { type: 'feat', text: 'Contexte : depuis v0.9.122 (sécurité S20), l\'analyse IA Groq exige `email_verified = true`. Plusieurs bêta-testeurs étaient bloqués sans moyen évident de renvoyer l\'email. Cette UI résout le problème côté client (auto-service, pas besoin de support).', textEn: 'Context: since v0.9.122 (security S20), Groq AI analysis requires `email_verified = true`. Several beta testers were blocked without an obvious way to resend the email. This UI solves the issue client-side (self-service, no support needed).' },
+        { type: 'feat', text: 'Gestion d\'erreurs : `auth/too-many-requests` → toast clair "Trop de tentatives, réessaie dans quelques minutes". Boutons désactivés pendant l\'envoi / la vérification pour éviter les doubles-clics.', textEn: 'Error handling: `auth/too-many-requests` → clear toast. Buttons disabled during send/check to avoid double-clicks.' },
+        { type: 'security', text: 'Aucun changement côté serveur — `sendEmailVerification` est rate-limité par Firebase Auth (~5 emails/heure/user). 14 nouvelles clés i18n (FR + EN). Event delegation sur `document.body` pour binding robuste.', textEn: 'No server-side change — `sendEmailVerification` is rate-limited by Firebase Auth (~5 emails/hour/user). 14 new i18n keys (FR + EN). Event delegation on `document.body` for robust binding.' },
+      ],
+      user: {
+        title: 'Renvoie ton email de vérification depuis les Réglages',
+        items: [
+          { type: 'feat', text: 'Si tu n\'arrives pas à utiliser l\'analyse IA, c\'est probablement parce que ton email n\'est pas encore vérifié.' },
+          { type: 'feat', text: 'Va dans **Réglages → Général** : un nouveau bloc « Vérification email » te dit si ton email est vérifié. Si non, clique sur **Renvoyer l\'email** pour recevoir un nouveau lien.' },
+          { type: 'feat', text: 'Après avoir cliqué sur le lien dans ta boîte mail, reviens sur l\'app et clique sur **J\'ai vérifié** pour débloquer l\'IA immédiatement.' },
+        ],
+      },
+    },
+    {
       version: '0.9.141',
       date: '2026-05-15',
       time: '03:00',
