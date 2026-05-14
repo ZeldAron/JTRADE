@@ -37,6 +37,66 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.130 — Retrait de la page "Mises à jour" de l'app (remplacée par Discord)
+
+**Type** : refactor / ux
+**Fichiers** : `src/app.html` (-3 blocks), `src/js/app.js` (-3 refs), `src/js/i18n.js` (-4 keys), `src/app.html` (bump v=), `src/index.html` (footer), `src/js/pages/changelog.js` (entrée 0.9.130)
+**Versions impactées** : front v0.9.130. CFs et rules inchangées.
+
+### Contexte
+User : « la page discord suffit tu peux retirer et fait bien attention que cela ne casse rien pour tout le reste ». Le canal Discord public `#mises-à-jour` (v0.9.127) est validé et opérationnel. On peut donc retirer la page Mises à jour de l'app (cohérent avec l'engagement initial : "quand ça sera bon tu enlève l'onglet mises à jour dans zeldtrade").
+
+### Changements
+
+#### `src/app.html` (3 retraits)
+1. **Sidebar nav-item** (ligne ~190) : suppression du `<div class="nav-item" data-page="changelog">...Mises à jour</div>`
+2. **DOM page** (ligne ~442) : suppression de `<div class="page" id="page-changelog"></div>`
+3. **Script src** (ligne ~799) : suppression de `<script src="js/pages/changelog.js?v=X.Y.Z"></script>`
+
+#### `src/js/app.js` (3 retraits)
+1. **PAGE_KEYS** : retrait de `changelog: 'page.changelog',`
+2. **switchPage()** : retrait de `if (page === 'changelog') Changelog.renderChangelog();`
+3. **VALID_PAGES Set** : retrait de `'changelog'` (utilisé par ztGoto sessionStorage redirect)
+
+#### `src/js/i18n.js` (4 clés retirées)
+- FR : `nav.changelog`, `page.changelog`
+- EN : `nav.changelog`, `page.changelog`
+
+#### `src/js/pages/changelog.js` — **NON TOUCHÉ**
+Le fichier reste sur disque avec :
+- `const ENTRIES = [...]` (66+ entrées, incrémenté à chaque release)
+- `function renderChangelog(...)` (dead code côté browser, mais pas grave)
+- `return { renderChangelog, getEntries: () => ENTRIES }`
+
+C'est nécessaire car `scripts/announce-update.js` (script Node admin) parse ce fichier en sandbox VM pour récupérer la dernière entrée et générer l'embed Discord.
+
+### Validation anti-régression
+Plusieurs checks effectués pour s'assurer que rien ne casse :
+
+1. ✅ `grep "Changelog\.\|nav.changelog\|page.changelog\|page-changelog\|changelog.js"` dans `src/` : **0 résultats** (hors `pages/changelog.js` lui-même et `docs/`)
+2. ✅ `node -e "...sandbox VM..."` charge `pages/changelog.js` et retourne **68 entries** + dernière version v0.9.129 — script announce-update.js continue à fonctionner
+3. ✅ Tests `node test/calc.test.js` : 103/103
+4. ✅ Aucune autre dépendance dans `src/js/` (les autres pages : dashboard, analytics, calendar, etc. ne référencent jamais Changelog)
+5. ✅ La page `tutorial` reste intacte (proche dans la sidebar, parfois confusion)
+6. ✅ Le `sessionStorage.ztGoto` cleanup (cas où un user aurait sauvegardé `ztGoto=changelog`) : maintenant invalide via `VALID_PAGES.has(_goto)` → fall-through vers `journal` par défaut, no crash
+
+### Impact
+- **UX users** : un onglet en moins dans la sidebar, légèrement plus net
+- **UX users avancés** : redirige naturellement vers Discord pour rester informé (acquisition communauté)
+- **Bundle** : -1 fichier JS chargé (`pages/changelog.js`) — gain minime (~10 KB minifiés)
+- **Admin** : workflow inchangé (release.sh → choix grosse maj → `node scripts/announce-update.js`)
+
+### Bump version
+- `src/app.html` : `?v=0.9.129` → `?v=0.9.130` (20 refs maintenant car -1 script)
+- `src/index.html` : footer
+- `src/js/pages/changelog.js` : entrée 0.9.130 avec champ `user:` (annonce le retrait)
+
+### À surveiller
+- Si un user a bookmarké `/app.html#changelog` ou similaire, le `VALID_PAGES.has('changelog')` retourne false → fall-through normal vers journal. Pas de crash, juste pas de redirection bookmark.
+- Si quelqu'un re-ajoute par erreur un appel à `Changelog.X` dans le futur sans recharger le script, il aura un `Changelog is not defined`. La var est complètement absente du browser maintenant.
+
+---
+
 ## 2026-05-14 — v0.9.129 — Error reporting CFs → Discord #dev-logs (Sentry-lite gratuit)
 
 **Type** : infra / security
