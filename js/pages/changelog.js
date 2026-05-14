@@ -5,6 +5,26 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.130',
+      date: '2026-05-14',
+      time: '22:30',
+      tags: ['refactor', 'ux'],
+      title: 'Retrait de la page "Mises à jour" (remplacée par le canal Discord)',
+      titleEn: 'Removal of the "Updates" page (replaced by the Discord channel)',
+      items: [
+        { type: 'refactor', text: 'Retrait de l\'onglet "Mises à jour" dans la sidebar de l\'app + suppression du DOM `#page-changelog` + retrait du routing + retrait du script `pages/changelog.js` du chargement browser. Cleanup i18n : retrait des clés `nav.changelog` et `page.changelog` (FR + EN).', textEn: 'Removed the "Updates" tab from the app sidebar + removed `#page-changelog` DOM + removed routing + removed `pages/changelog.js` from browser loading. i18n cleanup: removed `nav.changelog` and `page.changelog` keys (FR + EN).' },
+        { type: 'feat', text: 'Le fichier source `src/js/pages/changelog.js` est CONSERVÉ : il est utilisé par le script Node `scripts/announce-update.js` (parsé en sandbox VM) pour générer les annonces du canal Discord `#mises-à-jour`. Workflow inchangé côté admin.', textEn: 'The source file `src/js/pages/changelog.js` is KEPT: it\'s used by the Node script `scripts/announce-update.js` (parsed in VM sandbox) to generate Discord `#mises-à-jour` channel announcements. Admin workflow unchanged.' },
+        { type: 'ux', text: 'Conséquence : le canal Discord public `#mises-à-jour` devient la source unique des annonces de mise à jour pour les utilisateurs. Incitation à rejoindre la communauté Discord pour rester informé.', textEn: 'Consequence: the public Discord `#mises-à-jour` channel becomes the single source of update announcements for users. Incentive to join the Discord community to stay informed.' },
+      ],
+      user: {
+        title: 'L\'onglet "Mises à jour" est retiré de l\'app',
+        items: [
+          { type: 'feat', text: 'Pour rester informé des nouveautés, rejoins le canal `#mises-à-jour` sur le serveur Discord ZeldTrade HQ. C\'est la seule source des annonces désormais.' },
+          { type: 'feat', text: 'L\'app est un peu plus légère (un onglet en moins dans la sidebar). Tout le reste fonctionne exactement comme avant.' },
+        ],
+      },
+    },
+    {
       version: '0.9.129',
       date: '2026-05-14',
       time: '22:00',

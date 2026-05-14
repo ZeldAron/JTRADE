@@ -15,7 +15,6 @@ function initApp() {
     offers:    'page.offers',
     settings:  'page.settings',
     tutorial:  'page.tutorial',
-    changelog: 'page.changelog',
   };
 
   let currentPage = 'journal';
@@ -43,7 +42,6 @@ function initApp() {
     if (page === 'calendar')  UI.renderCalendar();
     if (page === 'outils')    UI.renderOutils();
     if (page === 'offers')    UI.renderOffers();
-    if (page === 'changelog') Changelog.renderChangelog();
   }
 
   // ── SIDEBAR TOGGLE ─────────────────────────────────────────────────────────
@@ -167,7 +165,7 @@ function initApp() {
   UI.updateStats();
 
   // Redirect post-login if a destination was set (ex: landing Pro button)
-  const VALID_PAGES = new Set(['journal','dashboard','analytics','goals','calendar','outils','offers','settings','tutorial','changelog']);
+  const VALID_PAGES = new Set(['journal','dashboard','analytics','goals','calendar','outils','offers','settings','tutorial']);
   const _goto = sessionStorage.getItem('ztGoto');
   sessionStorage.removeItem('ztGoto');
   if (_goto && VALID_PAGES.has(_goto)) {
