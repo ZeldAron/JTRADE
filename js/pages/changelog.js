@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.140',
+      date: '2026-05-15',
+      time: '02:30',
+      tags: ['security', 'hardening'],
+      title: 'Hardening Stripe webhook : validation stricte UID + tier + customer/subscription',
+      titleEn: 'Stripe webhook hardening: strict validation of UID + tier + customer/subscription',
+      items: [
+        { type: 'security', text: 'Suite à un audit externe (pote du dev) + audit interne approfondi (Explore agent boîte blanche), 2 findings critiques + 5 importants identifiés. 4 sur 7 corrigés en v0.9.140 (validation Stripe webhook), les autres déjà couverts ou notés en TODO.', textEn: 'Following an external audit (dev\'s friend) + thorough internal white-box audit (Explore agent), 2 critical + 5 important findings identified. 4 of 7 fixed in v0.9.140 (Stripe webhook validation), the others already covered or noted in TODO.' },
+        { type: 'security', text: 'Stripe webhook : ajout de validations strictes avant toute écriture Firestore. UID validé via regex `^[A-Za-z0-9]{1,128}$` (3 events : checkout.session.completed, customer.subscription.updated/deleted). Tier validé via whitelist `[monthly, yearly, lifetime]`. customerId et subscriptionId validés via regex `cus_*` et `sub_*`. → prévient l\'injection de métadonnées arbitraires si la clé Stripe était compromise.', textEn: 'Stripe webhook: strict validations added before any Firestore write. UID validated via regex, tier whitelisted, customerId/subscriptionId pattern-checked. Prevents arbitrary metadata injection if Stripe key was compromised.' },
+        { type: 'security', text: 'Faux positifs de l\'audit externe écartés après vérif code : (1) **Clickjacking** déjà bloqué triple-rideau (CSP `frame-ancestors none` + `X-Frame-Options DENY` + frame-buster JS dans app-bootstrap.js) ; (2) **Firestore rules `proCodeHashes` / `userEmails`** déjà bétonnées (`list: if isAdmin()`, `create/update: if false`) ; (3) **activatePro côté client** sécurisé par les rules Firestore (write `plan: pro` exige un codeHash existant avec uid matchant).', textEn: 'External audit false positives dismissed after code review: (1) **Clickjacking** already triple-blocked, (2) **Firestore rules** for proCodeHashes/userEmails already strict, (3) **activatePro client-side** secured by Firestore rules.' },
+      ],
+    },
+    {
       version: '0.9.139',
       date: '2026-05-15',
       time: '02:00',
