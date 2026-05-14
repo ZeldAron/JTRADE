@@ -53,10 +53,26 @@ const Auth = (() => {
       const cred = await _fbAuth.createUserWithEmailAndPassword(safeEmail, password);
       await cred.user.updateProfile({ displayName: safeName });
 
+      // v0.9.125 : créer immédiatement le doc userEmails (anti-race).
+      // Avant : on attendait `onAuthStateChanged` qui appelle `_storeUserEmail()`.
+      // Si l'user fermait l'onglet trop vite, le doc n'existait jamais → user
+      // fantôme côté admin. Bug détecté avec 4/11 docs manquants en prod.
+      try {
+        await _fbDb.collection('userEmails').doc(cred.user.uid).set({
+          uid:      cred.user.uid,
+          email:    safeEmail,
+          username: safeName,
+          lastSeen: Date.now(),
+        });
+      } catch (e) {
+        // Non bloquant : si rules refusent, onAuthStateChanged retentera au prochain login
+        console.warn('[register] storeUserEmail failed', e && e.code);
+      }
+
       // Email de vérification (non bloquant)
       cred.user.sendEmailVerification().catch(() => {});
 
-      // Notif admin via Cloud Function — la clé Web3Forms reste côté serveur
+      // Notif admin via Cloud Function (Discord webhook → #new-users public)
       try {
         if (_fbFunctions && captchaToken) {
           const callable = _fbFunctions.httpsCallable('notifyNewSignup');
