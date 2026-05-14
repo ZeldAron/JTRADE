@@ -37,6 +37,45 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.115 — Landing : ajustement tailles (anti gigantesque)
+
+**Type** : fix / ux
+**Fichiers** : `src/index.html` (landing)
+
+### Contexte
+User signale sur screenshot écran ~2000px de large que tout paraît hyper gros (titre hero 52px clamp, sub 19px, etc.). Sur écran < 1280px tailles OK, sur grand écran disproportionné.
+
+### Changements
+| Élément | Avant | Après |
+|---|---|---|
+| body | 16px | 15px |
+| hero-title | clamp(28px, 5vw, 52px) | clamp(26px, 3.4vw, 42px) |
+| hero-sub | clamp(15px, 2vw, 19px) | clamp(14px, 1.4vw, 17px) |
+| section-title | clamp(24px, 4vw, 36px) | clamp(22px, 2.6vw, 30px) |
+| section-sub | 16px | 14px |
+| feature-title | 17px | 15px |
+| feature-desc | 14px | 13px |
+| pricing-title | 22px | 19px |
+| pricing-text | 15px | 13px |
+| faq summary | 15px | 14px |
+| nav-brand | 18px | 17px |
+| container max-width | 1100px | 960px |
+| hero padding-top | 90px | 70px |
+| letter-spacing hero | -1.5px | -0.8px |
+| letter-spacing section | -0.8px | -0.5px |
+
+### Impact
+- Sur 2560px screen : hero plus mesuré (~42px au lieu de 52px)
+- Sur 1440px screen : taille moyenne, équilibrée
+- Sur 768px et moins : tailles min du clamp utilisées, lisibles
+- Pas d'impact fonctionnel — uniquement CSS
+
+### Tests
+- `node test/calc.test.js` : 103/103 ✓ (pas concerné)
+- Visual : à vérifier user-side
+
+---
+
 ## 2026-05-14 — v0.9.114 — Fix flash ancien landingScreen au login
 
 **Type** : fix / ux
