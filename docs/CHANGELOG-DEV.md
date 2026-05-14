@@ -37,6 +37,39 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.113 — Landing devient la page d'accueil principale
+
+**Type** : feat / refactor
+**Fichiers** : `src/index.html` (ex-landing.html), `src/app.html` (ex-index.html), `src/js/pages/changelog.js`, `docs/README.md`
+
+### Contexte
+User veut que `/zeldtrade/` affiche la landing (au lieu de l'écran de login de l'app). Avant : `index.html` = app SPA. Après : `index.html` = landing marketing.
+
+### Changements
+- `git mv src/index.html src/app.html` (préserve l'historique)
+- `git mv src/landing.html src/index.html`
+- Nouveau `index.html` (ex-landing) : tous les `href="index.html"` (Se connecter, Accéder à l'app) → `href="app.html"`
+- `og:url` mis à jour : `/landing.html` → `/`
+- `nav-brand` href : `landing.html` → `index.html`
+- `payment.html`, `legal.html`, `cgu.html`, `privacy.html` : les `href="index.html"` (Retour à ZeldTrade) restent valides — pointent maintenant vers la landing (cohérent avec "Retour à la page d'accueil")
+
+### Vérification déploiement
+- `curl https://zeldaron.github.io/zeldtrade/` → 200 + contenu landing ✅
+- `curl https://zeldaron.github.io/zeldtrade/app.html` → 200 ✅
+- Pas de 404 sur les autres pages
+
+### Analyse sécurité
+- Pas de changement fonctionnel — juste rename + redirection des liens
+- CSP de chaque page inchangée (les CSPs sont définies dans chaque .html)
+- Les bookmarks existants `zeldaron.github.io/zeldtrade/` montrent maintenant la landing — comportement attendu
+
+### À surveiller
+- Users existants qui ont bookmark `/zeldtrade/` verront la landing au lieu de l'app au prochain visit — non disruptif (1 clic vers "Accéder à l'app")
+- Si on veut migrer plus tard vers Firebase Hosting, le mapping `/ → index.html` et `/app.html → app.html` est natif
+- **F4 v2** prévu : routing automatique (si Firebase Auth user loggé → redirect vers app.html, sinon affiche landing) — pas encore implémenté
+
+---
+
 ## 2026-05-14 — v0.9.112 — Landing page v1 (F4)
 
 **Type** : feat

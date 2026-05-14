@@ -3,8 +3,9 @@
 > **Trading journal SPA** pour traders prop firms (Apex, FTMO, Topstep, Lucid, Funding Pips).
 > Stack vanilla JS + Firebase + Groq Vision. Modèle privé / recrutement manuel.
 
-**Version actuelle** : 0.9.112 (14 mai 2026)
-**Landing page publique** : https://zeldaron.github.io/zeldtrade/landing.html
+**Version actuelle** : 0.9.113 (14 mai 2026)
+**Landing page (entrée publique)** : https://zeldaron.github.io/zeldtrade/
+**App (login + journal)** : https://zeldaron.github.io/zeldtrade/app.html
 **Admin** : zeldtradepro@gmail.com (MFA TOTP activé)
 **URL prod** : https://zeldaron.github.io/zeldtrade/
 **URL admin** : https://zeldaron.github.io/zeldtrade/admin.html
@@ -65,9 +66,9 @@ ZeldTrade est un journal de trading destiné aux traders qui passent par des **p
 ```
 JTRADE/
 ├── src/                          # site déployé sur GitHub Pages
-│   ├── index.html                # app principale (SPA)
+│   ├── index.html                # landing page publique (homepage marketing — v0.9.113)
+│   ├── app.html                  # app principale SPA (login + journal) — accès via /app.html
 │   ├── admin.html                # console admin (page séparée)
-│   ├── landing.html              # page d'accueil publique (marketing)
 │   ├── payment.html              # placeholder (Stripe stealth)
 │   ├── legal.html, cgu.html, privacy.html  # mentions légales
 │   ├── css/style.css
