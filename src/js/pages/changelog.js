@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.116',
+      date: '2026-05-14',
+      time: '10:00',
+      tags: ['feat', 'mobile', 'a11y'],
+      title: 'Responsive complet — 5 breakpoints + print + reduced-motion',
+      titleEn: 'Full responsive — 5 breakpoints + print + reduced-motion',
+      items: [
+        { type: 'feat', text: 'Application 100% responsive sur tous les écrans : 1280px (large tablet), 1024px (tablet/petit laptop), 768px (mobile landscape), 480px (mobile portrait), 360px (iPhone SE). Protection générique anti overflow horizontal (img/video/svg max-width 100%, word-wrap sur textes longs).', textEn: 'App is now 100% responsive across all screens: 1280px (large tablet), 1024px (tablet/small laptop), 768px (mobile landscape), 480px (mobile portrait), 360px (iPhone SE). Generic overflow protection (img/video/svg max-width 100%, word-wrap on long texts).' },
+        { type: 'feat', text: 'Sur mobile <480px : tables scrollables horizontalement, KPI sur 1 colonne, levels sur 2 colonnes (au lieu de 4-5), wizard plein écran, modals pleine largeur, calendrier compact.', textEn: 'On mobile <480px: tables scroll horizontally, KPI on 1 column, levels on 2 columns (instead of 4-5), full-screen wizard, full-width modals, compact calendar.' },
+        { type: 'feat', text: 'Support landscape mobile (orientation paysage), `@media print` (impression journal pour archive prop firm), `prefers-reduced-motion` (accessibilité — désactive animations si user a coché "réduire les animations" système).', textEn: 'Mobile landscape support, `@media print` (journal printing for prop firm archive), `prefers-reduced-motion` (accessibility — disables animations if user has "reduce animations" system setting).' },
+      ],
+    },
+    {
       version: '0.9.115',
       date: '2026-05-14',
       time: '09:00',
