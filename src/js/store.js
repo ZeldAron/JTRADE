@@ -815,12 +815,6 @@ const Store = (() => {
     if (typeof _aiUsage.date === 'string' && _aiUsage.date > today) return false;
     return _aiUsage.date !== today || _aiUsage.count < 1;
   }
-  // recordAnalysis() est désormais géré exclusivement par la Cloud Function
-  // (transaction atomique côté serveur, impossible à bypasser via DevTools).
-  // Le client ne peut plus écrire dans aiUsage — rule Firestore bloque.
-  // On garde la fonction pour rétro-compat mais elle est no-op.
-  function recordAnalysis() { /* no-op — handled server-side */ }
-
   // Refetch aiUsage depuis Firestore (à appeler après une analyse réussie pour
   // que canAnalyzeToday() côté client reste cohérent avec l'état serveur)
   async function refreshAiUsage() {
@@ -931,7 +925,7 @@ const Store = (() => {
     getMyAccounts, getMyAccountById, getMyAccountByName, addMyAccount, updateMyAccount, deleteMyAccount,
     getSpreads, updateSpreads, getSpreadsByFirm, getAllSpreadsByFirm, updateSpreadsByFirm,
     getGroups, getGroupById, addGroup, updateGroup, deleteGroup,
-    getPlanInfo, isPro, activatePro, canAnalyzeToday, recordAnalysis, refreshAiUsage, canAddAccount,
+    getPlanInfo, isPro, activatePro, canAnalyzeToday, refreshAiUsage, canAddAccount,
     getLastWizardPrefs, setLastWizardPrefs,
     getStats,
   };

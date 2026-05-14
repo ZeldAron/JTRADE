@@ -13,13 +13,11 @@ const Stripe                             = require('stripe');
 admin.initializeApp();
 
 const GROQ_API_KEY      = defineSecret('GROQ_API_KEY');
-// Web3Forms — DEPRECATED (v0.9.123) remplacé par Discord webhooks.
-// Le secret reste déclaré pour ne pas casser le déploiement tant qu'on ne fait
-// pas de cleanup explicite, mais n'est plus utilisé par aucune CF.
-const WEB3FORMS_KEY     = defineSecret('WEB3FORMS_KEY');
-// Discord webhooks (v0.9.123) — remplacent Web3Forms (qui exige un plan payant
-// pour les appels server-side). Chaque webhook poste dans un canal privé du
-// serveur ZeldTrade HQ visible uniquement par l'admin.
+// Discord webhooks (v0.9.123) — remplacent Web3Forms (qui exigeait un plan payant
+// pour les appels server-side). Chaque webhook poste dans un canal du serveur
+// ZeldTrade HQ. WEB3FORMS_KEY a été retiré du code en v0.9.126 (cleanup) —
+// le secret reste dans Secret Manager (peut être destroyé manuellement via
+// `firebase functions:secrets:destroy WEB3FORMS_KEY` si désiré).
 const DISCORD_SUPPORT_WEBHOOK = defineSecret('DISCORD_SUPPORT_WEBHOOK');
 const DISCORD_SIGNUP_WEBHOOK  = defineSecret('DISCORD_SIGNUP_WEBHOOK');
 // hCaptcha — secret côté serveur pour vérifier les tokens captcha (optionnel)

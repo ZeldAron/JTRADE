@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.126',
+      date: '2026-05-14',
+      time: '20:30',
+      tags: ['refactor', 'cleanup', 'i18n'],
+      title: 'Cleanup code : 5 clés i18n manquantes + dead code retiré',
+      titleEn: 'Code cleanup: 5 missing i18n keys + dead code removed',
+      items: [
+        { type: 'fix', text: '5 clés i18n manquantes ajoutées dans dict.fr et dict.en : `cal.today` (bouton "Aujourd\'hui" du calendrier), `confirm.acc.title`, `confirm.grp.title`, `confirm.trade.title` (titres des modales de suppression), `ui.trades.lbl` (label du compteur recherche). Avant : ces textes apparaissaient en raw dans l\'interface (ex: "cal.today" au lieu de "Aujourd\'hui").', textEn: '5 missing i18n keys added in dict.fr and dict.en: `cal.today` (Calendar "Today" button), `confirm.acc.title`, `confirm.grp.title`, `confirm.trade.title` (delete modal titles), `ui.trades.lbl` (search counter label). Before: these texts appeared as raw keys in the UI (e.g. "cal.today" instead of "Today").' },
+        { type: 'feat', text: 'Audit i18n complet : 536 clés dans le dict, 499 utilisées dans le code. 5 manquantes (corrigées) + ~43 unused (gardées car beaucoup utilisées via interpolation `t(\'prefix.\' + variable)`, suppression risquée sans audit cas par cas).', textEn: 'Full i18n audit: 536 keys in dict, 499 used in code. 5 missing (fixed) + ~43 unused (kept because many used via `t(\'prefix.\' + variable)` interpolation, risky to remove without case-by-case audit).' },
+        { type: 'feat', text: 'Cleanup code : suppression de `Store.recordAnalysis()` (no-op fantôme, géré 100% côté Cloud Function depuis longtemps) et retrait de la déclaration `defineSecret(\'WEB3FORMS_KEY\')` (plus utilisée depuis la migration Discord v0.9.123). Aucun changement comportemental.', textEn: 'Code cleanup: removed `Store.recordAnalysis()` (phantom no-op, fully handled by Cloud Function for a while) and removed `defineSecret(\'WEB3FORMS_KEY\')` declaration (unused since Discord migration v0.9.123). No behavior change.' },
+      ],
+    },
+    {
       version: '0.9.125',
       date: '2026-05-14',
       time: '19:30',

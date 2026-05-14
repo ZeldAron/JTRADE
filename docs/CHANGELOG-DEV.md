@@ -37,6 +37,72 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.126 — Code cleanup (5 clés i18n + dead code retiré)
+
+**Type** : refactor / cleanup
+**Fichiers** : `src/js/i18n.js`, `src/js/store.js`, `functions/index.js`, `src/app.html` (bump v=), `src/index.html` (footer), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.126 (CFs inchangées comportementalement, redeploy optionnel pour sync source)
+
+### Contexte
+User : « je veux que tu fasses en sorte que le projet (niveau code) soit entièrement propre mais que tout fonctionne comme actuellement ». Audit complet du code via Explore agent — verdict : codebase déjà très propre (0 finding critique). Cleanup réalisé sur les 3 items pertinents.
+
+### Cleanup #1 — 5 clés i18n manquantes
+
+Script d'audit Python : extrait toutes les clés du `dict.fr`/`dict.en` de `i18n.js` (regex `'foo.bar':`) et compare aux usages `t('xxx')` / `i18n.t('xxx')` / `data-i18n="xxx"` dans `src/**/*.js` + `src/**/*.html`. Résultat :
+- **536 clés** dans dict
+- **499 clés** utilisées dans le code
+- **6 missing** (dont 1 faux positif `ob.` qui est une interpolation `t('ob.' + outcome)`, vrais : 5)
+- **43 unused** (non touchées — risque d'interpolation, audit cas par cas requis)
+
+**5 clés ajoutées** (FR + EN) :
+| Clé | Code FR | Code EN | Lieu d'usage |
+|---|---|---|---|
+| `cal.today` | `Aujourd'hui` | `Today` | `calendar.js:216` bouton retour mois courant |
+| `confirm.trade.title` | `Supprimer le trade` | `Delete trade` | `ui.js:369` modale confirm |
+| `confirm.acc.title` | `Supprimer le compte` | `Delete account` | `settings.js:285` modale confirm |
+| `confirm.grp.title` | `Supprimer le groupe` | `Delete group` | `settings.js:608` modale confirm |
+| `ui.trades.lbl` | `trades` | `trades` | `ui.js:121` compteur "X / N trades" |
+
+**Bug racine** : le code utilise `t('xxx') || 'fallback'` mais `t()` retourne la clé elle-même si non trouvée (string truthy) → le `||` ne déclenche jamais. Voir précédent fix `dash.empty.*` en v0.9.120. **Le pattern fallback inline est dangereux** — à supprimer progressivement (toutes les clés doivent exister dans i18n.js).
+
+### Cleanup #2 — Suppression de `Store.recordAnalysis()`
+
+Dans `src/js/store.js:818-822`, fonction no-op exportée :
+```js
+// recordAnalysis() est désormais géré exclusivement par la Cloud Function...
+function recordAnalysis() { /* no-op — handled server-side */ }
+```
+Exportée ligne 934 mais **0 appel** dans tout le repo (vérifié via `grep -rn "Store.recordAnalysis\|.recordAnalysis(" src/`). Suppression de la fonction + retrait du return. Pas de breaking change.
+
+### Cleanup #3 — Suppression de la déclaration `WEB3FORMS_KEY`
+
+Dans `functions/index.js:16-19`, secret déclaré mais détaché de toutes les CFs depuis v0.9.123 (migration Discord webhooks). Suppression de `defineSecret('WEB3FORMS_KEY')` + commentaire de doc qui explique que le secret peut être destroy manuellement via `firebase functions:secrets:destroy WEB3FORMS_KEY` côté CLI.
+
+### Non cleanups (intentionnel)
+
+- **`payment.html` + `payment.js`** : page "En cours de construction" pour le mode stealth Stripe (référencée par `offers.js:65,81`). **Garde** — sera supprimée quand Stripe sera branché.
+- **43 clés i18n unused** : risque trop élevé de casser une interpolation (`t('off.basic.' + variant)`). À auditer cas par cas plus tard.
+- **`.DS_Store`** : déjà dans `.gitignore`, pas tracké par git. Fichier OS macOS — pas notre problème.
+- **Commentaires "DEPRECATED" / "App Check" / "localhost"** : doc technique utile, pas dead code.
+
+### Validation
+- Tests `node test/calc.test.js` : 103/103 ✅
+- Audit i18n re-lancé : 0 missing après fix
+- Aucune CF redéployée (`functions/index.js` ne change que la déclaration d'un secret inutilisé, pas de logique)
+
+### Bump version
+- `src/app.html` : `?v=0.9.125` → `?v=0.9.126` (21 refs)
+- `src/index.html` : footer
+- `src/js/pages/changelog.js` : entrée 0.9.126
+
+### À faire (cleanup futur, non prioritaire)
+1. Audit cas par cas des 43 clés i18n unused (vérifier interpolation) — gain ~5% bundle i18n
+2. Supprimer le pattern `t('xxx') || 'fallback'` partout (forcer toutes les clés dans le dict)
+3. Quand Stripe sera branché : supprimer `payment.html` + `payment.js` (rediriger vers Stripe checkout direct)
+4. Refactor `modal.js` (1253 lignes) en sous-modules
+
+---
+
 ## 2026-05-14 — v0.9.125 — Fix bug comptes fantômes (userEmails timing)
 
 **Type** : fix / bug
