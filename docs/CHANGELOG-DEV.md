@@ -37,6 +37,99 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.118 — Landing : mockup interactif 5 onglets (CSS-only, zéro JS)
+
+**Type** : feat / ux / security
+**Fichiers** : `src/index.html` (+~350 lignes), `src/app.html` (bump v=), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.118 (CFs inchangées)
+
+### Contexte
+User demande **« je veux pouvoir accèder au bouton et pouvoir avoir un petit apperçu pour chaque bouton c'est possible ? »** sur le mockup d'aperçu de l'app. Réponse : oui, en CSS pur (radio + `:checked ~` sibling combinator), donc aucun JS ajouté → aucun impact CSP / surface d'attaque.
+
+### Pourquoi CSS-only et pas JS
+- **CSP stricte** : `script-src 'self'` ne permet pas d'inline scripts. Pour ajouter du JS il faudrait soit créer `js/landing.js` (cache-busting + maintenance) soit relâcher la CSP avec un nonce/hash — surcoût pour rien
+- **Zéro surface d'attaque ajoutée** : pas de listener click, pas d'état JS, pas de fetch
+- **Fonctionne même JS désactivé** (les radios sont natifs)
+- **A11y native** : tab + flèches naviguent dans le radio group, screen readers reconnaissent le pattern
+- **Perf** : 0 ms d'init, 0 ko de JS, animations en compositor
+
+### Pattern technique (radio + sibling)
+```html
+<div class="mockup-wrap">
+  <input type="radio" name="mockup-tab" id="mt-dashboard" checked>
+  <input type="radio" name="mockup-tab" id="mt-analytics">
+  ... 3 autres
+  <div class="mockup">
+    <label for="mt-dashboard" class="mockup-nav-item">Dashboard</label>
+    <label for="mt-analytics">Analytics</label>
+    ...
+    <div class="mockup-pane" data-pane="dashboard">...</div>
+    <div class="mockup-pane" data-pane="analytics">...</div>
+    ...
+  </div>
+</div>
+```
+```css
+.mockup-wrap > input[type="radio"] { /* visually hidden but focusable */
+  position: absolute;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  width: 1px; height: 1px;
+}
+.mockup-pane { display: none; }
+#mt-dashboard:checked ~ .mockup .mockup-pane[data-pane="dashboard"] { display: block; }
+#mt-dashboard:checked ~ .mockup label[for="mt-dashboard"] { /* active style */ }
+/* idem pour 4 autres */
+```
+
+Le radio coché reste cliquable par son label (n'importe où sur la page peut linker un label à un input via `for=...`). Le `~` sibling combinator + `[data-pane="..."]` cible le pane correspondant. C'est un pattern bien éprouvé (utilisé par des sites majeurs pour navigation sans JS).
+
+### Contenu des 5 panes
+
+1. **Dashboard** (par défaut) — inchangé : 3 KPIs (Balance / P&L Net / Win rate) + graphe d'équité SVG dégradé violet→rose
+2. **Analytics** — 3 KPIs (Trades total / R:R moyen / Profit factor) + bar chart "Perf par instrument" : 5 instruments (MNQ +1240, MES +860, MGC +540, CL +180, NQ -120) avec barres dégradé violet/rose ou rouge/orange
+3. **Calendrier** — 3 KPIs (Mai 2026 / Best day / Worst day) + grille calendar 7×5 avec cellules colorées (4 niveaux : winx/win/loss/empty)
+4. **Journal** — 3 KPIs (Cette semaine / Wins / Losses) + liste 6 trades (date, instrument, badge LONG/SHORT, P&L)
+5. **Objectifs** — 3 KPIs (Actifs / Atteints / En cours) + 3 progress bars (Profit mensuel 78%, Trades/mois 70%, Win rate ✓ atteint)
+
+### Changements CSS
+- Nouvelles classes : `.mockup-pane`, `.mockup-block` (frame générique avec label/val absolus), `.mockup-bars`/`.mockup-bar-row`/`.mockup-bar-track`/`.mockup-bar-fill`, `.mockup-cal-grid`/`.mockup-cal-day` (win/winx/loss/empty), `.mockup-trades`/`.mockup-trade*`, `.mockup-goals`/`.mockup-goal*`
+- `.mockup-nav-item` devient `<label>` cliquable (cursor: pointer, user-select: none, hover state)
+- Animation `paneFade` (250ms ease-out) sur changement d'onglet
+- `.mockup-main { min-height: 340px }` → garde une hauteur consistante entre les 5 panes
+- Mobile (`<768px`) : `.mockup-sidebar` devient `display: flex; overflow-x: auto` → onglets en barre horizontale scrollable
+- Mobile (`<640px`) : `.mockup-trade` et `.mockup-bar-row` réajustent leurs grilles
+
+### Sécurité — bilan exhaustif (user a demandé « comment je fais pour que cela n'ai aucune faille »)
+| Vecteur | Statut | Détail |
+|---|---|---|
+| CSP `script-src 'self'` | ✅ Inchangée | Zéro JS ajouté |
+| CSP `connect-src 'none'` | ✅ Inchangée | Page reste sans fetch |
+| CSP `img-src` / `font-src` | ✅ Inchangées | Tous SVG inline, aucun asset |
+| XSS via radio names/ids | ✅ Safe | IDs `mt-*` sont littéraux, jamais interpolés |
+| Form action | ✅ Safe | Radios pas dans un `<form>`, pas de soumission possible |
+| Clickjacking | ✅ Inchangé | `X-Frame-Options: DENY`, `frame-ancestors 'none'` |
+| Cookies / storage | ✅ Aucun | La page n'écrit/lit rien (le state radio est purement DOM) |
+| A11y trap | ✅ OK | Radio group + arrow keys natif, focus visible géré par navigateur |
+| Prefers-reduced-motion | ✅ Respecté | Animation `paneFade` désactivée si user préfère |
+
+### Impact
+- **UX** : la sidebar devient un vrai téaser interactif — l'utilisateur explore avant de cliquer "Accéder à l'app"
+- **Perf** : +~350 lignes HTML/CSS, mais page reste un seul fichier statique ; tout est servi en 1 round-trip GitHub Pages. Le rendu de pane caché coûte 0 (display:none = pas de layout)
+- **Bundle** : 0 ko JS ajouté
+- **SEO** : tous les panes sont dans le DOM dès le départ → indexable même si Google ne simule pas les clics
+
+### Bump version
+- `src/app.html` : `?v=0.9.117` → `?v=0.9.118` (20 scripts + 1 CSS + 1 settings)
+- `src/index.html` : footer `v0.9.117` → `v0.9.118`
+- `src/js/pages/changelog.js` : entrée 0.9.118 en tête de `ENTRIES`
+
+### À surveiller
+- Comportement clavier : Tab amène sur le radio group, Arrow keys (Left/Right) doivent changer la sélection. Tester sur macOS Safari (qui a parfois des particularités sur radios visuellement cachés)
+- Si un user signale que sur mobile la barre d'onglets horizontale n'est pas évidente, ajouter un indicateur visuel de scroll horizontal
+
+---
+
 ## 2026-05-14 — v0.9.117 — Landing v2 : tailles réduites + visuels (mockup, stats, grid)
 
 **Type** : feat / ux

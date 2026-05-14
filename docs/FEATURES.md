@@ -355,6 +355,7 @@ Redondant avec `frame-ancestors 'none'` + `X-Frame-Options DENY`. Defense-in-dep
 - **v0.9.115** : Landing — tailles ajustées (hero 52→42px, container 1100→960px) pour éviter le rendu gigantesque sur grand écran (2000px+).
 - **v0.9.116** : **Responsive complet** — 5 breakpoints (1280/1024/768/480/360px), protection anti overflow horizontal globale (img/video/svg/word-wrap), support landscape mobile, `@media print` (impression journal), `prefers-reduced-motion` (a11y).
 - **v0.9.117** : **Landing v2 — visuels enrichis** — tailles réduites encore (body 14px, hero clamp 24-36px, container 880px), nouveau logo SVG (chart trending up), mockup app preview complet inline (sidebar avec icônes SVG, KPI row, graphe d'équité SVG dégradé violet→rose), bande stats (5 prop firms / ∞ trades / 100% EU / 0€ beta), grille de fond + glows radiaux ambiants, badge pulsant animé. CSP inchangée, zéro asset externe.
+- **v0.9.118** : **Landing — mockup interactif** — la sidebar du mockup devient cliquable, 5 onglets avec aperçus dédiés : **Dashboard** (équité), **Analytics** (perf par instrument), **Calendrier** (grille mois colorée), **Journal** (liste trades récents), **Objectifs** (progress bars). 100% CSS (radio + `:checked ~`), zéro JS, zéro impact CSP. Sur mobile : sidebar devient barre d'onglets horizontale scrollable.
 
 ---
 
