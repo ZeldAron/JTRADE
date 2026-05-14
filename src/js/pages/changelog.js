@@ -5,6 +5,17 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.114',
+      date: '2026-05-14',
+      time: '08:30',
+      tags: ['fix', 'ux'],
+      title: 'Fix flash de l\'ancienne landing au login',
+      titleEn: 'Fix flash of old landing on login',
+      items: [
+        { type: 'fix', text: 'Supprimé le `landingScreen` interne d\'`app.html` (hero / preview / CTAs / FAQ inline qui flashait avant que Firebase Auth résolve). Maintenant : quand tu cliques "Se connecter" depuis la nouvelle landing, tu vois directement le formulaire de login propre, sans flash de l\'ancien contenu. Background dark forcé via inline style pour éviter le flash blanc pré-CSS.', textEn: 'Removed internal `landingScreen` from `app.html` (hero/preview/CTAs/FAQ inline that flashed before Firebase Auth resolved). Now: when you click "Sign in" from the new landing, you see the clean login form directly, no flash of old content. Dark background forced via inline style to prevent pre-CSS white flash.' },
+      ],
+    },
+    {
       version: '0.9.113',
       date: '2026-05-14',
       time: '02:30',
