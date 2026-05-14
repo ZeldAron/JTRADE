@@ -37,6 +37,64 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.121 — Fix logout : redirige vers la landing (index.html)
+
+**Type** : fix / ux
+**Fichiers** : `src/js/app.js` (2 sites), `src/js/pages/settings.js` (1 site), `src/app.html` (bump v=), `src/index.html` (footer), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.121
+
+### Contexte
+User signale : **« par contre quand je me déconnecte ça me met pas sur la landing page »**. Depuis le renommage v0.9.113 (`index.html` → `app.html`, `landing.html` → `index.html`), la déconnexion utilisait toujours `location.reload()` ce qui restait sur `/app.html` et re-déclenchait le modal de login. L'utilisateur s'attendait à être renvoyé sur la landing publique.
+
+### Changements
+Remplacement de `location.reload()` par `location.href = 'index.html'` aux 3 endroits qui déclenchent un logout :
+
+1. **`src/js/app.js:124`** — bouton "Déconnexion" dans la sidebar/settings
+   ```js
+   // Avant
+   Auth.logout();
+   location.reload();
+   // Après
+   Auth.logout().finally(() => { location.href = 'index.html'; });
+   ```
+   (Avantage : `.finally()` garantit la redirection même si `signOut()` échoue — l'user atteint la landing dans tous les cas)
+
+2. **`src/js/app.js:208`** — déconnexion auto après idle timeout (30 min sans activité)
+   ```js
+   Auth.logout().finally(() => { location.href = 'index.html'; });
+   ```
+
+3. **`src/js/pages/settings.js:945`** — après suppression définitive de compte
+   ```js
+   window.location.href = 'index.html';
+   ```
+
+### Sécurité
+- `location.href = 'index.html'` est un **chemin relatif littéral**, pas d'interpolation utilisateur → **aucun risque d'open redirect**
+- Même origine (`zeldaron.github.io/zeldtrade/`) → pas de cross-origin
+- Le navigateur charge `index.html` proprement (nouvelle page), purge le state Firebase Auth en mémoire et le state Store
+- `localStorage` clear déjà fait avant (`Store.clearLocalCache()`)
+- Pour la suppression de compte : le `signOut()` Firebase se déclenche automatiquement côté SDK après `user.delete()`, et notre redirect garantit qu'aucun écran "blanc" / "loading" ne s'affiche
+
+### Pourquoi `.finally()` au lieu de `.then()`
+Si `Auth.logout()` rejette (erreur réseau, déjà signed-out, etc.), avec `.then()` la redirection ne s'exécuterait pas et l'user resterait bloqué sur l'app dans un état incohérent. `.finally()` garantit la sortie quoi qu'il arrive. C'est défensif — en pratique signOut() ne devrait quasi jamais échouer mais on couvre le cas.
+
+### Impact
+- **UX** : flow de déconnexion correct, l'utilisateur retourne à la landing publique d'où il peut se reconnecter ou explorer le contenu marketing
+- **Sécu** : aucun risque ajouté (chemin littéral)
+- **Compat** : `location.href` est universel, fonctionne tous navigateurs
+
+### Bump version
+- `src/app.html` : `?v=0.9.120` → `?v=0.9.121` (21 refs)
+- `src/index.html` : footer
+- `src/js/pages/changelog.js` : entrée 0.9.121
+
+### À surveiller
+- Si le logout depuis admin.html doit aussi rediriger → vérifier `src/js/admin.js` (probablement déjà OK car page séparée)
+- Penser à l'inverse en F4 v3 (TODO) : si user loggé arrive sur `index.html`, rediriger auto vers `app.html`
+
+---
+
 ## 2026-05-14 — v0.9.120 — Revert sizing v0.9.119 + fix i18n manquantes (dash.empty.*)
 
 **Type** : fix / revert

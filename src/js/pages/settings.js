@@ -941,8 +941,8 @@
         _delAttempts = 0;
         delOverlay.style.display = 'none';
         // Firebase signOut se déclenche automatiquement après delete()
-        // mais on force quand même le retour à la landing
-        window.location.reload();
+        // on redirige vers la landing publique (index.html)
+        window.location.href = 'index.html';
       } else {
         _delAttempts++;
         if (_delAttempts >= 3) {

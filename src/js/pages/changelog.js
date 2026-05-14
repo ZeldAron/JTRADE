@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.121',
+      date: '2026-05-14',
+      time: '16:30',
+      tags: ['fix', 'ux'],
+      title: 'Fix : déconnexion redirige vers la landing au lieu de rester sur l\'app',
+      titleEn: 'Fix: logout redirects to landing instead of staying on the app',
+      items: [
+        { type: 'fix', text: 'Quand tu te déconnectes (bouton logout), tu es maintenant redirigé vers la landing publique (`index.html`) au lieu de rester sur `app.html` (qui re-affichait juste le modal login après reload).', textEn: 'When you log out (logout button), you are now redirected to the public landing (`index.html`) instead of staying on `app.html` (which just re-displayed the login modal after reload).' },
+        { type: 'fix', text: 'Même comportement pour la déconnexion automatique après 30 min d\'inactivité et après la suppression définitive de compte : retour à la landing au lieu d\'un simple reload sur place.', textEn: 'Same behavior for auto-logout after 30 min of inactivity and after permanent account deletion: return to landing instead of staying in place.' },
+      ],
+    },
+    {
       version: '0.9.120',
       date: '2026-05-14',
       time: '15:30',
