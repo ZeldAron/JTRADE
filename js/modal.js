@@ -179,10 +179,15 @@ const Modal = (() => {
 
       `═══ UNIVERSAL RULES ═══\n` +
       `  • NEVER use the live price ticker (top-left box like "/MGC", "/ES", "ENQM26", "B:", "C:", "Ch:").\n` +
+      `  • NEVER use ANY label on the right axis that contains the ⊕ symbol, a "+" icon, OR a countdown timer\n` +
+      `    (HH:MM format like "04:34" right next to the price — this is the current bar timer, not a level).\n` +
+      `    These are TradingView's CURRENT PRICE and CURRENT BAR indicators, NOT user-defined trade levels.\n` +
       `  • NEVER invent numbers. Copy EXACTLY digit by digit from the chart.\n` +
-      `  • European number format may use ", " or " " thousands separator (29 741,50 = 29741.50).\n` +
+      `  • European number format may use "," or " " thousands separator (29 741,50 = 29741.50).\n` +
       `  • Constraint: ${isLong ? 'sl < entry < tp1' : 'tp1 < entry < sl'} (if entry is null this is skipped).\n` +
-      `  • If a value is unreadable or absent, return null for that value.\n\n` +
+      `  • If a value is unreadable, ambiguous, or absent — return null. DO NOT GUESS.\n` +
+      `  • If NO pattern A/B/C clearly matches the screenshot, return {"entry":null,"sl":null,"tp1":null}.\n` +
+      `    It is better to return null than to invent wrong values.\n\n` +
 
       `Respond with ONLY this JSON on one line:\n` +
       `{"entry":0.00,"sl":0.00,"tp1":0.00}\n` +
