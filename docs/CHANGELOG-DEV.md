@@ -37,6 +37,89 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-14 — v0.9.128 — Privacy : refonte RGPD complète
+
+**Type** : privacy / docs
+**Fichiers** : `src/privacy.html` (refonte), `src/legal.html` (sous-traitants), `src/cgu.html` (date), `src/js/contact.js` (commentaire), `src/app.html` (2 commentaires + bump v=), `src/index.html` (footer), `src/js/pages/changelog.js`
+**Versions impactées** : front v0.9.128
+
+### Contexte
+User : « C — Compléter privacy.html (RGPD) ». Page legale existante (v du 30 avril) avec plusieurs trous identifiés par audit :
+
+1. **Date obsolète** : 30 avril 2026 → 14 mai 2026
+2. **Web3Forms** encore mentionné comme sous-traitant alors qu'il a été retiré en v0.9.123 (migration Discord)
+3. **Discord absent** comme sous-traitant (webhooks reçoivent pseudo + email vérifié dans #support-tickets privé)
+4. **Stripe absent** (paiements Pro/Lifetime à venir, info légale obligatoire à publier avant lancement)
+5. **Captures d'écran** : info **inexacte** ("non conservées") alors qu'elles sont en réalité dans `users/{uid}/screenshots/` Cloud Storage tant que le compte existe
+6. **AuditLogs** manquants alors qu'ils ont une TTL 1 an (v0.9.122)
+7. **Cloud Storage Firebase** noyé dans "Firebase" → séparé pour clarté
+8. **Cloud Functions Gen 2** non mentionné comme sous-traitant
+9. **Google Fonts** non mentionné (CDN externe → IP transmise)
+10. **Section Mineurs** absente (trading interdit aux <18 ans, recommandation ARMF/AMF)
+
+### Changements
+
+#### `src/privacy.html` (refonte complète, 221 → 252 lignes)
+- Date : 30 avril → 14 mai 2026
+- Statut ajouté : "Micro-entrepreneur (profession libérale)"
+- Tableau données collectées : ajout "Mot de passe" (haché), "Statut d'abonnement", "Logs d'audit administrateur" (TTL 1 an), "Logs techniques Firebase" (90j)
+- Captures d'écran : durée corrigée (avant : "non conservées", après : "tant que le compte existe")
+- Section Sous-traitants entièrement réécrite avec 10 blocks :
+  - Firebase Auth & Firestore (region europe-west1)
+  - Cloud Storage Firebase (separated, region europe-west1)
+  - Cloud Functions Gen 2 (region europe-west1)
+  - Groq, Inc. (analyse IA, consentement)
+  - **Discord, Inc.** (nouveau — notifs admin via webhooks, distinction privé/public)
+  - **Stripe Payments Europe Ltd.** (nouveau, tag "à venir, non actif aujourd'hui")
+  - hCaptcha
+  - Google reCAPTCHA Enterprise
+  - GitHub Pages
+  - **Google Fonts** (nouveau)
+- Web3Forms : retiré complètement
+- Section 5 ajoutée : Conservation et suppression (détail soft-delete 30j + TTL auditLogs 1 an)
+- Section 8 ajoutée : Mineurs (<18 ans interdit)
+- Bases légales explicitées avec articles RGPD (art. 6.1.b, 6.1.a, 6.1.f, art. 9, 12.3, 15-21, 26, 37)
+- Cookies : précision (pas de tracking, juste localStorage + session Firebase)
+- Note transferts hors UE : EU-US Data Privacy Framework (10/07/2023) pour Google, CCT pour les autres, Stripe en Irlande (UE)
+
+#### `src/legal.html`
+- Date : 30 avril → 14 mai 2026
+- Section sous-traitants : 2 entrées (Firebase + Groq) → **9 entrées** (alignement avec privacy.html) + renvoi vers privacy pour les détails
+
+#### `src/cgu.html`
+- Date : 30 avril → 14 mai 2026
+
+#### Cleanup commentaires Web3Forms résiduels
+- `src/js/contact.js:2` : "clé Web3Forms côté serveur" → "Discord webhook (depuis v0.9.123)"
+- `src/app.html:116` : "Web3Forms partage la sitekey" → "sitekey publique pour anti-bot"
+- `src/app.html:862` : "clé publique partagée par Web3Forms" → "clé publique pour anti-bot"
+
+### Conformité RGPD post-modif
+| Critère | Statut |
+|---|---|
+| Identité responsable du traitement (art. 13.1.a) | ✅ |
+| Finalités + bases légales explicites (art. 13.1.c) | ✅ |
+| Destinataires / sous-traitants (art. 13.1.e) | ✅ (10 blocks) |
+| Transferts hors UE (art. 13.1.f) | ✅ (EU-US DPF + CCT) |
+| Durée de conservation (art. 13.2.a) | ✅ |
+| Droits utilisateur (art. 13.2.b, 15-21) | ✅ |
+| CNIL contact (art. 13.2.d) | ✅ |
+| Protection mineurs (art. 8) | ✅ (interdit <18 ans) |
+| Politique cookies (Loi RGPD française) | ✅ (aucun cookie tracking) |
+| DPO (art. 37) | ✅ (justification absence) |
+
+### Impact
+- **Légal** : alignement avec la réalité technique (Discord, Stripe à venir, AuditLogs), pré-requis avant ouverture publique
+- **UX** : utilisateurs informés clairement de qui voit quoi
+- **Sécurité** : aucun changement (page statique, CSP inchangée)
+
+### Bump version
+- `src/app.html` : `?v=0.9.127` → `?v=0.9.128` (21 refs)
+- `src/index.html` : footer
+- `src/js/pages/changelog.js` : entrée 0.9.128 avec champ `user` (pour annoncer aux users que la politique est mise à jour — bonne pratique RGPD)
+
+---
+
 ## 2026-05-14 — v0.9.127 — Annonces Discord pour les mises à jour user-facing
 
 **Type** : feat / integration

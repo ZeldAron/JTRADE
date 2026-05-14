@@ -42,6 +42,7 @@
     .info-block p { margin: 0; }
     .info-block p + p { margin-top: 6px; }
     .tag { display: inline-block; font-size: 11px; font-weight: 500; background: rgba(99,102,241,0.12); color: #818cf8; border-radius: 4px; padding: 2px 8px; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .tag-future { background: rgba(212,153,34,0.12); color: #fbbf24; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
     th { text-align: left; color: #6b7280; font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #1e2535; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
     td { padding: 10px 12px; border-bottom: 1px solid #131929; color: #9ca3af; vertical-align: top; }
@@ -57,9 +58,9 @@
     <a href="index.html" class="back-link">← Retour à ZeldTrade</a>
 
     <h1 class="page-title">Politique de confidentialité</h1>
-    <p class="page-subtitle">Dernière mise à jour : 30 avril 2026</p>
+    <p class="page-subtitle">Dernière mise à jour : 14 mai 2026</p>
 
-    <p>Aaron Platon, éditeur de ZeldTrade, s'engage à protéger votre vie privée. Cette politique explique quelles données sont collectées, pourquoi, comment elles sont utilisées et quels sont vos droits conformément au Règlement Général sur la Protection des Données (RGPD — UE 2016/679) et à la loi Informatique et Libertés.</p>
+    <p>Aaron Platon, éditeur de ZeldTrade, s'engage à protéger votre vie privée. Cette politique explique quelles données sont collectées, pourquoi, comment elles sont utilisées et quels sont vos droits conformément au Règlement Général sur la Protection des Données (RGPD — UE 2016/679) et à la loi Informatique et Libertés (loi n° 78-17 du 6 janvier 1978 modifiée).</p>
 
     <!-- 1. Responsable -->
     <h2>1. Responsable du traitement</h2>
@@ -68,6 +69,7 @@
       <p><strong>Adresse :</strong> 19 rue de l'Église, 35130 Arbrissel, France</p>
       <p><strong>Email :</strong> <a href="mailto:zeldtradepro@gmail.com">zeldtradepro@gmail.com</a></p>
       <p><strong>SIRET :</strong> 100 510 643 00016</p>
+      <p><strong>Statut :</strong> Micro-entrepreneur (profession libérale)</p>
     </div>
 
     <!-- 2. Données collectées -->
@@ -84,127 +86,204 @@
       <tbody>
         <tr>
           <td><strong>Adresse email</strong></td>
-          <td>Authentification, récupération de mot de passe, contact</td>
+          <td>Authentification, récupération de mot de passe, contact, vérification d'identité</td>
+          <td>Exécution du contrat (art. 6.1.b RGPD)</td>
+          <td>Durée du compte + 30 jours (soft-delete)</td>
+        </tr>
+        <tr>
+          <td><strong>Pseudo (displayName)</strong></td>
+          <td>Identification dans l'interface et la communauté</td>
           <td>Exécution du contrat</td>
           <td>Durée du compte + 30 jours</td>
         </tr>
         <tr>
-          <td><strong>Pseudo</strong></td>
-          <td>Identification dans l'interface</td>
+          <td><strong>Mot de passe</strong></td>
+          <td>Authentification sécurisée</td>
           <td>Exécution du contrat</td>
-          <td>Durée du compte + 30 jours</td>
+          <td>Haché via Firebase (jamais stocké en clair), supprimé à la fermeture du compte</td>
         </tr>
         <tr>
-          <td><strong>Données de trading</strong> (trades, comptes, notes)</td>
+          <td><strong>Données de trading</strong><br><span style="font-size:12px;color:#6b7280">(trades, comptes prop firm, groupes, notes, setups)</span></td>
           <td>Fourniture du service de journal</td>
           <td>Exécution du contrat</td>
+          <td>Durée du compte + 30 jours (soft-delete avant suppression définitive)</td>
+        </tr>
+        <tr>
+          <td><strong>Captures d'écran de charts</strong><br><span style="font-size:12px;color:#6b7280">(optionnel)</span></td>
+          <td>Annexer un visuel au trade ; analyse par IA (optionnel)</td>
+          <td>Exécution du contrat (stockage) + Consentement (envoi à l'IA)</td>
+          <td>Conservées dans votre espace de stockage tant que le compte existe ; supprimées à la fermeture du compte</td>
+        </tr>
+        <tr>
+          <td><strong>Statut d'abonnement (Basic / Pro / Lifetime)</strong></td>
+          <td>Gestion des accès aux fonctionnalités payantes</td>
+          <td>Exécution du contrat</td>
           <td>Durée du compte + 30 jours</td>
         </tr>
         <tr>
-          <td><strong>Captures d'écran</strong> (optionnel, IA Vision)</td>
-          <td>Analyse automatique des trades via IA</td>
-          <td>Consentement (action volontaire)</td>
-          <td>Traitées en temps réel, non conservées</td>
+          <td><strong>Logs d'audit administrateur</strong><br><span style="font-size:12px;color:#6b7280">(actions admin : génération de codes Pro, suppression de compte, etc.)</span></td>
+          <td>Sécurité, traçabilité, prévention des abus</td>
+          <td>Intérêt légitime (art. 6.1.f RGPD)</td>
+          <td><strong>1 an</strong> (suppression automatique via TTL Firestore)</td>
         </tr>
         <tr>
-          <td><strong>Données de navigation</strong> (logs Firebase)</td>
-          <td>Sécurité, détection de fraude</td>
-          <td>Intérêt légitime</td>
-          <td>90 jours (politique Firebase)</td>
+          <td><strong>Logs techniques Firebase</strong><br><span style="font-size:12px;color:#6b7280">(IP, user-agent, dates de connexion)</span></td>
+          <td>Sécurité, détection de fraude, conformité légale</td>
+          <td>Intérêt légitime / Obligation légale</td>
+          <td>Selon politique Google Firebase (typiquement 90 jours)</td>
         </tr>
       </tbody>
     </table>
 
-    <p>ZeldTrade ne collecte aucune donnée à caractère sensible (santé, opinions politiques, données financières bancaires). Les données de trading saisies sont vos propres données d'activité.</p>
+    <p>ZeldTrade ne collecte aucune donnée à caractère sensible au sens de l'article 9 du RGPD (santé, opinions politiques, données biométriques, etc.). Les données de trading saisies vous appartiennent et restent privées (chaque utilisateur ne voit que ses propres données).</p>
+
+    <p><strong>Cookies :</strong> ZeldTrade n'utilise pas de cookies de tracking ni de cookies publicitaires. Seuls des mécanismes de stockage local (<code>localStorage</code>, voir section 4) et techniques (session Firebase) sont utilisés pour le bon fonctionnement de l'application.</p>
 
     <!-- 3. Sous-traitants -->
     <h2>3. Sous-traitants et transferts hors UE</h2>
-    <p>Certaines données sont transmises à des sous-traitants situés hors de l'Union Européenne. Ces transferts sont encadrés par les Clauses Contractuelles Types (CCT) de la Commission Européenne.</p>
+    <p>Certaines données sont transmises à des sous-traitants situés hors de l'Union Européenne. Ces transferts sont encadrés soit par une décision d'adéquation de la Commission Européenne, soit par les Clauses Contractuelles Types (CCT) standard.</p>
 
-    <div class="info-block" style="margin-bottom:10px">
-      <span class="tag">Authentification & base de données</span>
-      <p><strong>Firebase / Google LLC</strong> — États-Unis</p>
-      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique de confidentialité : <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a></p>
-    </div>
     <div class="info-block">
-      <span class="tag">Analyse IA (optionnel)</span>
+      <span class="tag">Authentification & base de données (region europe-west1)</span>
+      <p><strong>Firebase Authentication & Cloud Firestore — Google LLC</strong> (Belgique pour Firestore, États-Unis pour Auth)</p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique : <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a></p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Données : email, pseudo, mot de passe haché, trades, comptes, paramètres. Hébergement en Europe (region <code>europe-west1</code>) pour Firestore. Transferts US couverts par le Data Privacy Framework EU-US.</p>
+    </div>
+
+    <div class="info-block">
+      <span class="tag">Stockage des captures d'écran (region europe-west1)</span>
+      <p><strong>Cloud Storage for Firebase — Google LLC</strong> (Belgique)</p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique : <a href="https://cloud.google.com/storage/docs/data-locations" target="_blank" rel="noopener">cloud.google.com/storage/docs</a></p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Données : images compressées (~600 KB max) des charts associées à vos trades. Stockées dans <code>users/{votre-uid}/screenshots/</code>, accessibles uniquement par vous via règles Firebase Storage strictes.</p>
+    </div>
+
+    <div class="info-block">
+      <span class="tag">Cloud Functions (region europe-west1)</span>
+      <p><strong>Cloud Functions Gen 2 — Google LLC</strong> (Belgique)</p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique : <a href="https://cloud.google.com/functions" target="_blank" rel="noopener">cloud.google.com/functions</a></p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Exécute les fonctions serveur (analyse IA, envoi de notifications, gestion des abonnements). Aucune donnée persistée côté Cloud Functions.</p>
+    </div>
+
+    <div class="info-block">
+      <span class="tag">Analyse IA des charts (optionnel)</span>
       <p><strong>Groq, Inc.</strong> — États-Unis</p>
-      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique de confidentialité : <a href="https://groq.com/privacy-policy" target="_blank" rel="noopener">groq.com/privacy-policy</a></p>
-      <p style="margin-top:4px;font-size:13px;color:#6b7280">Les captures d'écran envoyées à Groq ne sont pas conservées après traitement selon leurs conditions.</p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique : <a href="https://groq.com/privacy-policy" target="_blank" rel="noopener">groq.com/privacy-policy</a></p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Données envoyées : capture d'écran du chart (encodée base64), texte du prompt. Selon la politique Groq, les requêtes API ne sont pas conservées pour entraîner leurs modèles. Cette analyse est <strong>volontaire</strong> de votre part (vous cliquez explicitement sur "Analyser") — base légale : consentement (art. 6.1.a RGPD).</p>
     </div>
 
-    <div class="info-block" style="margin-top:10px">
-      <span class="tag">Envoi de messages (formulaire de contact)</span>
-      <p><strong>Web3Forms (Hash Studio FZ LLC)</strong> — Émirats Arabes Unis / États-Unis</p>
-      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique de confidentialité : <a href="https://web3forms.com/privacy" target="_blank" rel="noopener">web3forms.com/privacy</a></p>
-      <p style="margin-top:4px;font-size:13px;color:#6b7280">Reçoit : nom, email (vérifié), message, identifiant utilisateur. Utilisé uniquement pour relayer votre message à l'administrateur.</p>
+    <div class="info-block">
+      <span class="tag">Notifications administrateur (formulaire de contact + inscriptions)</span>
+      <p><strong>Discord — Discord Inc.</strong> — États-Unis</p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique : <a href="https://discord.com/privacy" target="_blank" rel="noopener">discord.com/privacy</a></p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Données reçues via webhooks dans des canaux privés du serveur <em>ZeldTrade HQ</em> :</p>
+      <ul style="margin-left:0;margin-top:6px;font-size:13px">
+        <li><strong>Canal privé #support-tickets</strong> (visible par l'admin uniquement) : pseudo, email vérifié, message du formulaire de contact, identifiant utilisateur. Finalité : permettre à l'admin de répondre rapidement.</li>
+        <li><strong>Canal public #new-users</strong> (visible par tous les membres du serveur Discord) : <strong>pseudo uniquement</strong> (ou partie locale de l'email si pas de pseudo). <strong>L'email complet et l'identifiant ne sont jamais affichés publiquement.</strong></li>
+        <li><strong>Canal public #mises-à-jour</strong> : annonces génériques de nouvelles versions, aucune donnée utilisateur.</li>
+      </ul>
+      <p style="margin-top:6px;font-size:13px;color:#6b7280">Si vous nous contactez via le formulaire (action volontaire), votre message sera reçu via Discord par l'administrateur. Base légale : exécution du contrat (réponse au support).</p>
     </div>
 
-    <div class="info-block" style="margin-top:10px">
+    <div class="info-block">
+      <span class="tag tag-future">Paiements (à venir, non actif aujourd'hui)</span>
+      <p><strong>Stripe Payments Europe Ltd.</strong> — Irlande</p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique : <a href="https://stripe.com/fr/privacy" target="_blank" rel="noopener">stripe.com/privacy</a></p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Lorsque les paiements seront activés, Stripe traitera la transaction (numéro de carte, adresse de facturation). <strong>ZeldTrade ne stocke et ne voit jamais votre numéro de carte</strong> — seuls Stripe et votre banque y ont accès. Stripe est responsable conjoint du traitement pour la finalité paiement (art. 26 RGPD). Hébergement en Irlande (UE).</p>
+    </div>
+
+    <div class="info-block">
       <span class="tag">Protection anti-bot (formulaire de contact)</span>
       <p><strong>hCaptcha (Intuition Machines, Inc.)</strong> — États-Unis</p>
-      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique de confidentialité : <a href="https://www.hcaptcha.com/privacy" target="_blank" rel="noopener">hcaptcha.com/privacy</a></p>
-      <p style="margin-top:4px;font-size:13px;color:#6b7280">Collecte une empreinte de navigateur (IP, headers) pour distinguer les humains des bots. Base légale : intérêt légitime (sécurité du formulaire).</p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique : <a href="https://www.hcaptcha.com/privacy" target="_blank" rel="noopener">hcaptcha.com/privacy</a></p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Collecte une empreinte de navigateur (IP, headers, comportement) pour distinguer les humains des bots. Base légale : intérêt légitime (sécurité du formulaire de contact).</p>
     </div>
 
-    <div class="info-block" style="margin-top:10px">
+    <div class="info-block">
       <span class="tag">App Check / anti-abus API</span>
       <p><strong>Google reCAPTCHA Enterprise</strong> — États-Unis</p>
-      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique de confidentialité : <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></p>
-      <p style="margin-top:4px;font-size:13px;color:#6b7280">Vérifie que les requêtes aux Cloud Functions proviennent bien d'un navigateur légitime (pas de bot). Base légale : intérêt légitime (sécurité de l'API).</p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique : <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Vérifie que les requêtes aux Cloud Functions proviennent bien d'un navigateur légitime (pas de bot). Base légale : intérêt légitime (sécurité de l'API). Couvert par le Data Privacy Framework EU-US.</p>
     </div>
 
-    <div class="info-block" style="margin-top:10px">
+    <div class="info-block">
       <span class="tag">Hébergement statique (HTML/CSS/JS)</span>
-      <p><strong>GitHub Pages (GitHub Inc.)</strong> — États-Unis</p>
-      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique de confidentialité : <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">github.com/privacy</a></p>
-      <p style="margin-top:4px;font-size:13px;color:#6b7280">Hébergement des fichiers statiques uniquement (HTML/CSS/JS). Aucune donnée personnelle ne transite par GitHub. Logs d'accès standard (IP, user-agent) conservés selon politique GitHub.</p>
+      <p><strong>GitHub Pages — GitHub Inc.</strong> (filiale Microsoft)</p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique : <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">github.com/privacy</a></p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Héberge uniquement les fichiers statiques (HTML/CSS/JS) de l'interface. <strong>Aucune donnée personnelle ne transite ni n'est stockée par GitHub Pages.</strong> Logs d'accès standard (IP, user-agent) conservés selon la politique GitHub.</p>
+    </div>
+
+    <div class="info-block">
+      <span class="tag">Polices d'écriture</span>
+      <p><strong>Google Fonts — Google LLC</strong></p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Politique : <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></p>
+      <p style="margin-top:4px;font-size:13px;color:#6b7280">Chargement de la police « Geist » depuis les CDN Google. Lors du chargement, votre IP est transmise à Google. Base légale : intérêt légitime (présentation visuelle cohérente).</p>
     </div>
 
     <p style="margin-top:14px;font-size:13px;color:#6b7280">
-      <strong>Transferts hors UE</strong> : pour les sous-traitants Google (Firebase, reCAPTCHA), le transfert est couvert par le <em>Data Privacy Framework</em> EU-US (décision d'adéquation du 10 juillet 2023). Pour les autres (Groq, Web3Forms, hCaptcha, GitHub), des Clauses Contractuelles Types (CCT) sont en place ou en cours de mise en place.
+      <strong>Transferts hors UE</strong> : pour les sous-traitants Google (Firebase, Cloud Storage, Cloud Functions, reCAPTCHA, Fonts), le transfert est couvert par le <em>Data Privacy Framework EU-US</em> (décision d'adéquation de la Commission Européenne du 10 juillet 2023). Pour les autres (Groq, hCaptcha, Discord, GitHub), des Clauses Contractuelles Types (CCT) standard de la Commission s'appliquent. Stripe (Irlande) reste dans l'UE.
     </p>
 
     <!-- 4. Stockage local -->
     <h2>4. Stockage local (localStorage)</h2>
-    <p>ZeldTrade utilise le <em>localStorage</em> de votre navigateur pour mettre en cache vos données localement et assurer un chargement rapide de l'application. Ce mécanisme est distinct des cookies publicitaires et n'est pas partagé avec des tiers.</p>
-    <p>Les données stockées localement sont : cache des trades, comptes, réglages, préférence de langue. Elles sont automatiquement supprimées à la déconnexion ou si vous effacez les données de votre navigateur.</p>
+    <p>ZeldTrade utilise le <em>localStorage</em> de votre navigateur pour mettre en cache vos données localement et assurer un chargement rapide de l'application après la première connexion. Ce mécanisme est distinct des cookies publicitaires et n'est partagé avec aucun tiers.</p>
+    <p>Données stockées localement : cache des trades, comptes prop firm, paramètres, préférence de langue (FR/EN). Elles sont automatiquement effacées à la déconnexion, à la suppression du compte, ou si vous effacez manuellement les données de votre navigateur.</p>
 
-    <!-- 5. Vos droits -->
-    <h2>5. Vos droits</h2>
+    <!-- 5. Conservation et suppression -->
+    <h2>5. Conservation et suppression</h2>
+    <p>Les durées de conservation sont précisées dans le tableau de la section 2. À la fermeture de votre compte :</p>
+    <ul>
+      <li>Vos données sont déplacées dans une zone d'archivage (<code>deletedUsers/{uid}/</code>) pendant <strong>30 jours</strong> pour permettre une éventuelle réactivation (soft-delete).</li>
+      <li>Après 30 jours, toutes vos données (trades, captures d'écran, paramètres, pseudo, email) sont <strong>définitivement supprimées</strong>.</li>
+      <li>Vous pouvez exporter toutes vos données au format JSON depuis les Réglages avant la fermeture (droit à la portabilité, art. 20 RGPD).</li>
+    </ul>
+    <p>Les logs d'audit administrateur sont conservés <strong>1 an</strong> puis supprimés automatiquement via une politique TTL Firestore. Ces logs ne contiennent que des actions admin (génération de codes Pro, suppression de compte, etc.) sans contenu utilisateur.</p>
+
+    <!-- 6. Vos droits -->
+    <h2>6. Vos droits</h2>
     <p>Conformément au RGPD, vous disposez des droits suivants :</p>
     <ul>
-      <li><strong>Droit d'accès</strong> — obtenir une copie de vos données personnelles</li>
-      <li><strong>Droit de rectification</strong> — corriger des données inexactes</li>
-      <li><strong>Droit à l'effacement</strong> — demander la suppression de votre compte et de toutes vos données</li>
-      <li><strong>Droit à la portabilité</strong> — récupérer vos données dans un format structuré (export JSON disponible dans Réglages)</li>
-      <li><strong>Droit d'opposition</strong> — vous opposer à certains traitements fondés sur l'intérêt légitime</li>
-      <li><strong>Droit à la limitation</strong> — demander la suspension temporaire d'un traitement</li>
+      <li><strong>Droit d'accès</strong> (art. 15) — obtenir une copie de vos données personnelles</li>
+      <li><strong>Droit de rectification</strong> (art. 16) — corriger des données inexactes</li>
+      <li><strong>Droit à l'effacement</strong> (art. 17) — demander la suppression de votre compte et de toutes vos données (disponible directement dans Réglages)</li>
+      <li><strong>Droit à la portabilité</strong> (art. 20) — récupérer vos données dans un format structuré (export JSON dans Réglages)</li>
+      <li><strong>Droit d'opposition</strong> (art. 21) — vous opposer aux traitements fondés sur l'intérêt légitime</li>
+      <li><strong>Droit à la limitation</strong> (art. 18) — demander la suspension temporaire d'un traitement</li>
+      <li><strong>Droit de retirer votre consentement</strong> (art. 7) — pour l'analyse IA, ne plus cliquer "Analyser" suffit</li>
     </ul>
 
-    <p>Pour exercer ces droits, contactez : <a href="mailto:zeldtradepro@gmail.com">zeldtradepro@gmail.com</a>. Nous nous engageons à répondre dans un délai d'un mois.</p>
+    <p>Pour exercer ces droits, contactez : <a href="mailto:zeldtradepro@gmail.com">zeldtradepro@gmail.com</a>. Nous nous engageons à répondre dans un délai d'<strong>un mois</strong> conformément à l'art. 12.3 du RGPD (prolongeable de 2 mois si demande complexe, avec notification).</p>
     <p style="font-size:13px;color:#6b7280">Aucun Délégué à la Protection des Données (DPO) n'a été désigné — ZeldTrade ne réalise pas de traitement à grande échelle au sens de l'art. 37 du RGPD. Le responsable du traitement assume directement les obligations RGPD.</p>
     <p>Vous pouvez également introduire une réclamation auprès de la <strong>CNIL</strong> : <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener">cnil.fr/fr/plaintes</a> ou par courrier au 3 place de Fontenoy, 75007 Paris.</p>
 
-    <!-- 6. Sécurité -->
-    <h2>6. Sécurité</h2>
-    <p>ZeldTrade met en œuvre les mesures techniques et organisationnelles appropriées pour protéger vos données :</p>
+    <!-- 7. Sécurité -->
+    <h2>7. Sécurité</h2>
+    <p>ZeldTrade met en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données :</p>
     <ul>
       <li>Authentification sécurisée via Firebase Authentication (mots de passe hachés, jamais stockés en clair)</li>
-      <li>Transmissions chiffrées via HTTPS</li>
-      <li>Accès aux données Firestore restreint à l'utilisateur authentifié via des règles de sécurité</li>
-      <li>Aucun accès tiers à vos données de trading</li>
+      <li>Authentification à 2 facteurs (MFA) obligatoire sur le compte administrateur</li>
+      <li>Toutes les transmissions sont chiffrées (HTTPS / TLS 1.3)</li>
+      <li>Accès aux données Firestore restreint par des règles de sécurité strictes (chaque utilisateur ne peut lire/écrire que ses propres données)</li>
+      <li>Captures d'écran stockées dans un bucket Cloud Storage avec règles d'accès par utilisateur (pas d'accès tiers)</li>
+      <li>Validation côté serveur de tous les types de fichiers (anti-injection)</li>
+      <li>Logs d'audit immuables côté serveur pour toutes les actions sensibles</li>
+      <li>Protection anti-bot (hCaptcha, App Check reCAPTCHA Enterprise)</li>
+      <li>Politique de mots de passe forts requise (validée côté Firebase)</li>
     </ul>
 
-    <!-- 7. Modifications -->
-    <h2>7. Modifications de cette politique</h2>
-    <p>Cette politique peut être mise à jour à tout moment. En cas de modification substantielle, vous serez informé par email ou via une notification dans l'application. La date de dernière mise à jour figure en haut de page.</p>
+    <!-- 8. Mineurs -->
+    <h2>8. Mineurs</h2>
+    <p>ZeldTrade s'adresse aux traders adultes capables juridiquement. <strong>L'utilisation du service est interdite aux personnes mineures (moins de 18 ans).</strong> Le trading sur les marchés financiers comporte des risques importants et n'est pas adapté aux mineurs. Si nous apprenons qu'un compte a été créé par un mineur, il sera supprimé immédiatement.</p>
 
-    <!-- 8. Contact -->
-    <h2>8. Contact</h2>
+    <!-- 9. Modifications -->
+    <h2>9. Modifications de cette politique</h2>
+    <p>Cette politique peut être mise à jour pour refléter des évolutions du service ou de la réglementation. En cas de modification substantielle (changement de sous-traitant principal, nouvelles finalités, etc.), vous serez informé par email ou via une notification dans l'application avant la prise d'effet. La date de dernière mise à jour figure en haut de page.</p>
+
+    <!-- 10. Contact -->
+    <h2>10. Contact</h2>
     <div class="info-block">
       <p><strong>Email :</strong> <a href="mailto:zeldtradepro@gmail.com">zeldtradepro@gmail.com</a></p>
-      <p><strong>Délai de réponse :</strong> 30 jours maximum (obligation RGPD)</p>
+      <p><strong>Délai de réponse :</strong> 30 jours maximum (art. 12.3 RGPD)</p>
+      <p><strong>Discord :</strong> serveur communautaire ZeldTrade HQ (lien disponible dans l'application)</p>
     </div>
 
     <footer>
