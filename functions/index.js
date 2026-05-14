@@ -1095,12 +1095,27 @@ exports.stripeWebhook = onRequest(
     }
 
     try {
+      // v0.9.140 (audit hardening) : helpers de validation pour les inputs Stripe
+      // → prévient l'injection de UID/tier/customer arbitraires si la signature
+      //   webhook est valide mais les métadonnées sont malicieuses.
+      const _validUid    = (x) => typeof x === 'string' && /^[A-Za-z0-9]{1,128}$/.test(x);
+      const _validTier   = (x) => ['monthly', 'yearly', 'lifetime'].includes(x);
+      const _validCusId  = (x) => x == null || (typeof x === 'string' && /^cus_[A-Za-z0-9]{1,64}$/.test(x));
+      const _validSubId  = (x) => x == null || (typeof x === 'string' && /^sub_[A-Za-z0-9]{1,64}$/.test(x));
+
       switch (event.type) {
         case "checkout.session.completed": {
-          const s = event.data.object;
-          const uid  = s.client_reference_id || s.metadata?.uid;
-          const tier = s.metadata?.tier || "monthly";
-          if (!uid) { console.warn("[stripeWebhook] no uid in session", s.id); break; }
+          const s   = event.data.object;
+          const uid = s.client_reference_id || s.metadata?.uid;
+          let tier  = s.metadata?.tier || "monthly";
+          // Hardening v0.9.140 : valider strictement uid + tier avant écriture Firestore
+          if (!_validUid(uid)) {
+            console.warn("[stripeWebhook] invalid uid in session", s.id);
+            break;
+          }
+          if (!_validTier(tier)) tier = "monthly";
+          const cus = _validCusId(s.customer)     ? (s.customer     || null) : null;
+          const sub = _validSubId(s.subscription) ? (s.subscription || null) : null;
           // Active Pro + stocke les infos Stripe dans un doc séparé
           await db.doc(`users/${uid}/data/plan`).set({
             plan: "pro",
@@ -1109,8 +1124,8 @@ exports.stripeWebhook = onRequest(
             tier,
           }, { merge: false });
           await db.doc(`users/${uid}/data/stripe`).set({
-            customerId:     s.customer || null,
-            subscriptionId: s.subscription || null,
+            customerId:     cus,
+            subscriptionId: sub,
             tier,
             checkoutAt:     Date.now(),
           }, { merge: true });
@@ -1120,7 +1135,10 @@ exports.stripeWebhook = onRequest(
         case "customer.subscription.updated": {
           const sub = event.data.object;
           const uid = sub.metadata?.uid;
-          if (!uid) break;
+          if (!_validUid(uid)) {
+            console.warn("[stripeWebhook] invalid uid in subscription.updated", sub.id);
+            break;
+          }
           const isActive = sub.status === "active" || sub.status === "trialing";
           await db.doc(`users/${uid}/data/stripe`).set({
             subscriptionStatus: sub.status,
@@ -1140,7 +1158,10 @@ exports.stripeWebhook = onRequest(
         case "customer.subscription.deleted": {
           const sub = event.data.object;
           const uid = sub.metadata?.uid;
-          if (!uid) break;
+          if (!_validUid(uid)) {
+            console.warn("[stripeWebhook] invalid uid in subscription.deleted", sub.id);
+            break;
+          }
           await db.doc(`users/${uid}/data/plan`).set({
             plan: "basic",
             source: "stripe",

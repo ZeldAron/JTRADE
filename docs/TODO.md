@@ -55,7 +55,7 @@ Sans domaine `zeldtrade.com` :
 | ~~**Q3**~~ | ~~Winrate : compter `c.netPnl > 0` au lieu de `outcome === 'win'`~~ ✅ 2026-05-12 (v0.9.106) | 30 min |
 | ~~**Q4-Q5**~~ | ~~Calc.trade : early-return si entry/sl null ou tp1=0~~ ✅ 2026-05-12 (v0.9.106) | 30 min |
 | ~~**U1**~~ | ~~Remplacer `confirm()` natif par modale custom~~ ✅ 2026-05-13 (v0.9.107) | 1-2h |
-| **U3** | Onboarding nouveau user : empty state "premier lancement" guidé | 2h |
+| ~~**U3**~~ | ~~Onboarding nouveau user : empty state "premier lancement" guidé~~ ✅ 2026-05-14 (v0.9.111) — Dashboard empty state avec 3 étapes (U21) + i18n complet (dash.empty.*) v0.9.120 | ✅ Fait |
 
 ---
 
@@ -67,8 +67,8 @@ Sans domaine `zeldtrade.com` :
 |---|---|---|---|
 | ~~**I8**~~ | ~~Dependabot config~~ ✅ 2026-05-13 (`.github/dependabot.yml` créé) — il reste juste à cocher "Enable Dependabot alerts" dans GitHub Settings → Code security | 15 min | 0€ |
 | ~~**I9**~~ | ~~Migrer Web3Forms → Discord webhooks~~ ✅ 2026-05-14 (v0.9.123) — 2 webhooks setup (#support-tickets + #new-users), helper `_postDiscordWebhook()` avec regex validation, secrets `DISCORD_SUPPORT_WEBHOOK` + `DISCORD_SIGNUP_WEBHOOK` stockés et CFs redéployées | ✅ Fait |
-| **I11** | Compléter `privacy.html` : Groq, GitHub Pages, Stripe, Discord avec base légale RGPD | 1-2h | 0€ |
-| **I13** | Sentry / GCP Error Reporting alertes | 1h | 0€ (5k events/mois free) |
+| ~~**I11**~~ | ~~Compléter `privacy.html` : Groq, GitHub Pages, Stripe, Discord avec base légale RGPD~~ ✅ 2026-05-14 (v0.9.128) — 10 trous fixés (Discord, Stripe, Cloud Storage, AuditLogs, Mineurs, etc.) | ✅ Fait |
+| ~~**I13**~~ | ~~Sentry / GCP Error Reporting alertes~~ ✅ 2026-05-14 (v0.9.129) — Sentry-lite gratuit via Discord webhook `#dev-logs`, 9 CFs wrappées via `_wrapCF()` + `_reportError()` | ✅ Fait |
 | **I15** | Compte Stripe FR + KYC (lance tôt, attente 1-7j) | 2-3h + attente | 0€ (no fee sans vente) |
 | **I14** | MFA Firebase Auth admin (distinct du MFA Gmail) | 2-3h | 0€ |
 | **I7** | Bump `firebase-functions` v4.6 → v6 (EOL) | 2-4h (moi après que tu donnes go) | 0€ |
@@ -94,7 +94,12 @@ Sans domaine `zeldtrade.com` :
 
 ### 🔧 CODE (40)
 
-**Sécurité (10)** : S12 headers HTTP, ~~S13 TTL auditLogs~~ ✅ 2026-05-14 (v0.9.122), ~~S15 plan schema~~ ✅ déjà OK (rules), S16 audit pre-action, ~~S17 Unicode bidi~~ ✅ 2026-05-12, ~~S18 pagination admin~~ ✅ 2026-05-14 (v0.9.122), S19 throttle persisté serveur, ~~S20 email_verified signup~~ ✅ 2026-05-14 (v0.9.122 — analyzeChart), ~~S21 isAdmin bypass myAccounts~~ ✅ 2026-05-14 (v0.9.122), ~~S36 webhook idempotent~~ ✅ 2026-05-14 (v0.9.122)
+**Sécurité (10)** : S12 headers HTTP, ~~S13 TTL auditLogs~~ ✅ 2026-05-14 (v0.9.122), ~~S15 plan schema~~ ✅ déjà OK (rules), S16 audit pre-action, ~~S17 Unicode bidi~~ ✅ 2026-05-12, ~~S18 pagination admin~~ ✅ 2026-05-14 (v0.9.122), S19 throttle persisté serveur, ~~S20 email_verified signup~~ ✅ 2026-05-14 (v0.9.122 — analyzeChart), ~~S21 isAdmin bypass myAccounts~~ ✅ 2026-05-14 (v0.9.122), ~~S36 webhook idempotent~~ ✅ 2026-05-14 (v0.9.122), ~~S37 Stripe webhook validation UID+tier+customer/sub~~ ✅ 2026-05-15 (v0.9.140)
+
+**Hardening notés (audit interne 2026-05-15, non-critiques)** :
+- S38 CSP `style-src 'unsafe-inline'` à durcir (nonce/hash sur styles inline) — gros chantier (chaque `style="..."` à migrer en classe CSS). Risque XSS résiduel faible avec `escHtml` + `script-src 'self'`. À planifier post-bêta.
+- S39 `_verifyHcaptcha` sans `AbortController` timeout (risque DoS lente) — fix 5 min, peu critique tant que hCaptcha API stable.
+- S40 Audit logs `auditLogs` exposent `tier` (monthly/yearly/lifetime) en clair — non-critique car logs admin-read uniquement.
 
 **Code (15)** : ~~Q11 date floor~~ ✅ 2026-05-14, Q16 anti-corruption check, ~~Q17 garde-fou null~~ ✅ 2026-05-14, Q18-20 dedup helpers, Q22-23 dead code, Q24/31 perf Calc.trade, Q25-26 no-op functions, Q27 spreadCost fallback, Q43 timezone, ~~Q44 paste handlers~~ ✅ 2026-05-14, ~~Q49 race compression~~ ✅ 2026-05-14, ~~Q52 double escape JSON~~ ✅ 2026-05-14, Q53-55 désynchros sanitize, Q61-62 N+1 queries, Q69 reset aiUsage downgrade
 
@@ -122,7 +127,7 @@ Détails dans le CHANGELOG-DEV audit consolidé. Sélection :
 |---|---|---|---|
 | ~~**B3**~~ | ~~Rule `userEmails` blocklist trop stricte bloque la recréation du userEmails admin~~ ✅ Résolu 2026-05-13 | Username "Admin" (ou contenant "admin"/"zeldtrade"/etc.) bloquait la rule `userEmails write` introduite en v0.9.95. Le compte admin lui-même ne pouvait plus créer son record `userEmails` après recréation. **Fix** : bypass de la blocklist si `request.auth.token.email == 'zeldtradepro@gmail.com'`. Rule redéployée. | ✅ Résolu |
 | ~~**B1**~~ | ~~Activation code Pro échoue pour le compte admin recréé~~ ✅ Résolu 2026-05-12 (Option A) | User a édité manuellement le doc `proCodeHashes/{hash}` dans Firebase Console pour mettre le bon UID. Activation OK confirmée. Cleanup B (suppression artefacts ancien UID) reste pertinent à terme. | ✅ Résolu |
-| ~~**B2**~~ | ~~Cloud Function cleanup userEmails orphelins~~ ✅ 2026-05-13 (v0.9.107) — `cleanupOrphanUserEmails` CF + UI admin Config tab (dry-run obligatoire avant suppression) | À faire (~1h) |
+| ~~**B2**~~ | ~~Cloud Function cleanup userEmails orphelins~~ ✅ 2026-05-13 (v0.9.107) — `cleanupOrphanUserEmails` CF + UI admin Config tab (dry-run obligatoire avant suppression). En complément : 4 comptes fantômes existants ont été supprimés en v0.9.125 et fix structurel (création immédiate du doc userEmails au signup) déployé. | ✅ Résolu |
 
 ---
 
