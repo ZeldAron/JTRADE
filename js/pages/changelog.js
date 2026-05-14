@@ -5,6 +5,17 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.112',
+      date: '2026-05-14',
+      time: '02:00',
+      tags: ['feat'],
+      title: 'Landing page v1 — page d\'accueil publique',
+      titleEn: 'Landing page v1 — public marketing page',
+      items: [
+        { type: 'feat', text: 'Nouvelle page d\'accueil `landing.html` avec hero "Un journal de trading complet fait par un trader pour les traders". Sections : hero + 6 features (prop firms / IA chart / multi-comptes / calculs / screenshots / FR), pricing stealth (sur invitation), FAQ 6 questions, footer mentions légales. Design dark cohérent avec l\'app, responsive mobile-first, page 100% statique (zéro JS Firebase, CSP ultra-stricte).', textEn: 'New homepage `landing.html` with hero "A complete trading journal built by a trader for traders". Sections: hero + 6 features (prop firms / AI chart / multi-account / calcs / screenshots / FR), stealth pricing (by invitation), 6-question FAQ, legal footer. Dark design consistent with app, responsive mobile-first, 100% static page (zero Firebase JS, ultra-strict CSP).' },
+      ],
+    },
+    {
       version: '0.9.111',
       date: '2026-05-14',
       time: '01:00',
