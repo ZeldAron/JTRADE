@@ -737,6 +737,98 @@
     _openExportPdfModal();
   });
 
+  // v0.9.142 : vérification email — refresh statut + handlers via event delegation
+  function _refreshEmailVerifyStatus() {
+    try {
+      const user = firebase.auth().currentUser;
+      const statusEl = document.getElementById('emailVerifyStatus');
+      const btnResend = document.getElementById('btnResendVerify');
+      const btnCheck  = document.getElementById('btnCheckVerify');
+      if (!statusEl || !btnResend || !btnCheck) return;
+      if (!user) {
+        statusEl.textContent = t('set.email.verify.unauth') || 'Non connecté';
+        btnResend.style.display = 'none';
+        btnCheck.style.display = 'none';
+        return;
+      }
+      const email = user.email || '';
+      if (user.emailVerified) {
+        statusEl.innerHTML = '<span style="color:var(--green)">✅ ' +
+          UI.escHtml(t('set.email.verify.ok') || 'Email vérifié') +
+          '</span>';
+        btnResend.style.display = 'none';
+        btnCheck.style.display = 'none';
+      } else {
+        const tpl = t('set.email.verify.pending') ||
+          '⚠ Email non vérifié — clique sur le lien envoyé à {email}, puis "J\'ai vérifié".';
+        statusEl.innerHTML = '<span style="color:var(--amber)">' +
+          UI.escHtml(tpl).replace('{email}', '<strong>' + UI.escHtml(email) + '</strong>') +
+          '</span>';
+        btnResend.style.display = '';
+        btnCheck.style.display = '';
+      }
+    } catch (e) {
+      console.warn('[Settings] emailVerify refresh failed:', e && e.message);
+    }
+  }
+
+  document.body.addEventListener('click', async function (e) {
+    // ─ Bouton "Renvoyer l'email" ─
+    if (e.target.closest('#btnResendVerify')) {
+      e.preventDefault();
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+      const btn = document.getElementById('btnResendVerify');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = t('set.email.verify.sending') || 'Envoi…';
+      try {
+        await user.sendEmailVerification();
+        UI.toast(t('set.email.verify.sent') ||
+          'Email envoyé ! Vérifie ta boîte mail (et les spams).');
+      } catch (err) {
+        const code = err && err.code;
+        if (code === 'auth/too-many-requests') {
+          UI.toast(t('set.email.verify.toomany') ||
+            'Trop de tentatives. Attends quelques minutes avant de réessayer.', true);
+        } else {
+          UI.toast((t('set.email.verify.err') || 'Échec de l\'envoi : ') +
+            (err && err.message || ''), true);
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+      return;
+    }
+    // ─ Bouton "J'ai vérifié" → reload user state ─
+    if (e.target.closest('#btnCheckVerify')) {
+      e.preventDefault();
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+      const btn = document.getElementById('btnCheckVerify');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = t('set.email.verify.checking') || 'Vérification…';
+      try {
+        await user.reload();
+        _refreshEmailVerifyStatus();
+        if (user.emailVerified) {
+          UI.toast(t('set.email.verify.confirmed') || 'Email vérifié ! 🎉');
+        } else {
+          UI.toast(t('set.email.verify.notyet') ||
+            'Pas encore vérifié — clique sur le lien dans ton email.', true);
+        }
+      } catch (err) {
+        UI.toast('Erreur : ' + (err && err.message || ''), true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+      return;
+    }
+  });
+
   let _settingsBound = false;
 
   UI.initSettings = function () {
@@ -751,6 +843,9 @@
     // masqué pour toujours.
     const _rowPdf = document.getElementById('rowExportPdf');
     if (_rowPdf) _rowPdf.style.display = (Store.isPro && Store.isPro()) ? '' : 'none';
+
+    // v0.9.142 : refresh statut email vérifié à chaque render Settings.
+    _refreshEmailVerifyStatus();
 
     if (_settingsBound) {
       updateGroqStatus();
