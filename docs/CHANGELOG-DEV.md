@@ -37,6 +37,51 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-15 — v0.9.147 — URLs propres (cleanUrls Firebase Hosting)
+
+**Type** : ux / polish
+**Fichiers** : `firebase.json` (cleanUrls: true), `src/*.html` (href update), `src/js/pages/offers.js`, `src/js/app.js`, `src/js/pages/settings.js`, `src/robots.txt`, `src/js/pages/changelog.js`, bump v=0.9.147
+
+### Contexte
+User : "comment faire pour que quand je clique sur un onglet ça ne me met pas .html derrière les fichiers ?". Firebase Hosting supporte `cleanUrls: true` qui strippe le `.html` des URLs servies + redirige `.html` → clean.
+
+### Changements
+- **`firebase.json`** : `cleanUrls: false` → `true`
+- **Tous les `href`** mis à jour via `sed` cross-fichier :
+  - `href="index.html"` → `href="/"`
+  - `href="app.html"` → `href="/app"`
+  - `href="admin.html"` → `href="/admin"`
+  - `href="cgu.html"` → `href="/cgu"`
+  - `href="legal.html"` → `href="/legal"`
+  - `href="privacy.html"` → `href="/privacy"`
+  - `href="payment.html"` → `href="/payment"`
+- **JS routing** : `location.href = 'index.html'` → `location.href = '/'` (app.js logout x2, settings.js delete account)
+- **`og:url`** app.html : `/app.html` → `/app`
+- **`robots.txt`** : conserve les 2 patterns par défense en profondeur :
+  ```
+  Disallow: /admin
+  Disallow: /admin.html
+  Disallow: /payment
+  Disallow: /payment.html
+  ```
+
+### Impact
+- **UX** : URLs partage propres (`zeldtrade.com/app` vs `zeldtrade.com/app.html`).
+- **SEO** : élimine le contenu dupliqué `.html` / clean (Firebase 301 → canonique clean).
+- **Perf** : liens internes pointent direct → pas de hop redirect (gain ~50-100ms par nav).
+- **Réversibilité** : les anciens bookmarks `.html` continuent à marcher (301 redirect).
+
+### À surveiller
+- Re-tester logout (app.js:122, :206) et delete account (settings.js:1172) → redirect doit aller à `/`, pas une page 404.
+- Tester partage de lien sur réseaux sociaux (og:url canonique).
+- Vérifier que `robots.txt` est bien servi sur `zeldtrade.com/robots.txt`.
+
+### Liens
+- v0.9.145 (firebase.json hosting section)
+- Firebase Hosting docs : https://firebase.google.com/docs/hosting/full-config#clean_urls
+
+---
+
 ## 2026-05-15 — v0.9.146 — Login : fond stylé (grid + glow) + retrait croix fermeture
 
 **Type** : ui / polish
