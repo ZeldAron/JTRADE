@@ -37,6 +37,41 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-15 — v0.9.146 — Login : fond stylé (grid + glow) + retrait croix fermeture
+
+**Type** : ui / polish
+**Fichiers** : `src/app.html` (-1 ligne croix), `src/js/app-bootstrap.js` (-5 lignes handler), `src/css/style.css` (~+40 lignes pseudo-elements), `src/js/pages/changelog.js`, bump v=0.9.146
+**Versions impactées** : front v0.9.146
+
+### Contexte
+User : "j'ai un problème quand je me connecte sur l'application et bien ça met un fond bizarre (...) créer un fond stylé s'il te plaît et enlève la croix en haut de la fenêtre". Le fond de la modale de login était un `rgba(0,0,0,0.65)` + `backdrop-filter: blur(6px)` — fonctionnel mais inesthétique (rien derrière la modale puisqu'`app.html` est vide tant que pas authentifié). La croix ✕ ne menait à rien (cliquer pour fermer la modale = retomber sur page blanche, no exit).
+
+### Changements
+- **`src/app.html`** : suppression de `<button class="auth-modal-close" id="authModalClose">✕</button>`.
+- **`src/js/app-bootstrap.js`** : suppression du `addEventListener` sur `#authModalClose` (5 lignes) + du handler `authModalBackdrop` click (le backdrop devient inert).
+- **`src/css/style.css`** :
+  - `.auth-modal::before` : grid pattern violet `linear-gradient` 56×56px avec mask radial pour fade aux bords (même technique qu'`index.html`).
+  - `.auth-modal::after` : 2 radial gradients violet (#7c3aed) + rose (#f472b6) avec `filter: blur(40px)` et animation `authGlowDrift` 14s ease-in-out alternate (translate + scale subtile).
+  - `.auth-modal` : `background: var(--bg)` (couleur app de base).
+  - `.auth-modal-backdrop` : `pointer-events: none` (inert).
+  - Suppression de `.auth-modal-close` styles.
+
+### Impact
+- **UX** : page de connexion identique en feel à la landing page (`index.html`) → cohérence visuelle. Plus de croix trompeuse.
+- **Perf** : 2 pseudo-elements + 1 animation CSS, tout sur GPU (`filter`, `transform`). Aucun impact mesurable.
+- **Sécu** : aucun. Le backdrop inert ne crée pas de vulnérabilité — l'auth reste contrôlée par Firebase Auth.
+- **Accessibility** : retrait de la croix = un raccourci d'escape en moins, mais comme il ne menait nulle part de toute façon, no regression. `Escape` keyboard shortcut peut être ajouté plus tard si demandé.
+
+### À surveiller
+- Tester sur mobile (animation drift visible ?)
+- Tester avec `prefers-reduced-motion` — l'animation tourne quand même actuellement, on pourrait l'arrêter (TODO mineur).
+
+### Liens
+- v0.9.145 (migration Firebase Hosting, où cette modale est maintenant servie via `zeldtrade.com`)
+- `src/index.html` : source du pattern de fond (lignes 75-104)
+
+---
+
 ## 2026-05-15 — v0.9.145 — Migration Firebase Hosting + domaine custom + headers HTTPS
 
 **Type** : infra / security
