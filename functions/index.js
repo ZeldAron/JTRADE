@@ -35,6 +35,13 @@ const STRIPE_PRICE_YEARLY   = defineSecret('STRIPE_PRICE_YEARLY');
 const STRIPE_PRICE_LIFETIME = defineSecret('STRIPE_PRICE_LIFETIME');
 
 const ALLOWED_ORIGINS = [
+  // Domaine principal (à partir de v0.9.145, migration Firebase Hosting + custom domain)
+  'https://zeldtrade.com',
+  'https://www.zeldtrade.com',
+  // URL Firebase Hosting auto (utilisée pendant la propagation DNS / SSL custom)
+  'https://zeldtrade.web.app',
+  'https://zeldtrade.firebaseapp.com',
+  // Legacy : GitHub Pages — gardé en backup pendant ~1 semaine puis à retirer
   'https://zeldaron.github.io',
   // 'http://localhost:8080',  // retiré en prod — réactiver localement si dev
 ];
@@ -315,7 +322,7 @@ async function _postDiscordWebhook(url, embed) {
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({
         username:   'ZeldTrade Bot',
-        avatar_url: 'https://zeldaron.github.io/zeldtrade/favicon.png',
+        avatar_url: 'https://zeldtrade.com/favicon.png',
         embeds:     [embed],
       }),
       signal: controller.signal,
@@ -964,7 +971,7 @@ const TIER_TO_PRICE_SECRET = {
   lifetime: STRIPE_PRICE_LIFETIME,
 };
 
-const PUBLIC_SITE_URL = "https://zeldaron.github.io/zeldtrade";
+const PUBLIC_SITE_URL = "https://zeldtrade.com";
 
 /**
  * Génère un lien de checkout Stripe personnalisé pour un user donné.

@@ -1,22 +1,33 @@
 #!/bin/bash
 # ─── JTRADE RELEASE ───────────────────────────────────────────────────────────
-# Déploie la version actuelle de src/ sur GitHub Pages.
+# Déploie la version actuelle de src/ sur :
+#   1. Firebase Hosting (primaire, depuis v0.9.145) → https://zeldtrade.com
+#   2. GitHub Pages (backup pendant la migration) → https://zeldaron.github.io/zeldtrade
 #
 # Usage : ./scripts/release.sh v0.5.1
 #         ./scripts/release.sh          ← reprend le dernier tag
+#         ./scripts/release.sh v0.5.1 --no-backup   ← skip gh-pages
 
 set -e
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-# Version
-if [ -n "$1" ]; then
-    VERSION="$1"
-else
+# Args
+VERSION=""
+SKIP_BACKUP=false
+for arg in "$@"; do
+    case "$arg" in
+        --no-backup) SKIP_BACKUP=true ;;
+        -*) echo "Flag inconnu : $arg" ; exit 1 ;;
+        *)  VERSION="$arg" ;;
+    esac
+done
+
+if [ -z "$VERSION" ]; then
     VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
     if [ -z "$VERSION" ]; then
-        echo "Usage : ./scripts/release.sh v0.5.1"
+        echo "Usage : ./scripts/release.sh v0.5.1 [--no-backup]"
         exit 1
     fi
     echo "Aucune version précisée — utilise le dernier tag : $VERSION"
@@ -51,16 +62,34 @@ if [ -n "$(git status --porcelain src/)" ]; then
     echo "  ✓  Committé."
 fi
 
-# 3. Déploie src/ sur gh-pages (sans Actions, depuis le terminal)
+# 3. Deploy primaire : Firebase Hosting
 echo ""
-echo "  Déploiement sur GitHub Pages..."
-COMMIT=$(git subtree split --prefix src HEAD)
-git push origin "${COMMIT}:refs/heads/gh-pages" --force --quiet
-echo "  Déployé."
+echo "  → Déploiement sur Firebase Hosting..."
+firebase deploy --only hosting --non-interactive
+echo "  ✓  Firebase Hosting déployé."
+
+# 4. Deploy backup : GitHub Pages (sauf si --no-backup)
+if [ "$SKIP_BACKUP" = false ]; then
+    echo ""
+    echo "  → Déploiement backup sur GitHub Pages..."
+    COMMIT=$(git subtree split --prefix src HEAD)
+    if git push origin "${COMMIT}:refs/heads/gh-pages" --force --quiet; then
+        echo "  ✓  GitHub Pages déployé."
+    else
+        echo "  ⚠  Échec push gh-pages (non bloquant — Firebase reste primaire)."
+    fi
+else
+    echo ""
+    echo "  ⏭  Skip backup gh-pages (--no-backup)."
+fi
 
 echo ""
 echo "======================================="
-echo "  En ligne (30s) : https://zeldaron.github.io/zeldtrade"
-echo "  Version         : $VERSION"
+echo "  Primaire (live)     : https://zeldtrade.com"
+echo "  Firebase auto       : https://zeldtrade.web.app"
+if [ "$SKIP_BACKUP" = false ]; then
+    echo "  Backup (gh-pages)   : https://zeldaron.github.io/zeldtrade"
+fi
+echo "  Version             : $VERSION"
 echo "======================================="
 echo ""

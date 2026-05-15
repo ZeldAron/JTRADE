@@ -1,2 +1,5 @@
 .DS_Store
 .claude/
+
+# Firebase deploy cache (généré par firebase deploy localement, ne pas commit)
+.firebase/

@@ -37,6 +37,84 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-15 — v0.9.145 — Migration Firebase Hosting + domaine custom + headers HTTPS
+
+**Type** : infra / security
+**Fichiers** : `firebase.json` (+ section hosting), `scripts/release.sh` (refactor), `functions/index.js` (ALLOWED_ORIGINS + PUBLIC_SITE_URL), `src/{index,app}.html` (og:url), `src/js/pages/export-pdf.js` (footer), `scripts/announce-{update,maintenance}.js` (avatar), `src/js/pages/changelog.js`, `docs/README.md`, bump v=0.9.145
+**Versions impactées** : front v0.9.145, CFs : 10 CFs redéployées (ALLOWED_ORIGINS, PUBLIC_SITE_URL)
+
+### Contexte
+Migration de GitHub Pages vers Firebase Hosting pour avoir :
+1. Un domaine custom propre : `zeldtrade.com` (acheté Namecheap, ~10€/an avec promo NEWCOM679)
+2. Des headers HTTPS server-side (S12 du TODO) — impossible sur GH Pages qui ne permet aucun header custom
+3. Préparation pour Brevo SMTP + DKIM/SPF/DMARC sur le domaine custom (livraison email)
+
+### Changements
+
+**`firebase.json` — section hosting ajoutée**
+- `public: "src"` (même répertoire que la branche gh-pages)
+- 6 headers de sécurité sur tous les `*.html` :
+  - `Strict-Transport-Security: max-age=31536000; includeSubDomains` (HSTS 1 an, sans preload pour réversibilité)
+  - `X-Frame-Options: DENY` (server-side cette fois, frame-ancestors none du CSP n'était pas effectif via meta tag)
+  - `X-Content-Type-Options: nosniff`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Permissions-Policy` (toutes APIs sensibles blocked)
+  - `Content-Security-Policy` server-side (identique au meta, mais maintenant `frame-ancestors 'none'` fonctionne vraiment)
+- Cache assets statiques : `Cache-Control: public, max-age=31536000, immutable` (1 an) — sûr car cache-busting `?v=X.Y.Z` déjà en place
+- Cache HTML : `no-cache, no-store, must-revalidate` (bump version visible instant)
+
+**`scripts/release.sh` refactor**
+- Deploy primaire : `firebase deploy --only hosting --non-interactive`
+- Deploy backup : `git push gh-pages` (legacy, gardé ~1 semaine, skip via `--no-backup`)
+- Print final : URLs Firebase primaire + auto + gh-pages backup
+
+**`functions/index.js` — origines + URL publique**
+- `ALLOWED_ORIGINS` (CORS) enrichi : `zeldtrade.com`, `www.zeldtrade.com`, `zeldtrade.web.app`, `zeldtrade.firebaseapp.com` + legacy `zeldaron.github.io`
+- `PUBLIC_SITE_URL` → `https://zeldtrade.com` (impacte Stripe success_url/cancel_url)
+- `avatar_url` Discord bot → `https://zeldtrade.com/favicon.png`
+
+**URLs hardcodées migrées (cosmétique mais cohérence)**
+- `src/index.html:13` + `src/app.html:39` : og:url
+- `src/js/pages/export-pdf.js:141` : footer PDF
+- `scripts/announce-update.js` : avatar + footer Discord
+- `scripts/announce-maintenance.js` : avatar Discord
+
+### DNS configuration (manuel, hors code)
+Namecheap → Advanced DNS :
+- `A @ → 199.36.158.100` (Firebase Hosting edge)
+- `TXT @ → hosting-site=zeldtrade` (vérification ownership)
+- `CNAME www → zeldtrade.web.app` (redirige www → apex via Firebase)
+
+Firebase Console :
+- Custom domain `zeldtrade.com` ajouté (Quick setup)
+- Custom domain `www.zeldtrade.com` ajouté (Redirect → zeldtrade.com)
+
+### Impact
+- **UX** : domain propre, URLs `zeldtrade.com` (plus pro que `zeldaron.github.io/zeldtrade`)
+- **Sécu** : S12 ✅ done. CSP server-side rend `frame-ancestors none` effective (impossible en meta tag). HSTS force HTTPS pour les 12 prochains mois sur tout sous-domaine.
+- **Perf** : Firebase CDN edge Paris (`x-served-by: cache-par-lfpb1150034-PAR`) — latence FR plus faible que GH Pages (qui sert depuis US East).
+- **Réversibilité** : gh-pages reste actif comme backup. Pour rollback, suffit de pointer DNS apex vers GH Pages IPs.
+
+### À surveiller
+- **SSL provisioning** : 1-24h après vérification ownership Firebase. Tant que pas fait, `https://zeldtrade.com` retourne SSL error (404 sur HTTP, normal). Statut visible dans Firebase Console → Hosting.
+- **HSTS preload** : NON activé. Si besoin futur, ajouter `preload` à la directive et soumettre à hstspreload.org. Une fois preload, c'est IRRÉVERSIBLE — donc à faire seulement quand on est sûr.
+- **CSP duplication** : meta tag CSP reste dans les HTML PLUS la CSP server-side. Pas de conflit (browsers intersectent les CSPs = plus restrictif gagne). Nettoyage meta tags possible dans une release future.
+
+### Plan post-migration
+1. Attendre SSL prêt sur `zeldtrade.com` (1-24h)
+2. Annonce Discord #annonces "Site live sur zeldtrade.com"
+3. Demain : Brevo SMTP + DKIM/SPF/DMARC sur zeldtrade.com pour la deliverability email (résout le problème spam Firebase Auth)
+4. ~Une semaine après confirmation : retirer ALLOWED_ORIGINS `zeldaron.github.io`, supprimer branche gh-pages, retirer flag `--no-backup` du release.sh (gh-pages deviendra le default off)
+
+### Liens
+- v0.9.142 (UI Settings → Renvoyer email)
+- v0.9.143 (modale post-signup + log)
+- v0.9.144 (admin bulk verify — workaround temporaire jusqu'à Brevo)
+- TODO I10 (domaine custom + Firebase Hosting) ✅
+- TODO S12 (headers HTTP) ✅
+
+---
+
 ## 2026-05-15 — v0.9.144 — Admin : forcer email_verified (workaround deliverability)
 
 **Type** : admin / fix

@@ -121,13 +121,13 @@ const embed = {
   title:       `🚀 v${entry.version} — ${userTitle}`,
   description,
   color:       0x6366f1,
-  footer:      { text: 'ZeldTrade · zeldaron.github.io/zeldtrade' },
+  footer:      { text: 'ZeldTrade · zeldtrade.com' },
   timestamp:   new Date(`${entry.date}T${(entry.time || '12:00')}:00.000Z`).toISOString(),
 };
 
 const payload = JSON.stringify({
   username:   'ZeldTrade Updates',
-  avatar_url: 'https://zeldaron.github.io/zeldtrade/favicon.png',
+  avatar_url: 'https://zeldtrade.com/favicon.png',
   embeds:     [embed],
 });
 
