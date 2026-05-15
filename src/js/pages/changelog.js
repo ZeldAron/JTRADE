@@ -5,6 +5,24 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.149',
+      date: '2026-05-16',
+      time: '00:30',
+      tags: ['ui', 'auth'],
+      title: 'Bouton 👁️ pour voir le mot de passe (login + signup)',
+      titleEn: 'Show password button (login + signup)',
+      items: [
+        { type: 'ui', text: 'Ajout d\'un bouton 👁️ à droite des 3 champs mot de passe (connexion + inscription mot de passe + confirmation). Clic = toggle entre `type="password"` (caché) et `type="text"` (visible). SVG inline (CSP-friendly), event delegation sur `document.body` pour robustesse. Bouton `tabindex="-1"` (pas dans le tab order pour ne pas gêner le flow clavier).', textEn: 'Added a 👁️ button next to all 3 password fields (login + signup password + confirm). Click = toggle between `type="password"` (hidden) and `type="text"` (visible). Inline SVG (CSP-friendly), event delegation on `document.body` for robustness. Button `tabindex="-1"` (out of tab order to not disrupt keyboard flow).' },
+        { type: 'security', text: 'Aucun impact sécu : le toggle est purement client-side, le champ reste `password` par défaut (autocomplete fonctionne pareil). `aria-label` change dynamiquement entre "Afficher" et "Masquer" pour les lecteurs d\'écran.', textEn: 'No security impact: toggle is purely client-side, field stays `password` by default (autocomplete works the same). `aria-label` dynamically changes between "Show" and "Hide" for screen readers.' },
+      ],
+      user: {
+        title: 'Tu peux voir ton mot de passe en tapant',
+        items: [
+          { type: 'ui', text: 'Sur la page connexion et inscription, clique sur l\'icône 👁️ à droite du champ mot de passe pour l\'afficher en clair. Re-clique pour le masquer. Utile pour vérifier que tu n\'as pas fait de typo.' },
+        ],
+      },
+    },
+    {
       version: '0.9.148',
       date: '2026-05-15',
       time: '22:45',

@@ -1521,6 +1521,36 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 .lp-footer-links a:hover { color: var(--text); }
 
+/* ─── PASSWORD VISIBILITY TOGGLE (v0.9.149) ─── */
+.pwd-toggle-wrap {
+  position: relative;
+  display: block;
+}
+.pwd-toggle-wrap .form-input {
+  /* room for the icon on the right */
+  padding-right: 42px;
+}
+.pwd-toggle {
+  position: absolute;
+  top: 50%; right: 8px;
+  transform: translateY(-50%);
+  background: none; border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--muted, #8b949e);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.pwd-toggle:hover { color: var(--text, #e6edf3); background: rgba(255,255,255,0.05); }
+.pwd-toggle:focus-visible {
+  outline: 2px solid var(--accent-l, #a78bfa);
+  outline-offset: 2px;
+}
+.pwd-toggle svg { display: block; pointer-events: none; }
+
 /* ─── AUTH MODAL (v0.9.146 : fond stylé inspiré landing page) ─── */
 .auth-modal {
   position: fixed; inset: 0; z-index: 3000;
