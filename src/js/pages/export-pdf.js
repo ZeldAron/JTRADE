@@ -138,7 +138,7 @@ const ExportPDF = (() => {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(...COLOR_MUTED);
-    doc.text('ZeldTrade — Journal de trading prop firm — zeldaron.github.io/zeldtrade', 14, h - 6);
+    doc.text('ZeldTrade — Journal de trading prop firm — zeldtrade.com', 14, h - 6);
     doc.text(`Page ${pageNum} / ${totalPages}`, w - 14, h - 6, { align: 'right' });
   }
 
