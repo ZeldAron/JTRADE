@@ -5,6 +5,26 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.147',
+      date: '2026-05-15',
+      time: '22:30',
+      tags: ['ux', 'polish'],
+      title: 'URLs propres : zeldtrade.com/app au lieu de /app.html',
+      titleEn: 'Clean URLs: zeldtrade.com/app instead of /app.html',
+      items: [
+        { type: 'ux', text: '**`cleanUrls: true`** activé dans `firebase.json` → Firebase strippe automatiquement le `.html` des URLs. `zeldtrade.com/app.html` redirige (301) vers `zeldtrade.com/app`. Pareil pour `/admin`, `/cgu`, `/legal`, `/privacy`, `/payment`.', textEn: '**`cleanUrls: true`** enabled in `firebase.json` → Firebase auto-strips `.html` from URLs. `zeldtrade.com/app.html` redirects (301) to `zeldtrade.com/app`. Same for `/admin`, `/cgu`, `/legal`, `/privacy`, `/payment`.' },
+        { type: 'ux', text: 'Mise à jour de tous les `href` dans le code (7 HTML + offers.js) pour pointer directement vers les URLs clean (sans `.html`) → pas de hop redirect quand un user clique un lien interne. Ancien `index.html` devient `/`.', textEn: 'Updated all `href` in code (7 HTML + offers.js) to point directly to clean URLs (no `.html`) → no redirect hop when user clicks an internal link. Legacy `index.html` becomes `/`.' },
+        { type: 'ux', text: 'JS routing : `location.href = \'index.html\'` (logout, delete account) → `location.href = \'/\'`. og:url meta tag mis à jour. `robots.txt` couvre les 2 patterns (`/admin` ET `/admin.html`) pour défense en profondeur.', textEn: 'JS routing: `location.href = \'index.html\'` (logout, delete account) → `location.href = \'/\'`. og:url meta tag updated. `robots.txt` covers both patterns for defense-in-depth.' },
+      ],
+      user: {
+        title: 'URLs plus propres : zeldtrade.com/app au lieu de zeldtrade.com/app.html',
+        items: [
+          { type: 'ux', text: 'Les URLs n\'ont plus le `.html` à la fin → plus propre à partager. `zeldtrade.com/app`, `zeldtrade.com/cgu`, etc.' },
+          { type: 'ux', text: 'Les anciens liens (avec `.html`) continuent à fonctionner — redirection automatique vers la nouvelle URL clean.' },
+        ],
+      },
+    },
+    {
       version: '0.9.146',
       date: '2026-05-15',
       time: '22:00',

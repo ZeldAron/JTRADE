@@ -119,7 +119,7 @@ function initApp() {
   // ── LOGOUT ─────────────────────────────────────────────────────────────────
   $('btnLogout').addEventListener('click', () => {
     try { Store.clearLocalCache(); } catch {}
-    Auth.logout().finally(() => { location.href = 'index.html'; });
+    Auth.logout().finally(() => { location.href = '/'; });
   });
 
   // Bouton "Commencer →" du Guide → bascule sur Journal
@@ -203,7 +203,7 @@ function initApp() {
   setInterval(() => {
     if (Date.now() - _lastActivity > IDLE_LIMIT_MS) {
       try { Store.clearLocalCache(); } catch {}
-      Auth.logout().finally(() => { location.href = 'index.html'; });
+      Auth.logout().finally(() => { location.href = '/'; });
     }
   }, 60_000); // check chaque minute
 }

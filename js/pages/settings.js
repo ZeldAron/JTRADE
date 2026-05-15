@@ -1169,7 +1169,7 @@
         delOverlay.style.display = 'none';
         // Firebase signOut se déclenche automatiquement après delete()
         // on redirige vers la landing publique (index.html)
-        window.location.href = 'index.html';
+        window.location.href = '/';
       } else {
         _delAttempts++;
         if (_delAttempts >= 3) {
