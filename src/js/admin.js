@@ -103,6 +103,7 @@ const Admin = (() => {
         <td>
           <button class="btn-gen" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}">Générer code</button>
           <button class="btn-stripe" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}">💳 Lien Stripe</button>
+          <button class="btn-verify-email" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}" title="Forcer email_verified=true sur ce compte (à utiliser si l'user ne reçoit pas l'email Firebase)">✉️ Vérifier email</button>
           ${deleteBtn}
         </td>
       </tr>`;
@@ -123,6 +124,31 @@ const Admin = (() => {
     wrap.querySelectorAll('.btn-delete[data-uid]').forEach(btn => {
       btn.addEventListener('click', () => openDeleteModal(btn.dataset.uid, btn.dataset.email));
     });
+    wrap.querySelectorAll('.btn-verify-email').forEach(btn => {
+      btn.addEventListener('click', () => markUserVerified(btn.dataset.uid, btn.dataset.email, btn));
+    });
+  }
+
+  // ── Forcer email_verified=true sur un compte (v0.9.144) ─────────────────────
+  async function markUserVerified(uid, email, btn) {
+    if (!confirm(`Forcer email_verified=true pour ${email} ?\n\nUtilise cette action si l'utilisateur ne reçoit pas l'email Firebase (souvent en spam). L'IA Groq sera débloquée immédiatement.`)) return;
+    if (!_fbFunctions) { toast('SDK Functions non chargé.', true); return; }
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '…';
+    try {
+      const callable = _fbFunctions.httpsCallable('adminMarkEmailVerified');
+      const res = await callable({ uid });
+      const d = res.data;
+      if (d.alreadyVerified) toast(`${email} était déjà vérifié.`);
+      else toast(`${email} marqué comme vérifié ✓`);
+    } catch (e) {
+      console.warn('[Admin] markUserVerified failed', e);
+      toast('Erreur : ' + ((e && e.message) || 'inconnue'), true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = orig;
+    }
   }
 
   // ── Rendu onglet Codes ────────────────────────────────────────────────────────
@@ -473,6 +499,62 @@ const Admin = (() => {
         btnConfirm.disabled = true;
         btnConfirm.style.opacity = '0.5';
         btnConfirm.textContent = '🗑 Supprimer les orphelins';
+      }
+    });
+
+    // ── Section 3 : Vérification email manuelle (v0.9.144) ──────────────────
+    // Outil pour débloquer les bêta-testeurs qui ne reçoivent pas l'email
+    // Firebase (filtré en spam Gmail/free.fr/Hotmail). Bulk action one-shot
+    // + bouton individuel via la liste des users.
+    const sectionVerify = document.createElement('div');
+    sectionVerify.style.cssText = 'max-width:680px;margin-top:32px';
+
+    const hV = document.createElement('h3');
+    hV.style.cssText = 'margin:0 0 6px;font-size:15px';
+    hV.textContent = 'Forcer la vérification email';
+    sectionVerify.appendChild(hV);
+
+    const pV = document.createElement('p');
+    pV.style.cssText = 'font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px';
+    pV.textContent = 'Pour débloquer les utilisateurs qui ne reçoivent pas l\'email Firebase (filtré en spam Gmail/free.fr/Hotmail). À utiliser tant que Brevo+DKIM n\'est pas en place. Marque tous les comptes non-vérifiés comme vérifiés (Auth flag emailVerified=true).';
+    sectionVerify.appendChild(pV);
+
+    const btnVerify = document.createElement('button');
+    btnVerify.className = 'btn-secondary';
+    btnVerify.id = 'btnVerifyAll';
+    btnVerify.textContent = '✉️ Marquer tous les emails comme vérifiés';
+    sectionVerify.appendChild(btnVerify);
+
+    const resultV = document.createElement('div');
+    resultV.id = 'verifyResult';
+    resultV.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:monospace;font-size:12px;line-height:1.7;color:var(--text);white-space:pre-wrap;min-height:60px;margin-top:14px';
+    resultV.textContent = 'Clique sur le bouton pour marquer tous les comptes existants comme email-verified.';
+    sectionVerify.appendChild(resultV);
+
+    wrap.appendChild(sectionVerify);
+
+    btnVerify.addEventListener('click', async () => {
+      if (!_fbFunctions) { resultV.textContent = 'SDK Functions non chargé.'; return; }
+      if (!confirm('Marquer TOUS les comptes non-vérifiés comme email-verified ?\n\nUtilise cette action UNE seule fois pour rattraper la base bêta. Les nouveaux signups continueront à recevoir l\'email normal.')) return;
+      btnVerify.disabled = true;
+      btnVerify.textContent = 'Traitement...';
+      resultV.textContent = 'En cours...';
+      try {
+        const callable = _fbFunctions.httpsCallable('adminMarkEmailVerified');
+        const res = await callable({ all: true });
+        const d = res.data;
+        let txt = (d.message || 'OK') + '\n\n';
+        txt += `✅ Vérifiés : ${d.verified}\n`;
+        txt += `⏭ Déjà vérifiés (skip) : ${d.skipped}\n`;
+        if (d.errors) txt += `❌ Erreurs : ${d.errors}\n`;
+        if (d.truncated) txt += '\n⚠ Tronqué à 1000 users — relance si tu as plus de monde.';
+        resultV.textContent = txt;
+        toast('Vérification email bulk terminée.');
+      } catch (e) {
+        resultV.textContent = '❌ Erreur : ' + ((e && e.message) || 'inconnue');
+      } finally {
+        btnVerify.disabled = false;
+        btnVerify.textContent = '✉️ Marquer tous les emails comme vérifiés';
       }
     });
   }
