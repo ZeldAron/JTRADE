@@ -753,8 +753,12 @@
       }
       const email = user.email || '';
       if (user.emailVerified) {
-        statusEl.innerHTML = '<span style="color:var(--green)">✅ ' +
-          UI.escHtml(t('set.email.verify.ok') || 'Email vérifié') +
+        // v0.9.148 fix : l'emoji ✅ est déjà dans la clé i18n, ne pas le doubler.
+        // Et il faut interpoler {email} aussi dans ce cas (bug v0.9.142).
+        const tplOk = t('set.email.verify.ok') ||
+          '✅ Ton email ({email}) est vérifié. Tu as accès à toutes les fonctionnalités.';
+        statusEl.innerHTML = '<span style="color:var(--green)">' +
+          UI.escHtml(tplOk).replace('{email}', '<strong>' + UI.escHtml(email) + '</strong>') +
           '</span>';
         btnResend.style.display = 'none';
         btnCheck.style.display = 'none';
