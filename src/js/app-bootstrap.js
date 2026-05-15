@@ -66,12 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // bindOpen('btnLandingPro', 'login', () => sessionStorage.setItem('ztGoto', 'offers'));
   // bindOpen('btnLandingLifetime', 'login', () => sessionStorage.setItem('ztGoto', 'offers'));
 
-  $('authModalClose').addEventListener('click', e => { e.stopPropagation(); closeModal(); });
-  // Click sur le backdrop : ne ferme QUE si le clic est sur le backdrop lui-même
-  // (un clic sur la box ne doit pas remonter au backdrop, mais on protège quand même)
-  $('authModalBackdrop').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeModal();
-  });
+  // v0.9.146 : croix de fermeture retirée — accès au journal nécessite forcément
+  // une connexion, fermer la modale ne menait à rien (page vide derrière).
+  // Le backdrop reste cliquable techniquement mais ne ferme plus rien.
   // Escape : ne ferme que si la modal est réellement ouverte
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && authModal.style.display === 'flex') closeModal();

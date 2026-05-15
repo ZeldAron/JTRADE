@@ -5,6 +5,25 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.146',
+      date: '2026-05-15',
+      time: '22:00',
+      tags: ['ui', 'polish'],
+      title: 'Login : fond stylé (grid + glow) + retrait croix fermeture',
+      titleEn: 'Login: stylish background (grid + glow) + close button removed',
+      items: [
+        { type: 'ui', text: 'Modale de connexion : remplacement du fond noir blur générique par le **même style que la landing page** — grid pattern violet subtil + 2 glows radiaux (violet + rose) avec animation drift 14s. Le `--bg` de l\'app reste comme fond de base. CSS pur, pas de JS, perf négligeable.', textEn: 'Login modal: replaced generic dark blur background with the **same style as the landing page** — subtle purple grid pattern + 2 radial glows (purple + pink) with 14s drift animation. App `--bg` stays as base. Pure CSS, no JS, negligible perf.' },
+        { type: 'ui', text: 'Retrait du bouton **✕ fermeture** de la modale auth — cliquer dessus ne menait à rien (page `app.html` vide derrière, l\'auth est obligatoire). Backdrop devient inert (`pointer-events: none`) — pas de fermeture clic-extérieur non plus.', textEn: 'Removed **✕ close button** from auth modal — clicking it led nowhere (`app.html` page empty behind, auth is mandatory). Backdrop becomes inert (`pointer-events: none`) — no click-outside-to-close either.' },
+      ],
+      user: {
+        title: 'Login : nouveau look + plus de croix bizarre',
+        items: [
+          { type: 'ui', text: 'La page de connexion a un fond stylé maintenant (grid pattern + glow violet/rose) au lieu du noir vide — même look que la landing page.' },
+          { type: 'ui', text: 'La petite croix ✕ qui ne servait à rien en haut de la fenêtre de login a été retirée.' },
+        ],
+      },
+    },
+    {
       version: '0.9.145',
       date: '2026-05-15',
       time: '21:00',
