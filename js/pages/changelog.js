@@ -5,6 +5,17 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.148',
+      date: '2026-05-15',
+      time: '22:45',
+      tags: ['fix', 'i18n'],
+      title: 'Fix vérification email : ✅ doublé + {email} pas interpolé',
+      titleEn: 'Email verification fix: doubled ✅ + {email} not interpolated',
+      items: [
+        { type: 'fix', text: 'Bug v0.9.142 : la section "Vérification email" affichait "✅ ✅ Ton email ({email}) est vérifié" — emoji doublé (déjà dans la clé i18n + ajouté en JS) et placeholder `{email}` non interpolé dans le cas "vérifié" (seulement dans le cas "pending"). Fix : retirer l\'emoji du JS, ajouter `.replace(\'{email}\', email)` aussi pour le cas vérifié.', textEn: 'Bug from v0.9.142: "Email verification" section showed "✅ ✅ Your email ({email}) is verified" — doubled emoji (already in i18n key + added in JS) and `{email}` placeholder not interpolated in the "verified" case (only in the "pending" case). Fix: remove emoji from JS, add `.replace(\'{email}\', email)` for verified case too.' },
+      ],
+    },
+    {
       version: '0.9.147',
       date: '2026-05-15',
       time: '22:30',
