@@ -62,7 +62,7 @@ UI.renderOffers = function () {
       </ul>
       ${pro
         ? `<div class="offer-cta offer-cta-current">${t('off.cta.act')}</div>`
-        : `<a href="payment.html" target="_blank" rel="noopener noreferrer" class="offer-cta offer-cta-link offer-cta-pro">${t('off.cta.pro.btn')}</a>`}
+        : `<a href="/payment" target="_blank" rel="noopener noreferrer" class="offer-cta offer-cta-link offer-cta-pro">${t('off.cta.pro.btn')}</a>`}
     </div>`;
 
   // ── Card : LIFETIME ───────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ UI.renderOffers = function () {
         <li class="ok"><strong>${t('off.lt.f3')}</strong></li>
         <li class="ok">${t('off.lt.f4')}</li>
       </ul>
-      <a href="payment.html" target="_blank" rel="noopener noreferrer" class="offer-cta offer-cta-link offer-cta-lifetime">${t('off.cta.lt.btn')}</a>
+      <a href="/payment" target="_blank" rel="noopener noreferrer" class="offer-cta offer-cta-link offer-cta-lifetime">${t('off.cta.lt.btn')}</a>
     </div>`;
 
   // ── Comparison table ──────────────────────────────────────────────────────
