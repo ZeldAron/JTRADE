@@ -69,6 +69,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // v0.9.146 : croix de fermeture retirée — accès au journal nécessite forcément
   // une connexion, fermer la modale ne menait à rien (page vide derrière).
   // Le backdrop reste cliquable techniquement mais ne ferme plus rien.
+
+  // v0.9.149 : toggle visibilité mot de passe (login + signup).
+  // Event delegation sur document.body pour gérer les 3 boutons (loginPassword,
+  // regPassword, regPasswordConfirm) en une seule fois, robuste au re-render.
+  document.body.addEventListener('click', function (e) {
+    const btn = e.target.closest('.pwd-toggle');
+    if (!btn) return;
+    const targetId = btn.dataset.pwdTarget;
+    const input = document.getElementById(targetId);
+    if (!input) return;
+    const eye   = btn.querySelector('.pwd-icon-eye');
+    const slash = btn.querySelector('.pwd-icon-slash');
+    if (input.type === 'password') {
+      input.type = 'text';
+      if (eye)   eye.style.display   = 'none';
+      if (slash) slash.style.display = 'block';
+      btn.setAttribute('aria-label', 'Masquer le mot de passe');
+    } else {
+      input.type = 'password';
+      if (eye)   eye.style.display   = 'block';
+      if (slash) slash.style.display = 'none';
+      btn.setAttribute('aria-label', 'Afficher le mot de passe');
+    }
+  });
   // Escape : ne ferme que si la modal est réellement ouverte
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && authModal.style.display === 'flex') closeModal();
