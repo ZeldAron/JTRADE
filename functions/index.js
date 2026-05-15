@@ -1347,3 +1347,148 @@ exports.cleanupOrphanUserEmails = onCall(
     };
   }
 ));
+
+/* ============================================================================
+ *  adminMarkEmailVerified — v0.9.144 (2026-05-15)
+ *
+ *  Outil admin pour marquer manuellement un compte comme email-verified.
+ *  Cas d'usage : bêta-testeurs bloqués sur l'analyse IA Groq (qui exige
+ *  `email_verified` depuis v0.9.122) car les emails Firebase finissent en
+ *  spam et `sendEmailVerification` est rate-limité (~5/h/user).
+ *
+ *  Modes :
+ *   - { uid: "xxx" }  → marque un seul user comme vérifié
+ *   - { all: true }   → bulk : marque TOUS les users non-vérifiés comme vérifiés
+ *                       (one-shot ; à utiliser une fois pour rattraper la base
+ *                       existante puis ne plus appeler)
+ *
+ *  Sécurité :
+ *   - isAdmin() requis (email + email_verified token)
+ *   - Audit log Firestore avant + après (status: in_progress, completed)
+ *   - Bulk limité à 1000 users (LIST_LIMIT) — projet beta privé
+ *
+ *  Note sécurité long-terme : flipper email_verified=true côté admin contourne
+ *  le contrôle anti-abus de S20. Acceptable pendant la phase beta (users
+ *  manuellement recrutés). À retirer ou restreindre post-launch quand
+ *  Brevo+DKIM/SPF rendront la deliverability fiable.
+ * ============================================================================
+ */
+exports.adminMarkEmailVerified = onCall(
+  {
+    secrets:        [DISCORD_ERRORS_WEBHOOK],
+    enforceAppCheck: false,  // App Check encore désactivé (TODO I6/S1)
+    maxInstances:    1,
+    timeoutSeconds:  120,
+    memory:          '256MiB',
+    region:          'europe-west1',
+  },
+  _wrapCF('adminMarkEmailVerified', async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required');
+    }
+    if (request.auth.token.email !== ADMIN_EMAIL || !request.auth.token.email_verified) {
+      throw new HttpsError('permission-denied', 'Admin only');
+    }
+
+    const db = admin.firestore();
+    const targetUid = typeof request.data?.uid === 'string' ? request.data.uid.trim() : '';
+    const bulkAll   = request.data?.all === true;
+
+    if (!targetUid && !bulkAll) {
+      throw new HttpsError('invalid-argument', 'Provide either {uid} or {all: true}.');
+    }
+
+    // ─── MODE SINGLE USER ────────────────────────────────────────────────────
+    if (targetUid && !bulkAll) {
+      // Validation UID format (même regex que Stripe webhook S37)
+      if (!/^[A-Za-z0-9]{1,128}$/.test(targetUid)) {
+        throw new HttpsError('invalid-argument', 'Invalid UID format.');
+      }
+      try {
+        const user = await admin.auth().getUser(targetUid);
+        if (user.emailVerified) {
+          return { ok: true, alreadyVerified: true, uid: targetUid, email: user.email };
+        }
+        await admin.auth().updateUser(targetUid, { emailVerified: true });
+        // Audit log
+        try {
+          await db.collection('auditLogs').add({
+            action:  'adminMarkEmailVerified',
+            mode:    'single',
+            admin:   request.auth.token.email,
+            target:  { uid: targetUid, email: user.email },
+            at:      admin.firestore.FieldValue.serverTimestamp(),
+            expireAt: admin.firestore.Timestamp.fromMillis(Date.now() + 365 * 24 * 3600 * 1000),
+          });
+        } catch (e) { console.warn('[adminMarkEmailVerified] audit failed', e && e.message); }
+        return { ok: true, verified: true, uid: targetUid, email: user.email };
+      } catch (e) {
+        if (e.code === 'auth/user-not-found') {
+          throw new HttpsError('not-found', 'User UID does not exist.');
+        }
+        throw e;
+      }
+    }
+
+    // ─── MODE BULK (all unverified) ──────────────────────────────────────────
+    const auditRef = db.collection('auditLogs').doc();
+    try {
+      await auditRef.set({
+        action:  'adminMarkEmailVerified',
+        mode:    'bulk',
+        status:  'in_progress',
+        admin:   request.auth.token.email,
+        at:      admin.firestore.FieldValue.serverTimestamp(),
+        expireAt: admin.firestore.Timestamp.fromMillis(Date.now() + 365 * 24 * 3600 * 1000),
+      });
+    } catch (e) { console.warn('[adminMarkEmailVerified] pre-audit failed', e && e.message); }
+
+    const LIST_LIMIT = 1000;
+    let listed;
+    try {
+      listed = await admin.auth().listUsers(LIST_LIMIT);
+    } catch (e) {
+      console.error('[adminMarkEmailVerified] listUsers failed', e && e.message);
+      throw new HttpsError('internal', 'listUsers failed');
+    }
+
+    const truncated = listed.users.length >= LIST_LIMIT;
+    const verified  = [];
+    const skipped   = [];
+    const errors    = [];
+
+    for (const user of listed.users) {
+      if (user.emailVerified) {
+        skipped.push({ uid: user.uid, email: user.email, reason: 'already-verified' });
+        continue;
+      }
+      try {
+        await admin.auth().updateUser(user.uid, { emailVerified: true });
+        verified.push({ uid: user.uid, email: user.email });
+      } catch (e) {
+        errors.push({ uid: user.uid, email: user.email, error: e.message });
+      }
+    }
+
+    try {
+      await auditRef.update({
+        status:        errors.length === 0 ? 'completed' : 'partial',
+        verifiedCount: verified.length,
+        skippedCount:  skipped.length,
+        errorsCount:   errors.length,
+        truncated,
+        completedAt:   admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (e) { /* swallow */ }
+
+    return {
+      ok:       true,
+      mode:     'bulk',
+      verified: verified.length,
+      skipped:  skipped.length,
+      errors:   errors.length,
+      truncated,
+      message:  `${verified.length} user(s) marqué(s) comme vérifié(s). ${skipped.length} déjà vérifié(s). ${errors.length} erreur(s).`,
+    };
+  }
+));

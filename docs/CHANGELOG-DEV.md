@@ -37,6 +37,131 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-15 — v0.9.144 — Admin : forcer email_verified (workaround deliverability)
+
+**Type** : admin / fix
+**Fichiers** : `functions/index.js` (+ 132 lignes), `src/js/admin.js` (+ 90 lignes), `src/admin.html` (style btn), `src/js/pages/changelog.js`, bump v=0.9.144
+**Versions impactées** : front v0.9.144, CFs : ajout `adminMarkEmailVerified`
+
+### Contexte
+Malgré les fixes v0.9.142 (UI Settings → Renvoyer email) et v0.9.143 (modale post-signup + log erreurs), un bêta-testeur supplémentaire signale qu\'après avoir cliqué "Renvoyer l\'email" il ne reçoit toujours RIEN — même en spam. Cause probable : Firebase Auth rate-limite `sendEmailVerification` à ~5/h/user, et certains providers (free.fr, Hotmail entreprises) peuvent bloquer 100% des emails Firebase quand le domaine `firebaseapp.com` est sur leur blacklist interne.
+
+Solution court terme avant migration Brevo+DKIM/SPF : outil admin pour flipper manuellement `email_verified=true` côté Firebase Auth, soit user-par-user, soit en bulk pour la base existante.
+
+### Changements
+- **`functions/index.js`** : nouvelle CF `adminMarkEmailVerified`
+  - Mode single : `{ uid }` → valide format UID (regex `^[A-Za-z0-9]{1,128}$`), check `admin.auth().getUser(uid)`, call `updateUser(uid, {emailVerified: true})`. Retourne `{alreadyVerified|verified, uid, email}`.
+  - Mode bulk : `{ all: true }` → `admin.auth().listUsers(1000)`, itère, call `updateUser` sur tous les non-vérifiés. Retourne `{verified, skipped, errors, truncated, message}`.
+  - Sécurité : `isAdmin()` strict (email + `email_verified` token), audit log Firestore avant/après avec TTL 1 an (`expireAt`), `enforceAppCheck:false` (App Check encore désactivé — TODO I6/S1).
+- **`src/js/admin.js`** :
+  - Onglet **Outils** → 3e bloc "Forcer la vérification email" avec bouton `#btnVerifyAll` (confirm obligatoire + résultat dans pre-formatted box).
+  - Onglet **Utilisateurs** → chaque ligne reçoit un bouton `.btn-verify-email` (style bleu) qui appelle `markUserVerified(uid, email, btn)`.
+- **`src/admin.html`** : styles CSS `.btn-verify-email` (couleurs bleu pour distinguer des actions destructives rouges/violettes).
+
+### Impact
+- **UX bêta** : pain point déblocable immédiatement par l\'admin via bouton — pas besoin que le bêta-testeur reçoive l\'email. L\'IA Groq redevient utilisable dans la seconde après le clic.
+- **Sécu** : tradeoff documenté ↓. Contourne S20 (email_verified comme contrôle anti-abus sur `analyzeChart`). Mitigation : `isAdmin()` strict + audit log immuable. À retirer post-Brevo (~1 semaine).
+- **Perf** : bulk mode listUsers 1000 + N updateUser = ~5-10s pour 50 users (séquentiel). Acceptable pour one-shot. Si la base grossit, paralléliser avec `Promise.all`.
+
+### À surveiller
+- Tester bulk sur compte admin perso d\'abord (dry-run mental — pas de mode dry-run dans le bulk).
+- Vérifier audit log Firestore après chaque action : `auditLogs` doc avec `action: adminMarkEmailVerified`, `mode: bulk|single`, `verifiedCount`, etc.
+- Si tu dépasses 1000 users (très peu probable en beta), le `truncated: true` apparaît dans la réponse → relance jusqu\'à ce que verified=0.
+
+### Plan de retrait
+Quand Brevo+DKIM/SPF en place (post-domaine, ~1 semaine) :
+1. Vérifier que 100% des nouveaux signups reçoivent l\'email en INBOX (test sur Gmail, free.fr, Hotmail).
+2. Désactiver/supprimer la CF `adminMarkEmailVerified`.
+3. Retirer les boutons admin (3 lignes admin.js + 1 ligne CSS).
+4. Garder l\'historique audit log pour traçabilité.
+
+### Liens
+- v0.9.122 (S20 — origine du check email_verified)
+- v0.9.142 (UI Settings → Renvoyer email)
+- v0.9.143 (modale post-signup + await sendEmailVerification)
+
+---
+
+## 2026-05-14 — v0.9.143 — Fix signup : modale post-création + log erreurs email
+
+**Type** : fix
+**Fichiers** : `src/js/auth.js`, `src/js/app-bootstrap.js`, `src/js/ui.js`, `src/js/pages/changelog.js`, `src/index.html`, `src/app.html` (bump v=)
+**Versions impactées** : front v0.9.143, CFs inchangées
+
+### Bug
+Bêta-testeur signale : "je n'ai rien dans ma boîte mail quand je crée un compte". Reproduit le même jour. Causes identifiées :
+1. **Erreur silencieuse** : `auth.js:73` faisait `cred.user.sendEmailVerification().catch(() => {})` — toute erreur (rate-limit Firebase, quota Spark, problème SMTP) était avalée sans aucun log ni feedback front. Impossible de savoir si l'email était même tenté.
+2. **Spam filtering** : même quand `sendEmailVerification` réussit, le mail est expédié depuis `noreply@<project>.firebaseapp.com`. Sur Gmail / free.fr / Hotmail, ces emails finissent quasi systématiquement en spam. L'user pense donc que le système est cassé alors qu'il faut juste vérifier le dossier spam.
+3. **Aucune signalisation post-signup** : le flow allait directement `register() → showLoader(1.1s) → launchApp()` sans aucune indication sur l'email envoyé ni la nécessité de le vérifier.
+
+### Changements
+- **`src/js/auth.js`** :
+  - `register()` await maintenant `sendEmailVerification()` et capture le résultat dans `emailSent: bool` + `emailError: code|null` + `email: string` (retour étendu).
+  - Logs `console.warn('[register] sendEmailVerification failed:', code, msg)` si l'envoi échoue.
+  - Nouveau helper exporté `Auth.resendVerification()` qui appelle `currentUser.sendEmailVerification()` avec gestion d'erreurs propre. Utilisé dans la modale et réutilisable.
+- **`src/js/ui.js`** : `UI.confirmModal` étendu pour supporter `cancelText: false` (ou `null`) → cache le bouton secondaire et focus auto sur le bouton primaire. Permet d'utiliser confirmModal comme modale info pure (1 bouton "OK").
+- **`src/js/app-bootstrap.js`** : insère un `await UI.confirmModal({...cancelText: false})` entre `register()` et `showLoader()`. Le message :
+  - si `emailSent=true` → "Email envoyé à X. VÉRIFIE TES SPAMS (Gmail/free.fr/Hotmail filtrent). Sans ça, l'IA ne fonctionne pas. Redirection Réglages → Vérification email si besoin."
+  - si `emailSent=false` → "Compte créé mais l'envoi a échoué (code: X). Va dans Réglages → Vérification email pour le renvoyer."
+
+### Impact
+- **UX** : l'user comprend tout de suite (1) qu'un email a été envoyé, (2) où vérifier (spams), (3) comment renvoyer si besoin. Le bêta-testeur qui pensait "rien reçu" verra maintenant la modale et ira vérifier ses spams en premier réflexe.
+- **Sécu** : aucun changement de surface. `sendEmailVerification` reste rate-limité par Firebase Auth (~5 emails/h/user). La modale ne révèle aucune info sensible.
+- **Perf** : négligeable (modale rendue ~1× par signup).
+- **Tracking** : les erreurs `sendEmailVerification` apparaissent maintenant en `console.warn` (visible dans DevTools + propagé à Sentry-lite côté CFs si jamais l'erreur survient côté serveur dans un futur flow). On peut maintenant diagnostiquer pourquoi un envoi échoue, là où avant on était aveugle.
+
+### À surveiller
+- Tester signup avec un nouvel email Gmail → la modale doit apparaître AVANT le loader.
+- Tester escape/clic-overlay sur la modale → doit fermer mais NE PAS déclencher un comportement secondaire (puisque cancel est caché).
+- Si Firebase Auth rate-limite (signups en boucle), vérifier que le code d'erreur remonte bien dans `emailError`.
+
+### Pourquoi pas configurer un SMTP custom (Mailgun / SendGrid) ?
+- Spark plan gratuit limite mais ne casse pas le système.
+- Configurer un SMTP custom nécessite un domaine custom + DKIM/SPF/DMARC + service tiers (Mailgun gratuit 100 mails/jour, SendGrid 100/jour). Migration future possible.
+- Pour l'instant (budget zéro, prélaunch, < 50 bêta-testeurs), la modale + le resend depuis Settings suffisent à dégoupiller le pain point.
+
+### Liens
+- Bêta-testeur ayant rapporté le bug (privé Discord)
+- v0.9.141 (cause indirecte : message "email non vérifié" sans piste de remédiation)
+- v0.9.142 (Settings → Vérification email : la modale renvoie vers cette section)
+
+---
+
+## 2026-05-14 — v0.9.142 — UI Settings : renvoyer email de vérification (auto-service bêta-testeurs)
+
+**Type** : feat
+**Fichiers** : `src/app.html`, `src/js/pages/settings.js`, `src/js/i18n.js` (FR + EN), `src/js/pages/changelog.js`, `src/index.html` (footer), bump cache busting v=0.9.142
+**Versions impactées** : front v0.9.142, CFs inchangées
+
+### Contexte
+Depuis v0.9.122 (sécu S20), la CF `analyzeChart` exige `email_verified = true` côté token Firebase Auth. Plusieurs bêta-testeurs se sont retrouvés bloqués sur l'analyse IA sans moyen évident de renvoyer l'email de vérification — l'email automatique lors du signup peut atterrir en spam, expirer, ou être supprimé par mégarde. Le message d'erreur côté CF (corrigé en v0.9.141) explique maintenant la cause, mais il n'y avait pas de remédiation client-side.
+
+### Changements
+- **`src/app.html`** : nouveau bloc `#emailVerifySection` dans Réglages → onglet Général, entre la section Spreads et la section Données. Affiche un `<p id="emailVerifyStatus">` + 2 boutons cachés par défaut (`#btnResendVerify`, `#btnCheckVerify`).
+- **`src/js/pages/settings.js`** :
+  - Fonction top-level `_refreshEmailVerifyStatus()` : lit `firebase.auth().currentUser.emailVerified`, affiche un état coloré (vert ✅ / orange ⚠) et show/hide les boutons.
+  - Event delegation sur `document.body` pour `#btnResendVerify` (appelle `user.sendEmailVerification()` avec gestion `auth/too-many-requests`) et `#btnCheckVerify` (appelle `user.reload()` puis refresh).
+  - Appel de `_refreshEmailVerifyStatus()` au début de `UI.initSettings` (à chaque render, pas seulement first bind).
+- **`src/js/i18n.js`** : 14 nouvelles clés (FR + EN) : `set.email.verify.title/label/resend/check/unauth/ok/pending/sending/sent/toomany/err/checking/confirmed/notyet`. Le pattern `{email}` est interpolé côté JS via `.replace()`.
+- **`src/js/pages/changelog.js`** : entrée v0.9.142 avec champ `user:` (sera annoncée sur Discord #zeldtrade-updates via `scripts/announce-update.js`).
+
+### Impact
+- **UX** : un bêta-testeur bloqué peut maintenant débloquer l'analyse IA sans contacter le support en 2 clics (Renvoyer → cliquer lien dans mail → J'ai vérifié).
+- **Sécu** : aucun changement côté serveur. `sendEmailVerification` est rate-limité par Firebase Auth (~5 emails/heure/user). Pas de nouvelle surface d'attaque — la vérification email reste un état contrôlé par Firebase, pas par le client.
+- **Perf** : négligeable. `_refreshEmailVerifyStatus` est lu depuis `currentUser` (déjà en mémoire), pas d'appel réseau.
+
+### À surveiller
+- Tester sur un compte non vérifié : le bloc doit apparaître avec les 2 boutons.
+- Tester sur compte vérifié : le bloc doit afficher ✅ sans boutons.
+- Tester déconnexion → reconnexion : `_refreshEmailVerifyStatus` est appelé à chaque `UI.initSettings`, donc l'état doit toujours être à jour.
+- Vérifier toast d'erreur si `auth/too-many-requests` (rate limit Firebase) — peu probable en usage normal.
+
+### Liens
+- Origin : feedback bêta-testeur qui a reçu "Vérifie ton email avant d'utiliser l'IA" (message v0.9.141) mais ne savait pas comment relancer la vérification.
+- Pattern : event delegation déjà utilisée pour `#btnExportPdf` (v0.9.135).
+
+---
+
 ## 2026-05-14 — v0.9.133 — Fix Export PDF : check isPro() à chaque render
 
 **Type** : fix
