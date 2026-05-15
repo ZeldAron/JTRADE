@@ -5,6 +5,28 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.145',
+      date: '2026-05-15',
+      time: '21:00',
+      tags: ['infra', 'security'],
+      title: 'Migration vers zeldtrade.com + headers HTTPS pro',
+      titleEn: 'Migration to zeldtrade.com + production HTTPS headers',
+      items: [
+        { type: 'infra', text: 'Migration de l\'hébergement de GitHub Pages vers **Firebase Hosting**. Le site est désormais accessible sur `https://zeldtrade.com` (le SSL Let\'s Encrypt peut prendre 1-24h pour être provisionné). Ancien URL `zeldaron.github.io/zeldtrade` conservé en backup ~1 semaine. URL Firebase auto `zeldtrade.web.app` aussi accessible.', textEn: 'Migrated hosting from GitHub Pages to **Firebase Hosting**. Site is now accessible on `https://zeldtrade.com` (Let\'s Encrypt SSL may take 1-24h to provision). Legacy URL `zeldaron.github.io/zeldtrade` kept as backup ~1 week. Auto Firebase URL `zeldtrade.web.app` also accessible.' },
+        { type: 'security', text: 'Headers HTTPS server-side ajoutés via `firebase.json` (S12 du TODO) : HSTS 1 an, Content-Security-Policy stricte (avec `frame-ancestors none` qui ne fonctionne PAS en meta tag), X-Frame-Options DENY, X-Content-Type-Options nosniff, Permissions-Policy (toutes APIs sensibles bloquées), Referrer-Policy strict-origin-when-cross-origin. Cache assets statiques `immutable` 1 an (avec cache-busting `?v=` déjà en place).', textEn: 'Server-side HTTPS headers added via `firebase.json` (S12 in TODO): HSTS 1 year, strict Content-Security-Policy (with `frame-ancestors none` which does NOT work in meta tag), X-Frame-Options DENY, X-Content-Type-Options nosniff, Permissions-Policy (all sensitive APIs blocked), Referrer-Policy strict-origin-when-cross-origin. Static assets cached `immutable` 1 year (with existing `?v=` cache-busting).' },
+        { type: 'infra', text: 'CFs : `ALLOWED_ORIGINS` enrichi avec les 4 nouveaux domaines (`zeldtrade.com`, `www.zeldtrade.com`, `zeldtrade.web.app`, `zeldtrade.firebaseapp.com`). `PUBLIC_SITE_URL` migré vers `https://zeldtrade.com` (utilisé pour Stripe success_url/cancel_url). Avatar bot Discord et footer PDF mis à jour pareil.', textEn: 'CFs: `ALLOWED_ORIGINS` extended with 4 new domains. `PUBLIC_SITE_URL` migrated to `https://zeldtrade.com` (used for Stripe success_url/cancel_url). Discord bot avatar and PDF footer updated too.' },
+        { type: 'infra', text: '`scripts/release.sh` refactoré : déploie **en primaire** sur Firebase Hosting (`firebase deploy --only hosting`), **en backup** sur gh-pages (sauf si `--no-backup`). 2 URLs garanties live à chaque release.', textEn: 'Refactored `scripts/release.sh`: deploys to Firebase Hosting (primary) + gh-pages (backup unless `--no-backup`). 2 URLs guaranteed live each release.' },
+      ],
+      user: {
+        title: 'ZeldTrade a maintenant son propre domaine : zeldtrade.com 🎉',
+        items: [
+          { type: 'feat', text: '**Nouveau domaine officiel** : `https://zeldtrade.com` (le SSL peut prendre quelques heures à se provisionner — si tu vois une erreur de certificat, attends 1-2h).' },
+          { type: 'feat', text: 'L\'ancien lien (`zeldaron.github.io/zeldtrade`) continue à fonctionner cette semaine — pas besoin de paniquer si tu as un bookmark.' },
+          { type: 'feat', text: 'Sécurité renforcée : tous les headers HTTPS pro sont en place (CSP stricte, HSTS, anti-clickjacking, etc.) — protection accrue contre les attaques.' },
+        ],
+      },
+    },
+    {
       version: '0.9.144',
       date: '2026-05-15',
       time: '14:00',
