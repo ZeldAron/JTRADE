@@ -105,6 +105,12 @@ Sans domaine `zeldtrade.com` :
 
 **UX (15)** : U9 undo, U11 pills découvrables, ~~U13 touch targets mobile~~ ✅ 2026-05-13 (v0.9.109), U14 bulle contact mobile, U15 seuil "Meilleure session", U16-17 partial UI, ~~U20 bouton Aujourd'hui calendrier~~ ✅ 2026-05-14 (v0.9.111), ~~U21 dashboard empty~~ ✅ 2026-05-14 (v0.9.111), U22 couleurs harmonisées, U23 filtres combinables, ~~U24 compteur recherche~~ ✅ 2026-05-14 (v0.9.111), ~~U27 groupe visible~~ ✅ 2026-05-14 (v0.9.111), U28 CSV preview, U30 toast queue, ~~U31 mémo wizard~~ ✅ 2026-05-13 (v0.9.108), U32 confirm réanalyse, ~~U34 scroll-to-top~~ ✅ 2026-05-14 (v0.9.111)
 
+**Mobile / Responsive (signalé user 2026-05-16)** :
+- **U-MOB1** Audit responsive complet sur téléphone (iPhone + Android petits écrans 360-414px) : alignement cards/tuiles, padding/margins, lisibilité textes, débordements horizontaux, touch targets <44px restants, modales qui débordent
+- **U-MOB2** "Truc carré" visuel à fixer (à préciser au moment du fix — user a vu des éléments mal cadrés/proportionnés sur mobile)
+- Sections à inspecter en priorité : dashboard, calendrier, settings, modal trade, login/signup, landing page hero
+- Effort estimé : 2-4h selon profondeur du fix (CSS responsive + tests)
+
 ---
 
 ## ⚪ BAS — Nice-to-have (65+ findings)
