@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.176',
+      date: '2026-05-17',
+      time: '01:00',
+      tags: ['ux', 'a11y', 'fix'],
+      title: 'Wizard nouveau trade — frictions UX du quotidien',
+      titleEn: 'New trade wizard — daily UX frictions',
+      items: [
+        { type: 'ux', text: 'Le compte n\'est plus réinitialisé entre l\'étape 2 et 3 du wizard. Si tu avais sélectionné ton compte au démarrage, il reste pré-sélectionné — plus besoin de le re-choisir à chaque trade. Sur 50 trades/jour, ça fait gagner plusieurs minutes par jour.', textEn: 'Account is no longer reset between wizard step 2 and 3. Selected account stays pre-selected — no need to re-pick it for every trade.' },
+        { type: 'ui', text: 'Feedback plus visible quand le screenshot est uploadé : checkmark vert + gras au lieu d\'une simple ligne grise discrète.', textEn: 'Stronger visual feedback when screenshot is uploaded: green checkmark + bold instead of subtle gray.' },
+        { type: 'ui', text: 'La ligne "Frais A/R" est masquée quand il n\'y a pas de spread sur l\'instrument (au lieu d\'afficher inutilement "−$0.00") — moins de bruit visuel sur le calcul live.', textEn: 'Fees row hidden when total = 0 (no spread on instrument) instead of showing useless "−$0.00".' },
+        { type: 'a11y', text: 'Boutons LONG/SHORT : ajout d\'`aria-label` descriptifs et `title` au survol pour les lecteurs d\'écran et accessibilité clavier.', textEn: 'LONG/SHORT buttons: added descriptive aria-label and hover title for screen readers + keyboard a11y.' },
+      ],
+    },
+    {
       version: '0.9.173',
       date: '2026-05-16',
       time: '23:45',

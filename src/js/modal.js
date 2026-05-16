@@ -604,7 +604,14 @@ const Modal = (() => {
     rpcEl.textContent = c.riskPct.toFixed(2) + '%';
     rpcEl.style.color = Calc.riskColor(c.riskPct);
 
-    $('lcFees').textContent = '−$' + c.totalFees.toFixed(2);
+    // v0.9.176 (M7 fix) : masquer la ligne "Frais A/R" si total = 0 (pas de spread sur cet instrument)
+    const feesRow = $('lcFeesRow');
+    if (c.totalFees > 0) {
+      $('lcFees').textContent = '−$' + c.totalFees.toFixed(2);
+      if (feesRow) feesRow.style.display = '';
+    } else {
+      if (feesRow) feesRow.style.display = 'none';
+    }
 
     // Net reward ou P&L net selon présence du prix de sortie
     const netEl    = $('lcNet');
@@ -729,8 +736,10 @@ const Modal = (() => {
       _shotPreviewUrl = URL.createObjectURL(compressed);
       setShotPreview(_shotPreviewUrl);
       const kb = Math.round(compressed.size / 1024);
-      status.style.color = 'var(--green)';
-      status.textContent = `Prêt (${kb} KB) — sera enregistré au save`;
+      // v0.9.176 (M6 fix) : checkmark + couleur appuyée pour feedback fort.
+      status.style.color    = 'var(--green)';
+      status.style.fontWeight = '600';
+      status.textContent    = `✓ Screenshot prêt (${kb} KB) — sera enregistré au save`;
     } catch (e) {
       if (myToken !== _shotCompressionToken) return;
       status.style.color = 'var(--red)';
@@ -1071,7 +1080,10 @@ const Modal = (() => {
       }
       if (parsedTrade) fillStep3FromParsed();
       populateInstrumentSelect(firmKey, parsedTrade?.instrument);
-      populateApexSelect('');
+      // v0.9.176 (H3 fix) : préserver le compte déjà pré-sélectionné au step 1
+      // (lecture du select courant avant re-render). Évite de re-demander à l'user
+      // de choisir son compte 50x par jour quand il est déjà sélectionné par défaut.
+      populateApexSelect($('wApex').value || '');
       goToStep(3);
       $('wContracts').focus();
     });
