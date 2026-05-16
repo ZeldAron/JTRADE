@@ -1,0 +1,15 @@
+{
+  "name": "zeldtrade-scripts",
+  "version": "1.0.0",
+  "description": "Scripts utilitaires (newsletter, announce, etc.) — séparés du code applicatif",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "newsletter": "node send-newsletter.js"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.0"
+  }
+}

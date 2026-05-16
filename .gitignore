@@ -3,3 +3,7 @@
 
 # Firebase deploy cache (généré par firebase deploy localement, ne pas commit)
 .firebase/
+
+# Dépendances scripts/ (nodemailer, etc.) — installées via npm install dans scripts/
+scripts/node_modules/
+scripts/package-lock.json
