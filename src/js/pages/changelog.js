@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.152',
+      date: '2026-05-16',
+      time: '14:20',
+      tags: ['security', 'fix'],
+      title: 'App Check reCAPTCHA Enterprise réactivé + cleanup warnings console',
+      titleEn: 'App Check reCAPTCHA Enterprise re-enabled + console warnings cleanup',
+      items: [
+        { type: 'security', text: 'App Check (reCAPTCHA Enterprise) réactivé côté client après debug GCP Console : (1) domaines `zeldtrade.com` + `zeldtrade.web.app` ajoutés à la clé reCAPTCHA Enterprise, (2) service identity créée via `gcloud beta services identity create --service=firebaseappcheck.googleapis.com`, (3) rôle IAM `reCAPTCHA Enterprise Agent` attribué à `service-356908373821@gcp-sa-firebaseappcheck.iam.gserviceaccount.com`. Init `firebase.appCheck().activate()` décommenté dans `src/js/firebase.js`. `enforceAppCheck` côté CFs reste désactivé pour l\'instant (test client en cours).', textEn: 'App Check (reCAPTCHA Enterprise) re-enabled client-side after GCP Console debug.' },
+        { type: 'fix', text: 'Cleanup warnings console : retrait de `frame-ancestors \'none\'` et `<meta http-equiv="X-Frame-Options" content="DENY">` des 7 fichiers HTML (ces directives ne fonctionnent PAS en meta tag — déjà fournies server-side via `firebase.json` headers depuis v0.9.145). Retrait de la référence `//# sourceMappingURL=jspdf.umd.min.js.map` qui provoquait un 404 inutile.', textEn: 'Console warnings cleanup: removed `frame-ancestors` and `X-Frame-Options` from meta tags (these directives don\'t work in meta — already server-side since v0.9.145). Removed jspdf sourcemap reference (404).' },
+      ],
+      // Note technique uniquement — pas de champ `user:` (rien de visible côté users)
+    },
+    {
       version: '0.9.150',
       date: '2026-05-16',
       time: '01:30',

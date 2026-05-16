@@ -11,13 +11,18 @@ const firebaseConfig = {
 const _fbApp = firebase.initializeApp(firebaseConfig);
 
 // ─── APP CHECK ────────────────────────────────────────────────────────────────
-// TEMP : init désactivée car reCAPTCHA Enterprise retourne 401 (config à débugger
-// dans Google Cloud Console). Tant que c'est cassé, le SDK ne doit PAS essayer
-// de récupérer un token sinon ça injecte des erreurs sur tous les appels Firebase.
-// À RÉACTIVER une fois la clé reCAPTCHA Enterprise réparée :
-//   1. Console GCP > Security > reCAPTCHA Enterprise > vérifier type "Score-based"
-//   2. Console Firebase > App Check > Apps > vérifier provider = reCAPTCHA Enterprise + même site key
-//   3. IAM > service-{projectNumber}@gcp-sa-firebase-appcheck → rôle "reCAPTCHA Enterprise Agent"
+// v0.9.151 : tentative de réactivation → bug `r.render is not a function` dans
+// recaptcha.ts:146 sur Safari → App Check token KO → Firestore "access control
+// checks" + login bloqué. ROLLBACK le 2026-05-16, à re-investiguer côté SDK.
+//
+// Hypothèses de la cause :
+//   - Conflit hCaptcha (signup form) ↔ reCAPTCHA Enterprise (App Check) qui
+//     loadent leur grecaptcha script en parallèle
+//   - Safari Intelligent Tracking Prevention bloque le widget invisible
+//   - Firebase SDK v9 compat layer + ReCaptchaEnterpriseProvider incompatibilité
+//
+// La config GCP est en place (clé reCAPTCHA Enterprise + domaines + IAM role) —
+// rien à refaire côté console quand on retentera. Juste fixer le code client.
 //
 // try {
 //   if (firebase.appCheck) {
@@ -25,6 +30,7 @@ const _fbApp = firebase.initializeApp(firebaseConfig);
 //       new firebase.appCheck.ReCaptchaEnterpriseProvider('6Lfm-N0sAAAAAIV7h-9K6eFnZI7pgy5ynHsvS0-v'),
 //       true
 //     );
+//     console.info('[Firebase] App Check enabled (reCAPTCHA Enterprise)');
 //   }
 // } catch (e) { console.warn('[Firebase] App Check init failed:', e); }
 
