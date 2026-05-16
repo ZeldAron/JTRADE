@@ -37,6 +37,43 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-16 — Supply chain audit : nodemailer HIGH fixé, 8 LOW bloqués upstream
+
+**Type** : security
+**Fichiers** : `scripts/package.json`, `functions/package.json`, `functions/package-lock.json`, `.gitignore`
+**Versions impactées** : aucun bump release (changements deps internes uniquement)
+
+### Contexte
+GitHub Dependabot signalait 5 vulnérabilités sur le repo (1 HIGH, 2 moderate, 2 low). Audit local via `npm audit` dans les 2 codebases :
+- `scripts/` : **1 HIGH** sur `nodemailer < 8.0.4` (4 CVE incluant SMTP command injection via envelope.size + via CRLF in transport name)
+- `functions/` : **8 LOW** transitives via `firebase-admin@12 → @google-cloud/storage@7 → teeny-request@9 → http-proxy-agent@5 → @tootallnate/once@2.0.1` (CVSS 3.3, "Incorrect Control Flow Scoping", AV:L = local only)
+
+### Changements
+- **`scripts/package.json`** : `nodemailer ^6.9.0` → `^8.0.7`. API stable entre v6 et v8 sur `createTransport()` + `sendMail()` (notre seul usage). 0 vulns après upgrade.
+- **`functions/package.json`** : bumped `firebase-admin ^12.0.0` → `^12.7.0` (npm install auto, version mineure). Tentative `firebase-admin@13.10.0` ANNULÉE — conflit peer dep `firebase-functions@4.9.0` requiert `firebase-admin ^10 || ^11 || ^12`. Le déploiement avec @13 a échoué proprement (Cloud Build npm install rejected), aucune fonction modifiée en prod. Reverté à @12.
+- **`.gitignore`** : ajout `firebase-debug.log` + `firebase-debug.*.log` (générés par `firebase deploy` en cas d'échec, ne pas commit).
+
+### Impact
+- **Sécu** : HIGH résolue (newsletter SMTP injection blocked). 8 LOW restent — risque concret quasi nul :
+  - Severity LOW (CVSS 3.3), exploitable seulement en attaque locale (AV:L), pas via réseau.
+  - Notre code ne fait aucun appel direct à `@tootallnate/once` ou `http-proxy-agent` (transitives uniquement, utilisées par `@google-cloud/storage` pour des proxies HTTP que nous n'utilisons pas — nous lisons Storage via Firebase SDK qui passe par HTTPS direct).
+  - Exécution serveur dans une sandbox Cloud Run isolée (pas de filesystem partagé exploitable).
+- **Pas de breaking change client/serveur** : `firebase-admin@12.7.0` API identique à @12.0.0 (patch versions).
+
+### Plan de remédiation des 8 LOW (futur)
+Bloqué par `firebase-functions@4` (deprecated, EOL). Pour pouvoir bumper `firebase-admin → @13` (qui éliminerait la chaîne vulnérable), il faut :
+1. Migrer `firebase-functions@4.9.0` → `@7.x` (major bump avec breaking changes : imports, callable API, secrets binding).
+2. Tester intégralement toutes les CFs (`analyzeChart`, `sendContactMessage`, `notifyNewSignup`, `deleteUserAccount`, `generateProCode`, `revokeProCode`, `createCheckoutSession`, `stripeWebhook`, `adminMarkEmailVerified`, `cleanupOrphanUserEmails`).
+3. Bumper `firebase-admin → @13`.
+À planifier comme tâche dédiée post-MVP (3-4h estimé), pas critique.
+
+### Liens
+- HIGH advisory : https://github.com/advisories/GHSA-c7w3-x93f-qmm8 (nodemailer SMTP command injection)
+- LOW advisory : https://github.com/advisories/GHSA-vpq2-c234-7xj6 (@tootallnate/once)
+- Pas de release frontend (pas de changement user-facing).
+
+---
+
 ## 2026-05-16 — v0.9.170 — Anti IP-spoofing renforcé sur analyzeChart
 
 **Type** : security + fix
