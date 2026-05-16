@@ -37,6 +37,50 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-16 — v0.9.170 — Anti IP-spoofing renforcé sur analyzeChart
+
+**Type** : security + fix
+**Fichiers** : `functions/index.js`, `src/app.html`, `src/index.html`, `src/js/pages/changelog.js`
+**Versions impactées** : Cloud Functions (v0.9.170), front (v0.9.170)
+
+### Contexte
+Audit sécurité post-v0.9.169 (4 agents parallèles) a identifié comme finding **CRITIQUE** que le fallback IP rate-limit sur `analyzeChart` était contournable. L'ancien code (`v0.9.161`) faisait `ip = parts[0]` du header `X-Forwarded-For`. Or `parts[0]` est entièrement contrôlable par le client : un attaquant peut envoyer un XFF custom avec une IP différente à chaque requête, ce qui crée un bucket différent dans Firestore `ipRateLimit/{ip}` et **bypass le quota de 5 min**.
+
+Sur Firebase Functions Gen 2 (Cloud Run derrière Google HTTPS LB), le format réel du XFF reçu côté CF est :
+```
+<client-spoofable>, <proxies-spoofables>, <google-lb-ip>
+```
+- La **dernière** IP est ajoutée par le LB Google côté infra → trustée mais inutile (toujours la même).
+- L'**avant-dernière** est l'IP que le LB Google a vue se connecter à lui → **vraie IP client** (ou son dernier proxy public), **non forgeable** par le client.
+- Les premières peuvent être forgées librement.
+
+### Changements
+- `functions/index.js:121-133` : nouvelle logique
+  ```js
+  if (parts.length >= 2) {
+    ip = parts[parts.length - 2];  // IP trustée (vue par LB Google)
+  } else if (parts.length === 1) {
+    ip = parts[0];  // fallback cas anormal
+  }
+  ```
+- Commentaire détaillé ajouté pour documenter le rationale (anti-régression).
+- Bump version 0.9.169 → 0.9.170 sur tout le front (cache-bust + Settings + footer + changelog.js).
+
+### Impact
+- **Sécu** : ferme un bypass anti-DoS sur l'endpoint Groq (le plus coûteux financièrement). Combiné aux défenses existantes (Turnstile primaire, quotas per-user, email_verified, auth Firebase), la surface d'abus sur Groq devient ~nulle pour un attaquant non-authentifié.
+- **UX** : aucun changement visible côté user. Les vrais utilisateurs continuent d'être bucketés correctement.
+- **Faux positifs** : un user derrière un proxy résidentiel ou VPN sera bucketé sur l'IP du proxy/VPN (comportement normal d'un rate-limit IP).
+
+### À surveiller
+- Cas edge : si Google LB change un jour le format XFF (peu probable), le rate-limit reverrait sur 'unknown' pour tous → toléré (best-effort).
+- Si on voit des `[analyzeChart] suspect X-Forwarded-For chain length` en logs : à investiguer (mais désormais le bucket dépend de parts[-2], donc pas un bypass).
+
+### Liens
+- Audit complet : conversation 2026-05-16 (4 agents Explore parallèles, 4 surfaces : rules / CFs / frontend / infra).
+- Release v0.9.170 via `bash scripts/release.sh v0.9.170` + `firebase deploy --only functions`.
+
+---
+
 ## 2026-05-16 — v0.9.169 — Export PDF : 1 page par trade chronologique + fix CORS Storage
 
 **Type** : feat + fix

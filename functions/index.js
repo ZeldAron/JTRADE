@@ -113,17 +113,29 @@ exports.analyzeChart = onCall(
       // Fallback : rate-limit par IP. Stocke timestamp dernier appel dans
       // Firestore. Si moins de 5 min depuis le précédent, refuse.
       //
-      // v0.9.161 (H-001 fix) : anti IP-spoofing. Sur Firebase Functions Gen 2,
-      // X-Forwarded-For contient normalement 1-2 IPs (client + Google LB).
-      // Une chaîne >3 IPs = proxy chaining suspect → on bucket sur 'unknown'
-      // pour éviter qu'un attaquant via CDN/proxy chaîné multiplie ses IPs
-      // apparentes et bypass le rate-limit.
+      // v0.9.170 (audit fix) : anti IP-spoofing renforcé.
+      // Sur Firebase Functions Gen 2 (Cloud Run derrière Google HTTPS LB), le
+      // format X-Forwarded-For est : `<client-spoofable>, <proxies...>, <google-lb-ip>`.
+      // - La DERNIÈRE IP est toujours ajoutée par le LB Google côté infra → trustée.
+      // - L'AVANT-DERNIÈRE est l'IP que le LB Google a vue se connecter à lui →
+      //   c'est le client réel (ou son dernier proxy public), NON forgeable par
+      //   le client (le LB Google ignore les XFF venant du client pour cette
+      //   position).
+      // - Les premières IPs peuvent être forgées par le client → ne JAMAIS s'en
+      //   servir comme bucket de rate-limit.
+      // Ancien code (v0.9.161) prenait parts[0] → spoofable → bypass trivial
+      // en rotant la 1ère IP à chaque requête.
       const ipRaw = request.rawRequest?.headers?.['x-forwarded-for'];
       let ip = 'unknown';
       if (typeof ipRaw === 'string') {
         const parts = ipRaw.split(',').map(s => s.trim()).filter(Boolean);
-        if (parts.length > 0 && parts.length <= 3) ip = parts[0];
-        else if (parts.length > 3) console.warn('[analyzeChart] suspect X-Forwarded-For chain length:', parts.length);
+        if (parts.length >= 2) {
+          // Avant-dernière = IP trustée (vue par le LB Google)
+          ip = parts[parts.length - 2];
+        } else if (parts.length === 1) {
+          // Cas anormal (devrait pas arriver sur Cloud Run) — on prend ce qu'on a
+          ip = parts[0];
+        }
       }
       // Sanitize IP pour usage comme doc ID Firestore (regex perm. ipv4/ipv6 chars)
       const ipId = ip.replace(/[^A-Za-z0-9.:_-]/g, '_').slice(0, 64) || 'unknown';
