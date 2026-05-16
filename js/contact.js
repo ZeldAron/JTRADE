@@ -1,5 +1,8 @@
-// ─── WIDGET CONTACT ───────────────────────────────────────────────────────────
-// Envoi via Cloud Function vers Discord webhook (depuis v0.9.123, jamais exposé client)
+// ─── WIDGET CONTACT (app, user connecté) ─────────────────────────────────────
+// v0.9.172 : refonte ultra-simple. Pseudo récupéré côté serveur depuis
+// userEmails/{uid}.username (renseigné à la création du compte). Pas d'email
+// demandé, pas de captcha (throttle 60s/uid côté serveur suffit). L'utilisateur
+// tape juste son message, click envoyer → Discord webhook côté serveur.
 
 const Contact = (() => {
   let _lastSubmit = 0;
@@ -29,8 +32,6 @@ const Contact = (() => {
   }
 
   async function submitForm() {
-    const name    = document.getElementById('cName').value.trim().replace(/[\r\n]/g, '').slice(0, 100);
-    const email   = document.getElementById('cEmail').value.trim().replace(/[\r\n]/g, '').slice(0, 254);
     const message = document.getElementById('cMessage').value.trim().slice(0, 5000);
     const honey   = document.getElementById('cWebsite');
     const error   = document.getElementById('cError');
@@ -38,46 +39,40 @@ const Contact = (() => {
     const label   = document.getElementById('cSendLabel');
 
     error.textContent = '';
-    // Honeypot — si rempli, c'est un bot. On feint le succès sans envoyer.
+    // Honeypot — si rempli, c'est un bot. Faux succès sans envoyer.
     if (honey && honey.value) {
       _lastSubmit = Date.now();
       document.getElementById('contactForm').style.display    = 'none';
       document.getElementById('contactSuccess').style.display = 'flex';
       return;
     }
-    if (Date.now() - _lastSubmit < 60_000)                          { error.textContent = i18n.t('contact.err.wait') || 'Merci de patienter 60 secondes avant de renvoyer un message.'; return; }
-    if (!name || name.length < 2)                                    { error.textContent = i18n.t('contact.err.name');  return; }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))    { error.textContent = i18n.t('contact.err.email'); return; }
-    if (!message || message.length < 5)                              { error.textContent = i18n.t('contact.err.msg');   return; }
-
-    // hCaptcha — récupère le token depuis le widget de cette zone
-    const captchaToken = document.querySelector('#contactForm [name="h-captcha-response"]')?.value || '';
-    if (!captchaToken) {
-      error.textContent = 'Merci de cocher la case anti-bot.';
+    if (Date.now() - _lastSubmit < 60_000) {
+      error.textContent = i18n.t('contact.err.wait') || 'Merci de patienter 60 secondes avant de renvoyer un message.';
+      return;
+    }
+    if (!message || message.length < 5) {
+      error.textContent = i18n.t('contact.err.msg') || 'Message trop court (min 5 caractères).';
       return;
     }
 
     btn.disabled      = true;
-    label.textContent = i18n.t('contact.sending');
+    label.textContent = i18n.t('contact.sending') || 'Envoi…';
 
     try {
-      // Vérifie qu'un utilisateur est connecté (la CF exige auth)
       if (!_fbAuth || !_fbAuth.currentUser) {
         error.textContent = 'Connecte-toi pour envoyer un message.';
         btn.disabled      = false;
-        label.textContent = i18n.t('contact.send');
+        label.textContent = i18n.t('contact.send') || 'Envoyer';
         return;
       }
-
-      const plan = (() => { try { return Store.isPro() ? 'Pro' : 'Basic'; } catch { return '?'; } })();
       if (!_fbFunctions) {
         error.textContent = 'Service indisponible — recharge la page.';
         btn.disabled      = false;
-        label.textContent = i18n.t('contact.send');
+        label.textContent = i18n.t('contact.send') || 'Envoyer';
         return;
       }
       const callable = _fbFunctions.httpsCallable('sendContactMessage');
-      const result   = await callable({ name, email, message, plan, captchaToken });
+      const result   = await callable({ message });
       if (result.data?.ok) {
         _lastSubmit = Date.now();
         document.getElementById('contactForm').style.display    = 'none';
@@ -86,24 +81,19 @@ const Contact = (() => {
         throw new Error('Échec d\'envoi');
       }
     } catch (e) {
-      // Reset hCaptcha pour permettre un nouvel essai
-      try {
-        const widget = document.querySelector('#contactForm .h-captcha');
-        if (widget && typeof hcaptcha !== 'undefined' && widget.dataset.hcaptchaWidgetId !== undefined) {
-          hcaptcha.reset(widget.dataset.hcaptchaWidgetId);
-        }
-      } catch {}
       const code = e.code || '';
       const msg  = e.message || '';
       if (code === 'functions/resource-exhausted' || code === 'resource-exhausted') {
         error.textContent = msg;
       } else if (code === 'functions/invalid-argument' || code === 'invalid-argument') {
-        error.textContent = 'Champ invalide : ' + msg;
+        error.textContent = msg || 'Message invalide.';
+      } else if (code === 'functions/failed-precondition' || code === 'failed-precondition') {
+        error.textContent = msg || 'Vérifie ton email avant d\'envoyer un message.';
       } else {
-        error.textContent = i18n.t('contact.err.send');
+        error.textContent = i18n.t('contact.err.send') || 'Erreur d\'envoi — réessaie.';
       }
       btn.disabled      = false;
-      label.textContent = i18n.t('contact.send');
+      label.textContent = i18n.t('contact.send') || 'Envoyer';
     }
   }
 

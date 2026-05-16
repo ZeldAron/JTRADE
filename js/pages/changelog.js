@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.172',
+      date: '2026-05-16',
+      time: '22:30',
+      tags: ['fix', 'feature'],
+      title: 'Contact : refonte simple (juste pseudo + message → Discord)',
+      titleEn: 'Contact: ultra-simple form (just nickname + message → Discord)',
+      items: [
+        { type: 'fix', text: 'Le formulaire de contact dans l\'app était cassé depuis v0.9.161 (hCaptcha fail-closed). Refonte complète : on retire complètement le captcha, le champ email, et le champ nom. Le pseudo est récupéré côté serveur depuis le compte du user (champ username de userEmails). L\'utilisateur tape juste son message, clique envoyer, c\'est tout.', textEn: 'Contact form in app was broken since v0.9.161 (hCaptcha fail-closed). Full refactor: removed captcha, email, name fields. Nickname auto-fetched from server-side userEmails/{uid}.username. User just types message, hits send.' },
+        { type: 'feature', text: 'Nouvelle section Contact sur la landing page (B6) : pseudo + message, pas d\'email, pas de captcha. Visiteurs anonymes peuvent envoyer un message à Aaron via Discord. CF `sendContactMessage` accepte maintenant les appels non-authentifiés depuis la landing (avec validation pseudo + throttle 60s par IP avant-dernière du XFF).', textEn: 'New Contact section on landing page (B6): nickname + message, no email, no captcha. Anonymous visitors can send Aaron a message via Discord. CF accepts unauthenticated calls from landing (with nickname validation + 60s throttle per trusted IP).' },
+        { type: 'security', text: 'Sécu : throttle 60s par identité (uid si connecté, IP-bucketed avant-dernière du XFF si anonyme — cf. v0.9.170 anti IP-spoofing). Honeypot anti-bot conservé. maxInstances=5 sur la CF. Pseudo + message tronqués/sanitizés serveur. Pas de risque de fuite email puisqu\'on n\'en demande plus.', textEn: 'Security: 60s throttle per identity (uid or trusted-IP), honeypot kept, sanitization server-side. No email leak risk anymore.' },
+      ],
+    },
+    {
       version: '0.9.171',
       date: '2026-05-16',
       time: '21:00',
