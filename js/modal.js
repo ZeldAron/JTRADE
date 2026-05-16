@@ -142,6 +142,50 @@ const Modal = (() => {
     return (r.entry || r.sl || r.tp1) ? r : null;
   }
 
+  // ── Cloudflare Turnstile (v0.9.160 — hybride : token si dispo, sinon CF
+  // applique rate-limit IP). Échec gracieux pour navigateurs incompatibles
+  // (Safari ITP, Firefox + content blockers, etc.).
+  const _TURNSTILE_SITE_KEY = '0x4AAAAAADQkL2_LnsGG4b2_';
+  let _turnstileWidgetId = null;
+
+  function _getTurnstileToken() {
+    return new Promise((resolve) => {
+      // Resolve EMPTY si Turnstile SDK pas chargé (CSP blocker, extension, etc.)
+      if (typeof turnstile === 'undefined') {
+        console.warn('[Turnstile] SDK absent — fallback rate-limit IP server-side');
+        return resolve('');
+      }
+      let container = document.getElementById('turnstileContainer');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'turnstileContainer';
+        container.style.cssText = 'position:fixed;left:-9999px;top:-9999px;visibility:hidden';
+        document.body.appendChild(container);
+      }
+      if (_turnstileWidgetId !== null) {
+        try { turnstile.reset(_turnstileWidgetId); } catch {}
+      }
+      try {
+        _turnstileWidgetId = turnstile.render(container, {
+          sitekey: _TURNSTILE_SITE_KEY,
+          size: 'invisible',
+          callback: (token) => resolve(token || ''),
+          'error-callback': () => { console.warn('[Turnstile] error-callback'); resolve(''); },
+          'expired-callback': () => { console.warn('[Turnstile] expired'); resolve(''); },
+        });
+        try { turnstile.execute(_turnstileWidgetId); } catch (e) {
+          console.warn('[Turnstile] execute failed:', e && e.message);
+          return resolve('');
+        }
+        // Timeout sécu : 8s puis on lâche et on laisse le rate-limit IP prendre le relais
+        setTimeout(() => resolve(''), 8000);
+      } catch (e) {
+        console.warn('[Turnstile] render failed:', e && e.message);
+        resolve('');
+      }
+    });
+  }
+
   // ── Groq Vision API (via Cloud Function — clé API jamais exposée au client) ──
   async function analyzeWithGroq(imageB64, _unusedApiKey, direction) {
     const isLong = direction !== 'short';
@@ -203,23 +247,11 @@ const Modal = (() => {
     // Appel via Cloud Function (clé Groq côté serveur, quota enforce côté serveur)
     if (!_fbFunctions) throw new Error('Service IA indisponible — recharge la page.');
 
-    // v0.9.154 : pré-warm le token App Check avant le 1er appel CF.
-    // Le flag `_fbAppCheckReady` est setté par firebase.js APRÈS activate() OK.
-    // Si pas ready, on attend jusqu'à 1s (retry firebase.js sur DOMContentLoaded).
-    try {
-      let waited = 0;
-      while (!window._fbAppCheckReady && waited < 1000) {
-        await new Promise(r => setTimeout(r, 50));
-        waited += 50;
-      }
-      if (window._fbAppCheckReady && firebase.appCheck) {
-        await firebase.appCheck().getToken(/* forceRefresh */ false);
-      } else {
-        console.warn('[analyzeWithGroq] App Check not ready after 1s — appel CF en mode dégradé');
-      }
-    } catch (e) {
-      console.warn('[analyzeWithGroq] App Check pre-warm failed:', e && e.message);
-    }
+    // v0.9.160 : hybride Turnstile + rate-limit IP.
+    // Si Turnstile fonctionne (la majorité des browsers) → token valide → CF passe.
+    // Sinon (Safari ITP, content blocker Firefox, etc.) → token vide → CF applique
+    // rate-limit IP strict (1 analyse / 5 min / IP) comme fallback.
+    const turnstileToken = await _getTurnstileToken();
 
     const callable = _fbFunctions.httpsCallable('analyzeChart');
     let lastError = null;
@@ -227,7 +259,7 @@ const Modal = (() => {
     for (const model of GROQ_MODELS) {
       let data;
       try {
-        const result = await callable({ model, prompt, imageB64 });
+        const result = await callable({ model, prompt, imageB64, turnstileToken });
         data = result.data;
       } catch (e) {
         lastError = e;
