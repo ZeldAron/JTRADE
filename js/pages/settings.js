@@ -638,8 +638,9 @@
 
     const overlay = document.createElement('div');
     overlay.id = 'exportPdfOverlay';
-    overlay.className = 'modal-overlay';
-    overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;z-index:1000';
+    // v0.9.165 fix : ajout classe .open immédiate (CSS attend opacity:1 + pointer-events:all)
+    overlay.className = 'modal-overlay open';
+    overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;z-index:1000;opacity:1;pointer-events:all';
     overlay.innerHTML = `
       <div class="modal-card" style="max-width:440px;width:90vw;padding:24px;background:var(--bg2);border-radius:12px;border:1px solid var(--border)">
         <h3 style="margin:0 0 6px;font-size:18px;color:var(--text)">${UI.escHtml(t('set.export.pdf.title') || 'Exporter les trades en PDF')}</h3>
@@ -721,21 +722,9 @@
     });
   }
 
-  // v0.9.135 : event delegation pour le bouton Export PDF.
-  // Bindé UNE FOIS au load (pas dans initSettings — sinon problème de timing
-  // si initSettings() n'est pas encore appelée quand l'user clique).
-  // Le target.closest filtre par ID — robuste même si le DOM est recréé.
-  document.body.addEventListener('click', function (e) {
-    const target = e.target.closest('#btnExportPdf');
-    if (!target) return;
-    e.preventDefault();
-    // Double check Pro (sécurité — anti DevTools bypass)
-    if (!Store.isPro || !Store.isPro()) {
-      UI.toast(t('set.export.pdf.pro.only') || 'Export PDF réservé aux utilisateurs Pro.', true);
-      return;
-    }
-    _openExportPdfModal();
-  });
+  // v0.9.163 : Export PDF — direct binding (event delegation au top-level
+  // échouait sur certains setups, cause inconnue, peut-être stopPropagation
+  // upstream). Binding direct dans initSettings (comme CSV) → robuste.
 
   // v0.9.150 : toggle newsletter — lit depuis Auth.getConsentStatus() + écrit via Auth.setNewsletterOptIn()
   let _newsletterBound = false;
@@ -921,6 +910,25 @@
       a.click();
       UI.toast(t('set.export.done'));
     });
+
+    // v0.9.163 : Export PDF — binding direct (cf. comment plus haut)
+    const _btnExportPdf = $('btnExportPdf');
+    if (_btnExportPdf) {
+      _btnExportPdf.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Double check Pro côté client (sécurité — anti DevTools bypass)
+        if (!Store.isPro || !Store.isPro()) {
+          UI.toast(t('set.export.pdf.pro.only') || 'Export PDF réservé aux utilisateurs Pro.', true);
+          return;
+        }
+        try {
+          _openExportPdfModal();
+        } catch (err) {
+          console.error('[ExportPDF] erreur:', err);
+          UI.toast('Erreur : ' + (err && err.message || 'inconnue'), true);
+        }
+      });
+    }
 
     // ── v0.9.162 (F5) — Export CSV ──────────────────────────────────────────
     // Format : Date, Compte, Symbole, Direction, Lot, Entry, SL, TP1, TP2, TP3,
