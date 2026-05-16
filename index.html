@@ -720,48 +720,216 @@
       line-height: 1.6;
     }
 
-    /* ── Pricing stealth ──────────────────────────────────────────────── */
-    .pricing {
+    /* ── Comment ça marche (3 étapes, v0.9.177) ──────────────────────── */
+    .how {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .how-step {
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 32px 28px;
-      text-align: center;
-      max-width: 520px;
-      margin: 0 auto;
+      padding: 26px 22px;
       position: relative;
       overflow: hidden;
+      transition: border-color 0.25s, transform 0.25s;
     }
-    .pricing::before {
+    .how-step:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+    .how-step-num {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      font-size: 56px;
+      font-weight: 700;
+      color: rgba(124, 58, 237, 0.12);
+      line-height: 1;
+      letter-spacing: -2px;
+      pointer-events: none;
+    }
+    .how-step-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(244,114,182,0.12));
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    .how-step h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .how-step p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
+    .how-step kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      font-family: 'Geist Mono', SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    /* ── Pricing cards (v0.9.177) ────────────────────────────────────── */
+    .pricing-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+    .pricing-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 26px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      display: flex;
+      flex-direction: column;
+    }
+    .pricing-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 14px 32px rgba(124, 58, 237, 0.15);
+    }
+    .pricing-card.featured {
+      border-color: rgba(124, 58, 237, 0.4);
+      background: linear-gradient(180deg, rgba(124,58,237,0.08) 0%, var(--bg2) 60%);
+    }
+    .pricing-card.featured::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 2px;
       background: linear-gradient(90deg, transparent, var(--accent-l), var(--pink), transparent);
     }
-    .pricing-tag {
-      display: inline-block;
-      padding: 4px 11px;
-      background: rgba(124, 58, 237, 0.15);
-      color: var(--accent-l);
+    .pricing-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      padding: 4px 10px;
+      background: linear-gradient(135deg, var(--accent), var(--pink));
+      color: #fff;
       border-radius: 12px;
       font-size: 10px;
-      letter-spacing: 1px;
+      letter-spacing: 0.8px;
       text-transform: uppercase;
-      margin-bottom: 14px;
-      font-weight: 600;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
     }
-    .pricing-title {
-      font-size: 17px;
+    .pricing-card-name {
+      font-size: 13px;
       font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
       margin-bottom: 8px;
     }
-    .pricing-text {
-      color: var(--muted);
-      font-size: 12.5px;
-      line-height: 1.6;
-      margin-bottom: 20px;
+    .pricing-card-price {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+      letter-spacing: -1px;
     }
+    .pricing-card-price .price-suffix {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 400;
+      margin-left: 4px;
+    }
+    .pricing-card-tagline {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+    .pricing-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px;
+      flex: 1;
+    }
+    .pricing-features li {
+      font-size: 13px;
+      color: var(--text);
+      padding: 7px 0 7px 24px;
+      position: relative;
+      line-height: 1.45;
+    }
+    .pricing-features li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 11px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(63, 185, 80, 0.15);
+      border: 1px solid rgba(63, 185, 80, 0.4);
+    }
+    .pricing-features li::after {
+      content: '✓';
+      position: absolute;
+      left: 3px;
+      top: 7px;
+      font-size: 10px;
+      color: #3fb950;
+      font-weight: 700;
+    }
+    .pricing-features li.muted { color: var(--muted); }
+    .pricing-features li.muted::before { background: rgba(139,148,158,0.1); border-color: rgba(139,148,158,0.25); }
+    .pricing-features li.muted::after { color: var(--muted); }
+    .pricing-cta {
+      display: inline-block;
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 13.5px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.2s;
+      box-sizing: border-box;
+    }
+    .pricing-cta:hover { transform: translateY(-1px); }
+    .pricing-cta.primary {
+      background: linear-gradient(135deg, var(--accent), var(--pink));
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(124, 58, 237, 0.35);
+    }
+    .pricing-cta.primary:hover { opacity: 0.92; }
+    .pricing-cta.ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .pricing-cta.ghost:hover { border-color: var(--accent); }
+
+    /* Compatibilité : ancien bloc .pricing utilisé nulle part désormais */
 
     /* ── FAQ ──────────────────────────────────────────────────────────── */
     .faq {
@@ -944,6 +1112,8 @@
       .mockup-kpi-val { font-size: 13px; }
       .mockup-chart-svg { height: 140px; }
       .mockup-main { min-height: 280px; }
+      .how { grid-template-columns: 1fr; gap: 14px; }
+      .pricing-cards { grid-template-columns: 1fr; gap: 16px; }
     }
     @media (max-width: 640px) {
       .nav-inner { padding: 10px 16px; }
@@ -989,8 +1159,9 @@
         <span>ZeldTrade</span>
       </a>
       <div class="nav-links">
+        <a href="#how" class="nav-link">Comment ça marche</a>
         <a href="#features" class="nav-link">Fonctionnalités</a>
-        <a href="#pricing" class="nav-link">Accès</a>
+        <a href="#pricing" class="nav-link">Tarifs</a>
         <a href="#faq" class="nav-link">FAQ</a>
         <a href="#contact" class="nav-link">Contact</a>
         <a href="/app" class="btn btn-ghost btn-sm">Se connecter</a>
@@ -1344,6 +1515,35 @@
     </div>
   </div>
 
+  <!-- ─── Comment ça marche (v0.9.177) ─────────────────────────────────── -->
+  <section class="section" id="how">
+    <div class="section-eyebrow">Comment ça marche</div>
+    <h2 class="section-title">Journaliser un trade en 30 secondes</h2>
+    <p class="section-sub">
+      Le flow le plus rapide du marché. Pas d'Excel, pas de saisie manuelle, pas de copie-collage interminable.
+    </p>
+    <div class="how">
+      <div class="how-step">
+        <div class="how-step-num">01</div>
+        <div class="how-step-icon">📸</div>
+        <h3>Capture ton chart</h3>
+        <p>Screenshot ton setup sur TradingView puis <kbd>Ctrl</kbd>+<kbd>V</kbd> directement dans ZeldTrade. Drag &amp; drop ou paste — peu importe.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">02</div>
+        <div class="how-step-icon">🤖</div>
+        <h3>L'IA fait le boulot</h3>
+        <p>Groq Vision détecte automatiquement entry, stop-loss et take-profit sur ton graphique. Les niveaux sont pré-remplis en 2 secondes.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">03</div>
+        <div class="how-step-icon">📊</div>
+        <h3>Stats temps réel</h3>
+        <p>R:R, risque %, P&amp;L net (fees/spreads inclus), drawdown prop firm. Tout calculé en live, multi-comptes synchronisés.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ─── Features ─────────────────────────────────────────────────────── -->
   <section class="section" id="features">
     <div class="section-eyebrow">Fonctionnalités</div>
@@ -1403,21 +1603,48 @@
     </div>
   </section>
 
-  <!-- ─── Pricing (stealth) ────────────────────────────────────────────── -->
+  <!-- ─── Pricing (v0.9.177 — 2 cards visuelles Basic / Pro) ─────────── -->
   <section class="section" id="pricing">
-    <div class="section-eyebrow">Accès</div>
-    <h2 class="section-title">Beta sur invitation</h2>
+    <div class="section-eyebrow">Tarifs</div>
+    <h2 class="section-title">Simple et honnête</h2>
     <p class="section-sub">
-      ZeldTrade est en accès anticipé. Les places sont limitées pour itérer proprement avec les premiers utilisateurs.
+      Aucune carte requise pour démarrer. Le plan Basic est gratuit et le restera. Le Pro débloque les outils sérieux.
     </p>
-    <div class="pricing">
-      <span class="pricing-tag">✦ Founding members</span>
-      <h3 class="pricing-title">Tu veux tester ?</h3>
-      <p class="pricing-text">
-        Contacte l'équipe ZeldTrade via le formulaire ci-dessous.<br>
-        Les 50 premiers bêta-testeurs bénéficient d'un statut <strong>Founding Member</strong> avec accès Pro à vie.
-      </p>
-      <a href="#contact" class="btn btn-primary">Demander un accès →</a>
+    <div class="pricing-cards">
+      <!-- Basic -->
+      <div class="pricing-card">
+        <div class="pricing-card-name">Basic</div>
+        <div class="pricing-card-price">0 €<span class="price-suffix">/ pour toujours</span></div>
+        <p class="pricing-card-tagline">Pour démarrer et tester sans engagement.</p>
+        <ul class="pricing-features">
+          <li>1 compte prop firm</li>
+          <li>1 analyse IA par jour</li>
+          <li>Journal &amp; calendrier complet</li>
+          <li>Dashboard, Analytics, Goals</li>
+          <li>Calculateurs intégrés (position, R:R, fiscal micro)</li>
+          <li>Export JSON RGPD</li>
+          <li>Screenshots stockés à vie</li>
+        </ul>
+        <a href="/app" class="pricing-cta ghost">Créer un compte gratuit →</a>
+      </div>
+
+      <!-- Pro (featured) -->
+      <div class="pricing-card featured">
+        <span class="pricing-badge">✦ Founding</span>
+        <div class="pricing-card-name">Pro</div>
+        <div class="pricing-card-price">Gratuit<span class="price-suffix">pendant la beta</span></div>
+        <p class="pricing-card-tagline">Pour les traders sérieux. 5 places Founding restantes — accès Pro à vie en échange de feedback.</p>
+        <ul class="pricing-features">
+          <li>Jusqu'à 100 comptes prop firm</li>
+          <li>20 analyses IA par jour</li>
+          <li>Groupes : répliquer un trade sur N comptes en 1 clic</li>
+          <li>Export PDF + CSV (1 page par trade)</li>
+          <li>Toutes les features Basic incluses</li>
+          <li>Support prioritaire (canal direct)</li>
+          <li>Votes prioritaires sur la roadmap</li>
+        </ul>
+        <a href="#contact" class="pricing-cta primary">Demander une place Founding →</a>
+      </div>
     </div>
   </section>
 
@@ -1495,7 +1722,7 @@
       <a href="#contact" class="footer-link">Contact</a>
     </div>
     <div>
-      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.176</span>
+      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.177</span>
     </div>
   </footer>
 
