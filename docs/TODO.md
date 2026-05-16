@@ -30,6 +30,42 @@ Sans domaine `zeldtrade.com` :
 
 ---
 
+## ✅ Session 2026-05-16/17 — récap nuit
+
+Session marathon couvrant 7 releases (v0.9.169 → v0.9.175) — état du produit nettement amélioré avant lancement Stripe.
+
+**Sécurité** :
+- Audit complet 4 surfaces (rules / CFs / frontend / infra) → score 7.5/10 → **8.5-9/10**
+- Anti IP-spoofing renforcé sur `analyzeChart` (parts[length-2] du XFF, v0.9.170)
+- Helper `_assertAdmin()` centralisé avec re-auth récente <60min (v0.9.171)
+- Rate-limits admin symétriques (delete 5/h, revoke 10/h, markVerified 5/h)
+- CORS Storage prod strict (localhost retiré, configs prod/dev séparées)
+- `docs/SECURITY.md` refondu intégralement
+- Supply chain : nodemailer HIGH éliminée (v8.0.7), 8 LOW transitives documentées
+
+**Features user-facing** :
+- Export PDF refondu : 1 page/trade chronologique + screenshots embarqués (v0.9.169)
+- Contact form refonte : pseudo + message → Discord, plus d'email/captcha (v0.9.172, B5+B6 fixés)
+- Désinscription newsletter 1-clic RGPD-compliant (v0.9.173) : CF `unsubscribeNewsletter` + HMAC SHA-256 + headers RFC 8058 + page de confirmation
+- Anonymat dans le contenu public : "Aaron" → "l'équipe ZeldTrade" partout (sauf mentions légales)
+
+**Admin & opérations** :
+- Page admin redesignée : stats overview + recherche live + actions icônes compactes (v0.9.174)
+- Système d'annonces opérationnel : Discord `#annonces` + newsletter Brevo `news@zeldtrade.com` (DKIM/SPF/DMARC ✅)
+- Première annonce envoyée le 2026-05-16 (PDF + Contact + Sécurité) à 2 destinataires opt-in + post Discord
+- Fix CORS Firebase Storage (gsutil) pour embedding screenshots dans PDF
+- Fix bugs CSS toggle Réglages (spécificité `:not(.switch)`, v0.9.175)
+- TODO.md cleanup (B5, B6, F3, I1, I2, I6/S1, S1, I10, I10 alt, I15 statut)
+
+**Restant pour go-live début de semaine** :
+- 🟡 Stripe : KYC en cours (24-48h Stripe validation), code prêt, créer Products + Prices + coupon `LAUNCH40` + brancher checkout public
+- 🟡 MFA Firebase Auth admin (I14, 2h)
+- 🟡 Smoke test tunnel complet (signup → trade → export)
+- 🟢 Service account dédié CFs (I4/S3, post-MVP)
+- 🟢 Migration firebase-functions v4→v7 (post-MVP, débloque firebase-admin@13)
+
+---
+
 ## 🔴 CRITIQUE — Priorité absolue (15 findings)
 
 ### 🛠️ MANUEL — À toi (8 actions, ~3-4h total, 0€)
@@ -72,8 +108,8 @@ Sans domaine `zeldtrade.com` :
 | **I15** | Compte Stripe FR + KYC ✅ KYC soumis 2026-05-16, en attente validation 24-48h. Catégorie "Logiciels en tant que service" + libellé bancaire "ZeldTrade" + libellé abrégé "ZT" + Stripe Tax SKIP (franchise TVA art. 293 B). Reste à : créer Products/Prices + coupon LAUNCH40 + webhook + secrets Firebase. | 2-3h + attente | 0€ (no fee sans vente) |
 | **I14** | MFA Firebase Auth admin (distinct du MFA Gmail) | 2-3h | 0€ |
 | **I7** | Bump `firebase-functions` v4.6 → v6 (EOL) | 2-4h (moi après que tu donnes go) | 0€ |
-| **I10** | **OPTIONNEL** : domaine + Firebase Hosting | 3-4h | ~1€/mois (10€/an domaine) |
-| **I10 alt** | **GRATUIT** : Firebase Hosting sans domaine custom → `zeldtrade.web.app` + vrais headers HTTP | 1h | 0€ |
+| ~~**I10**~~ | ~~Domaine + Firebase Hosting~~ ✅ 2026-05-15 (v0.9.145) — **zeldtrade.com** déployé sur Firebase Hosting + headers HTTP stricts (CSP/HSTS/Permissions-Policy/etc.) configurés dans `firebase.json`. | ✅ Fait |
+| ~~**I10 alt**~~ | ~~Firebase Hosting `zeldtrade.web.app`~~ ✅ déprécié — couvert par I10 (domaine custom direct). | ✅ Fait |
 
 ### 🔧 CODE — 17 fixes
 
