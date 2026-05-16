@@ -165,6 +165,12 @@ const i18n = (() => {
       'set.spreads.unit': '/contrat',
       'set.sp.save':      'Sauvegarder',
       'set.sp.saved':     'Spreads sauvegardés',
+      // Notifications email (v0.9.150)
+      'set.notif.title':            'Notifications email',
+      'set.notif.newsletter.label': 'Recevoir les mises à jour et nouvelles offres',
+      'set.notif.newsletter.desc':  'Max 1 email/mois. Tu peux te désinscrire à tout moment ici.',
+      'set.notif.newsletter.on':    'Tu recevras les mises à jour par email.',
+      'set.notif.newsletter.off':   'Plus d\'emails de mises à jour.',
       // Email verification (v0.9.142)
       'set.email.verify.title':     'Vérification email',
       'set.email.verify.label':     'Statut de ton email',
@@ -262,6 +268,13 @@ const i18n = (() => {
       'auth.err.unknown': 'Une erreur est survenue. Réessaie.',
       'auth.err.username.length': 'Le pseudo doit faire entre 2 et 30 caractères.',
       'auth.err.username.chars':  'Le pseudo ne peut contenir que lettres, chiffres, _ et -.',
+      // v0.9.150 — RGPD consent
+      'auth.err.terms':           'Tu dois accepter les CGU et la Politique de confidentialité pour créer un compte.',
+      'auth.consent.terms':       'J\'accepte les <a href="/cgu" target="_blank" rel="noopener">CGU</a> et la <a href="/privacy" target="_blank" rel="noopener">Politique de confidentialité</a>',
+      'auth.consent.newsletter':  'Je veux recevoir les emails de mises à jour et nouvelles offres (max 1/mois, désinscription à tout moment)',
+      'consent.title':            'Mise à jour des conditions',
+      'consent.intro':            'Pour continuer à utiliser ZeldTrade, merci d\'accepter nos conditions. Tu peux les consulter en cliquant sur les liens ci-dessous.',
+      'consent.submit':           'Continuer',
       'contact.err.wait':         'Merci de patienter 60 secondes avant de renvoyer un message.',
       'err.file.large':   'Fichier trop volumineux (5 Mo max).',
       'err.name.invalid': 'Nom invalide (50 caractères max).',
@@ -766,6 +779,12 @@ const i18n = (() => {
       'set.spreads.unit': '/contract',
       'set.sp.save':      'Save',
       'set.sp.saved':     'Spreads saved',
+      // Email notifications (v0.9.150)
+      'set.notif.title':            'Email notifications',
+      'set.notif.newsletter.label': 'Receive updates and new offers',
+      'set.notif.newsletter.desc':  'Max 1 email/month. You can unsubscribe anytime here.',
+      'set.notif.newsletter.on':    'You\'ll receive updates by email.',
+      'set.notif.newsletter.off':   'No more update emails.',
       // Email verification
       'set.email.verify.title':     'Email verification',
       'set.email.verify.label':     'Your email status',
@@ -863,6 +882,13 @@ const i18n = (() => {
       'auth.err.unknown': 'An error occurred. Please try again.',
       'auth.err.username.length': 'Username must be between 2 and 30 characters.',
       'auth.err.username.chars':  'Username can only contain letters, digits, _ and -.',
+      // v0.9.150 — RGPD consent
+      'auth.err.terms':           'You must accept the Terms and Privacy Policy to create an account.',
+      'auth.consent.terms':       'I accept the <a href="/cgu" target="_blank" rel="noopener">Terms</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>',
+      'auth.consent.newsletter':  'I want to receive update emails and new offers (max 1/month, unsubscribe anytime)',
+      'consent.title':            'Terms update',
+      'consent.intro':            'To continue using ZeldTrade, please accept our terms. You can review them by clicking the links below.',
+      'consent.submit':           'Continue',
       'contact.err.wait':         'Please wait 60 seconds before sending another message.',
       'err.file.large':   'File too large (5 MB max).',
       'err.name.invalid': 'Invalid name (50 characters max).',

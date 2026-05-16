@@ -5,6 +5,28 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.150',
+      date: '2026-05-16',
+      time: '01:30',
+      tags: ['feat', 'rgpd'],
+      title: 'RGPD : acceptation CGU + opt-in newsletter au signup',
+      titleEn: 'RGPD: terms acceptance + newsletter opt-in at signup',
+      items: [
+        { type: 'feat', text: '**Signup form** : 2 nouvelles checkboxes RGPD. (1) Acceptation CGU + Politique de confidentialité **obligatoire** (bouton "Créer le compte" refuse si pas cochée). (2) Opt-in newsletter **optionnel décoché par défaut** (RGPD requiert opt-in actif). Liens vers `/cgu` et `/privacy` cliquables dans les checkboxes.', textEn: '**Signup form**: 2 new RGPD checkboxes. (1) Terms + Privacy Policy acceptance **mandatory** (submit button refuses without). (2) Newsletter opt-in **optional, unchecked by default** (RGPD requires active opt-in). Clickable links to `/cgu` and `/privacy`.' },
+        { type: 'feat', text: '**Modale consent pour users existants** : à la prochaine connexion des users créés avant v0.9.150 (donc sans `termsAccepted` en Firestore), une modale bloquante apparaît demandant d\'accepter les CGU + opt-in newsletter optionnel. Tant que pas accepté, l\'app ne se lance pas. Migration RGPD propre sans toucher au reste.', textEn: '**Consent modal for existing users**: on next login of users created before v0.9.150 (no `termsAccepted` in Firestore), a blocking modal appears asking to accept terms + optional newsletter. App doesn\'t launch until accepted. Clean RGPD migration.' },
+        { type: 'feat', text: '**Réglages → Notifications email** : nouveau toggle on/off pour activer/désactiver la newsletter à tout moment (RGPD droit de retrait). Stocké dans `userEmails/{uid}.newsletterOptIn`.', textEn: '**Settings → Email notifications**: new on/off toggle to enable/disable newsletter at any time (RGPD right to withdraw). Stored in `userEmails/{uid}.newsletterOptIn`.' },
+        { type: 'security', text: 'Schema Firestore : `userEmails` accepte 2 nouveaux champs (`termsAccepted: {version, acceptedAt}` + `newsletterOptIn: bool`). Rule mise à jour avec validation stricte (version string ≤16 chars, acceptedAt int). `_storeUserEmail` passé à `set({}, {merge: true})` pour ne PAS écraser ces fields à chaque login. Helpers `Auth.getConsentStatus()`, `Auth.recordConsent()`, `Auth.setNewsletterOptIn()` exposés. Constante `TERMS_VERSION = "v1.0"` — bumper pour forcer re-acceptation.', textEn: 'Firestore schema: `userEmails` accepts 2 new fields (`termsAccepted: {version, acceptedAt}` + `newsletterOptIn: bool`). Rule updated with strict validation. `_storeUserEmail` switched to `set({}, {merge: true})` to NOT wipe these fields each login. Helpers `Auth.getConsentStatus()`, `Auth.recordConsent()`, `Auth.setNewsletterOptIn()` exposed. `TERMS_VERSION = "v1.0"` constant — bump to force re-acceptance.' },
+      ],
+      user: {
+        title: 'Acceptation CGU et opt-in newsletter (RGPD)',
+        items: [
+          { type: 'feat', text: 'À l\'inscription, tu dois maintenant accepter les CGU et la Politique de confidentialité (obligatoire) — c\'est plus clair côté légal.' },
+          { type: 'feat', text: 'Nouvelle option : recevoir un email max 1×/mois pour les **mises à jour majeures et nouvelles offres** ZeldTrade. Optionnel, désactivable à tout moment dans **Réglages → Notifications email**.' },
+          { type: 'feat', text: 'Si tu as créé ton compte AVANT cette mise à jour, une fenêtre apparaîtra à ta prochaine connexion pour que tu acceptes les conditions une seule fois. Tu pourras aussi cocher la newsletter si ça t\'intéresse.' },
+        ],
+      },
+    },
+    {
       version: '0.9.149',
       date: '2026-05-16',
       time: '00:30',

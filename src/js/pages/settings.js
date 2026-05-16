@@ -737,6 +737,39 @@
     _openExportPdfModal();
   });
 
+  // v0.9.150 : toggle newsletter — lit depuis Auth.getConsentStatus() + écrit via Auth.setNewsletterOptIn()
+  let _newsletterBound = false;
+  async function _refreshNewsletterToggle() {
+    try {
+      const toggle = document.getElementById('toggleNewsletter');
+      if (!toggle) return;
+      const consent = await Auth.getConsentStatus();
+      if (consent && !consent.error) {
+        toggle.checked = !!consent.currentNewsletter;
+      }
+      if (_newsletterBound) return;
+      _newsletterBound = true;
+      toggle.addEventListener('change', async () => {
+        const desired = toggle.checked;
+        const original = !desired;
+        toggle.disabled = true;
+        const r = await Auth.setNewsletterOptIn(desired);
+        toggle.disabled = false;
+        if (r && r.ok) {
+          UI.toast(desired
+            ? (t('set.notif.newsletter.on') || 'Tu recevras les mises à jour par email.')
+            : (t('set.notif.newsletter.off') || 'Plus d\'emails de mises à jour.'));
+        } else {
+          // rollback visuel
+          toggle.checked = original;
+          UI.toast('Erreur : ' + (r && r.error || 'inconnue'), true);
+        }
+      });
+    } catch (e) {
+      console.warn('[Settings] newsletter refresh failed:', e && e.message);
+    }
+  }
+
   // v0.9.142 : vérification email — refresh statut + handlers via event delegation
   function _refreshEmailVerifyStatus() {
     try {
@@ -850,6 +883,9 @@
 
     // v0.9.142 : refresh statut email vérifié à chaque render Settings.
     _refreshEmailVerifyStatus();
+
+    // v0.9.150 : refresh state du toggle newsletter (lit depuis userEmails.newsletterOptIn)
+    _refreshNewsletterToggle();
 
     if (_settingsBound) {
       updateGroqStatus();
