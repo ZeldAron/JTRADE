@@ -699,6 +699,56 @@ async function _writeAuditLog(action, adminEmail, payload) {
   }
 }
 
+// v0.9.171 (audit hardening) — Helper : assertion admin stricte avec
+// re-auth récente. Pour les CFs destructives (delete/revoke/grant Pro/etc.),
+// on exige une session Firebase < `maxTokenAgeMin` minutes. Si l'admin a
+// fait login il y a plus d'1h, il doit re-authentifier avant ces actions.
+// Réduit la fenêtre d'attaque si un token a été volé/phishé.
+const ADMIN_MAX_TOKEN_AGE_MIN = 60;
+function _assertAdmin(request, opts) {
+  const maxAgeMin = (opts && Number.isFinite(opts.maxTokenAgeMin))
+    ? opts.maxTokenAgeMin
+    : ADMIN_MAX_TOKEN_AGE_MIN;
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Authentication required');
+  }
+  if (request.auth.token.email !== ADMIN_EMAIL || !request.auth.token.email_verified) {
+    throw new HttpsError('permission-denied', 'Admin only');
+  }
+  // auth_time = timestamp Unix (secondes) de la dernière re-auth Firebase.
+  // Si > maxAgeMin, on force re-login (anti vol de token longue durée).
+  const authTimeMs = (request.auth.token.auth_time || 0) * 1000;
+  if (authTimeMs > 0 && (Date.now() - authTimeMs) > maxAgeMin * 60 * 1000) {
+    throw new HttpsError('permission-denied',
+      `Session expirée (>${maxAgeMin}min). Déconnecte-toi et reconnecte-toi avant cette action.`);
+  }
+}
+
+// v0.9.171 — Helper : rate-limit atomique pour CFs admin (anti-burst si
+// compte admin compromis). action = clé unique dans adminRateLimit/{action},
+// max = nombre max d'appels par heure glissante.
+async function _assertAdminRateLimit(action, max) {
+  const db = admin.firestore();
+  const now = Date.now();
+  const rlRef = db.doc(`adminRateLimit/${action}`);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(rlRef);
+    const ONE_HOUR = 3600 * 1000;
+    const data = snap.exists ? snap.data() : { count: 0, windowStart: now };
+    const inWindow = (now - (data.windowStart || 0)) < ONE_HOUR;
+    const count = inWindow ? (data.count || 0) : 0;
+    if (count >= max) {
+      throw new HttpsError('resource-exhausted',
+        `Rate limit admin : max ${max}/heure pour ${action}. Réessaie plus tard.`);
+    }
+    tx.set(rlRef, {
+      count:       count + 1,
+      windowStart: inWindow ? data.windowStart : now,
+      lastAt:      now,
+    });
+  });
+}
+
 /**
  * Suppression complète d'un utilisateur (admin uniquement).
  * Ordre IMPORTANT : Auth supprimé EN PREMIER + tokens révoqués → l'user
@@ -715,12 +765,8 @@ exports.deleteUserAccount = onCall(
     region:         'europe-west1',
   },
   _wrapCF('deleteUserAccount', async (request) => {
-    if (!request.auth) {
-      throw new HttpsError('unauthenticated', 'Authentication required');
-    }
-    if (request.auth.token.email !== ADMIN_EMAIL || !request.auth.token.email_verified) {
-      throw new HttpsError('permission-denied', 'Admin only');
-    }
+    _assertAdmin(request);
+    await _assertAdminRateLimit('deleteUserAccount', 5);
 
     const targetUid = String(request.data?.uid || '').trim();
     if (!targetUid || !/^[A-Za-z0-9]{1,128}$/.test(targetUid)) {
@@ -896,12 +942,8 @@ exports.generateProCode = onCall(
     region:         'europe-west1',
   },
   _wrapCF('generateProCode', async (request) => {
-    if (!request.auth) {
-      throw new HttpsError('unauthenticated', 'Authentication required');
-    }
-    if (request.auth.token.email !== ADMIN_EMAIL || !request.auth.token.email_verified) {
-      throw new HttpsError('permission-denied', 'Admin only');
-    }
+    _assertAdmin(request);
+    await _assertAdminRateLimit('generateProCode', 10);
 
     const codeHash  = String(request.data?.codeHash || '').trim();
     const targetUid = String(request.data?.uid || '').trim();
@@ -919,24 +961,6 @@ exports.generateProCode = onCall(
 
     const db = admin.firestore();
     const now = Date.now();
-
-    // Rate-limit admin : max 10 codes / heure (anti-abus si compte admin compromis)
-    const rlRef = db.doc(`adminRateLimit/generateProCode`);
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(rlRef);
-      const ONE_HOUR = 3600 * 1000;
-      const data = snap.exists ? snap.data() : { count: 0, windowStart: now };
-      const inWindow = (now - (data.windowStart || 0)) < ONE_HOUR;
-      const count    = inWindow ? (data.count || 0) : 0;
-      if (count >= 10) {
-        throw new HttpsError('resource-exhausted', 'Rate limit : max 10 codes/heure. Réessaie plus tard.');
-      }
-      tx.set(rlRef, {
-        count:        count + 1,
-        windowStart:  inWindow ? data.windowStart : now,
-        lastAt:       now,
-      });
-    });
 
     // Cap absolu : max 5 codes actifs (non révoqués) par user cible
     const existing = await db.collection('proCodeHashes').where('uid', '==', targetUid).get();
@@ -980,12 +1004,8 @@ exports.revokeProCode = onCall(
     region:         'europe-west1',
   },
   _wrapCF('revokeProCode', async (request) => {
-    if (!request.auth) {
-      throw new HttpsError('unauthenticated', 'Authentication required');
-    }
-    if (request.auth.token.email !== ADMIN_EMAIL || !request.auth.token.email_verified) {
-      throw new HttpsError('permission-denied', 'Admin only');
-    }
+    _assertAdmin(request);
+    await _assertAdminRateLimit('revokeProCode', 10);
 
     const codeHash = String(request.data?.codeHash || '').trim();
     const targetUid = String(request.data?.uid || '').trim();
@@ -1079,10 +1099,7 @@ exports.createCheckoutSession = onCall(
     region:          "europe-west1",
   },
   _wrapCF('createCheckoutSession', async (request) => {
-    if (!request.auth) throw new HttpsError("unauthenticated", "Authentication required");
-    if (request.auth.token.email !== ADMIN_EMAIL || !request.auth.token.email_verified) {
-      throw new HttpsError("permission-denied", "Admin only");
-    }
+    _assertAdmin(request);
 
     const tier        = String(request.data?.tier || "").trim();
     const targetUid   = String(request.data?.targetUid || "").trim();
@@ -1313,12 +1330,7 @@ exports.cleanupOrphanUserEmails = onCall(
     region:          'europe-west1',
   },
   _wrapCF('cleanupOrphanUserEmails', async (request) => {
-    if (!request.auth) {
-      throw new HttpsError('unauthenticated', 'Authentication required');
-    }
-    if (request.auth.token.email !== ADMIN_EMAIL || !request.auth.token.email_verified) {
-      throw new HttpsError('permission-denied', 'Admin only');
-    }
+    _assertAdmin(request);
 
     const confirm = request.data?.confirm === true;
     const db = admin.firestore();
@@ -1476,12 +1488,8 @@ exports.adminMarkEmailVerified = onCall(
     region:          'europe-west1',
   },
   _wrapCF('adminMarkEmailVerified', async (request) => {
-    if (!request.auth) {
-      throw new HttpsError('unauthenticated', 'Authentication required');
-    }
-    if (request.auth.token.email !== ADMIN_EMAIL || !request.auth.token.email_verified) {
-      throw new HttpsError('permission-denied', 'Admin only');
-    }
+    _assertAdmin(request);
+    await _assertAdminRateLimit('adminMarkEmailVerified', 5);
 
     const db = admin.firestore();
     const targetUid = typeof request.data?.uid === 'string' ? request.data.uid.trim() : '';

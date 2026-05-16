@@ -1,0 +1,14 @@
+[
+  {
+    "origin": [
+      "https://zeldtrade.com",
+      "https://www.zeldtrade.com",
+      "https://zeldtrade.web.app",
+      "https://zeldtrade.firebaseapp.com",
+      "https://zeldaron.github.io"
+    ],
+    "method": ["GET", "HEAD"],
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"],
+    "maxAgeSeconds": 3600
+  }
+]

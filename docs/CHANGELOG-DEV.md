@@ -37,6 +37,62 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-16 — v0.9.171 — Hardening admin (re-auth récente + rate-limits symétriques + CORS prod strict + SECURITY.md refonte)
+
+**Type** : security
+**Fichiers** : `functions/index.js`, `scripts/storage-cors-prod.json` (nouveau), `scripts/storage-cors-dev.json` (nouveau), `scripts/storage-cors.json` (supprimé), `docs/SECURITY.md` (refonte complète), `src/app.html`, `src/index.html`, `src/js/pages/changelog.js`
+**Versions impactées** : Cloud Functions (v0.9.171), front (v0.9.171), Storage bucket CORS (config prod appliquée via gsutil)
+
+### Contexte
+Suite à l'audit complet 4 surfaces (rules / CFs / frontend / infra) de cet après-midi, traitement des findings 🟠 ÉLEVÉS :
+- Pas de re-auth récente sur CFs admin destructives → fenêtre d'attaque longue si token volé.
+- Rate-limit asymétrique : seul `generateProCode` était rate-limité (10/h), les autres CFs admin étaient illimitées.
+- CORS Storage contenait `localhost` même en prod (faiblesse mineure, évitable).
+- `docs/SECURITY.md` obsolète (parlait encore d'App Check abandonné v0.9.158, score 7.5/10 daté du 2026-05-14).
+
+### Changements
+
+**`functions/index.js`** :
+- Helper centralisé `_assertAdmin(request, opts)` (constante `ADMIN_MAX_TOKEN_AGE_MIN = 60`) :
+  - vérifie `request.auth` présent
+  - vérifie `email === ADMIN_EMAIL && email_verified`
+  - vérifie `(Date.now() - auth_time*1000) <= maxAgeMin * 60_000` → rejette si session > 60 min avec `permission-denied` "Session expirée"
+- Helper `_assertAdminRateLimit(action, max)` : transaction Firestore atomique sur `adminRateLimit/{action}` (déduplique le pattern qui existait inline pour `generateProCode`).
+- Application aux 6 CFs admin :
+  - `deleteUserAccount` : `_assertAdmin` + rate-limit **5/h**
+  - `generateProCode` : `_assertAdmin` + rate-limit **10/h** (helper remplace l'inline existant)
+  - `revokeProCode` : `_assertAdmin` + rate-limit **10/h**
+  - `createCheckoutSession` : `_assertAdmin` (pas de rate-limit explicite, déjà maxInstances=5)
+  - `cleanupOrphanUserEmails` : `_assertAdmin` (manuel rare, pas de rate-limit nécessaire)
+  - `adminMarkEmailVerified` : `_assertAdmin` + rate-limit **5/h**
+
+**Storage CORS** :
+- Suppression de `scripts/storage-cors.json` (config ambiguë dev/prod mixée).
+- Création `scripts/storage-cors-prod.json` — 5 origines strict prod (zeldtrade.com, www., web.app, firebaseapp.com, github.io), méthodes GET/HEAD, maxAge 3600.
+- Création `scripts/storage-cors-dev.json` — ajoute `http://localhost:5000` et `http://localhost:8080` pour dev local (à appliquer manuellement quand besoin via gsutil).
+- Config prod appliquée : `gsutil cors set scripts/storage-cors-prod.json gs://zeldtrade.firebasestorage.app` → vérifié OK.
+
+**`docs/SECURITY.md`** :
+- Refonte complète. Ancien doc supprimait beaucoup d'éléments obsolètes (App Check, exceptions résolues, score périmé).
+- Nouveau doc : modèle de menace inchangé, défenses tabulées par domaine (auth, autorisation, anti-injection, anti-abuse, RGPD, CFs hardening, infra), exceptions et trade-offs documentés (App Check abandonné, repo public, email admin hardcodé, firebase-functions@4, SA default Editor, logs Discord UIDs).
+- Score sécu : 7.5/10 → **8.5-9/10**.
+
+### Impact
+- **Sécu** : ferme la fenêtre d'attaque longue durée sur les CFs admin (auth_time check). Limite la destruction de masse (rate-limits symétriques). Réduit la surface CORS prod. Posture admin chain : 7.5/10 → 9/10.
+- **UX admin** : si la session admin a > 60 min, les actions destructives demandent un re-login. Solution : Firebase Console → reset password, ou logout/login. Non-bloquant pour usage normal (l'admin re-login souvent).
+- **Dev local** : le dev local ne pourra plus lire les screenshots Storage tant que la config dev n'est pas réappliquée. Solution : `gsutil cors set scripts/storage-cors-dev.json gs://zeldtrade.firebasestorage.app` avant session de dev local.
+
+### À surveiller
+- Les 4 docs `adminRateLimit/{action}` vont apparaître dans Firestore (createCheckoutSession exclu, généré on-demand par les helpers).
+- Si un admin reçoit "Session expirée (>60min)" alors qu'il vient juste de login : vérifier que `auth_time` du token est bien à jour (potentiel bug Firebase Auth iOS/Safari).
+- Faux positifs sur `auth_time` : si `request.auth.token.auth_time` est `undefined` (cas anormal), le check `authTimeMs > 0` skip la validation → fail-open. Acceptable car les autres checks (email + email_verified) restent stricts.
+
+### Liens
+- Audit complet : conversation 2026-05-16 (4 agents Explore parallèles).
+- Release v0.9.171 via `bash scripts/release.sh v0.9.171` + `firebase deploy --only functions`.
+
+---
+
 ## 2026-05-16 — Supply chain audit : nodemailer HIGH fixé, 8 LOW bloqués upstream
 
 **Type** : security
