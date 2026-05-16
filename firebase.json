@@ -29,6 +29,15 @@
     ],
     "cleanUrls": true,
     "trailingSlash": false,
+    "rewrites": [
+      {
+        "source": "/unsubscribe",
+        "function": {
+          "functionId": "unsubscribeNewsletter",
+          "region": "europe-west1"
+        }
+      }
+    ],
     "headers": [
       {
         "source": "**/*.@(html|htm)",

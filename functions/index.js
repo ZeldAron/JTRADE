@@ -9,6 +9,7 @@ const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https')
 const { defineSecret }                   = require('firebase-functions/params');
 const admin                              = require('firebase-admin');
 const Stripe                             = require('stripe');
+const crypto                             = require('crypto');
 
 admin.initializeApp();
 
@@ -28,6 +29,7 @@ const DISCORD_ERRORS_WEBHOOK  = defineSecret('DISCORD_ERRORS_WEBHOOK');
 // Tant que pas setté avec une vraie valeur, le check est skipé (mode dégradé).
 const HCAPTCHA_SECRET       = defineSecret('HCAPTCHA_SECRET');
 const TURNSTILE_SECRET      = defineSecret('TURNSTILE_SECRET');  // v0.9.158 anti-bot analyzeChart
+const UNSUBSCRIBE_HMAC_KEY  = defineSecret('UNSUBSCRIBE_HMAC_KEY');  // v0.9.173 newsletter unsubscribe
 // Stripe — clés en Secret Manager (test ET prod selon ce qui est setté)
 const STRIPE_SECRET_KEY     = defineSecret('STRIPE_SECRET_KEY');
 const STRIPE_WEBHOOK_SECRET = defineSecret('STRIPE_WEBHOOK_SECRET');
@@ -1621,3 +1623,112 @@ exports.adminMarkEmailVerified = onCall(
     };
   }
 ));
+
+/**
+ * v0.9.173 — Désinscription newsletter en 1 clic.
+ *
+ * Endpoint public (sans auth Firebase) exposé via Hosting rewrite à
+ * `https://zeldtrade.com/unsubscribe?u=<uid>&t=<hmac>`. Le token est un HMAC
+ * SHA-256 du uid avec le secret UNSUBSCRIBE_HMAC_KEY → impossible de
+ * désinscrire quelqu'un d'autre sans connaître le secret.
+ *
+ * Méthodes :
+ *  - GET  : utilisateur clique le lien dans l'email → page HTML de confirmation
+ *  - POST : RFC 8058 one-click (Gmail/Outlook bouton natif) → 200 OK vide
+ *
+ * Idempotent : peut être appelé N fois sans effet de bord.
+ */
+exports.unsubscribeNewsletter = onRequest(
+  {
+    secrets:        [UNSUBSCRIBE_HMAC_KEY, DISCORD_ERRORS_WEBHOOK],
+    maxInstances:    5,
+    timeoutSeconds:  10,
+    memory:         '256MiB',
+    region:         'europe-west1',
+    cors:            true,
+  },
+  async (req, res) => {
+    try {
+      // Récupère uid + token depuis query (GET) ou body+query (POST)
+      let uid   = String(req.query?.u || req.body?.u || '').trim();
+      let token = String(req.query?.t || req.body?.t || '').trim();
+
+      if (!/^[A-Za-z0-9]{1,128}$/.test(uid)) {
+        res.status(400).type('html').send(_unsubPage('error', 'Lien invalide.'));
+        return;
+      }
+      if (!/^[a-f0-9]{64}$/.test(token)) {
+        res.status(400).type('html').send(_unsubPage('error', 'Lien invalide ou expiré.'));
+        return;
+      }
+
+      // HMAC SHA-256 du uid avec secret server-side
+      const key      = UNSUBSCRIBE_HMAC_KEY.value();
+      const expected = crypto.createHmac('sha256', key).update(uid).digest('hex');
+      const tokBuf   = Buffer.from(token, 'hex');
+      const expBuf   = Buffer.from(expected, 'hex');
+
+      if (tokBuf.length !== expBuf.length || !crypto.timingSafeEqual(tokBuf, expBuf)) {
+        res.status(403).type('html').send(_unsubPage('error', 'Lien invalide ou expiré.'));
+        return;
+      }
+
+      // Update Firestore : newsletterOptIn = false (merge pour ne pas écraser les autres champs)
+      await admin.firestore().doc(`userEmails/${uid}`).set({
+        newsletterOptIn:     false,
+        newsletterOptedOutAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      // Audit log léger (optionnel mais utile pour traçabilité RGPD)
+      try {
+        await _writeAuditLog('newsletterUnsubscribe', 'system', { uid, method: req.method });
+      } catch {}
+
+      // RFC 8058 one-click : POST avec body 'List-Unsubscribe=One-Click' → réponse vide
+      if (req.method === 'POST') {
+        res.status(200).send('');
+        return;
+      }
+
+      // GET : page HTML de confirmation
+      res.status(200).type('html').send(_unsubPage('success'));
+    } catch (e) {
+      console.error('[unsubscribeNewsletter] error:', e?.message);
+      try { await _reportError({ source: 'unsubscribeNewsletter', error: e }); } catch {}
+      res.status(500).type('html').send(_unsubPage('error', 'Erreur — réessaie dans quelques minutes.'));
+    }
+  }
+);
+
+// Helper : page HTML simple servie par unsubscribeNewsletter (auto-suffisante, pas de JS, pas de fonts externes).
+function _unsubPage(state, message) {
+  const isError = state === 'error';
+  const icon    = isError ? '✕' : '✓';
+  const color   = isError ? '#f85149' : '#3fb950';
+  const title   = isError ? 'Impossible de te désinscrire' : 'Désinscription confirmée';
+  const body    = isError
+    ? (message || 'Lien invalide ou expiré.')
+    : 'Tu ne recevras plus les emails ZeldTrade. Tu peux toujours réactiver la newsletter dans tes Réglages → Notifications email si tu changes d\'avis.';
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZeldTrade — Désinscription</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{max-width:480px;width:100%;background:#161b22;border:1px solid #30363d;border-radius:14px;padding:36px 28px;text-align:center}
+.icon{width:56px;height:56px;margin:0 auto 18px;border-radius:50%;background:${isError ? 'rgba(248,81,73,0.15)' : 'rgba(63,185,80,0.15)'};color:${color};font-size:32px;display:flex;align-items:center;justify-content:center;font-weight:600}
+h1{margin:0 0 12px;font-size:22px;font-weight:600}
+p{margin:0 0 24px;font-size:14.5px;color:#c9d1d9;line-height:1.55}
+.cta{display:inline-block;padding:11px 22px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(124,58,237,0.3)}
+.footer{margin-top:22px;font-size:12px;color:#6e7681}
+.footer a{color:#a78bfa;text-decoration:none}
+</style></head>
+<body><div class="card">
+<div class="icon">${icon}</div>
+<h1>${title}</h1>
+<p>${body}</p>
+<a class="cta" href="https://zeldtrade.com">Retour au site →</a>
+<div class="footer">ZeldTrade — <a href="https://zeldtrade.com">zeldtrade.com</a></div>
+</div></body></html>`;
+}

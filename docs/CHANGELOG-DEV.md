@@ -37,6 +37,59 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-16 — v0.9.173 — Désinscription newsletter 1-clic (RGPD) + fix toggle Réglages
+
+**Type** : feature + fix
+**Fichiers** : `functions/index.js` (CF unsubscribeNewsletter), `firebase.json` (rewrite /unsubscribe), `scripts/send-newsletter.js` (tokens HMAC + List-Unsubscribe headers), `scripts/news-v0.9.172.html` (placeholder {{UNSUB_URL}}), `src/css/style.css` (.switch flex fix), `src/app.html`, `src/index.html`, `src/js/pages/changelog.js`
+**Versions impactées** : Cloud Function (v0.9.173 nouvelle `unsubscribeNewsletter`), front (v0.9.173), Hosting rewrite, Secret Manager (UNSUBSCRIBE_HMAC_KEY)
+
+### Contexte
+La désinscription newsletter actuelle renvoyait vers `zeldtrade.com/app` (page de login) → friction max + non-compliant avec RFC 8058 (one-click natif Gmail/Outlook). User signale aussi un bug visuel : le toggle "Notifications email" dans Réglages est étiré sur toute la ligne au lieu d'être un toggle compact 44×24px.
+
+### Changements
+
+**Désinscription 1-clic** (RGPD-compliant) :
+- Nouveau secret Firebase `UNSUBSCRIBE_HMAC_KEY` (32 bytes hex random) pour signer les liens de désinscription.
+- Nouvelle Cloud Function `unsubscribeNewsletter` (`onRequest`, public, `cors:true`) :
+  - GET `?u=<uid>&t=<hmac>` → vérifie HMAC en temps constant, flip `userEmails/{uid}.newsletterOptIn = false`, retourne page HTML de confirmation
+  - POST (RFC 8058 one-click) → idem, réponse 200 vide pour bouton natif Gmail/Outlook
+  - Validation regex stricte : `uid` `[A-Za-z0-9]{1,128}`, `t` `[a-f0-9]{64}`
+  - Audit log écrit (`newsletterUnsubscribe`)
+  - Idempotent
+- Rewrite Hosting : `/unsubscribe` → CF `unsubscribeNewsletter(europe-west1)`. URL finale propre : `https://zeldtrade.com/unsubscribe?u=...&t=...`
+- Page HTML auto-suffisante (CSS inline, pas de JS, pas de fonts externes) avec design cohérent du site (carte centrée + icône ✓/✕ + CTA retour).
+
+**Script `send-newsletter.js`** :
+- Lit le secret HMAC depuis `~/.config/zeldtrade/unsubscribe_hmac` (chmod 600, doit matcher la valeur du secret Firebase).
+- Helper `unsubUrlFor(uid)` génère le lien personnalisé par destinataire.
+- Remplace `{{UNSUB_URL}}` dans le HTML par le lien personnalisé avant envoi.
+- Ajoute les headers SMTP `List-Unsubscribe` (avec URL + mailto fallback) et `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058).
+
+**Template newsletter `news-v0.9.172.html`** :
+- Lien footer "Se désinscrire" → utilise `{{UNSUB_URL}}` (remplacé par le script à l'envoi).
+- Texte simplifié : "Se désinscrire en 1 clic".
+
+**Fix toggle CSS** (`style.css:1588`) :
+- Avant : `.switch { width: 44px; flex-shrink: 0 }` — mais `.settings-row label { flex: 1 }` matchait aussi `<label class="switch">` → `flex-grow: 1` hérité → toggle étiré.
+- Après : `.switch { flex: 0 0 44px }` — explicit override de `flex-grow: 0` pour bloquer le stretch.
+
+### Impact
+- **RGPD** : conformité art. 7 (consentement révocable facilement) + ePrivacy (mécanisme de désinscription en 1 action). Aussi conforme au CASL canadien et au CAN-SPAM Act US si jamais on a des opt-ins de ces juridictions.
+- **Délivrabilité** : les clients mail modernes (Gmail, Outlook, Apple Mail) affichent désormais un bouton natif "Désinscrire" → +1 sur le score de réputation expéditeur (Brevo + Gmail Postmaster).
+- **Sécu** : impossible de désinscrire quelqu'un d'autre sans connaître le secret HMAC server-side.
+- **UX Réglages** : toggle compact 44×24px au lieu d'un slider énorme.
+
+### À surveiller
+- Premier vrai test de la CF en prod : envoi d'un email à zeldtradepro@gmail.com + clic sur le lien de désinscription dans l'email → doit afficher la page de confirmation + flip Firestore.
+- Si Gmail/Outlook affiche bien le bouton "Désinscrire" natif (peut prendre quelques jours pour que la réputation expéditeur soit assez bonne pour que les clients le proposent).
+- Secret `UNSUBSCRIBE_HMAC_KEY` : la valeur doit être identique côté Firebase et côté `~/.config/zeldtrade/unsubscribe_hmac` sinon les tokens générés par le script seront rejetés par la CF.
+
+### Liens
+- RFC 8058 : https://datatracker.ietf.org/doc/html/rfc8058
+- Release v0.9.173 via `bash scripts/release.sh v0.9.173` + `firebase deploy --only functions:unsubscribeNewsletter`.
+
+---
+
 ## 2026-05-16 — v0.9.172 — Contact form refonte simple (B5 fixé + B6 ajouté)
 
 **Type** : fix + feature

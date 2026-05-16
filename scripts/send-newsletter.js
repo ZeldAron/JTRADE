@@ -24,6 +24,7 @@
 const fs        = require('fs');
 const path      = require('path');
 const os        = require('os');
+const crypto    = require('crypto');
 const nodemailer = require('nodemailer');
 const admin     = require(path.join(__dirname, '..', 'functions', 'node_modules', 'firebase-admin'));
 
@@ -69,6 +70,29 @@ const FROM_EMAIL = 'news@zeldtrade.com';  // Custom domain authentifié DKIM/DMA
 // Reply-To : les utilisateurs qui répondent atterrissent ici (news@ n'est pas une vraie inbox)
 const REPLY_TO   = 'zeldtradepro@gmail.com';
 const SUBJECT    = process.env.NEWSLETTER_SUBJECT || '🚀 ZeldTrade — Migration zeldtrade.com + grosses MAJ';
+const UNSUB_BASE = 'https://zeldtrade.com/unsubscribe';
+
+// ─── Unsubscribe HMAC (v0.9.173) ─────────────────────────────────────────────
+// Lit le secret depuis ~/.config/zeldtrade/unsubscribe_hmac (chmod 600) qui doit
+// contenir EXACTEMENT la même valeur que le secret Firebase UNSUBSCRIBE_HMAC_KEY.
+// Sans ce secret, le script ne peut pas générer de tokens valides → on refuse l'envoi.
+const UNSUB_HMAC_PATH = path.join(os.homedir(), '.config', 'zeldtrade', 'unsubscribe_hmac');
+let UNSUB_HMAC_KEY = '';
+try {
+  UNSUB_HMAC_KEY = fs.readFileSync(UNSUB_HMAC_PATH, 'utf8').trim();
+} catch (e) {
+  if (!dryRun) {
+    console.error(`✗ Clé HMAC unsubscribe introuvable : ${UNSUB_HMAC_PATH}`);
+    console.error('  Crée-le avec la MÊME valeur que le secret Firebase UNSUBSCRIBE_HMAC_KEY :');
+    console.error(`  printf "TA_CLE_HEX_64_CHARS" > ${UNSUB_HMAC_PATH} && chmod 600 ${UNSUB_HMAC_PATH}`);
+    process.exit(1);
+  }
+}
+
+function unsubUrlFor(uid) {
+  const token = crypto.createHmac('sha256', UNSUB_HMAC_KEY).update(uid).digest('hex');
+  return `${UNSUB_BASE}?u=${encodeURIComponent(uid)}&t=${token}`;
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function htmlToText(html) {
@@ -157,19 +181,22 @@ async function main() {
 
   for (const r of recipients) {
     try {
+      // v0.9.173 : génère le lien de désinscription personnalisé (HMAC signé)
+      const unsubUrl = unsubUrlFor(r.uid);
+      const htmlForUser = html.replace(/\{\{UNSUB_URL\}\}/g, unsubUrl);
+      const textForUser = text.replace(/\{\{UNSUB_URL\}\}/g, unsubUrl);
+
       const info = await transporter.sendMail({
         from:    `"${FROM_NAME}" <${FROM_EMAIL}>`,
         replyTo: REPLY_TO,  // v0.9.150 : réponses redirigées vers la vraie boîte admin
         to:      r.email,
         subject: SUBJECT,
-        text:    text,
-        html:    html,
-        // List-Unsubscribe header (RFC 8058) — Gmail/Outlook affichent un bouton se désinscrire
-        list: {
-          unsubscribe: {
-            url:     'https://zeldtrade.com/app',
-            comment: 'Réglages → Notifications email → toggle off',
-          },
+        text:    textForUser,
+        html:    htmlForUser,
+        // List-Unsubscribe + RFC 8058 one-click pour bouton natif Gmail/Outlook
+        headers: {
+          'List-Unsubscribe':      `<${unsubUrl}>, <mailto:unsubscribe@zeldtrade.com?subject=Unsubscribe%20${encodeURIComponent(r.uid)}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },
       });
       okCount++;
