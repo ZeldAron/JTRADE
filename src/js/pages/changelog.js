@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.156',
+      date: '2026-05-16',
+      time: '16:30',
+      tags: ['security', 'infra'],
+      title: 'App Check : compromis final — OFF sur analyzeChart, ON sur admin',
+      titleEn: 'App Check final: OFF on analyzeChart, ON on admin CFs',
+      items: [
+        { type: 'security', text: 'Après 4h de debug (v0.9.151-155), conclusion : reCAPTCHA Enterprise ET v3 échouent sur Safari (issues firebase-js-sdk#9135 + Safari ITP). Mode privé Safari bloque tous les 3rd-party providers — non-fixable côté code. Décision : `enforceAppCheck: false` permanent sur `analyzeChart` (CF la plus user-facing).', textEn: 'After 4h debug, conclusion: reCAPTCHA Enterprise AND v3 both fail on Safari. Decision: `enforceAppCheck: false` permanent on analyzeChart.' },
+        { type: 'security', text: 'App Check reste ENFORCED sur 5 CFs admin : `deleteUserAccount`, `generateProCode`, `revokeProCode`, `adminMarkEmailVerified`, `cleanupOrphanUserEmails`. Ces CFs sont rarement appelées (admin only) et fonctionnent sur Chrome (que l\'admin utilise). Protection 100% sur ces endpoints.', textEn: 'App Check stays ENFORCED on 5 admin CFs. Admin uses Chrome → 100% protection there.' },
+        { type: 'security', text: 'Protections résiduelles sur `analyzeChart` (largement suffisantes) : auth Firebase obligatoire + email_verified obligatoire (S20) + quota 1/jour Basic / 20/jour Pro + Groq key server-side + maxInstances:10 + magic byte image validation + prompt 5000 chars max. Le coût d\'abus est plafonné par les quotas individuels.', textEn: 'Residual protections on analyzeChart: auth + email_verified + per-user quotas + server-side Groq key + maxInstances + magic byte validation. Abuse cost capped.' },
+        { type: 'infra', text: 'CSP enrichi avec `https://apis.google.com` dans `connect-src` (server-side + meta tags) pour permettre les heartbeats reCAPTCHA sans warning console. Le client init App Check avec reCAPTCHA v3 (`6Lf2Ou0s...`) qui marche sur Chrome — Safari users tombent en mode dégradé silencieux (token App Check absent mais CFs analyzeChart acceptent).', textEn: 'CSP enriched with apis.google.com. Client uses reCAPTCHA v3 init.' },
+      ],
+    },
+    {
       version: '0.9.155',
       date: '2026-05-16',
       time: '16:00',
