@@ -59,7 +59,7 @@ Session marathon couvrant 7 releases (v0.9.169 → v0.9.175) — état du produi
 
 **Restant pour go-live début de semaine** :
 - 🟡 Stripe : KYC en cours (24-48h Stripe validation), code prêt, créer Products + Prices + coupon `LAUNCH40` + brancher checkout public
-- 🟡 MFA Firebase Auth admin (I14, 2h)
+- ~~MFA Firebase Auth admin (I14)~~ ❌ Abandonné 2026-05-17 — non implémenté (TOTP nécessite curl REST API + ~2h code enrollment/challenge). Protections alternatives suffisantes : MFA Gmail + _assertAdmin re-auth 60min + rate-limits + password fort + email_verified.
 - 🟡 Smoke test tunnel complet (signup → trade → export)
 - 🟢 Service account dédié CFs (I4/S3, post-MVP)
 - 🟢 Migration firebase-functions v4→v7 (post-MVP, débloque firebase-admin@13)
@@ -106,7 +106,7 @@ Session marathon couvrant 7 releases (v0.9.169 → v0.9.175) — état du produi
 | ~~**I11**~~ | ~~Compléter `privacy.html` : Groq, GitHub Pages, Stripe, Discord avec base légale RGPD~~ ✅ 2026-05-14 (v0.9.128) — 10 trous fixés (Discord, Stripe, Cloud Storage, AuditLogs, Mineurs, etc.) | ✅ Fait |
 | ~~**I13**~~ | ~~Sentry / GCP Error Reporting alertes~~ ✅ 2026-05-14 (v0.9.129) — Sentry-lite gratuit via Discord webhook `#dev-logs`, 9 CFs wrappées via `_wrapCF()` + `_reportError()` | ✅ Fait |
 | **I15** | Compte Stripe FR + KYC ✅ KYC soumis 2026-05-16, en attente validation 24-48h. Catégorie "Logiciels en tant que service" + libellé bancaire "ZeldTrade" + libellé abrégé "ZT" + Stripe Tax SKIP (franchise TVA art. 293 B). Reste à : créer Products/Prices + coupon LAUNCH40 + webhook + secrets Firebase. | 2-3h + attente | 0€ (no fee sans vente) |
-| **I14** | MFA Firebase Auth admin (distinct du MFA Gmail) | 2-3h | 0€ |
+| ~~**I14**~~ | ~~MFA Firebase Auth admin~~ ❌ Abandonné 2026-05-17 — décision user. Activation TOTP nécessite curl REST API (gcloud identity-platform inexistant) + ~2h code enrollment + flow login challenge. Risques : casser les logins users si mal configuré. Protections alternatives suffisantes (MFA Gmail + _assertAdmin re-auth 60min + rate-limits + password fort 10+ chars + email_verified obligatoire). Identity Platform laissé activé sur le projet (gratuit à notre volume). | n/a | 0€ |
 | **I7** | Bump `firebase-functions` v4.6 → v6 (EOL) | 2-4h (moi après que tu donnes go) | 0€ |
 | ~~**I10**~~ | ~~Domaine + Firebase Hosting~~ ✅ 2026-05-15 (v0.9.145) — **zeldtrade.com** déployé sur Firebase Hosting + headers HTTP stricts (CSP/HSTS/Permissions-Policy/etc.) configurés dans `firebase.json`. | ✅ Fait |
 | ~~**I10 alt**~~ | ~~Firebase Hosting `zeldtrade.web.app`~~ ✅ déprécié — couvert par I10 (domaine custom direct). | ✅ Fait |
@@ -221,7 +221,7 @@ Détails dans le CHANGELOG-DEV audit consolidé. Sélection :
 
 ### Mercredi (2-3h)
 11. I15 — Compte Stripe FR + KYC (le plus long en attente, à lancer tôt)
-12. I14 — MFA Firebase Auth admin (2h)
+12. ~~I14 — MFA Firebase Auth admin~~ ❌ Abandonné 2026-05-17
 
 ### Jeudi (3-4h)
 13. I10 alt — Migrer vers Firebase Hosting `zeldtrade.web.app` (1h, GRATUIT)
