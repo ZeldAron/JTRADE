@@ -2435,9 +2435,12 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 /* old .dac-kpis overridden below */
 
 /* ─── TOAST ─── */
+/* v0.9.167 : décalé au-dessus de la bulle d'assistance (#contactWidget,
+   bubble 52x52 à bottom:24px right:24px → occupe jusqu'à 76px du bas).
+   Toast à bottom: 92px pour laisser 16px de gap visuel. */
 .toast {
   position: fixed;
-  bottom: 24px;
+  bottom: 92px;
   right: 24px;
   background: var(--bg3);
   border: 1px solid var(--border2);
@@ -2454,6 +2457,11 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 .toast.show { transform: translateY(0); opacity: 1; }
 .toast.error { border-color: rgba(240,82,79,0.4); }
+
+/* Mobile : bubble visible mais plus petite → toast peut être plus proche */
+@media (max-width: 600px) {
+  .toast { bottom: 84px; right: 16px; left: 16px; }
+}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    CALENDRIER
