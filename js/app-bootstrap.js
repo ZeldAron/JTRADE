@@ -112,8 +112,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Launch app ──────────────────────────────────────────────────────────────
-  function launchApp(user) {
+  async function launchApp(user) {
     if (appLaunched) return;
+
+    // v0.9.150 : RGPD consent gate — bloque le lancement de l'app si l'user n'a
+    // pas encore accepté les CGU/Privacy (cas des users existants pre-v0.9.150).
+    // La modale consent doit être validée avant de continuer.
+    try {
+      const consent = await Auth.getConsentStatus();
+      if (consent && consent.needsConsent) {
+        await _showConsentModal(consent.currentNewsletter);
+      }
+    } catch (e) {
+      console.warn('[launchApp] consent check failed:', e && e.message);
+      // En cas d'erreur réseau, on laisse passer (best-effort) — l'audit RGPD
+      // est protégé par la rule Firestore qui block sans termsAccepted valide.
+    }
+
     appLaunched = true;
     Store.initForUser(user.id);
     $('userPillName').textContent = user.username;
@@ -137,6 +152,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch {}
     }, { once: true });
+  }
+
+  // v0.9.150 — Affiche la consent modal et attend que l'user soumette le form.
+  // Retourne une Promise qui se résout dès que `Auth.recordConsent` réussit.
+  function _showConsentModal(currentNewsletter) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('consentModal');
+      const form  = document.getElementById('consentFormEl');
+      const cbTerms = document.getElementById('consentAcceptTerms');
+      const cbNews  = document.getElementById('consentNewsletter');
+      const btn     = document.getElementById('btnConsentSubmit');
+      const errEl   = document.getElementById('consentError');
+      if (!modal || !form) return resolve();
+      // Pré-remplir la checkbox newsletter si user en avait déjà opt-in avant
+      if (cbNews) cbNews.checked = !!currentNewsletter;
+      if (cbTerms) cbTerms.checked = false;
+      errEl.textContent = '';
+      // Cacher le loader pour pas le voir derrière le modal pendant l'attente
+      if (loader) loader.style.display = 'none';
+      modal.style.display = 'flex';
+
+      async function onSubmit(e) {
+        e.preventDefault();
+        errEl.textContent = '';
+        if (!cbTerms.checked) {
+          errEl.textContent = i18n.t('auth.err.terms') || 'Tu dois accepter les CGU pour continuer.';
+          return;
+        }
+        btn.disabled = true;
+        const originalText = btn.textContent;
+        btn.textContent = '…';
+        const r = await Auth.recordConsent({
+          acceptedTerms:   true,
+          newsletterOptIn: !!cbNews.checked,
+        });
+        btn.disabled = false;
+        btn.textContent = originalText;
+        if (r && r.ok) {
+          modal.style.display = 'none';
+          form.removeEventListener('submit', onSubmit);
+          resolve();
+        } else {
+          errEl.textContent = 'Erreur : ' + (r && r.error || 'inconnue');
+        }
+      }
+      form.addEventListener('submit', onSubmit);
+    });
   }
 
   // ── Firebase Auth state ─────────────────────────────────────────────────────
@@ -228,10 +290,17 @@ document.addEventListener('DOMContentLoaded', () => {
       $('registerError').textContent = 'Merci de cocher la case anti-bot.';
       return;
     }
+    // v0.9.150 : RGPD consent — CGU obligatoire, newsletter optionnel
+    const acceptedTerms   = $('regAcceptTerms').checked;
+    const newsletterOptIn = $('regNewsletter').checked;
+    if (!acceptedTerms) {
+      $('registerError').textContent = i18n.t('auth.err.terms') || 'Tu dois accepter les CGU et la Politique de confidentialité pour créer un compte.';
+      return;
+    }
     _lastRegister = Date.now();
     const btn = e.target.querySelector('button[type=submit]');
     btn.disabled = true;
-    const result = await Auth.register(username, password, email, captchaToken);
+    const result = await Auth.register(username, password, email, captchaToken, { acceptedTerms, newsletterOptIn });
     btn.disabled = false;
     if (result.error) {
       // Reset hCaptcha pour permettre un nouvel essai
