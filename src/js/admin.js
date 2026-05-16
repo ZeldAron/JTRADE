@@ -39,6 +39,28 @@ const Admin = (() => {
     return new Date(ts).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
+  // v0.9.174 — date courte pour le tableau utilisateurs admin
+  function formatDateShort(ts) {
+    if (!ts) return '—';
+    return new Date(ts).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  }
+
+  // v0.9.174 — date relative ("il y a 3j", "il y a 2h")
+  function formatRelative(ts) {
+    if (!ts) return 'jamais';
+    const ms = Date.now() - ts;
+    if (ms < 0) return 'à l\'instant';
+    const sec = Math.floor(ms / 1000);
+    if (sec < 60)  return 'à l\'instant';
+    const min = Math.floor(sec / 60);
+    if (min < 60)  return `il y a ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24)    return `il y a ${h} h`;
+    const d = Math.floor(h / 24);
+    if (d < 7)     return `il y a ${d} j`;
+    return formatDateShort(ts);
+  }
+
   // ── Chargement des données ────────────────────────────────────────────────────
   async function loadUsers() {
     const snap = await _fbDb.collection('userEmails').get();
@@ -71,7 +93,11 @@ const Admin = (() => {
     } catch { return null; }
   }
 
-  // ── Rendu onglet Utilisateurs ─────────────────────────────────────────────────
+  // ── Rendu onglet Utilisateurs (v0.9.174 — redesign compact + stats + recherche) ──
+  let _cachedUsers     = [];
+  let _cachedPlans     = [];
+  let _userSearchQuery = '';
+
   async function renderUsers() {
     const wrap = $('tabUsers');
     wrap.innerHTML = '<div class="admin-loading">Chargement…</div>';
@@ -80,52 +106,111 @@ const Admin = (() => {
       wrap.innerHTML = '<p class="admin-empty">Aucun utilisateur enregistré.</p>';
       return;
     }
-
     // Charge les plans en parallèle
     const plans = await Promise.all(users.map(u => getUserPlan(u.uid)));
+    _cachedUsers = users;
+    _cachedPlans = plans;
+    _renderUsersTable();
+  }
 
+  function _renderUsersTable() {
+    const wrap = $('tabUsers');
+    const users = _cachedUsers;
+    const plans = _cachedPlans;
     const currentAdminUid = _fbAuth.currentUser?.uid || '';
 
-    const rows = users.map((u, i) => {
-      const plan = plans[i];
-      const isPro = plan?.plan === 'pro';
-      const activatedAt = isPro ? formatDate(plan.activatedAt) : '—';
-      const isSelf = u.uid === currentAdminUid;
+    // Stats globales
+    const total = users.length;
+    let proCount = 0, newsletterCount = 0;
+    for (let i = 0; i < users.length; i++) {
+      if (plans[i]?.plan === 'pro')        proCount++;
+      if (users[i].newsletterOptIn)        newsletterCount++;
+    }
+    const basicCount = total - proCount;
+
+    // Filtre live (pseudo OU email)
+    const q = (_userSearchQuery || '').toLowerCase().trim();
+    const filtered = users.map((u, i) => ({ u, plan: plans[i] }))
+      .filter(({ u }) => !q
+        || (u.username || '').toLowerCase().includes(q)
+        || (u.email    || '').toLowerCase().includes(q));
+
+    // Lignes
+    const rows = filtered.map(({ u, plan }) => {
+      const isPro       = plan?.plan === 'pro';
+      const isSelf      = u.uid === currentAdminUid;
+      const activated   = isPro ? formatDateShort(plan.activatedAt) : null;
+      const lastSeenRel = formatRelative(u.lastSeen);
+      const newsletter  = u.newsletterOptIn
+        ? '<span class="badge-news" title="Inscrit à la newsletter">📬</span>' : '';
+
       const deleteBtn = isSelf
-        ? '<button class="btn-delete" disabled title="Vous ne pouvez pas vous supprimer vous-même">Supprimer</button>'
-        : `<button class="btn-delete" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}">Supprimer</button>`;
+        ? '<button class="ico-btn" disabled title="Vous ne pouvez pas vous supprimer vous-même">🗑️</button>'
+        : `<button class="ico-btn ico-btn-red" data-action="delete" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}" title="Supprimer le compte">🗑️</button>`;
+
       return `<tr>
-        <td>${esc(u.username)}</td>
-        <td>${esc(u.email)}</td>
-        <td><span class="plan-tag ${isPro ? 'plan-tag-pro' : 'plan-tag-basic'}">${isPro ? '✦ PRO' : 'BASIC'}</span></td>
-        <td>${activatedAt}</td>
-        <td>${formatDate(u.lastSeen)}</td>
         <td>
-          <button class="btn-gen" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}">Générer code</button>
-          <button class="btn-stripe" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}">💳 Lien Stripe</button>
-          <button class="btn-verify-email" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}" title="Forcer email_verified=true sur ce compte (à utiliser si l'user ne reçoit pas l'email Firebase)">✉️ Vérifier email</button>
+          <div class="cell-user-name">${esc(u.username)}${newsletter}</div>
+          <div class="cell-user-email">${esc(u.email)}</div>
+        </td>
+        <td><span class="plan-tag ${isPro ? 'plan-tag-pro' : 'plan-tag-basic'}">${isPro ? '✦ PRO' : 'BASIC'}</span></td>
+        <td>
+          <div class="cell-dates-act">${activated ? 'Activé ' + activated : '—'}</div>
+          <div class="cell-dates-seen">Vu ${lastSeenRel}</div>
+        </td>
+        <td class="cell-actions">
+          <button class="ico-btn ico-btn-violet" data-action="gen"    data-uid="${esc(u.uid)}" data-email="${esc(u.email)}" title="Générer un code Pro">🎟️</button>
+          <button class="ico-btn ico-btn-violet" data-action="stripe" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}" title="Créer un lien de paiement Stripe">💳</button>
+          <button class="ico-btn ico-btn-blue"   data-action="verify" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}" title="Forcer email_verified=true">✉️</button>
           ${deleteBtn}
         </td>
       </tr>`;
     }).join('');
 
+    const emptyRow = filtered.length === 0
+      ? '<tr><td colspan="4" class="admin-empty-row">Aucun résultat pour ce filtre.</td></tr>'
+      : '';
+
     wrap.innerHTML = `
+      <div class="admin-stats">
+        <div class="stat-chip"><span class="stat-val">${total}</span><span class="stat-lbl">Utilisateurs</span></div>
+        <div class="stat-chip stat-chip-pro"><span class="stat-val">${proCount}</span><span class="stat-lbl">Pro</span></div>
+        <div class="stat-chip"><span class="stat-val">${basicCount}</span><span class="stat-lbl">Basic</span></div>
+        <div class="stat-chip"><span class="stat-val">${newsletterCount}</span><span class="stat-lbl">Newsletter</span></div>
+      </div>
+      <div class="admin-search">
+        <input type="text" id="userSearch" placeholder="Rechercher par pseudo ou email…" value="${esc(q)}" autocomplete="off" spellcheck="false" />
+      </div>
       <table class="admin-table">
-        <thead><tr><th>Pseudo</th><th>Email</th><th>Plan</th><th>Activé le</th><th>Dernière connexion</th><th>Actions</th></tr></thead>
-        <tbody>${rows}</tbody>
+        <thead><tr><th>Utilisateur</th><th>Plan</th><th>Activité</th><th class="th-actions">Actions</th></tr></thead>
+        <tbody>${rows || emptyRow}</tbody>
       </table>`;
 
-    wrap.querySelectorAll('.btn-gen').forEach(btn => {
-      btn.addEventListener('click', () => openGenModal(btn.dataset.uid, btn.dataset.email));
+    // Bind search (live filter)
+    const searchEl = $('userSearch');
+    searchEl.addEventListener('input', (e) => {
+      _userSearchQuery = e.target.value;
+      _renderUsersTable();
+      // Restore focus + cursor à la fin (le ré-render détruit l'input)
+      setTimeout(() => {
+        const s = $('userSearch');
+        if (!s) return;
+        s.focus();
+        s.setSelectionRange(s.value.length, s.value.length);
+      }, 0);
     });
-    wrap.querySelectorAll('.btn-stripe').forEach(btn => {
-      btn.addEventListener('click', () => openStripeModal(btn.dataset.uid, btn.dataset.email));
-    });
-    wrap.querySelectorAll('.btn-delete[data-uid]').forEach(btn => {
-      btn.addEventListener('click', () => openDeleteModal(btn.dataset.uid, btn.dataset.email));
-    });
-    wrap.querySelectorAll('.btn-verify-email').forEach(btn => {
-      btn.addEventListener('click', () => markUserVerified(btn.dataset.uid, btn.dataset.email, btn));
+
+    // Bind actions (event delegation par data-action)
+    wrap.querySelectorAll('[data-action]').forEach(btn => {
+      const action = btn.dataset.action;
+      btn.addEventListener('click', () => {
+        const uid = btn.dataset.uid;
+        const email = btn.dataset.email;
+        if (action === 'gen')         openGenModal(uid, email);
+        else if (action === 'stripe') openStripeModal(uid, email);
+        else if (action === 'verify') markUserVerified(uid, email, btn);
+        else if (action === 'delete') openDeleteModal(uid, email);
+      });
     });
   }
 
