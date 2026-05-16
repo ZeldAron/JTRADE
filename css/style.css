@@ -618,7 +618,10 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   gap: 16px;
 }
 .settings-row:last-child { border-bottom: none; }
-.settings-row label { font-size: 13px; flex: 1; }
+/* v0.9.175 : :not(.switch) pour ne pas stretcher le toggle.
+   .settings-row label avait une spécificité (0,2,0) > .switch (0,1,0),
+   donc flex:1 gagnait sur flex:0 0 44px → toggle géant. */
+.settings-row label:not(.switch) { font-size: 13px; flex: 1; }
 .settings-row .form-input { width: 160px; flex: none; }
 
 /* ─── MODAL ─── */
