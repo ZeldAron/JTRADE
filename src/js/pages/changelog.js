@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.169',
+      date: '2026-05-16',
+      time: '18:00',
+      tags: ['feature', 'fix'],
+      title: 'Export PDF : 1 page par trade en ordre chronologique + CORS Storage',
+      titleEn: 'PDF export: one page per trade chronologically + Storage CORS',
+      items: [
+        { type: 'fix', text: 'Fix CORS sur Firebase Storage : `gsutil cors set` appliqué au bucket `zeldtrade.firebasestorage.app` avec whitelist des origines (zeldtrade.com, *.web.app, *.firebaseapp.com, localhost). Les screenshots peuvent maintenant être chargés via `<img crossOrigin="anonymous">` + canvas et embarqués dans le PDF.', textEn: 'Fixed CORS on Firebase Storage bucket via gsutil. Screenshots can now be loaded cross-origin and embedded in PDF.' },
+        { type: 'feature', text: 'Refonte de la structure du PDF : suppression de la liste compacte (6 trades/page) et de la page séparateur "Screenshots des trades". Désormais 1 page dédiée par trade, en ordre chronologique (du plus ancien au plus récent), avec screenshot intégré quand présent — sinon mention "Aucun screenshot pour ce trade".', textEn: 'PDF restructured: one dedicated page per trade in chronological order (oldest first), with screenshot embedded when available.' },
+      ],
+    },
+    {
       version: '0.9.156',
       date: '2026-05-16',
       time: '16:30',
