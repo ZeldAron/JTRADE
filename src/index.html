@@ -13,14 +13,15 @@
   <meta property="og:url" content="https://zeldtrade.com/">
   <meta name="twitter:card" content="summary_large_image">
 
-  <!-- Sécurité : CSP stricte, page statique, aucune dépendance externe -->
+  <!-- Sécurité : CSP server-side dans firebase.json (plus stricte que cette meta).
+       v0.9.172 : autoriser Firebase SDK pour le contact form anonyme depuis la landing. -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src  'self';
+    script-src  'self' https://www.gstatic.com;
     style-src   'self' 'unsafe-inline';
     img-src     'self' data:;
     font-src    'self';
-    connect-src 'none';
+    connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://firebase.googleapis.com https://europe-west1-zeldtrade.cloudfunctions.net;
     frame-src   'none';
     form-action 'self';
     object-src  'none';
@@ -802,6 +803,98 @@
       line-height: 1.6;
     }
 
+    /* ── Contact form (B6, v0.9.172) ──────────────────────────────────── */
+    .contact-box {
+      max-width: 560px;
+      margin: 0 auto;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+    }
+    .contact-box .field {
+      margin-bottom: 14px;
+    }
+    .contact-box label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .contact-box input,
+    .contact-box textarea {
+      width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      box-sizing: border-box;
+      transition: border-color 0.15s;
+    }
+    .contact-box input:focus,
+    .contact-box textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .contact-box textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+    .contact-box .send-btn {
+      width: 100%;
+      padding: 12px 20px;
+      background: var(--accent);
+      color: white;
+      border: 0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .contact-box .send-btn:hover:not(:disabled) { background: var(--accent-l); }
+    .contact-box .send-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .contact-box .err {
+      color: #f85149;
+      font-size: 13px;
+      margin-top: 6px;
+      min-height: 16px;
+    }
+    .contact-box .success {
+      text-align: center;
+      padding: 12px 0;
+    }
+    .contact-box .success-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      background: rgba(63,185,80,0.15);
+      color: #3fb950;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .contact-box .success-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .contact-box .success-sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
     /* ── Footer ───────────────────────────────────────────────────────── */
     .footer {
       border-top: 1px solid var(--border);
@@ -1323,7 +1416,7 @@
         Contacte directement Aaron sur Discord ou par mail.<br>
         Les 50 premiers bêta-testeurs bénéficient d'un statut <strong>Founding Member</strong> avec accès Pro à vie.
       </p>
-      <a href="mailto:zeldtradepro@gmail.com?subject=Demande%20d%27acc%C3%A8s%20ZeldTrade" class="btn btn-primary">Demander un accès →</a>
+      <a href="#contact" class="btn btn-primary">Demander un accès →</a>
     </div>
   </section>
 
@@ -1359,18 +1452,130 @@
     </div>
   </section>
 
+  <!-- ─── Contact (B6, v0.9.172) ───────────────────────────────────────── -->
+  <section class="section" id="contact">
+    <div class="section-eyebrow">Contact</div>
+    <h2 class="section-title">Une question ?</h2>
+    <p class="section-sub">
+      Pseudo et message — pas besoin d'email. Réponse rapide directement par Aaron.
+    </p>
+    <div class="contact-box" id="landingContactBox">
+      <div class="contact-form-wrap" id="lcForm">
+        <div class="field">
+          <label for="lcName">Pseudo</label>
+          <input type="text" id="lcName" placeholder="Ton pseudo Discord ou autre" maxlength="100" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="lcMessage">Message</label>
+          <textarea id="lcMessage" rows="5" placeholder="Une question, une suggestion, une demande d'accès…" maxlength="5000"></textarea>
+        </div>
+        <!-- Honeypot anti-bot -->
+        <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+          <label>Website (laissez vide)</label>
+          <input type="text" id="lcWebsite" name="website" tabindex="-1" autocomplete="off">
+        </div>
+        <div class="err" id="lcError"></div>
+        <button type="button" id="lcSend" class="send-btn">Envoyer →</button>
+      </div>
+      <div class="success" id="lcSuccess" style="display:none">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Message envoyé !</div>
+        <div class="success-sub">Aaron te répondra rapidement.</div>
+      </div>
+    </div>
+  </section>
+
   <!-- ─── Footer ───────────────────────────────────────────────────────── -->
   <footer class="footer">
     <div class="footer-links">
       <a href="/legal" class="footer-link">Mentions légales</a>
       <a href="/cgu" class="footer-link">CGU</a>
       <a href="/privacy" class="footer-link">Confidentialité</a>
-      <a href="mailto:zeldtradepro@gmail.com" class="footer-link">Contact</a>
+      <a href="#contact" class="footer-link">Contact</a>
     </div>
     <div>
-      © 2026 ZeldTrade — Aaron — <span style="color: var(--accent-l)">v0.9.171</span>
+      © 2026 ZeldTrade — Aaron — <span style="color: var(--accent-l)">v0.9.172</span>
     </div>
   </footer>
+
+  <!-- ─── Firebase SDK + contact form (v0.9.172) ──────────────────────── -->
+  <!-- Minimal : juste app + functions-compat pour l'appel onCall sendContactMessage anonyme. -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-functions-compat.js"></script>
+  <script>
+    (function () {
+      // Init Firebase (clé API publique — sécurité via Firestore/CFs rules)
+      firebase.initializeApp({
+        apiKey:            'AIzaSyCX5AWqdFyunxpYV9LgaacHU1osXQDbEss',
+        authDomain:        'zeldtrade.firebaseapp.com',
+        projectId:         'zeldtrade',
+        storageBucket:     'zeldtrade.firebasestorage.app',
+        messagingSenderId: '356908373821',
+        appId:             '1:356908373821:web:4af7d3be51018b56ef1754',
+      });
+      const fn = firebase.app().functions('europe-west1');
+
+      const form    = document.getElementById('lcForm');
+      const success = document.getElementById('lcSuccess');
+      const nameEl  = document.getElementById('lcName');
+      const msgEl   = document.getElementById('lcMessage');
+      const honey   = document.getElementById('lcWebsite');
+      const errEl   = document.getElementById('lcError');
+      const btn     = document.getElementById('lcSend');
+      let _lastSubmit = 0;
+
+      async function submit() {
+        errEl.textContent = '';
+        const name    = (nameEl.value || '').trim().replace(/[\r\n]/g, '').slice(0, 100);
+        const message = (msgEl.value  || '').trim().slice(0, 5000);
+
+        // Honeypot
+        if (honey && honey.value) {
+          _lastSubmit = Date.now();
+          form.style.display    = 'none';
+          success.style.display = 'block';
+          return;
+        }
+        if (Date.now() - _lastSubmit < 60_000) {
+          errEl.textContent = 'Merci de patienter 60 secondes avant de renvoyer un message.';
+          return;
+        }
+        if (name.length < 2)    { errEl.textContent = 'Pseudo trop court (min 2 caractères).'; return; }
+        if (message.length < 5) { errEl.textContent = 'Message trop court (min 5 caractères).'; return; }
+
+        btn.disabled    = true;
+        btn.textContent = 'Envoi…';
+        try {
+          const callable = fn.httpsCallable('sendContactMessage');
+          const res      = await callable({ name, message });
+          if (res.data && res.data.ok) {
+            _lastSubmit = Date.now();
+            form.style.display    = 'none';
+            success.style.display = 'block';
+          } else {
+            throw new Error('Échec d\'envoi');
+          }
+        } catch (e) {
+          const code = e.code || '';
+          const msg  = e.message || '';
+          if (code === 'functions/resource-exhausted' || code === 'resource-exhausted') {
+            errEl.textContent = msg;
+          } else if (code === 'functions/invalid-argument' || code === 'invalid-argument') {
+            errEl.textContent = msg || 'Données invalides.';
+          } else {
+            errEl.textContent = 'Erreur d\'envoi — réessaie dans un instant.';
+          }
+          btn.disabled    = false;
+          btn.textContent = 'Envoyer →';
+        }
+      }
+
+      btn.addEventListener('click', submit);
+      msgEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit();
+      });
+    })();
+  </script>
 
 </body>
 </html>
