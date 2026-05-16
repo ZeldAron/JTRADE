@@ -20,7 +20,8 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == uid;
       allow write:  if request.auth != null
                     && request.auth.uid == uid
-                    && request.resource.data.keys().hasOnly(['uid', 'email', 'username', 'lastSeen'])
+                    // v0.9.150 : ajout `termsAccepted` (map) + `newsletterOptIn` (bool) — RGPD consent
+                    && request.resource.data.keys().hasOnly(['uid', 'email', 'username', 'lastSeen', 'termsAccepted', 'newsletterOptIn'])
                     && request.resource.data.uid == uid
                     && request.resource.data.email is string
                     && request.resource.data.email == request.auth.token.email
@@ -36,7 +37,24 @@ service cloud.firestore {
                       request.auth.token.email == 'zeldtradepro@gmail.com'
                       || !request.resource.data.username.lower().matches('.*(admin|zeldtrade|zeldaron|support|staff|moderator|root|system).*')
                     )
-                    && request.resource.data.lastSeen is int;
+                    && request.resource.data.lastSeen is int
+                    // v0.9.150 : validation termsAccepted (optionnel) — si présent, doit être map { version: string, acceptedAt: int }
+                    && (
+                      !('termsAccepted' in request.resource.data.keys())
+                      || (
+                        request.resource.data.termsAccepted is map
+                        && request.resource.data.termsAccepted.keys().hasOnly(['version', 'acceptedAt'])
+                        && request.resource.data.termsAccepted.version is string
+                        && request.resource.data.termsAccepted.version.size() >= 1
+                        && request.resource.data.termsAccepted.version.size() <= 16
+                        && request.resource.data.termsAccepted.acceptedAt is int
+                      )
+                    )
+                    // v0.9.150 : validation newsletterOptIn (optionnel, doit être bool si présent)
+                    && (
+                      !('newsletterOptIn' in request.resource.data.keys())
+                      || request.resource.data.newsletterOptIn is bool
+                    );
     }
 
     // ── Codes Pro (hashes) ───────────────────────────────────────────────────────
