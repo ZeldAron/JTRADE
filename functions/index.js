@@ -71,10 +71,25 @@ const ALLOWED_MODELS = new Set([
 exports.analyzeChart = onCall(
   {
     secrets:        [GROQ_API_KEY, DISCORD_ERRORS_WEBHOOK],
-    // cors retiré : passer un array casse le preflight OPTIONS en firebase-functions v4.
-    // Le default onCall gère CORS correctement (accepte tous origins, mais l'auth Firebase
-    // + l'API key Groq côté serveur enforcent déjà la sécurité).
-    // enforceAppCheck désactivé temporairement — à réactiver après config App Check
+    // v0.9.156 : App Check OFF DÉFINITIVEMENT sur analyzeChart.
+    //
+    // Décision prise après debug exhaustif (v0.9.151-155, ~4h de tentatives) :
+    //   - reCAPTCHA Enterprise échoue sur Safari (issue firebase-js-sdk#9135)
+    //   - reCAPTCHA v3 échoue aussi (401 sur /recaptcha/api2/pat)
+    //   - Safari Private Mode bloque 3rd-party iframe (par design Apple, non-fixable)
+    //
+    // analyzeChart étant la CF la plus user-facing (1 par analyse IA), la bloquer
+    // sur Safari = inacceptable. Les autres CFs (admin only) gardent App Check ON.
+    //
+    // Protections résiduelles sur analyzeChart (largement suffisantes pour beta) :
+    //   - Auth obligatoire (request.auth)
+    //   - email_verified obligatoire (S20)
+    //   - Quota 1/jour Basic, 20/jour Pro
+    //   - Groq API key server-side (jamais exposée)
+    //   - maxInstances: 10 (anti-DoS)
+    //   - Magic byte validation image (anti-MIME spoof)
+    //   - Prompt length max 5000 chars
+    enforceAppCheck: false,
     maxInstances:    10,
     timeoutSeconds:  60,
     memory:         '256MiB',
@@ -607,11 +622,8 @@ async function _writeAuditLog(action, adminEmail, payload) {
 exports.deleteUserAccount = onCall(
   {
     secrets:        [DISCORD_ERRORS_WEBHOOK],
-    // cors retiré : voir analyzeChart pour explication
-    // TEMP : enforceAppCheck désactivé (reCAPTCHA Enterprise 401 — à débugger)
-    // La protection vient de isAdmin() côté serveur (email + email_verified)
-    // enforceAppCheck: true,
-    // consumeAppCheckToken: true,
+    // v0.9.152 : App Check réactivé (config GCP Console + IAM SA fixée 2026-05-16)
+    enforceAppCheck: true,
     maxInstances:    2,
     timeoutSeconds:  60,
     memory:         '256MiB',
@@ -793,10 +805,8 @@ exports.deleteUserAccount = onCall(
 exports.generateProCode = onCall(
   {
     secrets:        [DISCORD_ERRORS_WEBHOOK],
-    // TEMP : enforceAppCheck désactivé (App Check cassé — workaround)
-    // isAdmin() + rate-limit Firestore restent en place
-    // enforceAppCheck: true,
-    // consumeAppCheckToken: true,
+    // v0.9.152 : App Check réactivé (config GCP Console + IAM SA fixée 2026-05-16)
+    enforceAppCheck: true,
     maxInstances:    2,
     timeoutSeconds:  15,
     memory:         '256MiB',
@@ -881,10 +891,8 @@ exports.generateProCode = onCall(
 exports.revokeProCode = onCall(
   {
     secrets:        [DISCORD_ERRORS_WEBHOOK],
-    // TEMP : enforceAppCheck désactivé (App Check cassé — workaround)
-    // isAdmin() reste en place + transaction atomique
-    // enforceAppCheck: true,
-    // consumeAppCheckToken: true,
+    // v0.9.152 : App Check réactivé (config GCP Console + IAM SA fixée 2026-05-16)
+    enforceAppCheck: true,
     maxInstances:    2,
     timeoutSeconds:  20,
     memory:         '256MiB',
@@ -1219,7 +1227,6 @@ exports.cleanupOrphanUserEmails = onCall(
   {
     secrets:        [DISCORD_ERRORS_WEBHOOK],
     enforceAppCheck: true,
-    consumeAppCheckToken: true,
     maxInstances:    1,  // 1 seul admin, pas de raison de paralléliser
     timeoutSeconds:  60,
     memory:          '256MiB',
@@ -1383,7 +1390,8 @@ exports.cleanupOrphanUserEmails = onCall(
 exports.adminMarkEmailVerified = onCall(
   {
     secrets:        [DISCORD_ERRORS_WEBHOOK],
-    enforceAppCheck: false,  // App Check encore désactivé (TODO I6/S1)
+    // v0.9.152 : App Check réactivé (config GCP Console + IAM SA fixée 2026-05-16)
+    enforceAppCheck: true,
     maxInstances:    1,
     timeoutSeconds:  120,
     memory:          '256MiB',
