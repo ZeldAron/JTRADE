@@ -232,100 +232,56 @@ const ExportPDF = (() => {
     );
   }
 
-  // ── Page liste de trades (compacte, ~6 par page) ──────────────────────────
-  function _drawTradesPage(doc, trades, startIdx, username) {
-    _drawHeader(doc, username);
-
-    let y = 32;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(...COLOR_TEXT);
-    doc.text(`Trades ${startIdx + 1}–${startIdx + trades.length}`, 14, y);
-    y += 8;
-
-    for (const t of trades) {
-      const pnl   = _tradePnl(t);
-      const isWin = pnl > 0.01;
-      const isLoss = pnl < -0.01;
-      const direction = (t.direction === 'short') ? 'SHORT' : 'LONG';
-      const dirColor  = (t.direction === 'short') ? COLOR_RED : COLOR_GREEN;
-      const tradeRr   = _tradeRr(t);
-
-      // Cadre du trade
-      doc.setDrawColor(...COLOR_BORDER);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(14, y, doc.internal.pageSize.getWidth() - 28, 30, 2, 2);
-
-      // Ligne 1 : Date | Instrument | Direction
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(...COLOR_TEXT);
-      doc.text(_fmtDate(t.date), 18, y + 7);
-      doc.text(String(t.instrument || '—'), 50, y + 7);
-
-      // Badge direction
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setFillColor(...dirColor);
-      doc.setTextColor(255, 255, 255);
-      doc.roundedRect(78, y + 3, 14, 5.5, 1, 1, 'F');
-      doc.text(direction, 85, y + 7, { align: 'center' });
-
-      // P&L à droite
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.setTextColor(...(isWin ? COLOR_GREEN : isLoss ? COLOR_RED : COLOR_TEXT));
-      doc.text(_fmtMoney(pnl), doc.internal.pageSize.getWidth() - 18, y + 7, { align: 'right' });
-
-      // Ligne 2 : Entry → SL → TP
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.setTextColor(...COLOR_MUTED);
-      const levels = `Entry ${t.entry ?? '—'}  ·  SL ${t.sl ?? '—'}  ·  TP1 ${t.tp1 ?? '—'}`;
-      doc.text(levels, 18, y + 15);
-
-      // R:R à droite
-      if (typeof tradeRr === 'number' && isFinite(tradeRr)) {
-        doc.text(`R:R ${tradeRr.toFixed(2)}`, doc.internal.pageSize.getWidth() - 18, y + 15, { align: 'right' });
-      }
-
-      // Ligne 3 : Setup + Notes (tronqués)
-      const setupText = (t.setup || '').trim().slice(0, 60);
-      const noteText  = (t.note  || '').trim().replace(/\s+/g, ' ').slice(0, 90);
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(8);
-      doc.setTextColor(...COLOR_MUTED);
-      if (setupText) doc.text(`Setup : ${setupText}`, 18, y + 22);
-      if (noteText)  doc.text(noteText.slice(0, 100), 18, y + 27);
-
-      y += 35; // Espace pour le trade suivant
-    }
-  }
-
-  // v0.9.166 : Helper fetch screenshot Storage → base64 data URL
-  // Retourne null si échec (image manquante, erreur réseau, etc.)
+  // v0.9.168 : Charge screenshot Storage via <img> + canvas (contourne CORS
+  // car les browsers laissent passer le draw d'image cross-origin si le
+  // serveur renvoie les bons headers — Firebase Storage le fait par défaut).
+  // Retourne une data URL (string), ou null si échec.
   async function _fetchScreenshotBase64(path) {
-    if (!path || !Store.getTradeScreenshotUrl) return null;
-    try {
-      const url = await Store.getTradeScreenshotUrl(path);
-      if (!url) return null;
-      const res = await fetch(url);
-      if (!res.ok) return null;
-      const blob = await res.blob();
-      return await new Promise((resolve, reject) => {
-        const fr = new FileReader();
-        fr.onload  = () => resolve(fr.result);
-        fr.onerror = () => reject(new Error('FileReader failed'));
-        fr.readAsDataURL(blob);
-      });
-    } catch (e) {
-      console.warn('[ExportPDF] screenshot fetch failed:', path, e && e.message);
+    if (!path || !Store.getTradeScreenshotUrl) {
+      console.warn('[ExportPDF] _fetchScreenshotBase64: no path or Store.getTradeScreenshotUrl');
       return null;
     }
+    let url;
+    try {
+      url = await Store.getTradeScreenshotUrl(path);
+    } catch (e) {
+      console.warn('[ExportPDF] getTradeScreenshotUrl failed:', path, e && e.message);
+      return null;
+    }
+    if (!url) {
+      console.warn('[ExportPDF] getTradeScreenshotUrl returned null for', path);
+      return null;
+    }
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width  = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          // JPEG plus petit que PNG pour les screenshots (gain ~70%)
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          resolve(dataUrl);
+        } catch (e) {
+          console.warn('[ExportPDF] canvas readback failed (CORS ?):', path, e && e.message);
+          resolve(null);
+        }
+      };
+      img.onerror = () => {
+        console.warn('[ExportPDF] img.onerror — screenshot inaccessible:', path);
+        resolve(null);
+      };
+      img.src = url;
+      // Timeout sécu 15s
+      setTimeout(() => resolve(null), 15000);
+    });
   }
 
-  // v0.9.166 : Page dédiée pour un trade avec son screenshot
-  function _drawTradeScreenshotPage(doc, trade, imgDataUrl, username) {
+  // v0.9.169 : Page dédiée pour un trade — screenshot optionnel
+  function _drawTradeDetailPage(doc, trade, imgDataUrl, username, indexLabel) {
     _drawHeader(doc, username);
     const w = doc.internal.pageSize.getWidth();
     const h = doc.internal.pageSize.getHeight();
@@ -341,7 +297,10 @@ const ExportPDF = (() => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(...COLOR_TEXT);
-    doc.text(`Trade : ${_fmtDate(trade.date)}`, 14, y);
+    const title = indexLabel
+      ? `${indexLabel} — ${_fmtDate(trade.date)}`
+      : `Trade : ${_fmtDate(trade.date)}`;
+    doc.text(title, 14, y);
 
     // Direction badge en haut à droite
     doc.setFont('helvetica', 'bold');
@@ -404,21 +363,12 @@ const ExportPDF = (() => {
     // Screenshot — fit dans l'espace restant avec ratio préservé
     if (imgDataUrl) {
       try {
-        // Détermine les dimensions de l'image
         const imgProps = doc.getImageProperties(imgDataUrl);
         const maxW = w - 28;
         const maxH = h - y - 20; // 20mm reserve for footer
-        let imgW = imgProps.width;
-        let imgH = imgProps.height;
-        const ratio = imgW / imgH;
-        // Scale pour fit
-        if (imgW > maxW * 4) { // px → mm conversion rough
-          imgW = maxW;
-          imgH = maxW / ratio;
-        } else {
-          imgW = maxW;
-          imgH = maxW / ratio;
-        }
+        const ratio = imgProps.width / imgProps.height;
+        let imgW = maxW;
+        let imgH = maxW / ratio;
         if (imgH > maxH) {
           imgH = maxH;
           imgW = maxH * ratio;
@@ -432,6 +382,11 @@ const ExportPDF = (() => {
         doc.setTextColor(...COLOR_MUTED);
         doc.text('Screenshot non affichable (format non supporté ou corrompu).', 14, y + 10);
       }
+    } else {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(10);
+      doc.setTextColor(...COLOR_MUTED);
+      doc.text('Aucun screenshot pour ce trade.', 14, y + 10);
     }
   }
 
@@ -459,9 +414,9 @@ const ExportPDF = (() => {
     // Note : on autorise 0 trade — on génère quand même la page de garde
     // avec stats vides (utile pour test ou compte fraîchement créé).
 
-    // 3. Trie chronologiquement (plus récent d'abord) — via _tradeMs car le
-    // champ stocké est `date` (string ISO), pas `timestamp`.
-    trades.sort((a, b) => _tradeMs(b) - _tradeMs(a));
+    // 3. Trie en ordre chronologique (du plus ancien au plus récent) — via
+    // _tradeMs car le champ stocké est `date` (string ISO), pas `timestamp`.
+    trades.sort((a, b) => _tradeMs(a) - _tradeMs(b));
 
     // 4. Calcule les stats
     const stats = _computeStats(trades);
@@ -489,53 +444,25 @@ const ExportPDF = (() => {
     // 7. Page de garde
     _drawCoverPage(doc, ctx);
 
-    // 8. Pages de trades (6 par page) — skip si 0 trade (juste page de garde)
-    const PER_PAGE = 6;
-    if (trades.length > 0) {
-      for (let i = 0; i < trades.length; i += PER_PAGE) {
-        doc.addPage();
-        _drawTradesPage(doc, trades.slice(i, i + PER_PAGE), i, username);
-      }
-    }
-
-    // 8 bis. v0.9.166 — Pages dédiées pour les trades avec screenshot
-    // 1 page par trade qui a screenshotPath, avec image en grand.
-    const tradesWithShots = trades.filter(t => t && t.screenshotPath);
+    // 8. v0.9.169 — Une page par trade en ordre chronologique, avec
+    // screenshot intégré si présent. Pas de liste compacte, pas de
+    // page séparateur — chaque trade a sa page dédiée.
     let shotsCount = 0;
-    if (tradesWithShots.length > 0) {
+    for (let i = 0; i < trades.length; i++) {
+      const trade = trades[i];
       progress({
-        phase: 'screenshots',
-        current: 0,
-        total: tradesWithShots.length,
-        message: `Téléchargement des screenshots (0/${tradesWithShots.length})…`,
+        phase: 'trades',
+        current: i + 1,
+        total: trades.length,
+        message: `Génération trade ${i + 1}/${trades.length}…`,
       });
-      // Page de séparation
-      doc.addPage();
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(24);
-      doc.setTextColor(...COLOR_TEXT);
-      doc.text('Screenshots des trades', 14, 60);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(11);
-      doc.setTextColor(...COLOR_MUTED);
-      doc.text(`${tradesWithShots.length} trade(s) avec capture d'écran`, 14, 70);
-
-      // Fetch + render 1 page par trade avec screenshot
-      for (let i = 0; i < tradesWithShots.length; i++) {
-        const trade = tradesWithShots[i];
-        progress({
-          phase: 'screenshots',
-          current: i + 1,
-          total: tradesWithShots.length,
-          message: `Téléchargement screenshot ${i + 1}/${tradesWithShots.length}…`,
-        });
-        const imgDataUrl = await _fetchScreenshotBase64(trade.screenshotPath);
-        if (imgDataUrl) {
-          doc.addPage();
-          _drawTradeScreenshotPage(doc, trade, imgDataUrl, username);
-          shotsCount++;
-        }
+      let imgDataUrl = null;
+      if (trade.screenshotPath) {
+        imgDataUrl = await _fetchScreenshotBase64(trade.screenshotPath);
+        if (imgDataUrl) shotsCount++;
       }
+      doc.addPage();
+      _drawTradeDetailPage(doc, trade, imgDataUrl, username, `Trade ${i + 1}/${trades.length}`);
     }
 
     progress({ phase: 'finalizing', message: 'Finalisation du PDF…' });
