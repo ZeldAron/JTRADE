@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.153',
+      date: '2026-05-16',
+      time: '14:50',
+      tags: ['security', 'fix'],
+      title: 'App Check : fix timing token + enforcement réactivé sur analyzeChart',
+      titleEn: 'App Check: token timing fix + enforcement re-enabled on analyzeChart',
+      items: [
+        { type: 'fix', text: 'Bug v0.9.152 : appel `analyzeChart` rejeté en 401 "Unauthenticated" malgré client authentifié. Cause root : le SDK Firebase n\'attache pas de token App Check à la 1ère requête CF si le token n\'a pas encore été récupéré (race condition après login).', textEn: 'v0.9.152 bug: analyzeChart 401 despite client auth OK. Root cause: Firebase SDK doesn\'t attach App Check token to first CF call if token not yet fetched (race after login).' },
+        { type: 'security', text: 'Fix dans `modal.js:analyzeWithGroq()` : ajout d\'un `await firebase.appCheck().getToken(false)` AVANT l\'appel de `analyzeChart`. Force la récupération du token + cache pour appels suivants. Try/catch large : si App Check échoue, l\'appel CF est quand même tenté (mode dégradé client).', textEn: 'Fix in `modal.js:analyzeWithGroq()`: added `await firebase.appCheck().getToken(false)` BEFORE the analyzeChart call.' },
+        { type: 'security', text: '`enforceAppCheck: true` ré-activé sur `analyzeChart`. Sécurité 100% : 6 CFs avec App Check enforcement (analyzeChart, deleteUserAccount, generateProCode, revokeProCode, adminMarkEmailVerified, cleanupOrphanUserEmails).', textEn: '`enforceAppCheck: true` re-enabled on `analyzeChart`. 100% security: 6 CFs with App Check enforcement.' },
+      ],
+    },
+    {
       version: '0.9.152',
       date: '2026-05-16',
       time: '14:20',

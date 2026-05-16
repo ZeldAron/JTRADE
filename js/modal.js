@@ -202,6 +202,22 @@ const Modal = (() => {
 
     // Appel via Cloud Function (clé Groq côté serveur, quota enforce côté serveur)
     if (!_fbFunctions) throw new Error('Service IA indisponible — recharge la page.');
+
+    // v0.9.153 : pré-warm le token App Check avant le 1er appel CF.
+    // Sans ça, les requêtes faites JUSTE après login partent sans token → CF
+    // rejette en 401 alors que l'auth est OK. Le SDK Firebase fait normalement
+    // l'attache auto, mais le token doit être déjà récupéré (cache) à ce moment.
+    // getToken() force la récupération ET cache pour les appels suivants.
+    try {
+      if (typeof firebase !== 'undefined' && firebase.appCheck) {
+        await firebase.appCheck().getToken(/* forceRefresh */ false);
+      }
+    } catch (e) {
+      // Échec récupération App Check token : on tente l'appel quand même (mode dégradé,
+      // si enforceAppCheck:false côté CF ça passera, sinon le serveur rejettera).
+      console.warn('[analyzeWithGroq] App Check pre-warm failed:', e && e.message);
+    }
+
     const callable = _fbFunctions.httpsCallable('analyzeChart');
     let lastError = null;
 
