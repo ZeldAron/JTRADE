@@ -1673,10 +1673,12 @@ exports.unsubscribeNewsletter = onRequest(
         return;
       }
 
-      // Update Firestore : newsletterOptIn = false (merge pour ne pas écraser les autres champs)
+      // Update Firestore : newsletterOptIn = false (merge pour ne pas écraser les autres champs).
+      // NB : on n'écrit AUCUN champ additionnel (newsletterOptedOutAt etc.) car les rules
+      // `userEmails/{uid}` ont un hasOnly() strict — un champ inattendu bloquerait la
+      // réactivation côté client. La traçabilité est dans auditLogs.
       await admin.firestore().doc(`userEmails/${uid}`).set({
-        newsletterOptIn:     false,
-        newsletterOptedOutAt: admin.firestore.FieldValue.serverTimestamp(),
+        newsletterOptIn: false,
       }, { merge: true });
 
       // Audit log léger (optionnel mais utile pour traçabilité RGPD)
