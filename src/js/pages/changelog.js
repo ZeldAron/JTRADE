@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.170',
+      date: '2026-05-16',
+      time: '19:30',
+      tags: ['security', 'fix'],
+      title: 'Anti IP-spoofing renforcé sur analyzeChart (audit post-prod)',
+      titleEn: 'Anti IP-spoofing hardening on analyzeChart (post-prod audit)',
+      items: [
+        { type: 'security', text: 'Audit sécurité a révélé une faiblesse du fallback IP rate-limit : l\'ancien code prenait `parts[0]` du header `X-Forwarded-For`, qui est forgeable par le client → rotation d\'IP triviale et bypass du quota 5 min. Sur Cloud Run, la VRAIE IP trustée est l\'avant-dernière (celle vue par le LB Google, non forgeable). Fix `functions/index.js:121-133` : `ip = parts[parts.length - 2]` au lieu de `parts[0]`.', textEn: 'Audit revealed an IP rate-limit bypass on analyzeChart: old code used `parts[0]` of X-Forwarded-For which is client-spoofable. Fix: use `parts[length-2]` (trusted IP seen by Google LB).' },
+        { type: 'security', text: 'Posture résultante : un attaquant ne peut plus contourner le rate-limit IP de 5 min en spoofant le header XFF. Il faudrait soit changer de réseau (coût réel), soit obtenir un token Turnstile valide (anti-bot). Combiné aux quotas par user (1/jour Basic, 20/jour Pro) + email_verified + auth Firebase, la surface d\'abus sur Groq API est verrouillée.', textEn: 'Result: attackers can no longer bypass the 5-min IP rate-limit via XFF spoofing. Combined with per-user quotas + email_verified + Firebase auth, Groq API abuse surface is locked down.' },
+      ],
+    },
+    {
       version: '0.9.169',
       date: '2026-05-16',
       time: '18:00',
