@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.154',
+      date: '2026-05-16',
+      time: '15:30',
+      tags: ['security', 'fix'],
+      title: 'App Check init robuste avec retry (fix race condition Safari)',
+      titleEn: 'App Check robust init with retry (Safari race fix)',
+      items: [
+        { type: 'fix', text: 'Bug v0.9.153 : malgré `firebase.appCheck` chargé + activate() appelé, le client renvoyait "App Check is being used before activate() is called for FirebaseApp [DEFAULT]". Race condition Safari : `firebase.appCheck` est défini (function) mais `firebase.appCheck.ReCaptchaEnterpriseProvider` peut être `undefined` au moment où `firebase.js` s\'exécute (le script `firebase-app-check-compat.js` est chargé sync mais évalué async).', textEn: 'v0.9.153 bug: Safari race condition where ReCaptchaEnterpriseProvider class loads later than expected.' },
+        { type: 'security', text: 'Fix : init avec retry — tente immédiatement, si échec retente sur `DOMContentLoaded` + 200ms fallback. Flag global `window._fbAppCheckReady` pour que les appels CF (modal.js getToken pre-warm) sachent si App Check est prêt. Logs `[Firebase] App Check enabled` (succès) ou warn explicite (échec) pour debug.', textEn: 'Fix: init with retry — immediate try, DOMContentLoaded fallback + 200ms safety net. Global flag for CF callers to check readiness.' },
+      ],
+    },
+    {
       version: '0.9.153',
       date: '2026-05-16',
       time: '14:50',
