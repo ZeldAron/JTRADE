@@ -137,8 +137,9 @@ const Modal = (() => {
     r.tp1       = findNum(['tp1', 'tp', 'target', 'profit']);
     r.tp2       = findNum(['tp2']);
     r.tp3       = findNum(['tp3']);
-    const lotsM = t.match(/(\d+)\s*(lots?|contrats?)/i);
-    if (lotsM) r.contracts = parseInt(lotsM[1]);
+    // v0.9.162 (B7b fix) : parseFloat + regex décimal pour gérer "0.2 lots"
+    const lotsM = t.match(/(\d+(?:\.\d+)?)\s*(lots?|contrats?)/i);
+    if (lotsM) r.contracts = parseFloat(lotsM[1]);
     return (r.entry || r.sl || r.tp1) ? r : null;
   }
 

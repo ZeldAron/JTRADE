@@ -189,6 +189,12 @@ const i18n = (() => {
       'set.data':         'Données',
       'set.export':       'Exporter (JSON)',
       'set.export.btn':   'Exporter',
+      // Export CSV (v0.9.162 F5)
+      'set.export.csv':       'Exporter en CSV',
+      'set.export.csv.desc':  'Tous les trades dans un fichier .csv (Excel, Google Sheets, NinjaTrader). 1 ligne = 1 trade.',
+      'set.export.csv.btn':   'Exporter CSV',
+      'set.export.csv.done':  'Export CSV : %n trade(s).',
+      'set.export.csv.empty': 'Aucun trade à exporter.',
       // Export PDF (Pro only — F3 v0.9.132)
       'set.export.pdf':           'Exporter en PDF',
       'set.export.pdf.desc':      'Rapport complet sur une période donnée (stats globales + chaque trade détaillé). Idéal pour comptabilité prop firm.',
@@ -803,6 +809,12 @@ const i18n = (() => {
       'set.data':         'Data',
       'set.export':       'Export (JSON)',
       'set.export.btn':   'Export',
+      // Export CSV (v0.9.162 F5)
+      'set.export.csv':       'Export as CSV',
+      'set.export.csv.desc':  'All trades in a .csv file (Excel, Google Sheets, NinjaTrader). 1 row = 1 trade.',
+      'set.export.csv.btn':   'Export CSV',
+      'set.export.csv.done':  'CSV export: %n trade(s).',
+      'set.export.csv.empty': 'No trade to export.',
       // Export PDF (Pro only)
       'set.export.pdf':           'Export as PDF',
       'set.export.pdf.desc':      'Full report for a given period (global stats + each trade in detail). Ideal for prop firm accounting.',
