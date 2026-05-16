@@ -209,3 +209,273 @@ Détails dans le CHANGELOG-DEV audit consolidé. Sélection :
 ```
 
 Ne pas supprimer les items — historique trace. Quand toute une section est complète, déplacer "🎉 TERMINÉ" en haut.
+
+---
+
+# 🔍 AUDIT EXHAUSTIF 2026-05-16 (v0.9.161)
+
+Audit complet du projet par Explore agent — 46 nouveaux items identifiés, classés par catégorie. Effort total estimé : ~40-50h. Aucun critique immédiat, mais beaucoup de polish + dette technique à attaquer post-beta.
+
+## 🐛 Bugs nouveaux
+
+### B7 — 🟡 MOYEN — Input `type="number"` step=0.01 bug Safari affichage
+**Fichier** : `src/app.html:726`, `src/js/modal.js:809`
+**Description** : Input `wContracts` a `type="number"` + `step="0.01"`. Safari peut arrondir/afficher différemment les fractionnaires en mode édition. Affecte UX mais pas logique.
+**Effort** : 15 min
+
+### B7b — 🟠 HAUT — `parseInt()` au lieu de `parseFloat()` sur lots parsés IA
+**Fichier** : `src/js/modal.js:141`
+**Description** : `parseInt(lotsM[1])` sur lots extraits par IA via regex. Si screenshot a "0.2 lots", `parseInt("0.2")` = 0. Devrait être `parseFloat()`.
+**Effort** : 5 min
+
+## 💾 Dette technique (Code Quality)
+
+### Q25 — 🟡 MOYEN — Refactor modal.js (59KB, 1324 lignes monolithiques)
+**Fichier** : `src/js/modal.js`
+**Description** : Tout le wizard dans un seul module. Splitter en wizard-step1/2/3.
+**Effort** : 4-6h
+
+### Q26 — 🟡 MOYEN — i18n.js trop gros (69KB, 1284 lignes)
+**Fichier** : `src/js/i18n.js`
+**Description** : Strings FR/EN inline. Splitter en `i18n.fr.json` + `i18n.en.json` + loader.
+**Effort** : 2-3h
+
+### Q27 — 🟢 BAS — Changelog.js monstre (167KB, 4700+ lignes)
+**Fichier** : `src/js/pages/changelog.js`
+**Description** : Historique complet inline depuis v0.9.1. Paginer 20 dernières inline + lazy-load full.
+**Effort** : 1-2h
+
+### Q28 — 🟡 MOYEN — settings.js volumineux (56KB)
+**Fichier** : `src/js/pages/settings.js`
+**Description** : Splitter en `settings-main`, `settings-accounts`, `settings-export`.
+**Effort** : 2-3h
+
+### Q29 — 🟢 BAS — Pas de minification JS
+**Description** : Tous les `.js` envoyés en clair. ~30% gain possible avec terser.
+**Effort** : 1-2h
+
+### Q30 — 🟡 MOYEN — Magic numbers éparpillés sans const
+**Fichier** : `src/js/modal.js:89`, `src/js/app.js:198`, `src/js/ui.js`
+**Description** : `1000` instrument fees, `50000` default capital, `2.14` default fee, `768` mobile breakpoint, etc. Centraliser en `const` ou config.
+**Effort** : 1-2h
+
+### Q31 — 🟡 MOYEN — 172 `addEventListener` vs 4 `removeEventListener`
+**Description** : Listeners s'accumulent à chaque modal open/close. Pas un memory leak critique mais pattern mauvais.
+**Effort** : 1-2h
+
+## 🎨 UX / Design (nouveaux trouvés)
+
+### U35 — 🟠 HAUT — Pas d'états "loading" visibles sur Dashboard/Analytics/Goals/Calendar
+**Fichier** : `src/js/pages/dashboard.js`, `analytics.js`, `goals.js`, `calendar.js`
+**Description** : Pages chargent silencieusement (~500ms-1s). User voit blanc → croit que cassé. Ajouter skeleton loader ou spinner.
+**Effort** : 1-2h
+
+### U36 — 🟡 MOYEN — Pas d'aria-label sur boutons icônes (~50+ boutons)
+**Fichier** : `src/app.html`, `src/index.html`
+**Description** : Lecteurs d'écran annoncent juste "button". WCAG A failed.
+**Effort** : 1-2h
+
+### U37 — 🟡 MOYEN — Mobile : Wizard étapes trop denses sur 320-414px
+**Fichier** : `src/app.html` (wizard), `src/css/style.css` (media queries)
+**Description** : Champs s'empilent sans whitespace sur iPhone SE.
+**Effort** : 1-2h
+
+### U38 — 🟡 MOYEN — Pas de "No data" empty states sur Analytics/Goals/Calendar
+**Description** : 0 trade → graphes vides sans message. Ajouter empty state + CTA.
+**Effort** : 1-2h
+
+### U39 — 🟢 BAS — Tooltips manquants sur boutons Outils
+**Fichier** : `src/js/pages/outils.js`
+**Description** : Icônes Simulateur fiscal / Calculatrice position sans tooltip.
+**Effort** : 30 min
+
+### U40 — 🟢 BAS — Topbar titre+version trop petit sur mobile
+**Fichier** : `src/css/style.css`
+**Description** : "ZeldTrade vX.Y.Z" peu lisible sur <600px.
+**Effort** : 15 min
+
+## 🔒 Sécurité (compléments audit récent)
+
+### S41 — 🟡 MOYEN — Pas de CSRF protection complémentaire (X-Request-ID)
+**Fichier** : `functions/index.js` (toutes CFs)
+**Description** : `httpsCallable()` envoie token Firebase auth → mitigé. Hardening : ajouter X-Request-ID header + validation.
+**Effort** : 1-2h
+
+### S42 — 🟡 MOYEN — Audit complet usage `innerHTML` vs `escHtml()`
+**Fichier** : `src/js/ui.js`, `src/js/modal.js:31`, partout
+**Description** : `esc()` existe mais pas toujours utilisé. Vérifier qu'AUCUN `.innerHTML` n'a de data user non escapée.
+**Effort** : 30 min
+
+### S43 — 🟢 BAS — Pas de debounce client sur "Sauvegarder trade"
+**Fichier** : `src/js/modal.js` (save button)
+**Description** : User pourrait mash bouton → créer 5 trades en 1s. Ajouter debounce 1s.
+**Effort** : 15 min
+
+### S44 — 🟡 MOYEN — Pas de SRI (SubResource Integrity) sur certains CDN scripts
+**Fichier** : `src/app.html`, `src/index.html`
+**Description** : Chart.js et autres sans `integrity=` hash. Si CDN compromis → injection.
+**Effort** : 1h
+
+### S45 — 🟢 BAS — Pas de header X-UA-Compatible
+**Fichier** : `firebase.json`
+**Description** : Mineur, aide vieux navigateurs.
+**Effort** : 5 min
+
+### S46 — 🟢 BAS — localStorage data non obfusquée
+**Fichier** : `src/js/store.js:141`
+**Description** : `lastWizardPrefs`, `_plan`, `aiUsage` en clair. Pas sensible mais obfusquer simple recommandé.
+**Effort** : 1h
+
+## 📊 Performance
+
+### P11 — 🟡 MOYEN — Chart.js (~60KB) chargé non-lazy
+**Fichier** : `src/app.html:897`, `src/js/pages/dashboard.js`
+**Description** : Chart.js chargé même si user reste sur Journal tab. Lazy-load au switch Dashboard.
+**Effort** : 1-2h
+
+### P12 — 🟡 MOYEN — Firestore listeners non détachés au switch page
+**Fichier** : `src/js/pages/dashboard.js`, `analytics.js`, `goals.js`
+**Description** : `onSnapshot()` sans `unsubscribe()` → 10 listeners empilés après 10 switches.
+**Effort** : 1-2h
+
+### P13 — 🟡 MOYEN — localStorage écriture sync à chaque trade save
+**Fichier** : `src/js/store.js:141`
+**Description** : Sur 100+ trades, JSON.stringify + localStorage = 50-100ms lag. Migrer IndexedDB ou debounce.
+**Effort** : 2-4h
+
+### P14 — 🟢 BAS — `i18n.t()` appelé sans cache/memoization
+**Fichier** : `src/js/i18n.js`
+**Description** : Recherche dans 1284 lignes à chaque rendu. Memoization basique = gain perceptible.
+**Effort** : 1h
+
+### P15 — 🟠 HAUT — Promise.all() Firestore queries sans timeout
+**Fichier** : `src/js/store.js` (`initForUser` ~line 180+)
+**Description** : Si Firebase down, page freeze indéfiniment. Ajouter Promise.race(10s timeout).
+**Effort** : 30 min
+
+## 📚 Documentation
+
+### D10 — 🟡 MOYEN — ARCHITECTURE.md pas à jour
+**Fichier** : `docs/ARCHITECTURE.md`
+**Description** : Ne documente pas Stripe webhook, Discord hooks, Groq CF, Storage, Firestore rules complexes.
+**Effort** : 1-2h
+
+### D11 — 🟡 MOYEN — Pas de ONBOARDING.md pour nouveau dev
+**Description** : Setup local, emulator, env vars, déploiement à documenter.
+**Effort** : 2-3h
+
+### D12 — 🟡 MOYEN — `firestore.rules` zéro commentaires
+**Description** : 20+ règles complexes sans explication. Ajouter commentaires par rule.
+**Effort** : 1h
+
+### D13 — 🟡 MOYEN — Pas de runbook incident
+**Description** : Créer `docs/INCIDENT_RESPONSE.md` : que checker, comment rollback, contacts.
+**Effort** : 1h
+
+### D14 — 🟢 BAS — `.github/CODEOWNERS` manquant
+**Description** : Auto-assign PR reviews si collab future.
+**Effort** : 15 min
+
+## 🧪 Tests
+
+### T7 — 🟡 MOYEN — Aucun test pour les Cloud Functions
+**Description** : `test/calc.test.js` couvre calc.js. Rien pour CFs. Setup Jest + Firebase emulator.
+**Effort** : 3-4h
+
+### T8 — 🟡 MOYEN — Pas de tests E2E (Cypress/Playwright)
+**Description** : Smoke test signup → trade → dashboard → export PDF.
+**Effort** : 4-6h
+
+### T9 — 🟡 MOYEN — Pas de code coverage report
+**Description** : Setup Istanbul/nyc. Actuel ~60% sur calc seulement.
+**Effort** : 5-7h total
+
+## ⚙️ Config / DevOps
+
+### I21 — 🟡 MOYEN — Pas de `.env.example`
+**Description** : Documenter `HCAPTCHA_SECRET`, `GROQ_API_KEY`, `STRIPE_*`, etc.
+**Effort** : 30 min
+
+### I22 — 🟡 MOYEN — firebase.json optimisations manquantes
+**Fichier** : `firebase.json`
+**Description** : Vérifier `cacheControl` immutable sur assets `?v=`. CSP headers servies côté Firebase ?
+**Effort** : 30 min
+
+### I23 — 🟡 MOYEN — Pas de GitHub Actions CI
+**Description** : Workflow auto pour `node test/calc.test.js` au push.
+**Effort** : 1-2h
+
+### I24 — 🟡 MOYEN — `scripts/release.sh` fragile
+**Description** : `git subtree` peut fail silencieusement → tag créé mais pas déployé. Ajouter checks + dry-run flag.
+**Effort** : 30 min
+
+## 🌍 i18n / Compliance
+
+### I25 — 🟡 MOYEN — Traductions FR/EN incomplètes
+**Fichier** : `src/js/i18n.js`
+**Description** : Vérifier qu'AUCUNE clé FR n'est orpheline côté EN et vice-versa.
+**Effort** : 1-2h
+
+### I26 — 🟡 MOYEN — Cookie banner manquant (RGPD)
+**Description** : Firebase, hCaptcha, Chart.js déposent cookies. Banner "Accepter/Refuser" obligatoire RGPD.
+**Effort** : 1-2h
+
+### I27 — 🟠 HAUT — CGU (`src/cgu.html`) trop vagues
+**Description** : Placeholder minimaliste. Manque limitation responsabilité, conditions précises, politique remboursement.
+**Effort** : 2-3h (rédaction légale)
+
+## 💰 Business / Scaling
+
+### B8 — 🟡 MOYEN — Pas de rate-limiting Firestore côté serveur
+**Description** : User pourrait créer 1000 trades en 1 min via API brute. Middleware throttle IP.
+**Effort** : 2-3h
+
+### B9 — 🟡 MOYEN — Pas de business metrics / monitoring applicatif
+**Description** : Pas de tracking "trades/jour", "users actifs/pays". Setup GA4 events + Data Studio.
+**Effort** : 2-3h
+
+### B10 — 🟡 MOYEN — Pas de feature flags runtime
+**Description** : Nouvelles features hard-deploy. Ajouter Firestore `/config/features` + toggle runtime.
+**Effort** : 1-2h
+
+## 🎯 Features à terminer / polish
+
+### F5 — 🟠 HAUT — Exporteur CSV trades
+**Description** : F3 fait PDF, faut aussi CSV pour Excel. Bouton "Exporter CSV".
+**Effort** : 1-2h
+
+### F6 — 🟡 MOYEN — Mode hors-ligne fallback IA Groq
+**Description** : Si Groq API down, mode dégradé : skip détection IA, user entre manuellement.
+**Effort** : 1-2h
+
+### F7 — 🟢 BAS — Fonction "Dupliquer trade"
+**Description** : Bouton qui ouvre wizard avec champs pré-remplis.
+**Effort** : 1-2h
+
+### F8 — 🟢 BAS — Dark/Light mode toggle
+**Description** : Settings → toggle + localStorage persist.
+**Effort** : 2-3h
+
+---
+
+## 📊 Récap audit 2026-05-16
+
+| Catégorie | Items | Effort total |
+|---|---|---|
+| 🐛 Bugs | 2 | 20 min |
+| 💾 Dette technique | 7 | 13-19h |
+| 🎨 UX | 6 | 5-7h |
+| 🔒 Sécu compléments | 6 | 4-5h |
+| 📊 Perf | 5 | 5-9h |
+| 📚 Docs | 5 | 5-8h |
+| 🧪 Tests | 3 | 12-17h |
+| ⚙️ DevOps | 4 | 3-5h |
+| 🌍 i18n/Compliance | 3 | 4-7h |
+| 💰 Business | 3 | 5-8h |
+| 🎯 Features | 4 | 5-8h |
+| **TOTAL** | **48** | **~60-90h** |
+
+**Priorité ordre d'attaque post-beta** :
+1. 🟠 Hauts (~6 items, ~12h) : P15, U35, B7b, I27, F5 + 1-2 autres
+2. 🟡 Moyens (~33 items, ~45h) : tout le polish dette+UX+sécu
+3. 🟢 Bas (~9 items, ~5h) : nice-to-have post-launch
