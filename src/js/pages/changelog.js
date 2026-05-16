@@ -13,7 +13,7 @@ const Changelog = (() => {
       titleEn: 'Contact: ultra-simple form (just nickname + message → Discord)',
       items: [
         { type: 'fix', text: 'Le formulaire de contact dans l\'app était cassé depuis v0.9.161 (hCaptcha fail-closed). Refonte complète : on retire complètement le captcha, le champ email, et le champ nom. Le pseudo est récupéré côté serveur depuis le compte du user (champ username de userEmails). L\'utilisateur tape juste son message, clique envoyer, c\'est tout.', textEn: 'Contact form in app was broken since v0.9.161 (hCaptcha fail-closed). Full refactor: removed captcha, email, name fields. Nickname auto-fetched from server-side userEmails/{uid}.username. User just types message, hits send.' },
-        { type: 'feature', text: 'Nouvelle section Contact sur la landing page (B6) : pseudo + message, pas d\'email, pas de captcha. Visiteurs anonymes peuvent envoyer un message à Aaron via Discord. CF `sendContactMessage` accepte maintenant les appels non-authentifiés depuis la landing (avec validation pseudo + throttle 60s par IP avant-dernière du XFF).', textEn: 'New Contact section on landing page (B6): nickname + message, no email, no captcha. Anonymous visitors can send Aaron a message via Discord. CF accepts unauthenticated calls from landing (with nickname validation + 60s throttle per trusted IP).' },
+        { type: 'feature', text: 'Nouvelle section Contact sur la landing page (B6) : pseudo + message, pas d\'email, pas de captcha. Visiteurs anonymes peuvent envoyer un message à l\'équipe ZeldTrade via Discord. CF `sendContactMessage` accepte maintenant les appels non-authentifiés depuis la landing (avec validation pseudo + throttle 60s par IP avant-dernière du XFF).', textEn: 'New Contact section on landing page (B6): nickname + message, no email, no captcha. Anonymous visitors can send the ZeldTrade team a message via Discord. CF accepts unauthenticated calls from landing (with nickname validation + 60s throttle per trusted IP).' },
         { type: 'security', text: 'Sécu : throttle 60s par identité (uid si connecté, IP-bucketed avant-dernière du XFF si anonyme — cf. v0.9.170 anti IP-spoofing). Honeypot anti-bot conservé. maxInstances=5 sur la CF. Pseudo + message tronqués/sanitizés serveur. Pas de risque de fuite email puisqu\'on n\'en demande plus.', textEn: 'Security: 60s throttle per identity (uid or trusted-IP), honeypot kept, sanitization server-side. No email leak risk anymore.' },
       ],
     },
@@ -1451,7 +1451,7 @@ const Changelog = (() => {
       items: [
         { type: 'feat', text: 'Blocage du wizard si aucun compte configuré : toast d\'erreur', textEn: 'Wizard blocked if no account configured: error toast' },
         { type: 'feat', text: 'Blocage de la sauvegarde si aucun compte sélectionné dans le wizard', textEn: 'Save blocked if no account selected in the wizard' },
-        { type: 'fix',  text: 'Formulaire de contact : remplacement du placeholder "Aaron" par générique', textEn: 'Contact form: replaced "Aaron" placeholder with a generic one' },
+        { type: 'fix',  text: 'Formulaire de contact : remplacement d\'un placeholder personnel par un texte générique', textEn: 'Contact form: replaced personal placeholder with a generic one' },
       ],
     },
   ];
