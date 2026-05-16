@@ -37,6 +37,61 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-16 — v0.9.172 — Contact form refonte simple (B5 fixé + B6 ajouté)
+
+**Type** : fix + feature
+**Fichiers** : `functions/index.js` (sendContactMessage refactor), `src/js/contact.js` (refonte), `src/app.html` (form simplifié), `src/index.html` (section contact + Firebase SDK + JS inline), `src/js/pages/changelog.js`
+**Versions impactées** : Cloud Function `sendContactMessage` (v0.9.172), front (v0.9.172)
+
+### Contexte
+Demande user explicite : refonte du contact dans l'app + ajout sur landing page. **Pas d'email, pas de captcha, juste pseudo + message → Discord**. Le contact form app était cassé depuis v0.9.161 (hCaptcha fail-closed) → B5. La landing n'avait que des `mailto:` → B6.
+
+### Changements
+
+**`functions/index.js`** :
+- `_reserveContactSlot(docPath)` — généralisé pour accepter un chemin Firestore arbitraire (au lieu d'un uid). Permet bucketing par uid (auth) ou par IP (anonyme).
+- `sendContactMessage` refactor complet — 2 modes :
+  - **AUTH** : message lu, pseudo récupéré depuis `userEmails/{uid}.username` (fallback `User XXXXXX` si missing), throttle `users/{uid}/data/contactThrottle`, footer Discord `UID: ...`.
+  - **ANONYME** (depuis landing) : `request.auth === null` accepté, pseudo dans `request.data.name` (validé `length >= 2`), IP bucketed via `parts[length-2]` du XFF (cf. v0.9.170), throttle `contactThrottleAnon/{ipId}`, footer Discord `IP: ...`.
+- Retrait `HCAPTCHA_SECRET` des secrets du onCall (captcha supprimé). hCaptcha verifier conservé dans le code pour `notifyNewSignup` qui l'utilise encore.
+- Pas d'email dans le payload, pas d'email dans l'embed Discord, pas d'email_verified check sur le mode anonyme.
+- Embed Discord avec couleur différenciée : `BRAND` (violet) pour app, `INFO` (bleu) pour landing.
+
+**`src/js/contact.js`** :
+- Refonte complète. Plus de `cName`/`cEmail`/captcha. Juste lit `cMessage`, appelle `httpsCallable('sendContactMessage')({ message })`.
+- Honeypot conservé (faux succès si rempli).
+- Throttle client-side 60s gardé (UX, server-side primaire).
+
+**`src/app.html`** :
+- Form contact réduit à juste un textarea message + honeypot + bouton.
+- Retirée la 2ème instance du widget `<div class="h-captcha">` qui était dans le form contact.
+
+**`src/index.html`** (landing) :
+- Nouvelle section `<section id="contact">` entre FAQ et footer — pseudo + message + bouton + état succès.
+- CSS inline pour `.contact-box`, `.field`, `.send-btn`, `.success` (cohérent avec le design landing).
+- CSP meta élargie : ajout `https://www.gstatic.com` dans `script-src` et tous les endpoints Firebase nécessaires dans `connect-src` (la CSP server-side de firebase.json reste plus stricte/autoritative en prod).
+- Ajout Firebase SDK 10.12.4 `firebase-app-compat.js` + `firebase-functions-compat.js` depuis gstatic.
+- Script inline : init Firebase + handler submit form (validation pseudo/message, throttle 60s client, appel CF, gestion erreurs).
+- Liens "Demander un accès →" (pricing) et "Contact" (footer) pointent maintenant vers `#contact` au lieu de `mailto:`.
+
+### Impact
+- **Sécu** : pas de régression. Throttle 60s + maxInstances=5 + IP anti-spoofing (XFF parts[-2]) + honeypot = barrière anti-spam suffisante pour un volume MVP. Sans captcha = un peu plus exposé au bot spam que avant, mais Aaron juge le compromis OK (simplicité user prime).
+- **UX** : contact passe de "remplir 3 champs + cocher captcha + envoyer" à "écrire message + clic envoyer" (1 champ pour l'app, 2 pour la landing). Réduit massivement la friction.
+- **Légal** : pas d'email collecté = pas de traitement de donnée perso supplémentaire = simplifie compliance. Pseudo libre saisi par le user.
+- **B5** : fixé (le hCaptcha qui était le bug est retiré).
+- **B6** : fixé (form contact présent sur landing).
+
+### À surveiller
+- Spam sur le mode anonyme : si volume excessif, restaurer un captcha minimal (Turnstile invisible) ou serrer le throttle (passer à 5min/IP).
+- Discord webhook `DISCORD_SUPPORT_WEBHOOK` doit être configuré (déjà OK car en place pour app contact pré-v0.9.172).
+- `contactThrottleAnon/{ip}` : nouvelle collection Firestore. Pas de rules explicites — admin SDK bypass. Documenter quand on aura le temps.
+
+### Liens
+- B5/B6 dans `docs/TODO.md` (lignes 147-148).
+- Release v0.9.172 via `bash scripts/release.sh v0.9.172` + `firebase deploy --only functions:sendContactMessage`.
+
+---
+
 ## 2026-05-16 — v0.9.171 — Hardening admin (re-auth récente + rate-limits symétriques + CORS prod strict + SECURITY.md refonte)
 
 **Type** : security

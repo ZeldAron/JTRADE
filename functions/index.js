@@ -298,11 +298,12 @@ exports.analyzeChart = onCall(
 ));
 
 // ─── Anti-spam : rate-limit côté serveur via Firestore TRANSACTION ATOMIQUE ──
-// Commit le throttle AVANT l'envoi (anti-race : un attaquant qui spam-clic
-// pendant que Web3Forms répond ne peut PAS bypass le throttle en parallélisant).
-async function _reserveContactSlot(uid) {
+// Commit le throttle AVANT l'envoi (anti-race : spam-clic en parallèle ne
+// bypass plus le 60s). Path = doc Firestore arbitraire (uid ou IP-bucketed).
+// v0.9.172 : généralisé pour accepter aussi les contacts anonymes (landing).
+async function _reserveContactSlot(docPath) {
   const db        = admin.firestore();
-  const ref       = db.doc(`users/${uid}/data/contactThrottle`);
+  const ref       = db.doc(docPath);
   const COOLDOWN  = 60 * 1000;
   await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
@@ -313,7 +314,11 @@ async function _reserveContactSlot(uid) {
       throw new HttpsError('resource-exhausted',
         `Merci de patienter ${wait}s avant de renvoyer un message.`);
     }
-    tx.set(ref, { lastSentAt: now });
+    tx.set(ref, {
+      lastSentAt: now,
+      // TTL : on garde 1h max (les contactThrottle anonymes n'ont pas vocation à persister)
+      expireAt: admin.firestore.Timestamp.fromMillis(now + 60 * 60 * 1000),
+    });
   });
   return ref;
 }
@@ -448,6 +453,7 @@ async function _postDiscordWebhook(url, embed) {
 const DISCORD_COLOR_BRAND = 0x6366f1;
 const DISCORD_COLOR_GREEN = 0x3fb950;
 const DISCORD_COLOR_RED   = 0xf85149;  // erreurs CF
+const DISCORD_COLOR_INFO  = 0x58a6ff;  // contacts anonymes landing
 
 /**
  * Sentry-lite : post un embed rouge dans #dev-logs quand une CF plante.
@@ -526,51 +532,74 @@ function _wrapCF(name, handler) {
  *  - Rate-limit 1/60s par utilisateur
  *  - Validation stricte des champs
  */
+// v0.9.172 : refonte complète. 2 modes acceptés (auth ou anonyme depuis
+// landing), pas de captcha, pas d'email demandé/transmis.
+//  - Mode AUTH : pseudo récupéré côté serveur depuis userEmails/{uid}.username.
+//  - Mode ANONYME : pseudo fourni par le client (validé).
+// Anti-abuse : throttle 60s/uid (auth) ou 60s/IP (anonyme, IP=avant-dernière
+// du XFF cf. v0.9.170). Le throttle est la seule barrière anti-spam (captcha
+// retiré sur demande user) — combiné aux maxInstances=5, surface limitée.
 exports.sendContactMessage = onCall(
   {
-    secrets:        [DISCORD_SUPPORT_WEBHOOK, HCAPTCHA_SECRET, DISCORD_ERRORS_WEBHOOK],
-    // cors retiré : voir analyzeChart pour explication
+    secrets:        [DISCORD_SUPPORT_WEBHOOK, DISCORD_ERRORS_WEBHOOK],
     maxInstances:    5,
     timeoutSeconds:  20,
     memory:         '256MiB',
     region:         'europe-west1',
   },
   _wrapCF('sendContactMessage', async (request) => {
-    if (!request.auth) {
-      throw new HttpsError('unauthenticated', 'Authentication required');
-    }
-    const uid = request.auth.uid;
-
-    // Email vérifié obligatoire (anti-spoofing renforcé) — check AVANT throttle
-    // pour ne pas consommer le slot si le user n'est pas éligible
-    if (!request.auth.token.email_verified) {
-      throw new HttpsError('failed-precondition',
-        'Vérifie ton email avant d\'envoyer un message (consulte ta boîte mail).');
+    // Message obligatoire dans les deux modes
+    const message = _sanitizeMessage(request.data?.message, 5000);
+    if (message.length < 5) {
+      throw new HttpsError('invalid-argument', 'Message trop court (min 5 caractères).');
     }
 
-    // Réservation atomique du slot throttle (commit AVANT l'envoi Web3Forms —
-    // anti-race : spam-clic en parallèle ne bypass plus le 60s)
-    await _reserveContactSlot(uid);
+    let displayName  = '';
+    let throttlePath = '';
+    let source       = '';
+    let footerExtra  = '';
 
-    const name         = _sanitizeText(request.data?.name,    100);
-    const tokenEmail   = String(request.auth.token.email || '').toLowerCase();
-    const email        = tokenEmail;
-    // Le message peut contenir des retours ligne (utile dans Discord) — on
-    // utilise _sanitizeMessage qui préserve \n. Tronqué à 3900 chars pour
-    // tenir dans embed.description (limite Discord 4096).
-    const message      = _sanitizeMessage(request.data?.message, 5000);
-    const plan         = _sanitizeText(request.data?.plan,    20);
-    const captchaToken = String(request.data?.captchaToken || '').slice(0, 4096);
+    if (request.auth) {
+      // ── Mode AUTH (depuis l'app) ─────────────────────────────────────────
+      const uid = request.auth.uid;
+      if (!request.auth.token.email_verified) {
+        throw new HttpsError('failed-precondition',
+          'Vérifie ton email avant d\'envoyer un message (consulte ta boîte mail).');
+      }
+      // Pseudo lu depuis userEmails/{uid} (renseigné à la création du compte)
+      try {
+        const snap = await admin.firestore().doc(`userEmails/${uid}`).get();
+        displayName = String(snap.data()?.username || '').trim().slice(0, 100);
+      } catch {}
+      if (!displayName) displayName = `User ${uid.slice(0, 6)}`;
+      source       = 'app';
+      throttlePath = `users/${uid}/data/contactThrottle`;
+      footerExtra  = `UID: ${uid}`;
+    } else {
+      // ── Mode ANONYME (depuis la landing page) ────────────────────────────
+      // Pseudo fourni par le client (visiteur non authentifié).
+      const rawName = _sanitizeText(request.data?.name, 100);
+      if (rawName.length < 2) {
+        throw new HttpsError('invalid-argument', 'Pseudo trop court (min 2 caractères).');
+      }
+      displayName = rawName;
 
-    if (name.length < 2)         throw new HttpsError('invalid-argument', 'Nom invalide');
-    if (!email || !/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,253}\.[A-Za-z]{2,24}$/.test(email))
-      throw new HttpsError('failed-precondition', 'Email du compte invalide.');
-    if (message.length < 5)      throw new HttpsError('invalid-argument', 'Message trop court');
-    if (!captchaToken)           throw new HttpsError('invalid-argument', 'Captcha manquant');
+      // IP anti-spoofing (cf. v0.9.170) : avant-dernière du XFF = vue par Google LB
+      const ipRaw = request.rawRequest?.headers?.['x-forwarded-for'];
+      let ip = 'unknown';
+      if (typeof ipRaw === 'string') {
+        const parts = ipRaw.split(',').map(s => s.trim()).filter(Boolean);
+        if (parts.length >= 2) ip = parts[parts.length - 2];
+        else if (parts.length === 1) ip = parts[0];
+      }
+      const ipId   = ip.replace(/[^A-Za-z0-9.:_-]/g, '_').slice(0, 64) || 'unknown';
+      source       = 'landing';
+      throttlePath = `contactThrottleAnon/${ipId}`;
+      footerExtra  = `IP: ${ipId}`;
+    }
 
-    // Validation hCaptcha côté serveur (si HCAPTCHA_SECRET configuré, sinon skip)
-    const captchaOk = await _verifyHcaptcha(captchaToken);
-    if (!captchaOk) throw new HttpsError('failed-precondition', 'Captcha invalide');
+    // Throttle 60s (anti-race : commit avant envoi Discord)
+    await _reserveContactSlot(throttlePath);
 
     // Construction de l'embed Discord (canal #support-tickets)
     const truncated   = message.length > 3900;
@@ -578,15 +607,14 @@ exports.sendContactMessage = onCall(
       ? message.slice(0, 3900) + '\n\n*… (message tronqué)*'
       : message;
     const embed = {
-      title:       `📩 Message de ${name}`,
+      title:       `📩 Message de ${displayName}`,
       description,
-      color:       DISCORD_COLOR_BRAND,
+      color:       source === 'app' ? DISCORD_COLOR_BRAND : DISCORD_COLOR_INFO,
       fields: [
-        { name: '👤 Pseudo', value: name,         inline: true },
-        { name: '📧 Email',  value: email,        inline: true },
-        { name: '💎 Plan',   value: plan || '—',  inline: true },
+        { name: '👤 Pseudo', value: displayName,                          inline: true },
+        { name: '🌐 Source', value: source === 'app' ? 'App (connecté)' : 'Landing (anonyme)', inline: true },
       ],
-      footer:    { text: `UID: ${uid}` },
+      footer:    { text: footerExtra },
       timestamp: new Date().toISOString(),
     };
 
