@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.173',
+      date: '2026-05-16',
+      time: '23:45',
+      tags: ['feature', 'fix', 'ux'],
+      title: 'Désinscription newsletter en 1 clic + fix toggle Réglages',
+      titleEn: 'One-click newsletter unsubscribe + Settings toggle fix',
+      items: [
+        { type: 'feature', text: 'Nouveau système de désinscription newsletter en 1 clic conforme RGPD : lien `zeldtrade.com/unsubscribe?u=...&t=...` dans le footer des emails + bouton natif Gmail/Outlook via headers `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058). Plus besoin de se loguer dans l\'app pour se désinscrire — un clic suffit, confirmation instantanée.', textEn: 'New one-click newsletter unsubscribe (RGPD-compliant): link in email footer + native Gmail/Outlook button via List-Unsubscribe-Post header (RFC 8058). No login required — one click confirms.' },
+        { type: 'security', text: 'Tokens de désinscription signés HMAC SHA-256 (secret server-side `UNSUBSCRIBE_HMAC_KEY`), comparaison en temps constant pour anti-timing attack. Impossible de désinscrire quelqu\'un d\'autre sans connaître le secret.', textEn: 'Unsubscribe tokens HMAC-SHA-256 signed with server-side secret, constant-time comparison.' },
+        { type: 'fix', text: 'Réglages → Notifications email : le toggle "Recevoir les mises à jour" était étiré sur toute la ligne (énorme) à cause d\'un sélecteur CSS trop large qui appliquait `flex:1` à `<label class="switch">`. Fix : `flex:0 0 44px` explicite sur `.switch` pour bloquer le stretch.', textEn: 'Settings notifications: toggle button was stretched across the row due to overly broad CSS selector. Fix: explicit flex:0 0 44px on .switch.' },
+      ],
+    },
+    {
       version: '0.9.172',
       date: '2026-05-16',
       time: '22:30',
