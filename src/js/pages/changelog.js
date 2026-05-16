@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.155',
+      date: '2026-05-16',
+      time: '16:00',
+      tags: ['security', 'fix'],
+      title: 'Migration reCAPTCHA Enterprise → v3 (fix Safari + App Check 100%)',
+      titleEn: 'Migration reCAPTCHA Enterprise → v3 (Safari fix + 100% App Check)',
+      items: [
+        { type: 'fix', text: 'Bug v0.9.151-154 : reCAPTCHA Enterprise échouait systématiquement à générer des tokens sur Safari (issue firebase/firebase-js-sdk#9135, ouverte mars 2025, non fixée par Google). Conséquence : App Check rejeté → CFs en 401 → analyzeChart bloquée sur Safari.', textEn: 'v0.9.151-154 bug: reCAPTCHA Enterprise consistently failed to generate tokens on Safari (Firebase JS SDK issue #9135). App Check rejected → CFs return 401.' },
+        { type: 'security', text: 'Migration vers **reCAPTCHA v3** (non-Enterprise). Nouvelle clé v3 créée + Firebase App Check configuré pour utiliser v3. Code client (`firebase.js`) switch de `ReCaptchaEnterpriseProvider` → `ReCaptchaV3Provider`. v3 = mature, compatible Safari/Firefox/Chrome.', textEn: 'Migration to **reCAPTCHA v3** (non-Enterprise). v3 = mature, Safari-compatible.' },
+        { type: 'security', text: '`enforceAppCheck: true` ré-activé sur les 6 CFs critiques (analyzeChart + 5 admin). **Sécurité 100% activée sur tous les browsers.** Trade-off : v3 est moins sophistiqué qu\'Enterprise (pas de score-based assessment) mais largement suffisant pour anti-bot.', textEn: '`enforceAppCheck: true` re-enabled on 6 critical CFs. **Full security on all browsers.**' },
+      ],
+    },
+    {
       version: '0.9.154',
       date: '2026-05-16',
       time: '15:30',
