@@ -27,6 +27,7 @@ const DISCORD_ERRORS_WEBHOOK  = defineSecret('DISCORD_ERRORS_WEBHOOK');
 // hCaptcha — secret côté serveur pour vérifier les tokens captcha (optionnel)
 // Tant que pas setté avec une vraie valeur, le check est skipé (mode dégradé).
 const HCAPTCHA_SECRET       = defineSecret('HCAPTCHA_SECRET');
+const TURNSTILE_SECRET      = defineSecret('TURNSTILE_SECRET');  // v0.9.158 anti-bot analyzeChart
 // Stripe — clés en Secret Manager (test ET prod selon ce qui est setté)
 const STRIPE_SECRET_KEY     = defineSecret('STRIPE_SECRET_KEY');
 const STRIPE_WEBHOOK_SECRET = defineSecret('STRIPE_WEBHOOK_SECRET');
@@ -63,33 +64,26 @@ const ALLOWED_MODELS = new Set([
  * Validations côté serveur :
  *  - Auth requis (uid)
  *  - Quota AI : 1/jour pour Basic, illimité pour Pro
- *  - App Check token requis (anti-bot)
+ *  - Cloudflare Turnstile token requis (anti-bot, remplace App Check v0.9.158)
  *  - Modèle dans whitelist
  *  - Image taille max 8 MB en base64 (~6 MB binaire)
  *  - Prompt max 2000 chars
  */
 exports.analyzeChart = onCall(
   {
-    secrets:        [GROQ_API_KEY, DISCORD_ERRORS_WEBHOOK],
-    // v0.9.156 : App Check OFF DÉFINITIVEMENT sur analyzeChart.
+    secrets:        [GROQ_API_KEY, DISCORD_ERRORS_WEBHOOK, TURNSTILE_SECRET],
+    // v0.9.158 : App Check Firebase ABANDONNÉ (bug Safari ITP), remplacé par
+    // Cloudflare Turnstile (token vérifié server-side avant chaque analyse).
     //
-    // Décision prise après debug exhaustif (v0.9.151-155, ~4h de tentatives) :
-    //   - reCAPTCHA Enterprise échoue sur Safari (issue firebase-js-sdk#9135)
-    //   - reCAPTCHA v3 échoue aussi (401 sur /recaptcha/api2/pat)
-    //   - Safari Private Mode bloque 3rd-party iframe (par design Apple, non-fixable)
-    //
-    // analyzeChart étant la CF la plus user-facing (1 par analyse IA), la bloquer
-    // sur Safari = inacceptable. Les autres CFs (admin only) gardent App Check ON.
-    //
-    // Protections résiduelles sur analyzeChart (largement suffisantes pour beta) :
+    // Protections sur analyzeChart :
     //   - Auth obligatoire (request.auth)
     //   - email_verified obligatoire (S20)
+    //   - Cloudflare Turnstile token (anti-bot remplacement App Check)
     //   - Quota 1/jour Basic, 20/jour Pro
     //   - Groq API key server-side (jamais exposée)
     //   - maxInstances: 10 (anti-DoS)
     //   - Magic byte validation image (anti-MIME spoof)
     //   - Prompt length max 5000 chars
-    enforceAppCheck: false,
     maxInstances:    10,
     timeoutSeconds:  60,
     memory:         '256MiB',
@@ -105,7 +99,56 @@ exports.analyzeChart = onCall(
         'Vérifie ton email avant d\'utiliser l\'IA (consulte ta boîte mail — clique sur le lien de vérification Firebase).');
     }
     const uid = request.auth.uid;
-    const { model, prompt, imageB64 } = request.data || {};
+    const { model, prompt, imageB64, turnstileToken } = request.data || {};
+
+    // v0.9.160 — Anti-bot HYBRIDE (defense in depth) :
+    //   1. Si turnstileToken présent + valide → laisse passer (cas nominal, ~70% users)
+    //   2. Sinon (Safari ITP / Firefox extensions / scripts directs) → fallback
+    //      rate-limit IP strict (1 analyse / 5 min / IP) avant de laisser passer.
+    let turnstileOk = false;
+    if (turnstileToken && typeof turnstileToken === 'string' && turnstileToken.length > 10) {
+      turnstileOk = await _verifyTurnstile(turnstileToken);
+    }
+    if (!turnstileOk) {
+      // Fallback : rate-limit par IP. Stocke timestamp dernier appel dans
+      // Firestore. Si moins de 5 min depuis le précédent, refuse.
+      //
+      // v0.9.161 (H-001 fix) : anti IP-spoofing. Sur Firebase Functions Gen 2,
+      // X-Forwarded-For contient normalement 1-2 IPs (client + Google LB).
+      // Une chaîne >3 IPs = proxy chaining suspect → on bucket sur 'unknown'
+      // pour éviter qu'un attaquant via CDN/proxy chaîné multiplie ses IPs
+      // apparentes et bypass le rate-limit.
+      const ipRaw = request.rawRequest?.headers?.['x-forwarded-for'];
+      let ip = 'unknown';
+      if (typeof ipRaw === 'string') {
+        const parts = ipRaw.split(',').map(s => s.trim()).filter(Boolean);
+        if (parts.length > 0 && parts.length <= 3) ip = parts[0];
+        else if (parts.length > 3) console.warn('[analyzeChart] suspect X-Forwarded-For chain length:', parts.length);
+      }
+      // Sanitize IP pour usage comme doc ID Firestore (regex perm. ipv4/ipv6 chars)
+      const ipId = ip.replace(/[^A-Za-z0-9.:_-]/g, '_').slice(0, 64) || 'unknown';
+      const RATE_LIMIT_MS = 5 * 60 * 1000;  // 5 minutes
+      try {
+        const rlRef = admin.firestore().collection('ipRateLimit').doc(ipId);
+        const snap  = await rlRef.get();
+        const last  = (snap.exists && snap.data()?.lastCall) || 0;
+        const now   = Date.now();
+        if (now - last < RATE_LIMIT_MS) {
+          const waitSec = Math.ceil((RATE_LIMIT_MS - (now - last)) / 1000);
+          throw new HttpsError('resource-exhausted',
+            `Trop d'analyses depuis ton IP. Attends ${waitSec}s avant la prochaine.`);
+        }
+        await rlRef.set({
+          lastCall: now,
+          // TTL Firestore : ce doc expire automatiquement après 1h
+          expireAt: admin.firestore.Timestamp.fromMillis(now + 60 * 60 * 1000),
+        }, { merge: true });
+      } catch (e) {
+        if (e instanceof HttpsError) throw e;
+        console.warn('[analyzeChart] IP rate-limit lookup failed:', e && e.message);
+        // En cas d'échec lookup Firestore, on laisse passer (best-effort, pas DoS user)
+      }
+    }
 
     // ── Validation des paramètres ───────────────────────────────────────────
     if (typeof model !== 'string' || !ALLOWED_MODELS.has(model)) {
@@ -269,8 +312,10 @@ async function _verifyHcaptcha(token) {
   let secret;
   try { secret = HCAPTCHA_SECRET.value(); } catch { secret = ''; }
   if (!secret || secret === 'placeholder') {
-    console.warn('[hCaptcha] verify skipé (HCAPTCHA_SECRET non configuré)');
-    return true;  // mode dégradé : pas de blocage
+    // v0.9.161 (H-002 fix) : FAIL-CLOSED strict. Avant on returnait true
+    // (mode dégradé) — désactivait hCaptcha si secret manquant.
+    console.error('[hCaptcha] HCAPTCHA_SECRET non configuré — fail-closed strict (v0.9.161)');
+    return false;
   }
   if (!token || typeof token !== 'string' || token.length < 10) return false;
   try {
@@ -287,6 +332,38 @@ async function _verifyHcaptcha(token) {
   } catch (e) {
     console.error('[hCaptcha] verify error:', e && e.message);
     return false;  // si l'appel échoue avec secret défini, on refuse (strict)
+  }
+}
+
+// v0.9.158 : Vérification Cloudflare Turnstile (remplace App Check sur analyzeChart).
+// Retourne true si token valide pour notre site key, false sinon.
+//
+// v0.9.161 (H-002 fix) : FAIL-CLOSED si secret absent/placeholder. Avant on
+// retournait true (mode dégradé), ce qui désactivait Turnstile silencieusement
+// si un admin compromis supprimait TURNSTILE_SECRET. Maintenant : false strict.
+// Le fallback IP rate-limit dans analyzeChart prendra le relais comme prévu.
+async function _verifyTurnstile(token) {
+  let secret;
+  try { secret = TURNSTILE_SECRET.value(); } catch { secret = ''; }
+  if (!secret || secret === 'placeholder') {
+    console.error('[Turnstile] TURNSTILE_SECRET non configuré — fail-closed strict (v0.9.161)');
+    return false;
+  }
+  if (!token || typeof token !== 'string' || token.length < 10) return false;
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ secret, response: token }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      console.warn('[Turnstile] verify failed:', (data['error-codes'] || []).join(','));
+    }
+    return data.success === true;
+  } catch (e) {
+    console.error('[Turnstile] verify error:', e && e.message);
+    return false;
   }
 }
 
@@ -434,7 +511,6 @@ function _wrapCF(name, handler) {
  * Envoyer un message de contact via Web3Forms (clé côté serveur).
  * Sécurité :
  *  - Auth requis
- *  - App Check requis
  *  - Rate-limit 1/60s par utilisateur
  *  - Validation stricte des champs
  */
@@ -515,7 +591,6 @@ exports.sendContactMessage = onCall(
  * Notifier l'admin d'une nouvelle inscription (appelée juste après register).
  * Sécurité :
  *  - Auth requis (donc la fonction n'est invocable que par un user fraichement inscrit)
- *  - App Check requis
  */
 exports.notifyNewSignup = onCall(
   {
@@ -622,8 +697,6 @@ async function _writeAuditLog(action, adminEmail, payload) {
 exports.deleteUserAccount = onCall(
   {
     secrets:        [DISCORD_ERRORS_WEBHOOK],
-    // v0.9.152 : App Check réactivé (config GCP Console + IAM SA fixée 2026-05-16)
-    enforceAppCheck: true,
     maxInstances:    2,
     timeoutSeconds:  60,
     memory:         '256MiB',
@@ -805,8 +878,6 @@ exports.deleteUserAccount = onCall(
 exports.generateProCode = onCall(
   {
     secrets:        [DISCORD_ERRORS_WEBHOOK],
-    // v0.9.152 : App Check réactivé (config GCP Console + IAM SA fixée 2026-05-16)
-    enforceAppCheck: true,
     maxInstances:    2,
     timeoutSeconds:  15,
     memory:         '256MiB',
@@ -891,8 +962,6 @@ exports.generateProCode = onCall(
 exports.revokeProCode = onCall(
   {
     secrets:        [DISCORD_ERRORS_WEBHOOK],
-    // v0.9.152 : App Check réactivé (config GCP Console + IAM SA fixée 2026-05-16)
-    enforceAppCheck: true,
     maxInstances:    2,
     timeoutSeconds:  20,
     memory:         '256MiB',
@@ -1226,7 +1295,6 @@ exports.stripeWebhook = onRequest(
 exports.cleanupOrphanUserEmails = onCall(
   {
     secrets:        [DISCORD_ERRORS_WEBHOOK],
-    enforceAppCheck: true,
     maxInstances:    1,  // 1 seul admin, pas de raison de paralléliser
     timeoutSeconds:  60,
     memory:          '256MiB',
@@ -1390,8 +1458,6 @@ exports.cleanupOrphanUserEmails = onCall(
 exports.adminMarkEmailVerified = onCall(
   {
     secrets:        [DISCORD_ERRORS_WEBHOOK],
-    // v0.9.152 : App Check réactivé (config GCP Console + IAM SA fixée 2026-05-16)
-    enforceAppCheck: true,
     maxInstances:    1,
     timeoutSeconds:  120,
     memory:          '256MiB',

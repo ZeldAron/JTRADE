@@ -77,6 +77,14 @@ service cloud.firestore {
       allow write, delete: if false;
     }
 
+    // ── Rate-limit par IP (v0.9.160 : fallback Turnstile pour Safari/Firefox sans
+    // extensions). Écrit UNIQUEMENT par analyzeChart CF via admin SDK. Aucun
+    // accès client : un attaquant ne peut pas falsifier l'historique de son IP.
+    match /ipRateLimit/{ip} {
+      allow read:   if isAdmin();
+      allow write, delete: if false;
+    }
+
     // ── Soft-deleted users (archive 30j avant purge définitive) ─────────────────
     // Écrit par Cloud Function lors d'un deleteUserAccount, accessible admin uniquement
     // pour restauration manuelle dans les 30 jours. Aucun accès client.
