@@ -720,6 +720,88 @@
       line-height: 1.6;
     }
 
+    /* ── Firms strip — wordmarks animés (v0.9.178) ──────────────────── */
+    .firms-strip {
+      max-width: 1100px;
+      margin: 32px auto 8px;
+      padding: 18px 0;
+      position: relative;
+      overflow: hidden;
+      mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+    }
+    .firms-label {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 14px;
+      font-weight: 600;
+    }
+    .firms-track {
+      display: flex;
+      gap: 28px;
+      width: max-content;
+      animation: firms-scroll 28s linear infinite;
+    }
+    .firms-strip:hover .firms-track { animation-play-state: paused; }
+    @keyframes firms-scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .firm-badge {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 22px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+      position: relative;
+      min-width: 180px;
+    }
+    .firm-badge:hover {
+      transform: translateY(-3px) scale(1.04);
+      border-color: var(--firm-color, var(--accent));
+      box-shadow: 0 14px 32px -8px var(--firm-glow, rgba(124,58,237,0.35));
+    }
+    .firm-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--firm-color, var(--accent));
+      box-shadow: 0 0 12px var(--firm-color, var(--accent));
+      animation: firm-pulse 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes firm-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%      { transform: scale(1.4); opacity: 0.6; }
+    }
+    .firm-name {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .firm-name .firm-suffix {
+      font-weight: 400;
+      color: var(--muted);
+      font-size: 12px;
+      margin-left: 4px;
+    }
+
+    /* Couleurs spécifiques par firm */
+    .firm-apex    { --firm-color: #ff6b35; --firm-glow: rgba(255,107,53,0.4); }
+    .firm-ftmo    { --firm-color: #00d97e; --firm-glow: rgba(0,217,126,0.4); }
+    .firm-topstep { --firm-color: #ef4444; --firm-glow: rgba(239,68,68,0.4); }
+    .firm-lucid   { --firm-color: #a855f7; --firm-glow: rgba(168,85,247,0.4); }
+    .firm-fpips   { --firm-color: #3b82f6; --firm-glow: rgba(59,130,246,0.4); }
+
     /* ── Comment ça marche (3 étapes, v0.9.177) ──────────────────────── */
     .how {
       display: grid;
@@ -1213,6 +1295,25 @@
         <div class="stat-num">0 €</div>
         <div class="stat-label">Pendant la beta</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ─── Firms strip — wordmarks animés (v0.9.178) ─────────────────────── -->
+  <div class="firms-strip" aria-label="Prop firms supportées">
+    <div class="firms-label">Compatible avec les principales prop firms</div>
+    <div class="firms-track" role="list">
+      <!-- 1er cycle -->
+      <div class="firm-badge firm-apex"    role="listitem"><span class="firm-dot"></span><span class="firm-name">APEX<span class="firm-suffix">Trader Funding</span></span></div>
+      <div class="firm-badge firm-ftmo"    role="listitem"><span class="firm-dot"></span><span class="firm-name">FTMO<span class="firm-suffix">1-Step + 2-Step</span></span></div>
+      <div class="firm-badge firm-topstep" role="listitem"><span class="firm-dot"></span><span class="firm-name">TOPSTEP<span class="firm-suffix">Combine</span></span></div>
+      <div class="firm-badge firm-lucid"   role="listitem"><span class="firm-dot"></span><span class="firm-name">LUCID<span class="firm-suffix">Trading</span></span></div>
+      <div class="firm-badge firm-fpips"   role="listitem"><span class="firm-dot"></span><span class="firm-name">FUNDING PIPS<span class="firm-suffix">Static DD</span></span></div>
+      <!-- 2e cycle (dupliqué pour scroll infini sans saut) -->
+      <div class="firm-badge firm-apex"    aria-hidden="true"><span class="firm-dot"></span><span class="firm-name">APEX<span class="firm-suffix">Trader Funding</span></span></div>
+      <div class="firm-badge firm-ftmo"    aria-hidden="true"><span class="firm-dot"></span><span class="firm-name">FTMO<span class="firm-suffix">1-Step + 2-Step</span></span></div>
+      <div class="firm-badge firm-topstep" aria-hidden="true"><span class="firm-dot"></span><span class="firm-name">TOPSTEP<span class="firm-suffix">Combine</span></span></div>
+      <div class="firm-badge firm-lucid"   aria-hidden="true"><span class="firm-dot"></span><span class="firm-name">LUCID<span class="firm-suffix">Trading</span></span></div>
+      <div class="firm-badge firm-fpips"   aria-hidden="true"><span class="firm-dot"></span><span class="firm-name">FUNDING PIPS<span class="firm-suffix">Static DD</span></span></div>
     </div>
   </div>
 
@@ -1722,7 +1823,7 @@
       <a href="#contact" class="footer-link">Contact</a>
     </div>
     <div>
-      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.177</span>
+      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.178</span>
     </div>
   </footer>
 
