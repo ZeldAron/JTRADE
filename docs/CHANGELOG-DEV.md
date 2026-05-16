@@ -37,6 +37,43 @@ Pourquoi cette modif, quelle était le problème.
 
 ---
 
+## 2026-05-16 — v0.9.169 — Export PDF : 1 page par trade chronologique + fix CORS Storage
+
+**Type** : feat + fix
+**Fichiers** : `src/js/pages/export-pdf.js`, `scripts/storage-cors.json` (nouveau), `src/app.html`, `src/index.html`, `src/js/pages/changelog.js`
+**Versions impactées** : front (v0.9.169), Storage bucket CORS (appliqué via gsutil)
+
+### Contexte
+Depuis l'ajout des screenshots dans le PDF (v0.9.166-168), deux problèmes restaient :
+1. Firebase Storage bucket sans config CORS → `img.crossOrigin = 'anonymous'` échouait → screenshots non embarqués (séparateur affiché mais aucune page screenshot derrière).
+2. User demandait une structure plus simple : 1 page par trade dans l'ordre chronologique, screenshot intégré quand présent, plutôt qu'une liste compacte + section screenshots séparée.
+
+### Changements
+- **CORS Storage** : créé `scripts/storage-cors.json` avec whitelist (`zeldtrade.com`, `www.zeldtrade.com`, `*.web.app`, `*.firebaseapp.com`, `zeldaron.github.io`, `localhost:5000`, `localhost:8080`), méthodes `GET`/`HEAD`, `Content-Type` + `Access-Control-Allow-Origin` exposés, maxAge 3600. Appliqué via `gsutil cors set scripts/storage-cors.json gs://zeldtrade.firebasestorage.app`.
+- **Refonte PDF** (`export-pdf.js`) :
+  - Suppression de `_drawTradesPage()` (liste compacte ~6 trades/page).
+  - Suppression de la page séparateur "Screenshots des trades".
+  - Renommage `_drawTradeScreenshotPage` → `_drawTradeDetailPage` qui gère `imgDataUrl === null` (affiche "Aucun screenshot pour ce trade.").
+  - Ajout argument `indexLabel` au header : "Trade N/total".
+  - Tri changé : `_tradeMs(a) - _tradeMs(b)` (chronologique ascendant, du plus ancien au plus récent) au lieu de descendant.
+  - Nouvelle boucle dans `generate()` : pour chaque trade, fetch optionnel du screenshot puis 1 page détail. `progress({ phase: 'trades', current, total })` au lieu de `screenshots`.
+- Bump version 0.9.168 → 0.9.169 (`src/app.html` cache-busts + version Settings, `src/index.html` footer, entrée changelog.js).
+
+### Impact
+- **UX** : PDF plus lisible — 1 page par trade avec toutes les infos (date, instrument, direction, levels, P&L, R:R, setup, notes, screenshot) au lieu de devoir naviguer entre une liste compacte et une section screenshot séparée. Ordre chronologique respecte l'usage attendu d'un journal de trading.
+- **Sécu** : pas d'impact négatif. CORS sur Storage limite les origines à notre domaine + dev → empêche d'autres sites de hotlinker les screenshots des users (n'était pas une protection avant car URLs signées, mais ça réduit la surface).
+- **Perf** : potentiellement plus de pages dans le PDF si beaucoup de trades (1 page chacun au lieu de 6/page). Fetch screenshot reste séquentiel — un user avec 50 trades + screenshots verrait ~50s d'attente sur connexion moyenne. À monitorer.
+
+### À surveiller
+- Cas avec 100+ trades : taille PDF + temps de génération.
+- Trades sans screenshot : la page affiche bien le fallback texte.
+- Cache navigateur : forcer `Cmd+Shift+R` après deploy car bump `?v=` ne couvre pas les images Storage.
+
+### Liens
+- Commit à venir, release v0.9.169 via `bash scripts/release.sh v0.9.169`.
+
+---
+
 ## 2026-05-15 — v0.9.147 — URLs propres (cleanUrls Firebase Hosting)
 
 **Type** : ux / polish
