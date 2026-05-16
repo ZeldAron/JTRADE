@@ -111,6 +111,15 @@ Sans domaine `zeldtrade.com` :
 - Sections à inspecter en priorité : dashboard, calendrier, settings, modal trade, login/signup, landing page hero
 - Effort estimé : 2-4h selon profondeur du fix (CSS responsive + tests)
 
+**Renommage UI "Groq" → "IA d'analyses" (signalé user 2026-05-16)** :
+- **U-IA1** Remplacer toutes les mentions user-facing de "Groq" / "Groq Vision" par "IA d'analyses" (plus générique, moins technique pour les bêta-testeurs)
+- Périmètre **user-facing** (à renommer) : ~25 occurrences dans `src/app.html` (Settings → section IA, tuto step 3), `src/index.html` (landing hero/features), `src/js/i18n.js` (clés `set.groq.*`, `tuto.s3.*`), `src/js/pages/changelog.js` (entrées historiques optionnel), labels boutons modal IA dans `src/js/modal.js`
+- Périmètre **À NE PAS TOUCHER** :
+  - `legal.html` + `privacy.html` : la mention "Groq, Inc." reste **obligatoire légalement** (transparence RGPD sur les sous-traitants exacts)
+  - Code interne : `_globalGroqKey`, `getGroqKey()`, `GROQ_API_KEY` secret, `config/groq`, etc. — noms internes techniques, garder
+- Choix de wording côté user : **"IA d'analyses"** (suggéré par l'user) — alternatives possibles : "IA Vision", "Analyse IA", "Assistant IA"
+- Effort estimé : 30-45 min (renommage cross-files + bump i18n + test visuel + release mineure)
+
 ---
 
 ## ⚪ BAS — Nice-to-have (65+ findings)
