@@ -701,22 +701,59 @@
       }
 
       const btn = $('btnExpPdfGenerate');
+      const cancelBtn = $('btnExpPdfCancel');
       const originalLabel = btn.textContent;
       btn.disabled = true;
+      cancelBtn.disabled = true;
       btn.textContent = t('set.export.pdf.loading') || 'Génération…';
 
+      // v0.9.166 : crée un container de progression pour les screenshots
+      let progressEl = document.getElementById('expPdfProgress');
+      if (!progressEl) {
+        progressEl = document.createElement('div');
+        progressEl.id = 'expPdfProgress';
+        progressEl.style.cssText = 'margin-top:14px;padding:12px 14px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.3);border-radius:8px;font-size:13px;color:var(--text)';
+        errEl.parentNode.insertBefore(progressEl, errEl);
+      }
+      progressEl.style.display = '';
+      progressEl.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(167,139,250,0.3);border-top-color:#a78bfa;border-radius:50%;animation:spin 0.8s linear infinite"></span><span id="expPdfProgressText">Préparation…</span></div><div style="margin-top:8px;background:rgba(255,255,255,0.05);height:4px;border-radius:2px;overflow:hidden"><div id="expPdfProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#a78bfa);transition:width 0.3s"></div></div>';
+      // Inject CSS pour spinner (idempotent)
+      if (!document.getElementById('expPdfProgressStyle')) {
+        const style = document.createElement('style');
+        style.id = 'expPdfProgressStyle';
+        style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+      }
+
+      function onProgress(info) {
+        const txt = document.getElementById('expPdfProgressText');
+        const bar = document.getElementById('expPdfProgressBar');
+        if (!txt) return;
+        txt.textContent = info.message || '…';
+        if (info.phase === 'screenshots' && info.total > 0) {
+          bar.style.width = Math.round((info.current / info.total) * 100) + '%';
+        } else if (info.phase === 'finalizing') {
+          bar.style.width = '95%';
+        } else if (info.phase === 'done') {
+          bar.style.width = '100%';
+        }
+      }
+
       try {
-        const result = await ExportPDF.generate({ startMs, endMs, accountId: acc });
+        const result = await ExportPDF.generate({ startMs, endMs, accountId: acc, onProgress });
+        const shotsMsg = result.screenshots > 0 ? ` + ${result.screenshots} screenshot(s)` : '';
         UI.toast(
           (t('set.export.pdf.ok') || 'PDF généré : %n trades sur %p pages.')
             .replace('%n', result.count)
-            .replace('%p', result.pages)
+            .replace('%p', result.pages) + shotsMsg
         );
         close();
       } catch (e) {
         errEl.textContent = e.message || (t('set.export.pdf.err.generic') || 'Échec de la génération.');
         errEl.style.display = '';
+        progressEl.style.display = 'none';
         btn.disabled = false;
+        cancelBtn.disabled = false;
         btn.textContent = originalLabel;
       }
     });

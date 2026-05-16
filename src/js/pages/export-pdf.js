@@ -302,9 +302,143 @@ const ExportPDF = (() => {
     }
   }
 
+  // v0.9.166 : Helper fetch screenshot Storage → base64 data URL
+  // Retourne null si échec (image manquante, erreur réseau, etc.)
+  async function _fetchScreenshotBase64(path) {
+    if (!path || !Store.getTradeScreenshotUrl) return null;
+    try {
+      const url = await Store.getTradeScreenshotUrl(path);
+      if (!url) return null;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      return await new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload  = () => resolve(fr.result);
+        fr.onerror = () => reject(new Error('FileReader failed'));
+        fr.readAsDataURL(blob);
+      });
+    } catch (e) {
+      console.warn('[ExportPDF] screenshot fetch failed:', path, e && e.message);
+      return null;
+    }
+  }
+
+  // v0.9.166 : Page dédiée pour un trade avec son screenshot
+  function _drawTradeScreenshotPage(doc, trade, imgDataUrl, username) {
+    _drawHeader(doc, username);
+    const w = doc.internal.pageSize.getWidth();
+    const h = doc.internal.pageSize.getHeight();
+    let y = 32;
+
+    // En-tête du trade
+    const pnl       = _tradePnl(trade);
+    const isWin     = pnl > 0.01;
+    const isLoss    = pnl < -0.01;
+    const direction = (trade.direction === 'short') ? 'SHORT' : 'LONG';
+    const dirColor  = (trade.direction === 'short') ? COLOR_RED : COLOR_GREEN;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(...COLOR_TEXT);
+    doc.text(`Trade : ${_fmtDate(trade.date)}`, 14, y);
+
+    // Direction badge en haut à droite
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setFillColor(...dirColor);
+    doc.setTextColor(255, 255, 255);
+    doc.roundedRect(w - 38, y - 5, 24, 8, 1.5, 1.5, 'F');
+    doc.text(direction, w - 26, y + 1, { align: 'center' });
+    y += 8;
+
+    // Symbole + Compte
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...COLOR_MUTED);
+    doc.text(`${trade.symbol || trade.instrument || '—'}  ·  ${trade.apex || '—'}`, 14, y);
+    y += 6;
+
+    // Niveaux
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...COLOR_TEXT);
+    doc.text(`Entry ${trade.entry ?? '—'}   SL ${trade.sl ?? '—'}   TP1 ${trade.tp1 ?? '—'}`, 14, y);
+    y += 5;
+
+    // P&L à droite
+    const tradeRr = _tradeRr(trade);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...(isWin ? COLOR_GREEN : isLoss ? COLOR_RED : COLOR_TEXT));
+    doc.text(_fmtMoney(pnl), w - 14, y, { align: 'right' });
+    if (typeof tradeRr === 'number' && isFinite(tradeRr)) {
+      doc.setFontSize(9);
+      doc.setTextColor(...COLOR_MUTED);
+      doc.text(`R:R ${tradeRr.toFixed(2)}`, w - 14, y - 5, { align: 'right' });
+    }
+    y += 4;
+
+    // Setup + Notes
+    const setupText = (trade.setup || '').trim();
+    const noteText  = (trade.note || trade.notes || '').trim();
+    if (setupText) {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9);
+      doc.setTextColor(...COLOR_MUTED);
+      const lines = doc.splitTextToSize(`Setup : ${setupText}`, w - 28);
+      doc.text(lines, 14, y);
+      y += lines.length * 4;
+    }
+    if (noteText) {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9);
+      doc.setTextColor(...COLOR_MUTED);
+      const lines = doc.splitTextToSize(`Notes : ${noteText}`, w - 28);
+      doc.text(lines, 14, y);
+      y += lines.length * 4;
+    }
+
+    y += 2;
+
+    // Screenshot — fit dans l'espace restant avec ratio préservé
+    if (imgDataUrl) {
+      try {
+        // Détermine les dimensions de l'image
+        const imgProps = doc.getImageProperties(imgDataUrl);
+        const maxW = w - 28;
+        const maxH = h - y - 20; // 20mm reserve for footer
+        let imgW = imgProps.width;
+        let imgH = imgProps.height;
+        const ratio = imgW / imgH;
+        // Scale pour fit
+        if (imgW > maxW * 4) { // px → mm conversion rough
+          imgW = maxW;
+          imgH = maxW / ratio;
+        } else {
+          imgW = maxW;
+          imgH = maxW / ratio;
+        }
+        if (imgH > maxH) {
+          imgH = maxH;
+          imgW = maxH * ratio;
+        }
+        const xOffset = (w - imgW) / 2;
+        doc.addImage(imgDataUrl, 'JPEG', xOffset, y, imgW, imgH, undefined, 'FAST');
+      } catch (e) {
+        console.warn('[ExportPDF] addImage failed for trade', trade.id, e && e.message);
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(10);
+        doc.setTextColor(...COLOR_MUTED);
+        doc.text('Screenshot non affichable (format non supporté ou corrompu).', 14, y + 10);
+      }
+    }
+  }
+
   // ── Génération du PDF complet ──────────────────────────────────────────────
   async function generate(opts) {
-    const { startMs, endMs, accountId } = opts || {};
+    const { startMs, endMs, accountId, onProgress } = opts || {};
+    const progress = (typeof onProgress === 'function') ? onProgress : () => {};
 
     // 1. Garde Pro (double check sécurité)
     if (typeof Store === 'undefined' || !Store.isPro || !Store.isPro()) {
@@ -350,6 +484,8 @@ const ExportPDF = (() => {
     const JsPDF = _getJsPDF();
     const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
+    progress({ phase: 'building', message: 'Génération du rapport…' });
+
     // 7. Page de garde
     _drawCoverPage(doc, ctx);
 
@@ -361,6 +497,48 @@ const ExportPDF = (() => {
         _drawTradesPage(doc, trades.slice(i, i + PER_PAGE), i, username);
       }
     }
+
+    // 8 bis. v0.9.166 — Pages dédiées pour les trades avec screenshot
+    // 1 page par trade qui a screenshotPath, avec image en grand.
+    const tradesWithShots = trades.filter(t => t && t.screenshotPath);
+    let shotsCount = 0;
+    if (tradesWithShots.length > 0) {
+      progress({
+        phase: 'screenshots',
+        current: 0,
+        total: tradesWithShots.length,
+        message: `Téléchargement des screenshots (0/${tradesWithShots.length})…`,
+      });
+      // Page de séparation
+      doc.addPage();
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(24);
+      doc.setTextColor(...COLOR_TEXT);
+      doc.text('Screenshots des trades', 14, 60);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(...COLOR_MUTED);
+      doc.text(`${tradesWithShots.length} trade(s) avec capture d'écran`, 14, 70);
+
+      // Fetch + render 1 page par trade avec screenshot
+      for (let i = 0; i < tradesWithShots.length; i++) {
+        const trade = tradesWithShots[i];
+        progress({
+          phase: 'screenshots',
+          current: i + 1,
+          total: tradesWithShots.length,
+          message: `Téléchargement screenshot ${i + 1}/${tradesWithShots.length}…`,
+        });
+        const imgDataUrl = await _fetchScreenshotBase64(trade.screenshotPath);
+        if (imgDataUrl) {
+          doc.addPage();
+          _drawTradeScreenshotPage(doc, trade, imgDataUrl, username);
+          shotsCount++;
+        }
+      }
+    }
+
+    progress({ phase: 'finalizing', message: 'Finalisation du PDF…' });
 
     // 9. Footer sur toutes les pages
     const totalPages = doc.getNumberOfPages();
@@ -374,7 +552,9 @@ const ExportPDF = (() => {
     const filename = `zeldtrade-export-${dateStr}.pdf`;
     doc.save(filename);
 
-    return { ok: true, count: trades.length, pages: totalPages, filename };
+    progress({ phase: 'done', message: 'PDF téléchargé !' });
+
+    return { ok: true, count: trades.length, pages: totalPages, screenshots: shotsCount, filename };
   }
 
   return { generate };
