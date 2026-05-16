@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.171',
+      date: '2026-05-16',
+      time: '21:00',
+      tags: ['security'],
+      title: 'Hardening admin : re-auth récente + rate-limits symétriques + CORS Storage strict',
+      titleEn: 'Admin hardening: recent re-auth + symmetric rate-limits + strict Storage CORS',
+      items: [
+        { type: 'security', text: 'Audit a révélé 3 faiblesses sur la chaîne admin. Fix : helper `_assertAdmin()` centralisé qui exige une session Firebase < 60 min pour TOUTES les CFs destructives (deleteUserAccount, generateProCode, revokeProCode, createCheckoutSession, cleanupOrphanUserEmails, adminMarkEmailVerified). Si un token admin est volé/phishé, l\'attaquant a au max 1h pour agir avant que le check `auth_time` ne le rejette.', textEn: 'Audit revealed 3 weaknesses in admin chain. Fix: centralized `_assertAdmin()` helper enforces Firebase session < 60 min for ALL destructive admin CFs. Stolen tokens have 1h max attack window.' },
+        { type: 'security', text: 'Rate-limit admin symétrique : `deleteUserAccount` 5/h, `revokeProCode` 10/h, `adminMarkEmailVerified` 5/h (avant : seul `generateProCode` rate-limité à 10/h, les autres étaient illimités). Helper `_assertAdminRateLimit()` déduplique le pattern transaction Firestore. Empêche la destruction de masse si compte admin compromis.', textEn: 'Symmetric admin rate-limits. Previously only generateProCode was limited; now deleteUserAccount/revokeProCode/adminMarkEmailVerified are too. Prevents mass destruction if admin compromised.' },
+        { type: 'security', text: 'CORS Firebase Storage en prod : retrait de `http://localhost:5000` et `http://localhost:8080` de la whitelist (configs séparées `storage-cors-prod.json` et `storage-cors-dev.json`). Applique strictement les 5 origines de prod (zeldtrade.com, www., web.app, firebaseapp.com, github.io). Pour dev local, appliquer manuellement la config dev.', textEn: 'Production Storage CORS now strict: localhost removed, only 5 prod origins allowed. Separate dev config available.' },
+        { type: 'security', text: 'Refonte complète de `docs/SECURITY.md` : ancien doc obsolète (parlait encore d\'App Check). Nouveau doc reflète l\'état réel post-audit (v0.9.171). Score sécu : 8.5-9/10 (+1.5 depuis v0.9.111).', textEn: 'Full rewrite of docs/SECURITY.md to reflect post-audit state. Sec score: 8.5-9/10 (+1.5 since v0.9.111).' },
+      ],
+    },
+    {
       version: '0.9.170',
       date: '2026-05-16',
       time: '19:30',
