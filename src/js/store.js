@@ -69,10 +69,16 @@ const Store = (() => {
       { id:'apex-100k', size:'100K', capital:100000, profitTarget:6000, maxDrawdown:3000, dailyLossLimit:1500, maxContractsEval:8,  maxContractsPA:6,  evalFee:59.90, activationFeePA:149, drawdownType:'Trailing EOD (se fige à PT)', consistency:'≤50% meilleure journée (PA)', minTradingDays:1, payoutConditions:'PA $149 — 5 trading days, max 20 comptes' },
       { id:'apex-150k', size:'150K', capital:150000, profitTarget:9000, maxDrawdown:4000, dailyLossLimit:2000, maxContractsEval:12, maxContractsPA:10, evalFee:89.90, activationFeePA:169, drawdownType:'Trailing EOD (se fige à PT)', consistency:'≤50% meilleure journée (PA)', minTradingDays:1, payoutConditions:'PA $169 — 5 trading days, max 20 comptes' },
     ]},
-    topstep: { name: 'Topstep',         accounts: [
-      { id:'topstep-50k',  size:'50K',  capital:50000,  profitTarget:3000,  maxDrawdown:2000, dailyLossLimit:0,    drawdownType:'Trailing EOD', consistency:'≤50% PT (PT ajusté si dépassé)',    minTradingDays:0, payoutConditions:'100% premier $10K, puis 90/10 — 5j gagnants min' },
-      { id:'topstep-100k', size:'100K', capital:100000, profitTarget:6000,  maxDrawdown:3000, dailyLossLimit:0,    drawdownType:'Trailing EOD', consistency:'≤50% PT (PT ajusté si dépassé)',    minTradingDays:0, payoutConditions:'100% premier $10K, puis 90/10 — 5j gagnants min' },
-      { id:'topstep-150k', size:'150K', capital:150000, profitTarget:9000,  maxDrawdown:4500, dailyLossLimit:0,    drawdownType:'Trailing EOD', consistency:'≤50% PT (PT ajusté si dépassé)',    minTradingDays:0, payoutConditions:'100% premier $10K, puis 90/10 — 5j gagnants min' },
+    // ─── Topstep 2026 — refonte v0.9.188 ───
+    // Source : help.topstep.com (Trading Combine Parameters + Max Loss Limit + Live Funded).
+    // 2 phases : Trading Combine (éval, $49/$99/$149 mensuel) → Express ou Live Funded Account.
+    // MLL (Max Loss Limit) = trailing drawdown qui se fige à starting balance + PT.
+    // Pas de DLL fixe sur le Combine — Live Funded a un DLL dynamique de base $2K/$3K/$4.5K.
+    // Consistency : best day ≤ 50% des profits totaux. 5 jours gagnants min pour 1er payout.
+    topstep: { name: 'Topstep', accounts: [
+      { id:'topstep-50k',  size:'50K',  capital:50000,  profitTarget:3000, maxDrawdown:2000, dailyLossLimit:0, maxContractsEval:5,  evalFeeMonthly:49,  drawdownType:'Trailing (se fige à PT)', consistency:'Best day ≤50% profits totaux', minTradingDays:5, payoutConditions:'Combine $49/mois — Live Funded DLL $2K — 50% premiers profits jusqu\'à 30j, puis 100% (max $5K), 5j gagnants min' },
+      { id:'topstep-100k', size:'100K', capital:100000, profitTarget:6000, maxDrawdown:3000, dailyLossLimit:0, maxContractsEval:10, evalFeeMonthly:99,  drawdownType:'Trailing (se fige à PT)', consistency:'Best day ≤50% profits totaux', minTradingDays:5, payoutConditions:'Combine $99/mois — Live Funded DLL $3K — 50% premiers profits jusqu\'à 30j, puis 100% (max $10K), 5j gagnants min' },
+      { id:'topstep-150k', size:'150K', capital:150000, profitTarget:9000, maxDrawdown:4500, dailyLossLimit:0, maxContractsEval:15, evalFeeMonthly:149, drawdownType:'Trailing (se fige à PT)', consistency:'Best day ≤50% profits totaux', minTradingDays:5, payoutConditions:'Combine $149/mois — Live Funded DLL $4.5K — 50% premiers profits jusqu\'à 30j, puis 100% (max $15K), 5j gagnants min' },
     ]},
     ftmo:    { name: 'FTMO (CFD/Forex)', accounts: [
       { id:'ftmo-10k',     size:'10K',  capital:10000,  profitTarget:1000,  maxDrawdown:1000,  dailyLossLimit:500,   drawdownType:'Statique (2-Step)', consistency:'Aucune', minTradingDays:4, payoutConditions:'80% split (90% après scaling) — fee remboursé au 1er payout' },
