@@ -159,7 +159,7 @@ const Admin = (() => {
           <div class="cell-dates-seen">Vu ${lastSeenRel}</div>
         </td>
         <td class="cell-actions">
-          <button class="ico-btn ico-btn-violet" data-action="gen"    data-uid="${esc(u.uid)}" data-email="${esc(u.email)}" title="Générer un code Pro">🎟️</button>
+          <button class="ico-btn ico-btn-violet" data-action="gen"    data-uid="${esc(u.uid)}" data-email="${esc(u.email)}" title="Générer un code Bêta Testeur (accès complet)">🎟️</button>
           <button class="ico-btn ico-btn-violet" data-action="stripe" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}" title="Créer un lien de paiement Stripe">💳</button>
           <button class="ico-btn ico-btn-blue"   data-action="verify" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}" title="Forcer email_verified=true">✉️</button>
           ${deleteBtn}

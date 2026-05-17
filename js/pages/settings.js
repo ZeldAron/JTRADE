@@ -210,6 +210,10 @@
       $('btnAddMyAccount').addEventListener('click', () => {
         if (!Store.canAddAccount()) {
           const isEn = i18n.getLang() === 'en';
+          const tier = Store.getTier();
+          const limit = Store.getLimits().maxAccounts;
+          const tierLabel = tier === 'trader' ? 'Trader' : tier === 'funded' ? 'Funded' : 'Elite';
+          const nextTier = tier === 'trader' ? 'Funded (10 comptes)' : 'Elite (100 comptes)';
           // Show inline upgrade banner instead of toast
           const existing = document.getElementById('accLimitBanner');
           if (existing) { existing.remove(); return; }
@@ -220,12 +224,14 @@
           banner.innerHTML = `
             <div class="upgrade-inline-icon">🔒</div>
             <div class="upgrade-inline-body">
-              <div class="upgrade-inline-title">${isEn ? 'Unlimited accounts — Pro feature' : 'Comptes illimités — Fonctionnalité Pro'}</div>
+              <div class="upgrade-inline-title">${isEn
+                ? `Account limit reached (${limit} on ${tierLabel})`
+                : `Limite atteinte (${limit} compte${limit > 1 ? 's' : ''} sur ${tierLabel})`}</div>
               <div class="upgrade-inline-sub">${isEn
-                ? 'Basic plan allows 1 account. Upgrade to Pro to manage multiple challenges at once.'
-                : 'Le plan Basic permet 1 compte. Passez Pro pour gérer plusieurs challenges simultanément.'}</div>
+                ? `Upgrade to ${nextTier} to manage more challenges at once.`
+                : `Passe au plan ${nextTier} pour gérer plus de comptes simultanément.`}</div>
             </div>
-            <button class="upgrade-inline-btn" id="btnUpgradeAccounts">${isEn ? 'Upgrade →' : 'Passer PRO →'}</button>`;
+            <button class="upgrade-inline-btn" id="btnUpgradeAccounts">${isEn ? 'Upgrade →' : 'Voir les offres →'}</button>`;
           document.getElementById('maList').after(banner);
           document.getElementById('btnUpgradeAccounts').addEventListener('click', () => {
             document.querySelector('[data-page="offers"]').click();

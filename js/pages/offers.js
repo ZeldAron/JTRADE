@@ -5,7 +5,13 @@
 UI.renderOffers = function () {
   const el   = document.getElementById('offersContent');
   const plan = Store.getPlanInfo();
-  const pro  = plan.plan === 'pro';
+  // v0.9.211 — Détection du tier actif parmi 4 (trader / funded / elite / beta)
+  const tier = plan.tier || (plan.plan === 'pro' ? 'beta' : 'trader');
+  const isTrader = tier === 'trader';
+  const isFunded = tier === 'funded';
+  const isElite  = tier === 'elite';
+  const isBeta   = tier === 'beta';
+  const pro      = !isTrader; // backward compat — Founding Members et payants
   const t    = k => i18n.t(k);
   const tv   = (k, v) => i18n.t(k, v);
   const isEn = i18n.getLang() === 'en';
@@ -15,18 +21,19 @@ UI.renderOffers = function () {
     : null;
 
   // ── Status banner ──────────────────────────────────────────────────────────
+  const tierLabel = isBeta ? 'Bêta Testeur ✨' : isElite ? 'Elite' : isFunded ? 'Funded' : 'Trader';
   const statusBanner = pro
     ? `<div class="pro-active-banner">
-        <div class="pro-active-icon">✦</div>
+        <div class="pro-active-icon">${isBeta ? '✨' : '✦'}</div>
         <div>
-          <div class="pro-active-title">${t('off.pro.active.title')}</div>
-          <div class="pro-active-sub">${tv('off.pro.active.sub', { date: activatedDate })}</div>
+          <div class="pro-active-title">Plan ${tierLabel} actif</div>
+          <div class="pro-active-sub">${activatedDate ? tv('off.pro.active.sub', { date: activatedDate }) : 'Accès complet à toutes les fonctionnalités'}</div>
         </div>
       </div>`
     : '';
 
-  // ── Founding scarcity banner (only for non-Pro) ────────────────────────────
-  const foundingBanner = pro ? '' : `
+  // ── Founding scarcity banner (uniquement Trader — déjà cible) ──────────────
+  const foundingBanner = !isTrader ? '' : `
     <div class="founding-banner">
       <div class="founding-banner-text">
         <div class="founding-banner-title">${t('off.founding.title')}</div>
@@ -44,9 +51,9 @@ UI.renderOffers = function () {
 
   // ── Card : TRADER (gratuit) ───────────────────────────────────────────────
   const cardTrader = `
-    <div class="offer-card ${!pro ? 'offer-current' : ''}">
+    <div class="offer-card ${isTrader ? 'offer-current' : ''}">
       <div class="offer-badge-basic">GRATUIT</div>
-      <div class="offer-badge-current" style="opacity:${!pro ? 1 : 0}">${t('off.current')}</div>
+      <div class="offer-badge-current" style="opacity:${isTrader ? 1 : 0}">${t('off.current')}</div>
       <div class="offer-name">Trader</div>
       <div class="offer-tag">${t('off.trader.tag')}</div>
       <div class="offer-price-hidden" style="color:var(--green)">0 €<span class="offer-price-suffix"> · ${t('off.forever')}</span></div>
@@ -67,9 +74,9 @@ UI.renderOffers = function () {
 
   // ── Card : FUNDED (14.99 €/mois — featured) ──────────────────────────────
   const cardFunded = `
-    <div class="offer-card offer-pro ${pro ? 'offer-current' : ''}">
-      <div class="offer-badge-pro">${t('off.popular')}</div>
-      <div class="offer-badge-current" style="opacity:${pro ? 1 : 0};color:#a78bfa">${t('off.current')}</div>
+    <div class="offer-card offer-pro ${isFunded ? 'offer-current' : ''}">
+      <div class="offer-badge-pro">${isBeta ? 'BÊTA ✨' : t('off.popular')}</div>
+      <div class="offer-badge-current" style="opacity:${isFunded ? 1 : 0};color:#a78bfa">${t('off.current')}</div>
       <div class="offer-name" style="color:#a78bfa">Funded</div>
       <div class="offer-tag">${t('off.funded.tag')}</div>
       <div class="offer-price-hidden">
@@ -89,16 +96,18 @@ UI.renderOffers = function () {
         <li class="ok">${t('off.funded.f6')}</li>
         <li class="ok">${t('off.funded.f7')}</li>
       </ul>
-      ${pro
+      ${isFunded || isBeta
         ? `<div class="offer-cta offer-cta-current">${t('off.cta.act')}</div>`
-        : `<a href="/payment" target="_blank" rel="noopener noreferrer" class="offer-cta offer-cta-link offer-cta-pro">${t('off.cta.funded.btn')}</a>`}
+        : isElite
+          ? `<div class="offer-cta offer-cta-current" style="background:rgba(255,255,255,0.04)">Inclus dans Elite</div>`
+          : `<a href="/payment" target="_blank" rel="noopener noreferrer" class="offer-cta offer-cta-link offer-cta-pro">${t('off.cta.funded.btn')}</a>`}
     </div>`;
 
   // ── Card : ELITE (29.99 €/mois) ───────────────────────────────────────────
   const cardElite = `
-    <div class="offer-card offer-elite">
+    <div class="offer-card offer-elite ${isElite ? 'offer-current' : ''}">
       <div class="offer-badge-elite">✦ Premium</div>
-      <div class="offer-badge-current" style="opacity:0">${t('off.current')}</div>
+      <div class="offer-badge-current" style="opacity:${isElite ? 1 : 0};color:#fbbf24">${t('off.current')}</div>
       <div class="offer-name" style="color:#f59e0b">Elite</div>
       <div class="offer-tag">${t('off.elite.tag')}</div>
       <div class="offer-price-hidden">
@@ -117,7 +126,9 @@ UI.renderOffers = function () {
         <li class="ok">${t('off.elite.f5')}</li>
         <li class="ok">${t('off.elite.f6')}</li>
       </ul>
-      <a href="/payment" target="_blank" rel="noopener noreferrer" class="offer-cta offer-cta-link offer-cta-elite">${t('off.cta.elite.btn')}</a>
+      ${isElite || isBeta
+        ? `<div class="offer-cta offer-cta-current">${t('off.cta.act')}</div>`
+        : `<a href="/payment" target="_blank" rel="noopener noreferrer" class="offer-cta offer-cta-link offer-cta-elite">${t('off.cta.elite.btn')}</a>`}
     </div>`;
 
   // ── Trust banner ───────────────────────────────────────────────────────────
