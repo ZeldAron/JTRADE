@@ -236,7 +236,10 @@ const Admin = (() => {
     }
   }
 
-  // ── Rendu onglet Codes ────────────────────────────────────────────────────────
+  // ── Rendu onglet Codes (v0.9.179 : unifié avec design Users — stats + search + actions icônes) ──
+  let _cachedCodes      = [];
+  let _codeSearchQuery  = '';
+
   async function renderCodes() {
     const wrap = $('tabCodes');
     wrap.innerHTML = '<div class="admin-loading">Chargement…</div>';
@@ -245,22 +248,79 @@ const Admin = (() => {
       wrap.innerHTML = '<p class="admin-empty">Aucun code généré.</p>';
       return;
     }
+    _cachedCodes = codes;
+    _renderCodesTable();
+  }
 
-    const rows = codes.map(c => `<tr>
-      <td class="hash-cell">${esc(c.id.slice(0, 16))}…</td>
-      <td>${esc(c.email)}</td>
-      <td>${formatDate(c.createdAt)}</td>
-      <td><span class="plan-tag ${c.isActive ? 'plan-tag-pro' : 'plan-tag-basic'}">${c.isActive ? '✦ Abonnement actif' : 'Non activé'}</span></td>
-      <td><button class="btn-revoke" data-id="${esc(c.id)}" data-uid="${esc(c.uid)}" data-email="${esc(c.email || '?')}" data-active="${c.isActive}">Révoquer</button></td>
-    </tr>`).join('');
+  function _renderCodesTable() {
+    const wrap  = $('tabCodes');
+    const codes = _cachedCodes;
+
+    // Stats globales
+    const total       = codes.length;
+    const activeCount = codes.filter(c => c.isActive).length;
+    const inactiveCount = total - activeCount;
+    const uniqueUsers = new Set(codes.map(c => c.uid)).size;
+
+    // Filtre live (email)
+    const q = (_codeSearchQuery || '').toLowerCase().trim();
+    const filtered = codes.filter(c =>
+      !q
+      || (c.email || '').toLowerCase().includes(q)
+      || (c.id    || '').toLowerCase().includes(q));
+
+    const rows = filtered.map(c => {
+      const statusTag = c.isActive
+        ? '<span class="plan-tag plan-tag-pro">✦ Abonnement actif</span>'
+        : '<span class="plan-tag plan-tag-basic">Non activé</span>';
+      return `<tr>
+        <td>
+          <div class="cell-user-name">${esc(c.email || '?')}</div>
+          <div class="cell-user-email" style="font-family:monospace">${esc(c.id.slice(0, 16))}…</div>
+        </td>
+        <td>${statusTag}</td>
+        <td>
+          <div class="cell-dates-act">Créé ${formatDateShort(c.createdAt)}</div>
+          <div class="cell-dates-seen">${formatRelative(c.createdAt)}</div>
+        </td>
+        <td class="cell-actions">
+          <button class="ico-btn ico-btn-red" data-action="revoke" data-id="${esc(c.id)}" data-uid="${esc(c.uid)}" data-email="${esc(c.email || '?')}" data-active="${c.isActive}" title="Révoquer ce code">🚫</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    const emptyRow = filtered.length === 0
+      ? '<tr><td colspan="4" class="admin-empty-row">Aucun résultat pour ce filtre.</td></tr>'
+      : '';
 
     wrap.innerHTML = `
+      <div class="admin-stats">
+        <div class="stat-chip"><span class="stat-val">${total}</span><span class="stat-lbl">Total codes</span></div>
+        <div class="stat-chip stat-chip-pro"><span class="stat-val">${activeCount}</span><span class="stat-lbl">Actifs</span></div>
+        <div class="stat-chip"><span class="stat-val">${inactiveCount}</span><span class="stat-lbl">Non activés</span></div>
+        <div class="stat-chip"><span class="stat-val">${uniqueUsers}</span><span class="stat-lbl">Users uniques</span></div>
+      </div>
+      <div class="admin-search">
+        <input type="text" id="codeSearch" placeholder="Rechercher par email ou hash…" value="${esc(q)}" autocomplete="off" spellcheck="false" />
+      </div>
       <table class="admin-table">
-        <thead><tr><th>Hash (tronqué)</th><th>Généré pour</th><th>Créé le</th><th>Statut</th><th>Action</th></tr></thead>
-        <tbody>${rows}</tbody>
+        <thead><tr><th>Bénéficiaire / Hash</th><th>Statut</th><th>Création</th><th class="th-actions">Action</th></tr></thead>
+        <tbody>${rows || emptyRow}</tbody>
       </table>`;
 
-    wrap.querySelectorAll('.btn-revoke').forEach(btn => {
+    const searchEl = $('codeSearch');
+    searchEl.addEventListener('input', (e) => {
+      _codeSearchQuery = e.target.value;
+      _renderCodesTable();
+      setTimeout(() => {
+        const s = $('codeSearch');
+        if (!s) return;
+        s.focus();
+        s.setSelectionRange(s.value.length, s.value.length);
+      }, 0);
+    });
+
+    wrap.querySelectorAll('[data-action="revoke"]').forEach(btn => {
       btn.addEventListener('click', () =>
         revokeCode(btn.dataset.id, btn.dataset.uid, btn.dataset.email, btn.dataset.active === 'true')
       );

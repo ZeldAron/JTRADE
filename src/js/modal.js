@@ -917,7 +917,18 @@ const Modal = (() => {
     const sl    = parseFloat($('wSL').value);
     const tp1   = parseFloat($('wTP1').value);
     if (!entry || !sl || !tp1) { UI.toast(i18n.t('modal.required'), true); return; }
-    if (!$('wApex').value)     { UI.toast(i18n.t('err.no.account.sel'), true); return; }
+    const apexValueRaw = $('wApex').value;
+    if (!apexValueRaw)         { UI.toast(i18n.t('err.no.account.sel'), true); return; }
+    // v0.9.179 (M8 fix) : bloquer save si l'user a sélectionné un groupe VIDE
+    // (groupe sans aucun compte associé → la boucle save crash silencieusement)
+    if (apexValueRaw.startsWith('grp:')) {
+      const grpId = apexValueRaw.slice(4);
+      const grp   = Store.getGroups().find(g => g.id === grpId);
+      if (!grp || !Array.isArray(grp.accountIds) || grp.accountIds.length === 0) {
+        UI.toast('Le groupe sélectionné est vide. Ajoute au moins un compte dans Réglages → Groupes.', true);
+        return;
+      }
+    }
     _saveInFlight = true;
     const saveBtn = $('wBtnSave');
     const saveBtnOriginalText = saveBtn ? saveBtn.textContent : '';
@@ -1067,8 +1078,17 @@ const Modal = (() => {
     $('wBtnLong').addEventListener('click',  () => setDirection('long'));
     $('wBtnShort').addEventListener('click', () => setDirection('short'));
 
-    // Step 2
-    $('wBtnBack1').addEventListener('click', () => goToStep(1));
+    // Step 2 — v0.9.179 (H2 fix) : confirmer si analyse IA déjà effectuée
+    // ou image chargée (sinon retour silencieux qui détruit l'image)
+    $('wBtnBack1').addEventListener('click', () => {
+      const hasWork = !!parsedTrade || !!imageB64;
+      if (hasWork) {
+        if (!confirm('Revenir à l\'étape précédente va effacer ton screenshot et l\'analyse IA. Continuer ?')) {
+          return;
+        }
+      }
+      goToStep(1);
+    });
     $('wBtnRetry').addEventListener('click', analyzeImage);
     $('wTextHint').addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); analyzeImage(); }
@@ -1297,8 +1317,15 @@ const Modal = (() => {
     const initialApex = $('wApex').value;
     if (initialApex && initialApex.startsWith('grp:')) updateGroupHint(initialApex);
 
+    // v0.9.179 (M4 fix) : debounce 80ms sur input pour éviter recalc à chaque keystroke.
+    // `change` (blur) reste immédiat pour feedback synchrone.
+    let _wRecalcTimer = null;
+    const wRecalcDebounced = () => {
+      if (_wRecalcTimer) clearTimeout(_wRecalcTimer);
+      _wRecalcTimer = setTimeout(() => { _wRecalcTimer = null; wRecalc(); }, 80);
+    };
     ['wContracts', 'wEntry', 'wSL', 'wTP1', 'wExit', 'wManualPnl'].forEach(id => {
-      $(id).addEventListener('input',  wRecalc);
+      $(id).addEventListener('input',  wRecalcDebounced);
       $(id).addEventListener('change', wRecalc);
     });
 
