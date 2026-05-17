@@ -325,10 +325,17 @@
     function renderCards(key) {
       const firm = firms[key];
       if (!firm) return `<p style="color:var(--muted);font-size:12px">—</p>`;
-      return `<div class="accounts-grid">${firm.accounts.map(a => `
+
+      // v0.9.184 : si les comptes ont un `subType` (ex: Lucid Flex/Pro/Direct),
+      // on les groupe par sous-type avec un header de section pour lisibilité.
+      const hasSubTypes = firm.accounts.some(a => a.subType);
+      const renderCard = a => `
         <div class="account-card">
           <div class="ac-header">
-            <span class="ac-name" style="font-weight:700;font-size:13px">${a.size}</span>
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1">
+              <span class="ac-name" style="font-weight:700;font-size:13px">${a.size}</span>
+              ${a.subType ? `<span style="font-size:9px;color:var(--accent-l);font-weight:700;letter-spacing:0.7px;text-transform:uppercase">${a.subType}</span>` : ''}
+            </div>
             ${ddBadge(a.drawdownType)}
           </div>
           <div class="ac-field">
@@ -366,7 +373,29 @@
             <span style="font-size:10px;color:var(--muted2);text-align:right;max-width:58%;line-height:1.4">${a.payoutConditions}</span>
           </div>
         </div>
-      `).join('')}</div>`;
+      `;
+
+      // Mode groupé (Lucid avec sub-types : Flex / Pro / Direct)
+      if (hasSubTypes) {
+        const groups = {};
+        const order  = [];
+        firm.accounts.forEach(a => {
+          const k = a.subType || 'Standard';
+          if (!groups[k]) { groups[k] = []; order.push(k); }
+          groups[k].push(a);
+        });
+        return order.map(sub => `
+          <div class="pf-subgroup" style="margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">
+              <h4 style="margin:0;font-size:14px;font-weight:600;color:var(--text)">${firm.name} ${sub}</h4>
+              <span style="font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px">${groups[sub].length} taille${groups[sub].length > 1 ? 's' : ''}</span>
+            </div>
+            <div class="accounts-grid">${groups[sub].map(renderCard).join('')}</div>
+          </div>`).join('');
+      }
+
+      // Mode standard (1 grille pour toutes les tailles)
+      return `<div class="accounts-grid">${firm.accounts.map(renderCard).join('')}</div>`;
     }
 
     function render(activeKey) {
