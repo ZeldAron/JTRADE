@@ -1,5 +1,6 @@
 // ─── PAGE OFFRES ──────────────────────────────────────────────────────────────
-// v0.9.197 : refonte 3 offres distinctes — Trader (gratuit) / Funded (14.99€/mois) / Elite (29.99€/mois)
+// v0.9.198 : refonte commerciale — taglines, bénéfices, toggle annuel, trust banner,
+// bandeau Founding scarcité, 6 FAQ. Lots 1+2+3+4 du plan marketing.
 
 UI.renderOffers = function () {
   const el   = document.getElementById('offersContent');
@@ -24,13 +25,32 @@ UI.renderOffers = function () {
       </div>`
     : '';
 
+  // ── Founding scarcity banner (only for non-Pro) ────────────────────────────
+  const foundingBanner = pro ? '' : `
+    <div class="founding-banner">
+      <div class="founding-banner-text">
+        <div class="founding-banner-title">${t('off.founding.title')}</div>
+        <div class="founding-banner-sub">${t('off.founding.sub')}</div>
+      </div>
+      <button type="button" class="founding-banner-cta" id="btnFoundingApply">${t('off.founding.cta')} →</button>
+    </div>`;
+
+  // ── Billing toggle (Monthly / Yearly) ──────────────────────────────────────
+  const billingToggle = `
+    <div class="billing-toggle" role="tablist" aria-label="Billing period">
+      <button type="button" class="billing-toggle-btn active" data-billing="monthly" role="tab" aria-selected="true">${t('off.billing.monthly')}</button>
+      <button type="button" class="billing-toggle-btn" data-billing="yearly" role="tab" aria-selected="false">${t('off.billing.yearly')} <span class="billing-toggle-save">−2 ${isEn ? 'mo' : 'mois'}</span></button>
+    </div>`;
+
   // ── Card : TRADER (gratuit) ───────────────────────────────────────────────
   const cardTrader = `
     <div class="offer-card ${!pro ? 'offer-current' : ''}">
       <div class="offer-badge-basic">TRADER</div>
       <div class="offer-badge-current" style="opacity:${!pro ? 1 : 0}">${t('off.current')}</div>
       <div class="offer-name">Trader</div>
-      <div class="offer-price-hidden" style="color:var(--green)">✓ 0 € — ${t('off.forever')}</div>
+      <div class="offer-tag">${t('off.trader.tag')}</div>
+      <div class="offer-price-hidden" style="color:var(--green)">0 €<span class="offer-price-suffix"> · ${t('off.forever')}</span></div>
+      <div class="offer-perday">&nbsp;</div>
       <ul class="offer-features">
         <li class="ok">${t('off.trader.f1')}</li>
         <li class="ok">${t('off.trader.f2')}</li>
@@ -51,7 +71,15 @@ UI.renderOffers = function () {
       <div class="offer-badge-pro">${t('off.popular')}</div>
       <div class="offer-badge-current" style="opacity:${pro ? 1 : 0};color:#a78bfa">${t('off.current')}</div>
       <div class="offer-name" style="color:#a78bfa">Funded</div>
-      <div class="offer-price-hidden">14.99 €<span style="color:var(--muted);font-size:13px;font-weight:500">/${isEn ? 'month' : 'mois'}</span></div>
+      <div class="offer-tag">${t('off.funded.tag')}</div>
+      <div class="offer-price-hidden">
+        <span data-price-monthly>14,99 €<span class="offer-price-suffix">/${t('off.month')}</span></span>
+        <span data-price-yearly style="display:none">${t('off.funded.yearly')}</span>
+      </div>
+      <div class="offer-perday">
+        <span data-price-monthly>${t('off.funded.perday')}</span>
+        <span data-price-yearly style="display:none;color:var(--green);font-weight:600">${t('off.funded.yearly.save')}</span>
+      </div>
       <ul class="offer-features">
         <li class="ok">${t('off.funded.f1')}</li>
         <li class="ok"><strong>${t('off.funded.f2')}</strong></li>
@@ -72,16 +100,33 @@ UI.renderOffers = function () {
       <div class="offer-badge-elite">ELITE</div>
       <div class="offer-badge-current" style="opacity:0">${t('off.current')}</div>
       <div class="offer-name" style="color:#f59e0b">Elite</div>
-      <div class="offer-price-hidden">29.99 €<span style="color:var(--muted);font-size:13px;font-weight:500">/${isEn ? 'month' : 'mois'}</span></div>
+      <div class="offer-tag">${t('off.elite.tag')}</div>
+      <div class="offer-price-hidden">
+        <span data-price-monthly>29,99 €<span class="offer-price-suffix">/${t('off.month')}</span></span>
+        <span data-price-yearly style="display:none">${t('off.elite.yearly')}</span>
+      </div>
+      <div class="offer-perday">
+        <span data-price-monthly>${t('off.elite.perday')}</span>
+        <span data-price-yearly style="display:none;color:var(--green);font-weight:600">${t('off.elite.yearly.save')}</span>
+      </div>
       <ul class="offer-features">
         <li class="ok">${t('off.elite.f1')}</li>
         <li class="ok"><strong>${t('off.elite.f2')}</strong></li>
         <li class="ok"><strong>${t('off.elite.f3')}</strong></li>
         <li class="ok">${t('off.elite.f4')}</li>
         <li class="ok">${t('off.elite.f5')}</li>
-        <li class="soon">${t('off.elite.f6')}</li>
+        <li class="ok">${t('off.elite.f6')}</li>
       </ul>
       <a href="/payment" target="_blank" rel="noopener noreferrer" class="offer-cta offer-cta-link offer-cta-elite">${t('off.cta.elite.btn')}</a>
+    </div>`;
+
+  // ── Trust banner ───────────────────────────────────────────────────────────
+  const trustBanner = `
+    <div class="trust-banner">
+      <span class="trust-item">✓ ${t('off.trust.cancel')}</span>
+      <span class="trust-item">✓ ${t('off.trust.guarantee')}</span>
+      <span class="trust-item">✓ ${t('off.trust.export')}</span>
+      <span class="trust-item">✓ ${t('off.trust.nocb')}</span>
     </div>`;
 
   // ── Comparison table ──────────────────────────────────────────────────────
@@ -144,12 +189,17 @@ UI.renderOffers = function () {
       </div>
 
       ${statusBanner}
+      ${foundingBanner}
+
+      ${pro ? '' : billingToggle}
 
       <div class="offers-cards">
         ${cardTrader}
         ${cardFunded}
         ${cardElite}
       </div>
+
+      ${trustBanner}
 
       ${promoSection}
 
@@ -169,11 +219,44 @@ UI.renderOffers = function () {
         <div class="faq-item"><b>${t('off.faq.1q')}</b><p>${t('off.faq.1a')}</p></div>
         <div class="faq-item"><b>${t('off.faq.2q')}</b><p>${t('off.faq.2a')}</p></div>
         <div class="faq-item"><b>${t('off.faq.3q')}</b><p>${t('off.faq.3a')}</p></div>
+        <div class="faq-item"><b>${t('off.faq.4q')}</b><p>${t('off.faq.4a')}</p></div>
+        <div class="faq-item"><b>${t('off.faq.5q')}</b><p>${t('off.faq.5a')}</p></div>
+        <div class="faq-item"><b>${t('off.faq.6q')}</b><p>${t('off.faq.6a')}</p></div>
       </div>
     </div>
   `;
 
-  // Activation logic (non-Pro only)
+  // ── Billing toggle logic ──────────────────────────────────────────────────
+  if (!pro) {
+    const toggleBtns = el.querySelectorAll('.billing-toggle-btn');
+    toggleBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const billing = btn.getAttribute('data-billing');
+        toggleBtns.forEach(b => {
+          const isActive = b.getAttribute('data-billing') === billing;
+          b.classList.toggle('active', isActive);
+          b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        el.querySelectorAll('[data-price-monthly]').forEach(p => {
+          p.style.display = billing === 'monthly' ? '' : 'none';
+        });
+        el.querySelectorAll('[data-price-yearly]').forEach(p => {
+          p.style.display = billing === 'yearly' ? '' : 'none';
+        });
+      });
+    });
+  }
+
+  // ── Founding apply button → contact bubble ─────────────────────────────────
+  const foundingBtn = document.getElementById('btnFoundingApply');
+  if (foundingBtn) {
+    foundingBtn.addEventListener('click', () => {
+      const bubble = document.getElementById('contactBubble');
+      if (bubble) bubble.click();
+    });
+  }
+
+  // ── Activation logic (non-Pro only) ────────────────────────────────────────
   if (!pro) {
     const btn   = document.getElementById('btnActivatePro');
     const input = document.getElementById('proCodeInput');
