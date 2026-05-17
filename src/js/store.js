@@ -144,8 +144,27 @@ const Store = (() => {
   let spreads       = { ...DEFAULT_SPREADS };
   let spreadsByFirm = Object.fromEntries(Object.keys(DEFAULT_SPREADS_BY_FIRM).map(k => [k, { ...DEFAULT_SPREADS_BY_FIRM[k] }]));
   let groups        = [];
-  let _plan         = { plan: 'basic' };
+  let _plan         = { plan: 'basic', tier: 'trader' };
   let _aiUsage      = { date: '', count: 0 };
+
+  // ─── Plans & tiers (v0.9.211) ────────────────────────────────────────────────
+  // 4 tiers : trader (gratuit) / funded (14,99 €) / elite (29,99 €) / beta (admin attribué, accès tout)
+  const VALID_TIERS = new Set(['trader', 'funded', 'elite', 'beta']);
+  const TIER_LIMITS = {
+    trader: { maxAccounts: 1,        maxAiPerDay: 1        },
+    funded: { maxAccounts: 10,       maxAiPerDay: 20       },
+    elite:  { maxAccounts: 100,      maxAiPerDay: 100      },
+    beta:   { maxAccounts: Infinity, maxAiPerDay: Infinity },
+  };
+  // Matrice features → tiers qui y ont accès. Si non listée = accès libre.
+  const TIER_FEATURES = {
+    groups:           ['funded', 'elite', 'beta'],
+    exportPdf:        ['funded', 'elite', 'beta'],
+    exportCsv:        ['funded', 'elite', 'beta'],
+    prioritySupport:  ['funded', 'elite', 'beta'],
+    betaFeatures:     ['elite', 'beta'],
+    decisiveVote:     ['elite', 'beta'],
+  };
   let _globalGroqKey = '';
 
   // ── Clés localStorage (cache local) ─────────────────────────────────────────
@@ -364,15 +383,23 @@ const Store = (() => {
       if (gSnap.exists)  { groups = gSnap.data().items || []; changed = true; }
       if (planSnap.exists) {
         const raw = planSnap.data() || {};
-        const wasPro = _plan.plan === 'pro';
+        const wasTier = _plan.tier;
         // Whitelist STRICTE des champs lus depuis Firestore (anti-injection si
         // une CF future écrivait des champs arbitraires : isAdmin, unlimited, etc.)
+        const planValue = raw.plan === 'pro' ? 'pro' : 'basic';
+        // Migration v0.9.211 : ajout du champ `tier` (4 valeurs).
+        // - Si tier explicite et valide → garde
+        // - Si plan='pro' legacy → tier='beta' (Founding Members = accès tout)
+        // - Sinon → tier='trader'
+        let tier = (typeof raw.tier === 'string' && VALID_TIERS.has(raw.tier)) ? raw.tier
+                 : (planValue === 'pro' ? 'beta' : 'trader');
         _plan = {
-          plan:        raw.plan === 'pro' ? 'pro' : 'basic',
+          plan:        planValue,
+          tier:        tier,
           activatedAt: (typeof raw.activatedAt === 'number' && isFinite(raw.activatedAt)) ? raw.activatedAt : null,
           codeHash:    typeof raw.codeHash === 'string' ? raw.codeHash.slice(0, 128) : null,
         };
-        if ((_plan.plan === 'pro') !== wasPro) {
+        if (_plan.tier !== wasTier) {
           window.dispatchEvent(new CustomEvent('store:planChanged'));
         }
         changed = true;
@@ -814,8 +841,17 @@ const Store = (() => {
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  function getPlanInfo() { return { ..._plan }; }
+  function getPlanInfo() { return { ..._plan, limits: { ...getLimits() } }; }
   function isPro()       { return _plan.plan === 'pro'; }
+  // v0.9.211 — Nouveaux helpers tier-aware
+  function getTier()     { return VALID_TIERS.has(_plan.tier) ? _plan.tier : 'trader'; }
+  function getLimits()   { return TIER_LIMITS[getTier()] || TIER_LIMITS.trader; }
+  // canUseFeature('groups') → true/false selon le tier de l'user
+  function canUseFeature(feat) {
+    const allowed = TIER_FEATURES[feat];
+    if (!allowed) return true; // pas listée = accès libre
+    return allowed.includes(getTier());
+  }
 
   let _proAttempts = 0;
   let _proThrottleUntil = 0;
@@ -852,7 +888,9 @@ const Store = (() => {
         return false;
       }
       _proAttempts = 0;
-      const info = { plan: 'pro', activatedAt: Date.now(), codeHash: hash };
+      // v0.9.211 : les codes Pro existants donnent désormais accès `beta` (tier= 'beta')
+      // = accès illimité à toutes les features. Workflow Founding Members inchangé côté UX.
+      const info = { plan: 'pro', tier: 'beta', activatedAt: Date.now(), codeHash: hash };
       _plan = { ...info };
       await userDoc('plan').set(info);
       window.dispatchEvent(new CustomEvent('store:planChanged'));
@@ -872,10 +910,12 @@ const Store = (() => {
   // ── IA usage ─────────────────────────────────────────────────────────────────
   function getAIUsage()      { return { ..._aiUsage }; }
   function canAnalyzeToday() {
-    if (isPro()) return true;
+    const max = getLimits().maxAiPerDay;
+    if (!isFinite(max) || max <= 0) return max > 0; // beta = Infinity = true
+    if (max === Infinity) return true;
     const today = localToday();
     if (typeof _aiUsage.date === 'string' && _aiUsage.date > today) return false;
-    return _aiUsage.date !== today || _aiUsage.count < 1;
+    return _aiUsage.date !== today || _aiUsage.count < max;
   }
   // Refetch aiUsage depuis Firestore (à appeler après une analyse réussie pour
   // que canAnalyzeToday() côté client reste cohérent avec l'état serveur)
@@ -886,7 +926,10 @@ const Store = (() => {
     } catch {}
   }
 
-  function canAddAccount() { return isPro() || myAccounts.length < 1; }
+  function canAddAccount() {
+    const max = getLimits().maxAccounts;
+    return max === Infinity || myAccounts.length < max;
+  }
 
   // ── Stats ─────────────────────────────────────────────────────────────────────
   // Winrate basé sur netPnl > 0 (cohérent avec UI.statsForTrades).
@@ -987,7 +1030,8 @@ const Store = (() => {
     getMyAccounts, getMyAccountById, getMyAccountByName, addMyAccount, updateMyAccount, deleteMyAccount,
     getSpreads, updateSpreads, getSpreadsByFirm, getAllSpreadsByFirm, updateSpreadsByFirm,
     getGroups, getGroupById, addGroup, updateGroup, deleteGroup,
-    getPlanInfo, isPro, activatePro, canAnalyzeToday, refreshAiUsage, canAddAccount,
+    getPlanInfo, isPro, getTier, getLimits, canUseFeature, TIER_LIMITS, TIER_FEATURES,
+    activatePro, canAnalyzeToday, refreshAiUsage, canAddAccount,
     getLastWizardPrefs, setLastWizardPrefs,
     getStats,
   };
