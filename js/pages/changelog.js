@@ -5,6 +5,34 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.192',
+      date: '2026-05-17',
+      time: '18:30',
+      tags: ['feature'],
+      title: 'Onglet Réglages → Fonds propres (courtiers + fiscalité France)',
+      titleEn: 'Settings → Personal funds tab (brokers + France tax)',
+      items: [
+        { type: 'feature', text: 'Nouvel onglet **Fonds propres** dans Réglages, à côté de Crypto et Prop Firms. Sert de référentiel pour t\'aider à choisir si tu veux trader avec ton propre capital plutôt que via une prop firm.', textEn: 'New **Personal funds** tab in Settings, next to Crypto and Prop Firms. Reference guide if you want to trade your own capital instead of via a prop firm.' },
+        { type: 'feature', text: 'Comparatif avantages / inconvénients du trading en fonds propres (100% des profits, pas de règles vs capital limité, fiscalité à gérer).', textEn: 'Pros / cons comparison of trading personal funds (100% profits, no rules vs limited capital, taxes to manage).' },
+        { type: 'feature', text: '4 courtiers présentés : **Interactive Brokers**, **Trading 212**, **Saxo Bank**, **DEGIRO** — avec spécialités, points forts/faibles et public cible.', textEn: '4 brokers presented: Interactive Brokers, Trading 212, Saxo Bank, DEGIRO — with specialties, pros/cons and target audience.' },
+        { type: 'feature', text: 'Encart **fiscalité France** : PFU 30% sur plus-values sur valeurs mobilières, traitement BIC pour les futures, micro-BNC pour activité régulière. Avertissement non-conseil fiscal.', textEn: 'France tax section: 30% flat tax (PFU) on capital gains, BIC treatment for futures, micro-BNC for regular activity. Non-advisory disclaimer.' },
+        { type: 'ux', text: 'Roadmap visible : import API broker + calculateur fiscal France à venir.', textEn: 'Visible roadmap: broker API import + France tax calculator coming.' },
+      ],
+    },
+    {
+      version: '0.9.191',
+      date: '2026-05-17',
+      time: '17:30',
+      tags: ['feature'],
+      title: 'Onglet Réglages → Crypto (Binance + Coinbase)',
+      titleEn: 'Settings → Crypto tab (Binance + Coinbase)',
+      items: [
+        { type: 'feature', text: 'Nouvel onglet **Crypto** dans Réglages : référentiel des 2 plateformes supportées (Binance Futures USDT-M et Coinbase Advanced spot USD).', textEn: 'New **Crypto** tab in Settings: reference for the 2 supported platforms (Binance Futures USDT-M, Coinbase Advanced USD spot).' },
+        { type: 'feature', text: 'Pour chaque plateforme : paires disponibles, modes (spot/perpetual), fees maker/taker par défaut, leverage max, KYC requis, conditions de payout.', textEn: 'For each platform: available pairs, modes (spot/perpetual), default maker/taker fees, max leverage, KYC required, payout conditions.' },
+        { type: 'ux', text: 'Onglet structuré comme le référentiel Prop Firms pour cohérence visuelle.', textEn: 'Tab structured like the Prop Firms reference for visual consistency.' },
+      ],
+    },
+    {
       version: '0.9.190',
       date: '2026-05-17',
       time: '16:30',

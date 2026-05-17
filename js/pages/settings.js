@@ -538,6 +538,134 @@
     render(FIRM_ORDER.find(k => firms[k]) || 'apex');
   }
 
+  // v0.9.192 — Onglet Fonds propres : présentation du mode + courtiers + fiscalité
+  function renderPersonalSettings() {
+    const el = $('settingsPersonal');
+    if (!el) return;
+
+    const BROKERS = [
+      {
+        name:    'Interactive Brokers',
+        url:     'https://www.interactivebrokers.com/',
+        color:   '#d92228',
+        speciality: 'Futures + Actions + Options',
+        pros:    'Le plus complet, accès direct CME/CBOE, marges institutionnelles',
+        cons:    'Interface complexe au début, frais data $10/mois',
+        bestFor: 'Traders sérieux multi-actifs',
+      },
+      {
+        name:    'Trading 212',
+        url:     'https://www.trading212.com/',
+        color:   '#00b14f',
+        speciality: 'CFD + Actions fractionnées',
+        pros:    'Commissions 0€, interface mobile-first, ISA/CTO',
+        cons:    'Pas de futures CME, CFD only (réglementation ESMA)',
+        bestFor: 'Débutants, swing trading, investissement long terme',
+      },
+      {
+        name:    'Saxo Bank',
+        url:     'https://www.home.saxo/',
+        color:   '#003867',
+        speciality: 'Multi-actifs (Futures, FX, Actions)',
+        pros:    'Réglementation FR/EU stricte, plateforme SaxoTraderGO solide',
+        cons:    'Frais data + commissions plus élevés que IB',
+        bestFor: 'Traders EU qui veulent un broker régulé localement',
+      },
+      {
+        name:    'DEGIRO',
+        url:     'https://www.degiro.com/',
+        color:   '#003663',
+        speciality: 'Actions + ETF (pas de futures CME)',
+        pros:    'Frais très bas, populaire en France, FR/NL régulé',
+        cons:    'Pas de futures américains, pas idéal pour day trading',
+        bestFor: 'Investisseurs long terme en actions/ETF',
+      },
+    ];
+
+    function renderBrokerCard(b) {
+      return `
+        <div class="account-card" style="margin-bottom:14px">
+          <div class="ac-header" style="margin-bottom:12px">
+            <div>
+              <div class="ac-name" style="font-weight:700;font-size:14px;color:${b.color}">${UI.escHtml(b.name)}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">${UI.escHtml(b.speciality)}</div>
+            </div>
+            <a href="${b.url}" target="_blank" rel="noopener" class="ac-badge" style="background:${b.color}1f;color:${b.color};text-decoration:none">Site officiel ↗</a>
+          </div>
+          <div class="ac-field" style="align-items:flex-start">
+            <span class="ac-label" style="padding-top:2px;color:var(--green)">✓ Pour</span>
+            <span style="font-size:11px;color:var(--text2);text-align:right;max-width:65%;line-height:1.4">${UI.escHtml(b.pros)}</span>
+          </div>
+          <div class="ac-field" style="align-items:flex-start">
+            <span class="ac-label" style="padding-top:2px;color:var(--red)">✗ Contre</span>
+            <span style="font-size:11px;color:var(--text2);text-align:right;max-width:65%;line-height:1.4">${UI.escHtml(b.cons)}</span>
+          </div>
+          <div class="ac-field" style="align-items:flex-start">
+            <span class="ac-label" style="padding-top:2px">Idéal pour</span>
+            <span style="font-size:11px;color:var(--accent-l);text-align:right;max-width:65%;line-height:1.4">${UI.escHtml(b.bestFor)}</span>
+          </div>
+        </div>`;
+    }
+
+    el.innerHTML = `
+      <div class="settings-section settings-section--wide">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <h3 style="margin:0">Trading en fonds propres</h3>
+          <span style="font-size:10px;background:var(--bg3);padding:3px 10px;border-radius:6px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">💰 Mode libre</span>
+        </div>
+        <p style="font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:18px">Trader avec ton propre capital, sans règles prop firm imposées. Tu gardes 100% des gains, mais tu risques aussi 100% du capital — c'est ton choix de risk management qui prime.</p>
+
+        <!-- Bloc avantages/inconvénients -->
+        <div class="form-grid form-grid-2" style="margin-bottom:18px">
+          <div style="background:rgba(63,185,80,0.08);border:1px solid rgba(63,185,80,0.25);border-radius:8px;padding:14px 16px">
+            <div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:0.4px;margin-bottom:8px">✓ AVANTAGES</div>
+            <ul style="margin:0;padding-left:18px;font-size:12px;color:var(--text2);line-height:1.6">
+              <li>100% des gains à toi (pas de payout split)</li>
+              <li>Aucune règle externe (drawdown, daily loss, time-in-trade)</li>
+              <li>Pas de frais d'évaluation mensuels</li>
+              <li>Pas de risque de "perte du compte" pour règles violées</li>
+              <li>Liberté de stratégie totale (scalp, swing, holding)</li>
+            </ul>
+          </div>
+          <div style="background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.25);border-radius:8px;padding:14px 16px">
+            <div style="font-size:11px;color:var(--red);font-weight:700;letter-spacing:0.4px;margin-bottom:8px">✗ INCONVÉNIENTS</div>
+            <ul style="margin:0;padding-left:18px;font-size:12px;color:var(--text2);line-height:1.6">
+              <li>Tu risques ton propre capital (pas de "compte 50K" prêté)</li>
+              <li>Levier limité selon régulation (ESMA = 1:30 max retail FX)</li>
+              <li>Marges et frais data à ta charge</li>
+              <li>Discipline 100% interne (pas de stop automatique externe)</li>
+              <li>Fiscalité immédiate sur les plus-values (vs salaire chez prop firm)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Courtiers recommandés -->
+        <h4 style="margin:0 0 10px;font-size:13px;font-weight:600;color:var(--text)">Courtiers populaires (à titre indicatif)</h4>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5">Sélection non-exhaustive de brokers fréquemment utilisés par les traders FR/EU. Vérifie toujours la régulation (AMF, FCA, CySEC) et les conditions avant ouverture de compte.</p>
+        ${BROKERS.map(renderBrokerCard).join('')}
+
+        <!-- Mention fiscale -->
+        <div style="background:rgba(255,159,10,0.08);border:1px solid rgba(255,159,10,0.25);border-radius:8px;padding:14px 16px;margin-top:6px">
+          <div style="font-size:11px;color:var(--amber);font-weight:700;letter-spacing:0.4px;margin-bottom:8px">📊 FISCALITÉ FRANCE (à titre informatif)</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6">
+            En fonds propres en France, les <strong>plus-values mobilières</strong> sont imposées au PFU (Prélèvement Forfaitaire Unique) de <strong>30%</strong> (12.8% IR + 17.2% prélèvements sociaux) ou au barème progressif IR sur option globale.
+            <br><br>
+            Pour les <strong>futures et CFD</strong>, c'est le <strong>BIC non professionnel</strong> par défaut (régime micro-BIC ou réel). Sur option PFU 30% possible si le trading est non-habituel.
+            <br><br>
+            <em style="color:var(--muted);font-size:11px">⚠️ Ces infos sont indicatives. Consulte un expert-comptable pour ta situation personnelle. Le statut "trader pro" demande des conditions strictes (régularité, volume, principal moyen de subsistance).</em>
+          </div>
+        </div>
+
+        <!-- Roadmap -->
+        <div style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);border-radius:8px;padding:14px 16px;margin-top:14px">
+          <div style="font-size:11px;color:var(--accent-l);font-weight:600;letter-spacing:0.4px;margin-bottom:6px">🚀 ROADMAP</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.55">
+            Import automatique des trades depuis l'API broker (NinjaTrader, Tradovate, IB API). Suivi multi-courtiers depuis un seul écran. Calculateur fiscal intégré avec génération du formulaire 2074.
+          </div>
+        </div>
+      </div>`;
+  }
+
   // v0.9.191 — Onglet Crypto : référentiel des 2 plateformes supportées + paires + frais types
   function renderCryptoSettings() {
     const el = $('settingsCrypto');
@@ -1145,6 +1273,7 @@
     try { renderGroupsSettings(); }    catch(e) { console.error('[Settings] groups error:', e); }
     try { renderMyAccountsSettings(); } catch(e) { console.error('[Settings] accounts error:', e); }
     try { renderPropFirmsSettings(); }  catch(e) { console.error('[Settings] propfirms error:', e); }
+    try { renderPersonalSettings(); }   catch(e) { console.error('[Settings] personal error:', e); }
     try { renderCryptoSettings(); }     catch(e) { console.error('[Settings] crypto error:', e); }
     try { renderSpreadsSettings(); }    catch(e) { console.error('[Settings] spreads error:', e); }
 
