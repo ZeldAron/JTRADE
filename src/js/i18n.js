@@ -168,7 +168,7 @@ const i18n = (() => {
       // Notifications email (v0.9.150)
       'set.notif.title':            'Notifications email',
       'set.notif.newsletter.label': 'Recevoir les mises à jour et nouvelles offres',
-      'set.notif.newsletter.desc':  'Max 1 email/mois. Tu peux te désinscrire à tout moment ici.',
+      'set.notif.newsletter.desc':  'Tu peux te désinscrire à tout moment ici.',
       'set.notif.newsletter.on':    'Tu recevras les mises à jour par email.',
       'set.notif.newsletter.off':   'Plus d\'emails de mises à jour.',
       // Email verification (v0.9.142)
@@ -277,7 +277,7 @@ const i18n = (() => {
       // v0.9.150 — RGPD consent
       'auth.err.terms':           'Tu dois accepter les CGU et la Politique de confidentialité pour créer un compte.',
       'auth.consent.terms':       'J\'accepte les <a href="/cgu" target="_blank" rel="noopener">CGU</a> et la <a href="/privacy" target="_blank" rel="noopener">Politique de confidentialité</a>',
-      'auth.consent.newsletter':  'Je veux recevoir les emails de mises à jour et nouvelles offres (max 1/mois, désinscription à tout moment)',
+      'auth.consent.newsletter':  'Je veux recevoir les emails de mises à jour et nouvelles offres (désinscription à tout moment)',
       'consent.title':            'Mise à jour des conditions',
       'consent.intro':            'Pour continuer à utiliser ZeldTrade, merci d\'accepter nos conditions. Tu peux les consulter en cliquant sur les liens ci-dessous.',
       'consent.submit':           'Continuer',
@@ -788,7 +788,7 @@ const i18n = (() => {
       // Email notifications (v0.9.150)
       'set.notif.title':            'Email notifications',
       'set.notif.newsletter.label': 'Receive updates and new offers',
-      'set.notif.newsletter.desc':  'Max 1 email/month. You can unsubscribe anytime here.',
+      'set.notif.newsletter.desc':  'You can unsubscribe anytime here.',
       'set.notif.newsletter.on':    'You\'ll receive updates by email.',
       'set.notif.newsletter.off':   'No more update emails.',
       // Email verification
@@ -897,7 +897,7 @@ const i18n = (() => {
       // v0.9.150 — RGPD consent
       'auth.err.terms':           'You must accept the Terms and Privacy Policy to create an account.',
       'auth.consent.terms':       'I accept the <a href="/cgu" target="_blank" rel="noopener">Terms</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>',
-      'auth.consent.newsletter':  'I want to receive update emails and new offers (max 1/month, unsubscribe anytime)',
+      'auth.consent.newsletter':  'I want to receive update emails and new offers (unsubscribe anytime)',
       'consent.title':            'Terms update',
       'consent.intro':            'To continue using ZeldTrade, please accept our terms. You can review them by clicking the links below.',
       'consent.submit':           'Continue',
