@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.190',
+      date: '2026-05-17',
+      time: '16:30',
+      tags: ['feature'],
+      title: 'Phase 3 — Comptes Crypto (Binance + Coinbase)',
+      titleEn: 'Phase 3 — Crypto accounts (Binance + Coinbase)',
+      items: [
+        { type: 'feature', text: 'Comptes **Crypto** disponibles : Binance (perpetuals USDT-M) et Coinbase (spot USD). Choisis ton compte type Crypto dans Réglages → Mes Comptes → champs spécifiques apparaissent : plateforme, mode (spot/perpetual), leverage, fees maker/taker en %.', textEn: 'Crypto accounts available: Binance (USDT-M perpetuals) and Coinbase (USD spot). Choose Crypto type in Settings → fields appear: platform, mode (spot/perpetual), leverage, maker/taker fees %.' },
+        { type: 'feature', text: '**10 paires Binance** : BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT, XRPUSDT, ADAUSDT, AVAXUSDT, DOGEUSDT, LINKUSDT, DOTUSDT. **5 paires Coinbase** : BTC-USD, ETH-USD, SOL-USD, XRP-USD, AVAX-USD.', textEn: '10 Binance pairs + 5 Coinbase pairs.' },
+        { type: 'feature', text: 'Calcul des frais adapté : pour crypto, fees = % du notional (avg_price × qty × feeTakerPct × 2). Defaults : Binance 0.02%/0.05% (maker/taker), Coinbase 0.40%/0.60%. Modifiable par compte selon ton niveau VIP / abonnement.', textEn: 'Fee calc adapted: crypto fees = % notional. Defaults: Binance 0.02/0.05%, Coinbase 0.40/0.60%. Customizable per account.' },
+        { type: 'ux', text: 'Quand tu sélectionnes un compte crypto dans le wizard nouveau trade, le sélecteur d\'instrument affiche automatiquement les paires crypto au lieu des futures.', textEn: 'When you pick a crypto account in the wizard, instrument select auto-shows crypto pairs.' },
+      ],
+    },
+    {
       version: '0.9.189',
       date: '2026-05-17',
       time: '15:00',
