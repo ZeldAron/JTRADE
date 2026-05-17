@@ -1,5 +1,5 @@
 :root {
-  /* macOS-inspired backgrounds */
+  /* Backgrounds — alignés sur la palette landing pour cohérence brand */
   --bg:        #0d0d0f;
   --bg2:       #141417;
   --bg3:       #1c1c21;
@@ -14,16 +14,25 @@
   --muted:     #86868b;
   --muted2:    #48484d;
 
-  /* macOS system colors */
+  /* Couleurs sémantiques trading (intactes — convention universelle) */
   --green:     #30d158;
   --green-dim: rgba(48,209,88,0.13);
   --red:       #ff453a;
   --red-dim:   rgba(255,69,58,0.13);
   --amber:     #ff9f0a;
   --amber-dim: rgba(255,159,10,0.13);
-  --blue:      #0a84ff;
+  --blue:      #0a84ff;            /* gardé pour Entry (bleu trading classique) */
   --blue-dim:  rgba(10,132,255,0.13);
-  --accent:    #0a84ff;
+
+  /* v0.9.180 (U41) : palette brand violet/rose alignée sur la landing.
+     --accent passe de bleu Apple (#0a84ff) → violet brand (#7c3aed).
+     Propage automatiquement à ~62 usages dans tout le CSS. */
+  --accent:     #7c3aed;
+  --accent-l:   #a78bfa;
+  --accent-d:   #5b21b6;
+  --accent-dim: rgba(124,58,237,0.13);
+  --pink:       #f472b6;
+  --cyan:       #22d3ee;
 
   --r:    10px;
   --r-sm: 6px;
@@ -122,7 +131,7 @@ body {
 }
 
 .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-.nav-item.active { color: var(--accent); background: rgba(10,132,255,0.12); font-weight: 500; }
+.nav-item.active { color: var(--accent); background: rgba(124,58,237,0.12); font-weight: 500; }
 .nav-item.active svg { color: var(--accent); }
 
 .nav-divider { height: 1px; background: var(--border); margin: 8px 0; }
@@ -252,7 +261,7 @@ body {
   align-items: stretch;
 }
 .trade-item:hover { background: rgba(255,255,255,0.03); }
-.trade-item.selected { background: rgba(10,132,255,0.08); border-left: 2px solid var(--accent); }
+.trade-item.selected { background: rgba(124,58,237,0.08); border-left: 2px solid var(--accent); }
 
 .trade-bar { width: 3px; border-radius: 99px; flex-shrink: 0; min-height: 40px; }
 .trade-item-body { flex: 1; min-width: 0; }
@@ -468,7 +477,7 @@ button:focus-visible {
   appearance: none;
   width: 100%;
 }
-.form-input:focus { border-color: rgba(10,132,255,0.6); box-shadow: 0 0 0 3px rgba(10,132,255,0.1); }
+.form-input:focus { border-color: rgba(124,58,237,0.6); box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
 .form-input.mono { font-family: 'Geist Mono', monospace; }
 select.form-input { cursor: pointer; }
 textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
@@ -493,7 +502,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   cursor: pointer;
   transition: all 0.12s;
 }
-.seg-btn.active { background: rgba(10,132,255,0.14); color: var(--accent); font-weight: 600; }
+.seg-btn.active { background: rgba(124,58,237,0.14); color: var(--accent); font-weight: 600; }
 
 .live-calc {
   background: var(--bg3);
@@ -664,7 +673,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   overflow: hidden;
   transform: translateY(14px);
   transition: transform 0.2s;
-  box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(10,132,255,0.06);
+  box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.06);
 }
 .modal-overlay.open .modal { transform: translateY(0); }
 
@@ -787,9 +796,9 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   gap: 8px;
   margin-bottom: 12px;
 }
-.wizard-drop-zone:hover    { border-color: var(--accent); background: rgba(10,132,255,0.06); }
+.wizard-drop-zone:hover    { border-color: var(--accent); background: rgba(124,58,237,0.06); }
 .wizard-drop-zone.has-image { border-color: var(--accent); border-style: solid; }
-.wizard-drop-zone.dz-dragover { border-color: var(--accent); background: rgba(10,132,255,0.1); border-style: solid; transform: scale(1.01); }
+.wizard-drop-zone.dz-dragover { border-color: var(--accent); background: rgba(124,58,237,0.1); border-style: solid; transform: scale(1.01); }
 .wizard-drop-zone kbd {
   background: var(--bg3);
   border: 1px solid var(--border2);
@@ -1763,7 +1772,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   display: flex;
   flex-direction: column;
   gap: 20px;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(10,132,255,0.08);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.08);
   backdrop-filter: blur(12px);
 }
 
@@ -1783,7 +1792,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(10,132,255,0.4);
+  box-shadow: 0 8px 24px rgba(124,58,237,0.4);
 }
 .login-logo-mark svg { width: 30px; height: 30px; stroke: white; }
 
@@ -1826,9 +1835,9 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   cursor: pointer;
   transition: opacity 0.2s, box-shadow 0.2s;
   margin-bottom: 14px;
-  box-shadow: 0 4px 16px rgba(10,132,255,0.3);
+  box-shadow: 0 4px 16px rgba(124,58,237,0.3);
 }
-.login-btn:hover   { opacity: 0.88; box-shadow: 0 6px 20px rgba(10,132,255,0.45); }
+.login-btn:hover   { opacity: 0.88; box-shadow: 0 6px 20px rgba(124,58,237,0.45); }
 .login-btn:active  { opacity: 0.75; }
 
 .login-switch {
@@ -2664,7 +2673,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 .cal-sum-row:last-child { border-bottom: none; }
 .cal-sum-row:hover      { background: var(--bg3); }
-.cal-sum-row--sel       { background: rgba(10,132,255,0.08) !important; }
+.cal-sum-row--sel       { background: rgba(124,58,237,0.08) !important; }
 .cal-sum-date  { font-weight: 600; }
 .cal-sum-count { color: var(--muted2); font-size: 11px; }
 .cal-sum-badges { display: flex; gap: 5px; align-items: center; }
@@ -2853,7 +2862,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 .nav-item-offers svg { stroke: var(--accent); }
 .nav-item-offers.active, .nav-item-offers:hover {
-  background: rgba(10,132,255,.12);
+  background: rgba(124,58,237,.12);
 }
 
 /* ── Offers page ───────────────────────────────────────────────────────────── */
@@ -3082,12 +3091,12 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   background: var(--accent);
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 20px rgba(10,132,255,.4);
+  box-shadow: 0 4px 20px rgba(124,58,237,.4);
   transition: transform .2s, box-shadow .2s;
   position: relative;
   color: #fff;
 }
-.contact-bubble:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(10,132,255,.55); }
+.contact-bubble:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(124,58,237,.55); }
 .contact-bubble.active { transform: scale(1.05); }
 .contact-bubble-dot {
   position: absolute; top: 10px; right: 10px;
@@ -3180,7 +3189,7 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 .contact-success-icon {
   width: 48px; height: 48px; border-radius: 50%;
-  background: rgba(10,132,255,.15); color: var(--accent);
+  background: rgba(124,58,237,.15); color: var(--accent);
   font-size: 22px; display: flex; align-items: center; justify-content: center;
 }
 .contact-success-title { font-size: 15px; font-weight: 800; }

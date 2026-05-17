@@ -5,6 +5,19 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.180',
+      date: '2026-05-17',
+      time: '11:45',
+      tags: ['ui', 'branding'],
+      title: 'Unification couleurs : app passe au violet/rose de la landing (U41)',
+      titleEn: 'Color unification: app aligned to landing\'s violet/pink (U41)',
+      items: [
+        { type: 'ui', text: 'L\'app reprend désormais la palette **violet/rose** de la landing pour une cohérence de marque totale. Plus de bleu Apple générique sur les boutons primaires, les focus rings, les hovers — tout passe en violet ZeldTrade (#7c3aed → #f472b6).', textEn: 'App now uses the landing\'s violet/pink palette for full brand consistency. No more generic Apple blue on primary buttons, focus rings, hovers — everything goes ZeldTrade violet.' },
+        { type: 'ui', text: 'Couleurs sémantiques trading **conservées intactes** : Entry reste bleu, Stop Loss reste rouge, Take Profit reste vert. Pas de confusion, juste un brand plus distinctif.', textEn: 'Semantic trading colors kept: Entry stays blue, Stop Loss red, Take Profit green. No confusion — just a stronger brand.' },
+        { type: 'ui', text: 'Favicon de l\'app passé du bleu au violet ZeldTrade pour matcher l\'onglet navigateur avec le branding.', textEn: 'App favicon switched from blue to ZeldTrade violet for consistent browser tab branding.' },
+      ],
+    },
+    {
       version: '0.9.179',
       date: '2026-05-17',
       time: '11:00',
