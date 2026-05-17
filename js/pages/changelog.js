@@ -5,6 +5,23 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.204',
+      date: '2026-05-17',
+      time: '23:30',
+      tags: ['feature', 'ux'],
+      title: 'Landing : refonte marketing complète (hero, comparatifs, roadmap)',
+      titleEn: 'Landing: full marketing overhaul (hero, comparison, roadmap)',
+      items: [
+        { type: 'ux', text: 'Hero v2 : nouveau titre choc "Arrête de bust ton funded à cause d\'un mauvais Excel", sous-titre orienté trader prop firm, bandeau Founding scarcité.', textEn: 'Hero v2: punchy new title, prop firm-focused subtitle, Founding scarcity banner.' },
+        { type: 'feature', text: 'Nouvelle section **Avant / Après** : 2 colonnes pour comparer Excel chaotique vs ZeldTrade centralisé. Pain points → bénéfices clairs.', textEn: 'New **Before / After** section: 2-column compare of chaotic Excel vs centralized ZeldTrade.' },
+        { type: 'feature', text: 'Refonte features : **3 piliers** (IA Groq Vision, Règles prop firms, Multi-comptes) avec détails + grille **9 mini-features**.', textEn: 'Features redesign: **3 pillars** with details + **9 mini-features** grid.' },
+        { type: 'feature', text: 'Nouvelle section **Use cases par prop firm** : 6 cards (Apex, Topstep, FTMO, Lucid, Funding Pips, Fonds propres/Crypto) avec pain spécifique → solution ZeldTrade.', textEn: 'New **Use cases by prop firm** section: 6 cards with specific pain → ZeldTrade solution.' },
+        { type: 'feature', text: 'Nouvelle section **Vs Concurrence** : tableau ZeldTrade vs Tradervue / TradeZella / Excel sur 9 critères. Highlight 50 % moins cher.', textEn: 'New **Competition comparison** table: ZeldTrade vs Tradervue / TradeZella / Excel on 9 criteria.' },
+        { type: 'feature', text: 'Nouvelle section **Roadmap publique** : 3 colonnes (Livré ✅ / En cours 🚧 / Planifié 📅). Transparence totale.', textEn: 'New **Public roadmap** section: 3 columns (Done / In progress / Planned).' },
+        { type: 'ux', text: 'Animations subtiles au scroll (fade-in + slide-up) sur toutes les sections, respect prefers-reduced-motion.', textEn: 'Subtle scroll animations on all sections, respects prefers-reduced-motion.' },
+      ],
+    },
+    {
       version: '0.9.198',
       date: '2026-05-17',
       time: '21:30',
