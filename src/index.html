@@ -945,6 +945,323 @@
       max-width: 980px;
       margin: 0 auto;
     }
+
+    /* ── Avant / Après (v0.9.204) ──────────────────────────────────────── */
+    .ba-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 860px) { .ba-grid { grid-template-columns: 1fr; } }
+    .ba-col {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 26px 24px;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+    .ba-col.ba-before {
+      border-color: rgba(248, 81, 73, 0.25);
+      background: linear-gradient(180deg, rgba(248,81,73,0.04) 0%, var(--bg2) 50%);
+    }
+    .ba-col.ba-after {
+      border-color: rgba(63, 185, 80, 0.35);
+      background: linear-gradient(180deg, rgba(63,185,80,0.06) 0%, var(--bg2) 50%);
+    }
+    .ba-col-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ba-col-icon { font-size: 26px; line-height: 1; }
+    .ba-col-head h3 { font-size: 17px; font-weight: 700; }
+    .ba-list { list-style: none; padding: 0; }
+    .ba-list li {
+      font-size: 13.5px;
+      color: var(--text2);
+      padding: 8px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.5;
+    }
+    .ba-x { color: var(--red); font-weight: 800; flex-shrink: 0; line-height: 1.5; }
+    .ba-check { color: var(--green); font-weight: 800; flex-shrink: 0; line-height: 1.5; }
+    .ba-after .ba-list li strong { color: var(--text); }
+
+    /* ── 3 Piliers (v0.9.204) ──────────────────────────────────────────── */
+    .title-accent {
+      background: linear-gradient(135deg, var(--accent-l), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .pillars {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      max-width: 1100px;
+      margin: 0 auto 36px;
+    }
+    @media (max-width: 900px) { .pillars { grid-template-columns: 1fr; max-width: 520px; } }
+    .pillar {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 26px 22px;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      position: relative;
+    }
+    .pillar:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 14px 32px rgba(124,58,237,0.15);
+    }
+    .pillar.pillar-featured {
+      border: 1.5px solid rgba(124,58,237,0.55);
+      background: linear-gradient(180deg, rgba(124,58,237,0.10) 0%, var(--bg2) 50%);
+      box-shadow: 0 14px 32px -10px rgba(124,58,237,0.30);
+    }
+    .pillar-num {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted2);
+      letter-spacing: 0.1em;
+    }
+    .pillar-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+      line-height: 1;
+    }
+    .pillar-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+    .pillar-desc {
+      font-size: 13.5px;
+      color: var(--text2);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .pillar-bullets {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    .pillar-bullets li {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 4px 0 4px 16px;
+      position: relative;
+      line-height: 1.4;
+    }
+    .pillar-bullets li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--accent-l);
+      font-weight: 700;
+    }
+
+    /* Mini features grid */
+    .mini-features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 900px) { .mini-features { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .mini-features { grid-template-columns: 1fr; } }
+    .mini-feat {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .mini-feat:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .mini-feat-icon { font-size: 22px; line-height: 1; flex-shrink: 0; }
+    .mini-feat strong { font-size: 13px; color: var(--text); }
+    .mini-feat span { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+
+    /* ── Use cases par prop firm (v0.9.204) ──────────────────────────── */
+    .usecases-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 900px) { .usecases-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .usecases-grid { grid-template-columns: 1fr; } }
+    .usecase-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 18px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .usecase-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .usecase-card.usecase-other { border-style: dashed; }
+    .usecase-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .usecase-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .usecase-head h3 { font-size: 15px; font-weight: 700; color: var(--text); }
+    .usecase-pain {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .usecase-fix {
+      font-size: 12.5px;
+      color: var(--text2);
+      line-height: 1.55;
+    }
+    .usecase-fix strong { color: var(--accent-l); }
+
+    /* ── Vs Concurrence (v0.9.204) ───────────────────────────────────── */
+    .vs-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+    }
+    .vs-table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .vs-table thead th {
+      padding: 16px 14px;
+      text-align: center;
+      font-weight: 700;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .vs-table thead th.vs-feat { text-align: left; }
+    .vs-table thead th.vs-us {
+      background: linear-gradient(180deg, rgba(124,58,237,0.15), rgba(124,58,237,0.03));
+      color: var(--accent-l);
+    }
+    .vs-sub { font-size: 11px; font-weight: 500; color: var(--muted); }
+    .vs-table tbody td {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text2);
+    }
+    .vs-table tbody td:first-child {
+      text-align: left;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .vs-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+    .vs-table tbody tr td:nth-child(2) {
+      background: rgba(124,58,237,0.05);
+    }
+    .vs-yes { color: #4ade80; font-weight: 600; }
+    .vs-mid { color: #f59e0b; font-weight: 500; }
+    .vs-no  { color: var(--muted); }
+    .vs-conclusion {
+      max-width: 1100px;
+      margin: 22px auto 0;
+      text-align: center;
+      font-size: 14px;
+      color: var(--text2);
+    }
+    .vs-conclusion strong { color: var(--accent-l); }
+
+    /* ── Roadmap publique (v0.9.204) ─────────────────────────────────── */
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 900px) { .roadmap-grid { grid-template-columns: 1fr; max-width: 520px; } }
+    .roadmap-col {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 20px;
+    }
+    .roadmap-col.roadmap-done { border-color: rgba(63, 185, 80, 0.35); }
+    .roadmap-col.roadmap-doing { border-color: rgba(124, 58, 237, 0.45); }
+    .roadmap-col.roadmap-next { border-color: rgba(245, 158, 11, 0.35); }
+    .roadmap-col-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .roadmap-icon { font-size: 20px; line-height: 1; }
+    .roadmap-col-head h3 { font-size: 15px; font-weight: 700; color: var(--text); }
+    .roadmap-list { list-style: none; padding: 0; }
+    .roadmap-list li {
+      font-size: 12.5px;
+      color: var(--text2);
+      padding: 6px 0 6px 18px;
+      position: relative;
+      line-height: 1.5;
+    }
+    .roadmap-list li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--muted2);
+    }
+    .roadmap-done .roadmap-list li::before { color: #4ade80; }
+    .roadmap-doing .roadmap-list li::before { color: var(--accent-l); }
+    .roadmap-next .roadmap-list li::before { color: #f59e0b; }
+
+    /* ── Scroll animations (v0.9.204) ─────────────────────────────────── */
+    .lp-anim-init {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.55s ease-out, transform 0.55s ease-out;
+      will-change: opacity, transform;
+    }
+    .lp-anim-init.lp-anim-in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .lp-anim-init { opacity: 1; transform: none; transition: none; }
+    }
     .how-step {
       background: var(--bg2);
       border: 1px solid var(--border);
@@ -1569,36 +1886,37 @@
       <div class="nav-links">
         <a href="#how" class="nav-link">Comment ça marche</a>
         <a href="#features" class="nav-link">Fonctionnalités</a>
+        <a href="#vs" class="nav-link">Comparer</a>
         <a href="#pricing" class="nav-link">Tarifs</a>
         <a href="#faq" class="nav-link">FAQ</a>
-        <a href="#contact" class="nav-link">Contact</a>
         <a href="/app" class="btn btn-ghost btn-sm">Se connecter</a>
       </div>
     </div>
   </nav>
 
-  <!-- ─── Hero ─────────────────────────────────────────────────────────── -->
+  <!-- ─── Hero v2 (v0.9.204) ──────────────────────────────────────────── -->
   <header class="hero">
     <div class="hero-badge">
       <span class="hero-badge-dot"></span>
-      Beta privée — sur invitation
+      🔥 5 dernières places Founding — accès Funded à vie
     </div>
     <h1 class="hero-title">
-      Un journal de trading complet<br>
-      <span class="accent">fait par un trader pour les traders</span>
+      Arrête de bust ton funded<br>
+      <span class="accent">à cause d'un mauvais Excel.</span>
     </h1>
     <p class="hero-sub">
-      Spécialement conçu pour les traders en prop firm. Calculs précis Apex / FTMO / Topstep / Lucid / Funding Pips,
-      analyse IA des charts, multi-comptes, screenshots persistants. Aucune approximation.
+      <strong>ZeldTrade</strong> calcule ton trailing drawdown <strong>au tick près</strong> pour Apex / FTMO / Topstep / Lucid / Funding Pips.
+      L'IA détecte entry, SL et TP depuis tes screenshots TradingView. Multi-comptes, crypto, fonds propres — tout dans 1 seul journal.
     </p>
     <div class="hero-ctas">
-      <a href="/app" class="btn btn-primary">Accéder à l'app →</a>
-      <a href="#features" class="btn btn-ghost">Voir les fonctionnalités</a>
+      <a href="/app" class="btn btn-primary">Démarrer en 2 min →</a>
+      <a href="#how" class="btn btn-ghost">Voir la démo</a>
     </div>
     <div class="hero-trust">
-      <span class="hero-trust-item"><span class="hero-trust-dot"></span>Données chiffrées en EU</span>
-      <span class="hero-trust-item"><span class="hero-trust-dot"></span>Pas de tracking</span>
-      <span class="hero-trust-item"><span class="hero-trust-dot"></span>RGPD compliant</span>
+      <span class="hero-trust-item"><span class="hero-trust-dot"></span>🇫🇷 Made in France</span>
+      <span class="hero-trust-item"><span class="hero-trust-dot"></span>Données chiffrées EU</span>
+      <span class="hero-trust-item"><span class="hero-trust-dot"></span>Pas de tracking · RGPD natif</span>
+      <span class="hero-trust-item"><span class="hero-trust-dot"></span>Aucune CB requise</span>
     </div>
   </header>
 
@@ -1945,6 +2263,47 @@
     </div>
   </div>
 
+  <!-- ─── Avant / Après (v0.9.204) ───────────────────────────────────── -->
+  <section class="section" id="before-after">
+    <div class="section-eyebrow">Avant / Après</div>
+    <h2 class="section-title">Pourquoi tu vas changer d'outil ce mois-ci</h2>
+    <p class="section-sub">
+      Si tu trades en prop firm avec un Excel ou un journal générique, voici ce que tu rates chaque jour.
+    </p>
+    <div class="ba-grid">
+      <div class="ba-col ba-before">
+        <div class="ba-col-head">
+          <span class="ba-col-icon">😤</span>
+          <h3>Sans ZeldTrade</h3>
+        </div>
+        <ul class="ba-list">
+          <li><span class="ba-x">✗</span> Excel chaotique avec 12 onglets pour 5 comptes différents</li>
+          <li><span class="ba-x">✗</span> Trailing drawdown calculé à la main → erreurs &amp; breach surprise</li>
+          <li><span class="ba-x">✗</span> Screenshots TradingView éparpillés dans 8 dossiers</li>
+          <li><span class="ba-x">✗</span> Saisie manuelle de chaque trade (3-5 min × 20 trades/jour = 1h perdue)</li>
+          <li><span class="ba-x">✗</span> Calculs P&amp;L approximatifs, frais oubliés</li>
+          <li><span class="ba-x">✗</span> Aucune analytics par setup, par session, par instrument</li>
+          <li><span class="ba-x">✗</span> Outils anglo-saxons à 30-40 $/mois pas adaptés aux prop firms</li>
+        </ul>
+      </div>
+      <div class="ba-col ba-after">
+        <div class="ba-col-head">
+          <span class="ba-col-icon">🚀</span>
+          <h3>Avec ZeldTrade</h3>
+        </div>
+        <ul class="ba-list">
+          <li><span class="ba-check">✓</span> <strong>1 journal centralisé</strong> pour tes 10 comptes prop / crypto / personnels</li>
+          <li><span class="ba-check">✓</span> <strong>Trailing drawdown EOD précis</strong> calculé au tick près (Apex/Topstep/Lucid/FP)</li>
+          <li><span class="ba-check">✓</span> <strong>Screenshots persistants</strong> stockés à vie dans le cloud (chiffrés EU)</li>
+          <li><span class="ba-check">✓</span> <strong>IA Groq Vision</strong> détecte entry/SL/TP en 2 sec (gain de 50 min/jour)</li>
+          <li><span class="ba-check">✓</span> <strong>P&amp;L net</strong> calculé avec fees + spreads par instrument</li>
+          <li><span class="ba-check">✓</span> <strong>Analytics</strong> par setup, session, instrument, jour, mois</li>
+          <li><span class="ba-check">✓</span> <strong>Made in France</strong> à 14,99 €/mois — 50% moins cher que les US</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
   <!-- ─── Comment ça marche (v0.9.177) ─────────────────────────────────── -->
   <section class="section" id="how">
     <div class="section-eyebrow">Comment ça marche</div>
@@ -1976,59 +2335,218 @@
 
   <!-- ─── Features ─────────────────────────────────────────────────────── -->
   <section class="section" id="features">
-    <div class="section-eyebrow">Fonctionnalités</div>
-    <h2 class="section-title">Tout ce qu'un trader prop firm peut vouloir</h2>
+    <div class="section-eyebrow">3 piliers</div>
+    <h2 class="section-title">Ce que ZeldTrade fait <span class="title-accent">mieux que tous les autres</span></h2>
     <p class="section-sub">
-      Pas un journal générique adapté. Pas de bullshit. Conçu pour les contraintes spécifiques des comptes funded.
+      Pas une liste de 50 features. 3 choses bien faites qui te font économiser 1h par jour et éviter des breaches.
     </p>
-    <div class="features">
-      <div class="feature">
-        <div class="feature-icon">🎯</div>
-        <h3 class="feature-title">Spécialisé prop firms</h3>
-        <p class="feature-desc">
-          Trailing drawdown EOD précis pour Apex, Topstep, Lucid, Funding Pips. Static drawdown pour FTMO 2-Step.
-          Safety net, daily loss limit, max contracts intégrés.
+
+    <!-- 3 PILIERS -->
+    <div class="pillars">
+      <div class="pillar">
+        <div class="pillar-num">01</div>
+        <div class="pillar-icon">🤖</div>
+        <h3 class="pillar-title">IA Groq Vision qui lit tes charts</h3>
+        <p class="pillar-desc">
+          <strong>Ctrl+V</strong> ton screenshot TradingView → l'IA détecte entry, SL et TP en <strong>2 secondes</strong>.
+          4 modèles en cascade (Llama Vision, etc.) pour ne jamais rater. Validation magic bytes serveur, App Check anti-spoofing.
         </p>
+        <ul class="pillar-bullets">
+          <li>20 analyses / jour (Funded) · 100 / jour (Elite)</li>
+          <li>Validation serveur stricte (PNG/JPEG/WebP)</li>
+          <li>Fallback parse texte si l'IA fail</li>
+        </ul>
       </div>
-      <div class="feature">
-        <div class="feature-icon">🤖</div>
-        <h3 class="feature-title">Analyse IA des charts</h3>
-        <p class="feature-desc">
-          Capture TradingView en Ctrl+V — Groq Vision extrait entry/SL/TP automatiquement.
-          Tu passes plus de temps à analyser qu'à recopier.
+      <div class="pillar pillar-featured">
+        <div class="pillar-num">02</div>
+        <div class="pillar-icon">🎯</div>
+        <h3 class="pillar-title">Règles prop firms calculées au tick</h3>
+        <p class="pillar-desc">
+          <strong>Trailing drawdown EOD précis</strong> pour Apex, Topstep, Lucid (Flex/Pro/Direct), Funding Pips. Static pour FTMO 2-Step.
+          Safety net, daily loss limit, max contracts intégrés. Tu vois le risque <strong>en temps réel</strong> dans le dashboard.
         </p>
+        <ul class="pillar-bullets">
+          <li>5 prop firms supportées (12+ presets)</li>
+          <li>Distance to floor + Apex risk bar</li>
+          <li>Comptes Crypto (Binance / Coinbase) &amp; Fonds propres</li>
+        </ul>
       </div>
-      <div class="feature">
-        <div class="feature-icon">📊</div>
-        <h3 class="feature-title">Multi-comptes natif</h3>
-        <p class="feature-desc">
-          Gère plusieurs comptes prop firms en parallèle (Apex 50k + FTMO 100k + …). Filtres par compte,
-          stats séparées, groupes pour répliquer un trade sur N comptes en 1 clic.
+      <div class="pillar">
+        <div class="pillar-num">03</div>
+        <div class="pillar-icon">📊</div>
+        <h3 class="pillar-title">Multi-comptes + groupes en 1 clic</h3>
+        <p class="pillar-desc">
+          <strong>Jusqu'à 100 comptes</strong> (prop / crypto / fonds propres). Crée un groupe, saisis ton trade une fois,
+          il se réplique automatiquement sur tous les comptes du groupe avec la bonne taille / bon levier.
         </p>
+        <ul class="pillar-bullets">
+          <li>10 comptes (Funded) · 100 comptes (Elite)</li>
+          <li>50 groupes max, 100 comptes / groupe</li>
+          <li>Filtres dashboard par compte ou groupe</li>
+        </ul>
       </div>
-      <div class="feature">
-        <div class="feature-icon">📐</div>
-        <h3 class="feature-title">Calculs précis micro-futures</h3>
-        <p class="feature-desc">
-          POINT_VALUES corrects pour MES, MNQ, MGC, MCL, ES, NQ, GC, CL, ZN. CFD et forex aussi.
-          R:R, risk %, P&amp;L net avec fees/spreads. Partial close (scale-out).
-        </p>
+    </div>
+
+    <!-- Mini features -->
+    <div class="mini-features">
+      <div class="mini-feat"><span class="mini-feat-icon">📸</span><div><strong>Screenshots à vie</strong><br><span>Stockés chiffrés EU, compression auto</span></div></div>
+      <div class="mini-feat"><span class="mini-feat-icon">📐</span><div><strong>P&amp;L net précis</strong><br><span>Fees, spreads, partial close, scale-out</span></div></div>
+      <div class="mini-feat"><span class="mini-feat-icon">📅</span><div><strong>Calendrier coloré</strong><br><span>Par jour, par mois, drawer cliquable</span></div></div>
+      <div class="mini-feat"><span class="mini-feat-icon">🎯</span><div><strong>Goals personnels</strong><br><span>P&amp;L mensuel, winrate, streak, # trades</span></div></div>
+      <div class="mini-feat"><span class="mini-feat-icon">📈</span><div><strong>Analytics profond</strong><br><span>Par setup, instrument, session, jour</span></div></div>
+      <div class="mini-feat"><span class="mini-feat-icon">📄</span><div><strong>Export PDF + CSV</strong><br><span>1 page/trade pour coach ou funded app</span></div></div>
+      <div class="mini-feat"><span class="mini-feat-icon">🧮</span><div><strong>Calculateur fiscal FR</strong><br><span>Micro-BNC, URSSAF, ACRE intégrés</span></div></div>
+      <div class="mini-feat"><span class="mini-feat-icon">🌍</span><div><strong>Bilingue FR / EN</strong><br><span>Switch dynamique sans reload</span></div></div>
+      <div class="mini-feat"><span class="mini-feat-icon">🔒</span><div><strong>RGPD natif</strong><br><span>Export JSON complet, suppression 1-clic</span></div></div>
+    </div>
+  </section>
+
+  <!-- ─── Use cases par prop firm (v0.9.204) ───────────────────────────── -->
+  <section class="section" id="usecases">
+    <div class="section-eyebrow">Use cases</div>
+    <h2 class="section-title">Tu trades quelle <span class="title-accent">prop firm</span> ?</h2>
+    <p class="section-sub">
+      Chaque firm a ses règles spécifiques. ZeldTrade les connaît toutes — choisis ton compte et configure en 30 secondes.
+    </p>
+    <div class="usecases-grid">
+      <div class="usecase-card">
+        <div class="usecase-head">
+          <div class="usecase-dot" style="background:#0a84ff"></div>
+          <h3>Apex Trader Funding</h3>
+        </div>
+        <p class="usecase-pain">Trailing drawdown EOD complexe, 4 tailles (25K/50K/100K/150K), eval fees + activation fees PA, max contracts.</p>
+        <p class="usecase-fix"><strong>ZeldTrade :</strong> 4 presets EOD officiels intégrés, calcul du trailing au tick près, alerte distance to floor, breakdown fees activation.</p>
       </div>
-      <div class="feature">
-        <div class="feature-icon">📸</div>
-        <h3 class="feature-title">Screenshots à vie</h3>
-        <p class="feature-desc">
-          Ctrl+V ton chart au moment du trade → stocké à vie dans le cloud. Re-cliques sur le trade 6 mois plus tard,
-          le screenshot est toujours là. Compression auto, jamais d'images perdues.
-        </p>
+      <div class="usecase-card">
+        <div class="usecase-head">
+          <div class="usecase-dot" style="background:#3fb950"></div>
+          <h3>Topstep</h3>
+        </div>
+        <p class="usecase-pain">Trailing drawdown jusqu'au passage en funded, eval fee mensuel à intégrer au break-even, max contracts par phase.</p>
+        <p class="usecase-fix"><strong>ZeldTrade :</strong> 3 presets Topstep avec eval fees mensuels, switch automatique funded → trailing fige, dashboard adapté.</p>
       </div>
-      <div class="feature">
-        <div class="feature-icon">🇫🇷</div>
-        <h3 class="feature-title">Interface en français</h3>
-        <p class="feature-desc">
-          La quasi-totalité des journals trading sont en anglais. ZeldTrade est nativement bilingue FR/EN.
-          Documentation, support, légal — tout en français.
-        </p>
+      <div class="usecase-card">
+        <div class="usecase-head">
+          <div class="usecase-dot" style="background:#f97316"></div>
+          <h3>FTMO (1-Step + 2-Step)</h3>
+        </div>
+        <p class="usecase-pain">Static drawdown sur 2-Step (différent du trailing), consistency rule sur certains comptes, profit targets phase 1 vs phase 2.</p>
+        <p class="usecase-fix"><strong>ZeldTrade :</strong> Presets FTMO 1-Step et 2-Step distincts, static drawdown calculé correctement, suivi consistency.</p>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-head">
+          <div class="usecase-dot" style="background:#a855f7"></div>
+          <h3>Lucid Trading</h3>
+        </div>
+        <p class="usecase-pain">3 produits distincts (Flex / Pro / Direct), 4 tailles chacun = 12 configurations. Chacune avec ses propres drawdown, profit target, max contracts.</p>
+        <p class="usecase-fix"><strong>ZeldTrade :</strong> <strong>12 presets Lucid</strong> ready-to-use — le seul SaaS à les avoir tous distingués correctement.</p>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-head">
+          <div class="usecase-dot" style="background:#ec4899"></div>
+          <h3>Funding Pips</h3>
+        </div>
+        <p class="usecase-pain">Static drawdown, multi-step evaluation, profit target par phase, payout conditions spécifiques.</p>
+        <p class="usecase-fix"><strong>ZeldTrade :</strong> Preset Funding Pips configurable, static drawdown précis, suivi profit target en temps réel.</p>
+      </div>
+      <div class="usecase-card usecase-other">
+        <div class="usecase-head">
+          <div class="usecase-dot" style="background:#94a3b8"></div>
+          <h3>Autre / Fonds propres / Crypto</h3>
+        </div>
+        <p class="usecase-pain">Tu trades avec ton propre capital ou sur Binance / Coinbase ? Pas de règles imposées mais besoin d'un journal aussi rigoureux.</p>
+        <p class="usecase-fix"><strong>ZeldTrade :</strong> Comptes <strong>Personnel</strong> sans règles + comptes <strong>Crypto</strong> (Binance Futures + Coinbase Spot) avec calcul des fees adapté.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Vs Concurrence (v0.9.204) ────────────────────────────────────── -->
+  <section class="section" id="vs">
+    <div class="section-eyebrow">Comparaison</div>
+    <h2 class="section-title">Pourquoi pas <span class="title-accent">Tradervue, Zella ou Excel</span> ?</h2>
+    <p class="section-sub">
+      Les outils US sont bien faits mais ignorent les contraintes prop firms FR. Excel demande 30 min de paramétrage par compte.
+    </p>
+    <div class="vs-wrap">
+      <table class="vs-table">
+        <thead>
+          <tr>
+            <th class="vs-feat">Critère</th>
+            <th class="vs-us"><strong>ZeldTrade</strong><br><span class="vs-sub">14,99 € / mois</span></th>
+            <th>Tradervue<br><span class="vs-sub">$29 / mois</span></th>
+            <th>TradeZella<br><span class="vs-sub">$39 / mois</span></th>
+            <th>Excel<br><span class="vs-sub">Gratuit</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Règles prop firms intégrées</td><td class="vs-yes">✓ 5 firms · 20+ presets</td><td class="vs-no">✗</td><td class="vs-mid">⚠ Partiel</td><td class="vs-no">✗ Manuel</td></tr>
+          <tr><td>Trailing drawdown EOD précis</td><td class="vs-yes">✓ Calculé au tick</td><td class="vs-no">✗</td><td class="vs-no">✗</td><td class="vs-no">✗</td></tr>
+          <tr><td>IA Vision sur screenshot</td><td class="vs-yes">✓ Groq incluse</td><td class="vs-no">✗</td><td class="vs-mid">⚠ Add-on payant</td><td class="vs-no">✗</td></tr>
+          <tr><td>Multi-comptes + groupes</td><td class="vs-yes">✓ 1 trade → N comptes</td><td class="vs-mid">⚠ Manuel</td><td class="vs-mid">⚠ Manuel</td><td class="vs-no">✗ 1 onglet/compte</td></tr>
+          <tr><td>Comptes Crypto</td><td class="vs-yes">✓ Binance + Coinbase</td><td class="vs-no">✗</td><td class="vs-mid">⚠ Limité</td><td class="vs-no">✗ Manuel</td></tr>
+          <tr><td>Interface française</td><td class="vs-yes">✓ FR natif</td><td class="vs-no">✗ EN only</td><td class="vs-no">✗ EN only</td><td class="vs-yes">✓ Manuel</td></tr>
+          <tr><td>Calculateur fiscal FR (micro-BNC)</td><td class="vs-yes">✓ Intégré</td><td class="vs-no">✗</td><td class="vs-no">✗</td><td class="vs-no">✗</td></tr>
+          <tr><td>RGPD natif (export, suppression 1-clic)</td><td class="vs-yes">✓</td><td class="vs-mid">⚠ Partiel</td><td class="vs-mid">⚠ Partiel</td><td class="vs-yes">✓</td></tr>
+          <tr><td>Hébergement UE</td><td class="vs-yes">✓ Firebase EU</td><td class="vs-no">✗ US</td><td class="vs-no">✗ US</td><td class="vs-yes">✓ Local</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="vs-conclusion">
+      <strong>50 % moins cher que Tradervue, 62 % moins cher que Zella</strong> — et avec les seules règles prop firms FR vraiment intégrées.
+    </p>
+  </section>
+
+  <!-- ─── Roadmap publique (v0.9.204) ──────────────────────────────────── -->
+  <section class="section" id="roadmap">
+    <div class="section-eyebrow">Roadmap publique</div>
+    <h2 class="section-title">Ce qu'on construit, <span class="title-accent">au grand jour</span></h2>
+    <p class="section-sub">
+      Transparence totale. Voici ce qui est livré, ce qu'on bosse, et ce qui arrive. Les utilisateurs Funded et Elite votent sur les priorités.
+    </p>
+    <div class="roadmap-grid">
+      <div class="roadmap-col roadmap-done">
+        <div class="roadmap-col-head">
+          <span class="roadmap-icon">✅</span>
+          <h3>Livré</h3>
+        </div>
+        <ul class="roadmap-list">
+          <li>Journal multi-comptes + groupes</li>
+          <li>IA Groq Vision (4 modèles cascade)</li>
+          <li>Trailing drawdown EOD précis 5 firms</li>
+          <li>Comptes Crypto (Binance + Coinbase)</li>
+          <li>Comptes Fonds propres</li>
+          <li>Export PDF / CSV / JSON RGPD</li>
+          <li>Calculateur fiscal micro-BNC</li>
+          <li>Bilingue FR / EN</li>
+        </ul>
+      </div>
+      <div class="roadmap-col roadmap-doing">
+        <div class="roadmap-col-head">
+          <span class="roadmap-icon">🚧</span>
+          <h3>En cours</h3>
+        </div>
+        <ul class="roadmap-list">
+          <li>Stripe Checkout (Funded / Elite)</li>
+          <li>Audit complet expérience mobile</li>
+          <li>Onboarding Pro multi-select préférences</li>
+          <li>Wizard crypto : labels qty vs contracts</li>
+          <li>Témoignages Founding Members</li>
+        </ul>
+      </div>
+      <div class="roadmap-col roadmap-next">
+        <div class="roadmap-col-head">
+          <span class="roadmap-icon">📅</span>
+          <h3>Planifié</h3>
+        </div>
+        <ul class="roadmap-list">
+          <li>Import API broker (IB, Trading 212…)</li>
+          <li>Dashboard coach (multi-élèves)</li>
+          <li>Accès API public (Elite)</li>
+          <li>Stats consolidées multi-comptes</li>
+          <li>Backup automatique quotidien</li>
+          <li>Export Excel avec formules natives</li>
+          <li>Mobile app (iOS / Android)</li>
+        </ul>
       </div>
     </div>
   </section>
@@ -2214,7 +2732,7 @@
       </a>
     </div>
     <div>
-      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.203</span>
+      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.204</span>
     </div>
   </footer>
 
@@ -2224,6 +2742,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-functions-compat.js"></script>
   <script src="js/landing-contact.js?v=0.9.172"></script>
   <script src="js/landing-pricing.js?v=0.9.198"></script>
+  <script src="js/landing-animations.js?v=0.9.204" defer></script>
 
 </body>
 </html>
