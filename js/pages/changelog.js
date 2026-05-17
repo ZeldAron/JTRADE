@@ -5,6 +5,21 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.197',
+      date: '2026-05-17',
+      time: '20:30',
+      tags: ['feature', 'ux'],
+      title: 'Refonte des offres : Trader / Funded / Elite',
+      titleEn: 'Plans redesign: Trader / Funded / Elite',
+      items: [
+        { type: 'feature', text: '**3 plans distincts** au lieu de 2 : **Trader** (gratuit), **Funded** (14,99 €/mois) et **Elite** (29,99 €/mois). Plus de plan Lifetime.', textEn: '**3 distinct plans** instead of 2: **Trader** (free), **Funded** (€14.99/mo), **Elite** (€29.99/mo). No more Lifetime plan.' },
+        { type: 'feature', text: '**Trader** (gratuit pour toujours) : 1 compte, 1 analyse IA/jour, journal complet, dashboard, calendrier, goals, calculateurs.', textEn: '**Trader** (free forever): 1 account, 1 AI/day, full journal, dashboard, calendar, goals, calculators.' },
+        { type: 'feature', text: '**Funded** (14,99 €/mois) : 10 comptes, 20 analyses IA/jour, groupes multi-comptes, export PDF avec screenshots, support prioritaire.', textEn: '**Funded** (€14.99/mo): 10 accounts, 20 AI/day, multi-account groups, PDF export with screenshots, priority support.' },
+        { type: 'feature', text: '**Elite** (29,99 €/mois) : 100 comptes, 100 analyses IA/jour, accès anticipé features beta, support 24h, votes décisifs roadmap.', textEn: '**Elite** (€29.99/mo): 100 accounts, 100 AI/day, early beta access, 24h support, decisive roadmap votes.' },
+        { type: 'ux', text: 'Page Offres et section Tarifs de la landing entièrement refondues. Comparaison complète sur 12 critères dans la page Offres.', textEn: 'Offers page and landing pricing section fully redesigned. Full comparison table with 12 criteria on the Offers page.' },
+      ],
+    },
+    {
       version: '0.9.195',
       date: '2026-05-17',
       time: '19:30',
