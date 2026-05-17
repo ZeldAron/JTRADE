@@ -5,6 +5,17 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.195',
+      date: '2026-05-17',
+      time: '19:30',
+      tags: ['ux'],
+      title: 'Newsletter : retrait de la limite "max 1/mois"',
+      titleEn: 'Newsletter: removed "max 1/month" mention',
+      items: [
+        { type: 'ux', text: 'Retiré la mention "Max 1 email/mois" sur la case newsletter (création de compte, modal consent CGU et Réglages). Désormais : "Je veux recevoir les emails de mises à jour et nouvelles offres (désinscription à tout moment)". Permet d\'envoyer plus librement les annonces de fonctionnalités majeures.', textEn: 'Removed the "Max 1 email/month" mention on the newsletter checkbox (signup, consent modal and Settings). Now: "I want to receive updates and offers (unsubscribe anytime)". Allows freer sending of major feature announcements.' },
+      ],
+    },
+    {
       version: '0.9.193',
       date: '2026-05-17',
       time: '19:00',
