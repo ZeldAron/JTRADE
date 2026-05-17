@@ -13,10 +13,14 @@ const Store = (() => {
   const DEFAULT_SETTINGS = { capital: 50000, contracts: 1, instrument: 'MES1' };
 
   const DEFAULT_ACCOUNT_TYPES = [
-    { id: 'apex-25k',     firmKey: 'apex',    name: 'Apex $25K',      capital:  25000, profitTarget:  1500, maxDrawdown:  1000, dailyLossLimit:   500, maxContracts:  4, feePerSide: 1.99 },
-    { id: 'apex-50k',     firmKey: 'apex',    name: 'Apex $50K',      capital:  50000, profitTarget:  3000, maxDrawdown:  2000, dailyLossLimit:  1000, maxContracts:  6, feePerSide: 1.99 },
-    { id: 'apex-100k',    firmKey: 'apex',    name: 'Apex $100K',     capital: 100000, profitTarget:  6000, maxDrawdown:  3000, dailyLossLimit:  1500, maxContracts:  8, feePerSide: 1.99 },
-    { id: 'apex-150k',    firmKey: 'apex',    name: 'Apex $150K',     capital: 150000, profitTarget:  9000, maxDrawdown:  4000, dailyLossLimit:  2000, maxContracts: 12, feePerSide: 1.99 },
+    // ─── Apex Trader Funding 2026 (refonte v0.9.186) ───
+    // Apex propose 2 produits : EOD Trail (End Of Day Drawdown) et Intraday Trail
+    // (Trailing en temps réel). Captures officielles fournies par user.
+    // Apex EOD — drawdown se fige quand atteint la balance cible
+    { id: 'apex-eod-25k',  firmKey: 'apex', subType: 'EOD',  name: 'Apex EOD $25K',  capital:  25000, profitTarget:  1500, maxDrawdown:  1000, dailyLossLimit:   500, maxContracts:  4, feePerSide: 1.99 },
+    { id: 'apex-eod-50k',  firmKey: 'apex', subType: 'EOD',  name: 'Apex EOD $50K',  capital:  50000, profitTarget:  3000, maxDrawdown:  2000, dailyLossLimit:  1000, maxContracts:  6, feePerSide: 1.99 },
+    { id: 'apex-eod-100k', firmKey: 'apex', subType: 'EOD',  name: 'Apex EOD $100K', capital: 100000, profitTarget:  6000, maxDrawdown:  3000, dailyLossLimit:  1500, maxContracts:  8, feePerSide: 1.99 },
+    { id: 'apex-eod-150k', firmKey: 'apex', subType: 'EOD',  name: 'Apex EOD $150K', capital: 150000, profitTarget:  9000, maxDrawdown:  4000, dailyLossLimit:  2000, maxContracts: 12, feePerSide: 1.99 },
     { id: 'topstep-50k',  firmKey: 'topstep', name: 'Topstep $50K',   capital:  50000, profitTarget:  3000, maxDrawdown:  2000, dailyLossLimit:     0, maxContracts:  5, feePerSide: 1.90 },
     { id: 'topstep-100k', firmKey: 'topstep', name: 'Topstep $100K',  capital: 100000, profitTarget:  6000, maxDrawdown:  3000, dailyLossLimit:     0, maxContracts: 10, feePerSide: 1.90 },
     { id: 'topstep-150k', firmKey: 'topstep', name: 'Topstep $150K',  capital: 150000, profitTarget:  9000, maxDrawdown:  4500, dailyLossLimit:     0, maxContracts: 15, feePerSide: 1.90 },
@@ -56,11 +60,16 @@ const Store = (() => {
   ];
 
   const DEFAULT_PROP_FIRMS = {
-    apex:    { name: 'Apex Funding',    accounts: [
-      { id:'apex-25k',     size:'25K',  capital:25000,  profitTarget:1500,  maxDrawdown:1000, dailyLossLimit:500,  drawdownType:'Trailing EOD', consistency:'≤50% meilleure journée',              minTradingDays:0, payoutConditions:'90/10 split — aucun min de jours' },
-      { id:'apex-50k',     size:'50K',  capital:50000,  profitTarget:3000,  maxDrawdown:2000, dailyLossLimit:1000, drawdownType:'Trailing EOD', consistency:'≤50% meilleure journée',              minTradingDays:0, payoutConditions:'90/10 split — aucun min de jours' },
-      { id:'apex-100k',    size:'100K', capital:100000, profitTarget:6000,  maxDrawdown:3000, dailyLossLimit:1500, drawdownType:'Trailing EOD', consistency:'≤50% meilleure journée',              minTradingDays:0, payoutConditions:'90/10 split — aucun min de jours' },
-      { id:'apex-150k',    size:'150K', capital:150000, profitTarget:9000,  maxDrawdown:4000, dailyLossLimit:2000, drawdownType:'Trailing EOD', consistency:'≤50% meilleure journée',              minTradingDays:0, payoutConditions:'90/10 split — aucun min de jours' },
+    // ─── Apex Trader Funding 2026 — refonte v0.9.186 ───
+    // Source : captures officielles apextraderfunding.com (user, 2026-05-17).
+    // 2 produits : EOD Trail (drawdown se fige à PT atteint) et Intraday Trail (trailing live).
+    // Min Days To Pass : 1. Consistency Rule : 50% (PA). Activation Fee one-time PA. Max 20 comptes PA.
+    apex: { name: 'Apex Trader Funding', accounts: [
+      // Apex EOD Trail
+      { id:'apex-eod-25k',  subType:'EOD', size:'25K',  capital:25000,  profitTarget:1500, maxDrawdown:1000, dailyLossLimit:500,  maxContractsEval:4,  maxContractsPA:2, evalFee:34.90,  activationFeePA:119, drawdownType:'Trailing EOD (se fige à PT)', consistency:'≤50% meilleure journée (PA)', minTradingDays:1, payoutConditions:'PA $119 — 5 trading days, max 20 comptes' },
+      { id:'apex-eod-50k',  subType:'EOD', size:'50K',  capital:50000,  profitTarget:3000, maxDrawdown:2000, dailyLossLimit:1000, maxContractsEval:6,  maxContractsPA:4, evalFee:39.90,  activationFeePA:129, drawdownType:'Trailing EOD (se fige à PT)', consistency:'≤50% meilleure journée (PA)', minTradingDays:1, payoutConditions:'PA $129 — 5 trading days, max 20 comptes' },
+      { id:'apex-eod-100k', subType:'EOD', size:'100K', capital:100000, profitTarget:6000, maxDrawdown:3000, dailyLossLimit:1500, maxContractsEval:8,  maxContractsPA:6, evalFee:59.90,  activationFeePA:149, drawdownType:'Trailing EOD (se fige à PT)', consistency:'≤50% meilleure journée (PA)', minTradingDays:1, payoutConditions:'PA $149 — 5 trading days, max 20 comptes' },
+      { id:'apex-eod-150k', subType:'EOD', size:'150K', capital:150000, profitTarget:9000, maxDrawdown:4000, dailyLossLimit:2000, maxContractsEval:12, maxContractsPA:10, evalFee:89.90, activationFeePA:169, drawdownType:'Trailing EOD (se fige à PT)', consistency:'≤50% meilleure journée (PA)', minTradingDays:1, payoutConditions:'PA $169 — 5 trading days, max 20 comptes' },
     ]},
     topstep: { name: 'Topstep',         accounts: [
       { id:'topstep-50k',  size:'50K',  capital:50000,  profitTarget:3000,  maxDrawdown:2000, dailyLossLimit:0,    drawdownType:'Trailing EOD', consistency:'≤50% PT (PT ajusté si dépassé)',    minTradingDays:0, payoutConditions:'100% premier $10K, puis 90/10 — 5j gagnants min' },
