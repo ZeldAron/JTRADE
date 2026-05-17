@@ -5,6 +5,18 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.181',
+      date: '2026-05-17',
+      time: '12:15',
+      tags: ['ux', 'a11y'],
+      title: 'Empty state Analytics + a11y boutons icônes',
+      titleEn: 'Analytics empty state + icon button a11y',
+      items: [
+        { type: 'ux', text: 'Page Analytics : si tu n\'as encore aucun trade enregistré, tu as maintenant un vrai empty state (icône 📈 + texte explicatif + bouton « + Nouveau trade ») au lieu d\'un simple paragraphe gris perdu.', textEn: 'Analytics page: proper empty state with icon + explainer + CTA when no trades, instead of a lost gray paragraph.' },
+        { type: 'a11y', text: 'aria-label ajouté sur 4 boutons icônes critiques (fermer wizard, déconnexion, bulle assistance, fermer assistance) pour les lecteurs d\'écran.', textEn: 'aria-label added on 4 critical icon-only buttons (close wizard, logout, assistance bubble, close assistance) for screen readers.' },
+      ],
+    },
+    {
       version: '0.9.180',
       date: '2026-05-17',
       time: '11:45',
