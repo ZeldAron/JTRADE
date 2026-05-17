@@ -1252,6 +1252,369 @@
     .roadmap-doing .roadmap-list li::before { color: var(--accent-l); }
     .roadmap-next .roadmap-list li::before { color: #f59e0b; }
 
+    /* ── Démo live animation (v0.9.209) ──────────────────────────────── */
+    .demo-window {
+      max-width: 920px;
+      margin: 0 auto;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px -20px rgba(0,0,0,0.6);
+    }
+    .demo-chrome {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #0a0e14;
+      border-bottom: 1px solid var(--border);
+    }
+    .demo-cdot { width: 10px; height: 10px; border-radius: 50%; }
+    .demo-cdot.red    { background: #ff5f57; }
+    .demo-cdot.yellow { background: #ffbd2e; }
+    .demo-cdot.green  { background: #28c940; }
+    .demo-curl {
+      margin-left: 14px;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-family: ui-monospace, monospace;
+    }
+    .demo-app {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      min-height: 340px;
+    }
+    @media (max-width: 720px) {
+      .demo-app { grid-template-columns: 1fr; min-height: 460px; }
+      .demo-sidebar { display: none; }
+    }
+    .demo-sidebar {
+      background: #0d1117;
+      border-right: 1px solid var(--border);
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .demo-logo {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #7c3aed, #5b21b6);
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 0 12px;
+    }
+    .demo-side-item {
+      font-size: 11.5px;
+      color: var(--muted);
+      padding: 7px 9px;
+      border-radius: 6px;
+      line-height: 1.3;
+    }
+    .demo-side-item.active {
+      background: rgba(124,58,237,0.18);
+      color: var(--accent-l);
+      font-weight: 600;
+    }
+    .demo-main {
+      position: relative;
+      padding: 22px 24px 24px;
+      overflow: hidden;
+    }
+    /* Step indicator */
+    .demo-steps {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .demo-stepdot {
+      font-size: 11px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      padding: 5px 11px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.5s;
+    }
+    .demo-stepdot span {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 10px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .demo-stepdot.active {
+      color: var(--accent-l);
+      background: rgba(124,58,237,0.14);
+      border-color: rgba(124,58,237,0.4);
+    }
+    .demo-stepdot.active span {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      color: #fff;
+    }
+    .demo-stepdot.done {
+      color: #4ade80;
+      border-color: rgba(63,185,80,0.4);
+    }
+    .demo-stepdot.done span {
+      background: rgba(63,185,80,0.25);
+      color: #4ade80;
+    }
+
+    /* Stages (overlayed, only one visible at a time) */
+    .demo-stage {
+      position: absolute;
+      top: 70px;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .demo-stage-1 { animation: demoStage 12s infinite; animation-delay: 0s; }
+    .demo-stage-2 { animation: demoStage 12s infinite; animation-delay: -8s; }
+    .demo-stage-3 { animation: demoStage 12s infinite; animation-delay: -4s; }
+    @keyframes demoStage {
+      0%, 28%   { opacity: 1; }
+      33%, 100% { opacity: 0; }
+    }
+
+    /* Stage 1 : Drop zone */
+    .demo-drop {
+      position: relative;
+      background: rgba(124,58,237,0.04);
+      border: 2px dashed rgba(124,58,237,0.4);
+      border-radius: 12px;
+      padding: 18px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      overflow: hidden;
+    }
+    .demo-paste-hint {
+      font-size: 12px;
+      color: var(--muted);
+      animation: demoPasteHint 12s infinite;
+    }
+    @keyframes demoPasteHint {
+      0%, 12%   { opacity: 0.9; transform: translateY(0); }
+      15%, 100% { opacity: 0; transform: translateY(-10px); }
+    }
+    .demo-chart {
+      width: 100%;
+      max-width: 360px;
+      height: 130px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      opacity: 0;
+      transform: scale(0.94);
+      animation: demoChartIn 12s infinite;
+    }
+    @keyframes demoChartIn {
+      0%, 12%   { opacity: 0; transform: scale(0.94); }
+      18%, 28%  { opacity: 1; transform: scale(1); }
+      33%, 100% { opacity: 0; transform: scale(1); }
+    }
+    .demo-cursor {
+      position: absolute;
+      bottom: 14px; right: 14px;
+      background: var(--accent);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: ui-monospace, monospace;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(124,58,237,0.45);
+      animation: demoCursor 12s infinite;
+    }
+    @keyframes demoCursor {
+      0%      { opacity: 0; transform: translate(20px, 20px); }
+      8%, 13% { opacity: 1; transform: translate(0, 0); }
+      15%     { transform: scale(1.15); }
+      17%     { transform: scale(1); }
+      22%, 100% { opacity: 0; transform: translate(20px, 20px); }
+    }
+
+    /* Stage 2 : AI fields */
+    .demo-ai {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 4px 0;
+    }
+    .demo-ai-spinner {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 3px solid rgba(167,139,250,0.2);
+      border-top-color: var(--accent-l);
+      margin: 0 auto;
+      animation: demoSpin 0.9s linear infinite, demoSpinnerFade 12s infinite;
+    }
+    @keyframes demoSpin { to { transform: rotate(360deg); } }
+    @keyframes demoSpinnerFade {
+      0%, 33% { opacity: 0; }
+      35%, 42% { opacity: 1; }
+      45%, 100% { opacity: 0; }
+    }
+    .demo-ai-text {
+      text-align: center;
+      color: var(--accent-l);
+      font-size: 12.5px;
+      font-weight: 500;
+      animation: demoAiText 12s infinite;
+    }
+    @keyframes demoAiText {
+      0%, 33% { opacity: 0; }
+      35%, 45% { opacity: 1; }
+      48%, 100% { opacity: 0; }
+    }
+    .demo-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .demo-field {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    .demo-field-label { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .demo-field-value { font-size: 15px; color: var(--text); font-weight: 700; font-family: ui-monospace, monospace; }
+    .demo-field-1 { animation: demoFieldIn 12s infinite; animation-delay: -7.0s; }
+    .demo-field-2 { animation: demoFieldIn 12s infinite; animation-delay: -6.7s; }
+    .demo-field-3 { animation: demoFieldIn 12s infinite; animation-delay: -6.4s; }
+    .demo-field-4 { animation: demoFieldIn 12s infinite; animation-delay: -6.1s; }
+    @keyframes demoFieldIn {
+      0%, 41%   { opacity: 0; transform: translateY(8px); border-color: var(--border); }
+      45%, 47%  { opacity: 1; transform: translateY(0); border-color: rgba(124,58,237,0.5); box-shadow: 0 0 0 3px rgba(124,58,237,0.15); }
+      55%, 100% { opacity: 1; transform: translateY(0); border-color: var(--border); box-shadow: none; }
+    }
+
+    /* Stage 3 : Summary + Save */
+    .demo-summary {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .demo-summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+    }
+    .demo-summary-row span { color: var(--muted); }
+    .demo-summary-row strong { color: var(--text); font-weight: 600; font-family: ui-monospace, monospace; font-size: 12.5px; }
+    .demo-save-btn {
+      display: block;
+      width: 100%;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, var(--accent), var(--pink));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px -8px rgba(124,58,237,0.5);
+      animation: demoSaveBtn 12s infinite;
+    }
+    @keyframes demoSaveBtn {
+      0%, 75%   { transform: scale(1); box-shadow: 0 8px 24px -8px rgba(124,58,237,0.5); }
+      78%       { transform: scale(0.97); box-shadow: 0 4px 10px rgba(124,58,237,0.35); }
+      82%, 100% { transform: scale(1); box-shadow: 0 8px 24px -8px rgba(124,58,237,0.5); }
+    }
+    .demo-toast {
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(63,185,80,0.12);
+      border: 1px solid rgba(63,185,80,0.4);
+      color: #4ade80;
+      padding: 9px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0;
+      white-space: nowrap;
+      animation: demoToast 12s infinite;
+    }
+    @keyframes demoToast {
+      0%, 80%   { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      83%, 95%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+      98%, 100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    }
+
+    /* Step dot states (synced with stages) */
+    .demo-stepdot-1 { animation: demoDot1 12s infinite; }
+    .demo-stepdot-2 { animation: demoDot2 12s infinite; }
+    .demo-stepdot-3 { animation: demoDot3 12s infinite; }
+    @keyframes demoDot1 {
+      0%, 28%    { color: var(--accent-l); background: rgba(124,58,237,0.14); border-color: rgba(124,58,237,0.4); }
+      33%, 100%  { color: #4ade80; background: transparent; border-color: rgba(63,185,80,0.35); }
+    }
+    @keyframes demoDot2 {
+      0%, 28%    { color: var(--muted); background: rgba(255,255,255,0.04); border-color: var(--border); }
+      33%, 61%   { color: var(--accent-l); background: rgba(124,58,237,0.14); border-color: rgba(124,58,237,0.4); }
+      66%, 100%  { color: #4ade80; background: transparent; border-color: rgba(63,185,80,0.35); }
+    }
+    @keyframes demoDot3 {
+      0%, 61%    { color: var(--muted); background: rgba(255,255,255,0.04); border-color: var(--border); }
+      66%, 95%   { color: var(--accent-l); background: rgba(124,58,237,0.14); border-color: rgba(124,58,237,0.4); }
+      96%, 100%  { color: #4ade80; background: transparent; border-color: rgba(63,185,80,0.35); }
+    }
+
+    .demo-caption {
+      max-width: 920px;
+      margin: 14px auto 0;
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--muted2);
+      font-style: italic;
+    }
+
+    /* Respect reduced motion : disable all demo animations */
+    @media (prefers-reduced-motion: reduce) {
+      .demo-stage-1 { opacity: 1; }
+      .demo-stage-2, .demo-stage-3 { display: none; }
+      .demo-chart, .demo-cursor, .demo-paste-hint,
+      .demo-ai-spinner, .demo-ai-text, .demo-field,
+      .demo-save-btn, .demo-toast,
+      .demo-stepdot-1, .demo-stepdot-2, .demo-stepdot-3 {
+        animation: none;
+      }
+      .demo-chart { opacity: 1; transform: none; }
+      .demo-field { opacity: 1; transform: none; }
+    }
+
     /* ── Scroll animations (v0.9.204) ─────────────────────────────────── */
     .lp-anim-init {
       opacity: 0;
@@ -1914,7 +2277,7 @@
     </p>
     <div class="hero-ctas">
       <a href="/app" class="btn btn-primary">Démarrer en 2 min →</a>
-      <a href="#how" class="btn btn-ghost">Voir la démo</a>
+      <a href="#demo" class="btn btn-ghost">Voir la démo →</a>
     </div>
     <div class="hero-trust">
       <span class="hero-trust-item"><span class="hero-trust-dot"></span>🇫🇷 Made in France</span>
@@ -2266,6 +2629,111 @@
       </div>
     </div>
   </div>
+
+  <!-- ─── Démo live (v0.9.209) — animation 3 étapes en boucle ─────────── -->
+  <section class="section" id="demo">
+    <div class="section-eyebrow">Démo live</div>
+    <h2 class="section-title">Crée ton premier trade en <span class="title-accent">30 secondes</span></h2>
+    <p class="section-sub">
+      Aucune saisie manuelle. Capture ton chart TradingView, l'IA fait le reste.
+    </p>
+
+    <div class="demo-window" aria-label="Démo animée de création de trade">
+      <!-- Browser chrome -->
+      <div class="demo-chrome">
+        <span class="demo-cdot red"></span>
+        <span class="demo-cdot yellow"></span>
+        <span class="demo-cdot green"></span>
+        <span class="demo-curl">zeldtrade.com/app · Nouveau trade</span>
+      </div>
+
+      <div class="demo-app">
+        <!-- Sidebar -->
+        <aside class="demo-sidebar">
+          <div class="demo-logo">Z</div>
+          <div class="demo-side-item active">📝 Nouveau trade</div>
+          <div class="demo-side-item">📊 Dashboard</div>
+          <div class="demo-side-item">📓 Journal</div>
+          <div class="demo-side-item">📈 Analytics</div>
+          <div class="demo-side-item">🎯 Objectifs</div>
+          <div class="demo-side-item">⚙️ Réglages</div>
+        </aside>
+
+        <!-- Main canvas -->
+        <main class="demo-main">
+          <!-- Step indicator -->
+          <div class="demo-steps">
+            <div class="demo-stepdot demo-stepdot-1"><span>1</span> Capture</div>
+            <div class="demo-stepdot demo-stepdot-2"><span>2</span> IA fill</div>
+            <div class="demo-stepdot demo-stepdot-3"><span>3</span> Sauvegarde</div>
+          </div>
+
+          <!-- Step 1: Drop zone -->
+          <div class="demo-stage demo-stage-1">
+            <div class="demo-drop">
+              <div class="demo-paste-hint">📸 Drag &amp; drop ou Ctrl+V ton screenshot TradingView</div>
+              <!-- Fake screenshot SVG -->
+              <svg class="demo-chart" viewBox="0 0 320 160" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="dchart" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="rgba(124,58,237,0.25)"/>
+                    <stop offset="100%" stop-color="rgba(124,58,237,0)"/>
+                  </linearGradient>
+                </defs>
+                <rect width="320" height="160" fill="#0d1117"/>
+                <!-- Grid -->
+                <line x1="0" y1="40"  x2="320" y2="40"  stroke="#1f2937" stroke-width="0.5"/>
+                <line x1="0" y1="80"  x2="320" y2="80"  stroke="#1f2937" stroke-width="0.5"/>
+                <line x1="0" y1="120" x2="320" y2="120" stroke="#1f2937" stroke-width="0.5"/>
+                <!-- Price line -->
+                <path d="M0,110 L40,95 L70,100 L100,85 L130,72 L160,80 L190,65 L220,55 L260,68 L300,52 L320,48"
+                      fill="none" stroke="#a78bfa" stroke-width="2"/>
+                <path d="M0,110 L40,95 L70,100 L100,85 L130,72 L160,80 L190,65 L220,55 L260,68 L300,52 L320,48 L320,160 L0,160 Z"
+                      fill="url(#dchart)"/>
+                <!-- Entry/SL/TP lines -->
+                <line x1="0" y1="78" x2="320" y2="78" stroke="#22d3ee" stroke-width="1" stroke-dasharray="3,3"/>
+                <text x="6" y="74" fill="#22d3ee" font-size="9" font-family="monospace">ENTRY 4523.50</text>
+                <line x1="0" y1="105" x2="320" y2="105" stroke="#f85149" stroke-width="1" stroke-dasharray="3,3"/>
+                <text x="6" y="115" fill="#f85149" font-size="9" font-family="monospace">SL 4519.50</text>
+                <line x1="0" y1="50" x2="320" y2="50" stroke="#3fb950" stroke-width="1" stroke-dasharray="3,3"/>
+                <text x="6" y="46" fill="#3fb950" font-size="9" font-family="monospace">TP 4530.00</text>
+              </svg>
+              <!-- Cursor -->
+              <div class="demo-cursor" aria-hidden="true">⌘V</div>
+            </div>
+          </div>
+
+          <!-- Step 2: AI analysis -->
+          <div class="demo-stage demo-stage-2">
+            <div class="demo-ai">
+              <div class="demo-ai-spinner" aria-hidden="true"></div>
+              <div class="demo-ai-text">L'IA Groq Vision analyse ton chart…</div>
+              <div class="demo-fields">
+                <div class="demo-field demo-field-1"><span class="demo-field-label">Entry</span><span class="demo-field-value">4 523,50</span></div>
+                <div class="demo-field demo-field-2"><span class="demo-field-label">Stop Loss</span><span class="demo-field-value">4 519,50</span></div>
+                <div class="demo-field demo-field-3"><span class="demo-field-label">Take Profit</span><span class="demo-field-value">4 530,00</span></div>
+                <div class="demo-field demo-field-4"><span class="demo-field-label">R:R</span><span class="demo-field-value">1,63</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Save -->
+          <div class="demo-stage demo-stage-3">
+            <div class="demo-summary">
+              <div class="demo-summary-row"><span>Instrument</span><strong>ES (Apex 100K)</strong></div>
+              <div class="demo-summary-row"><span>Side · Contracts</span><strong>Long · 2</strong></div>
+              <div class="demo-summary-row"><span>Risk</span><strong>200 $ — 0,2 %</strong></div>
+              <div class="demo-summary-row"><span>R:R</span><strong>1,63</strong></div>
+            </div>
+            <button class="demo-save-btn">✓ Sauvegarder le trade</button>
+            <div class="demo-toast">✓ Trade ajouté à ton journal &amp; dashboard mis à jour</div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <p class="demo-caption">Animation simplifiée — la vraie app est plus complète (multi-comptes, groupes, partial close, etc.)</p>
+  </section>
 
   <!-- ─── Avant / Après (v0.9.204) ───────────────────────────────────── -->
   <section class="section" id="before-after">
@@ -2736,7 +3204,7 @@
       </a>
     </div>
     <div>
-      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.208</span>
+      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.209</span>
     </div>
   </footer>
 
