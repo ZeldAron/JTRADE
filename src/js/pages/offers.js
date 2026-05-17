@@ -45,7 +45,7 @@ UI.renderOffers = function () {
   // ── Card : TRADER (gratuit) ───────────────────────────────────────────────
   const cardTrader = `
     <div class="offer-card ${!pro ? 'offer-current' : ''}">
-      <div class="offer-badge-basic">TRADER</div>
+      <div class="offer-badge-basic">GRATUIT</div>
       <div class="offer-badge-current" style="opacity:${!pro ? 1 : 0}">${t('off.current')}</div>
       <div class="offer-name">Trader</div>
       <div class="offer-tag">${t('off.trader.tag')}</div>
@@ -97,7 +97,7 @@ UI.renderOffers = function () {
   // ── Card : ELITE (29.99 €/mois) ───────────────────────────────────────────
   const cardElite = `
     <div class="offer-card offer-elite">
-      <div class="offer-badge-elite">ELITE</div>
+      <div class="offer-badge-elite">✦ Premium</div>
       <div class="offer-badge-current" style="opacity:0">${t('off.current')}</div>
       <div class="offer-name" style="color:#f59e0b">Elite</div>
       <div class="offer-tag">${t('off.elite.tag')}</div>

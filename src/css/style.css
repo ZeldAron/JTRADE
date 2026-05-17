@@ -3029,6 +3029,13 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   line-height: 1.45;
   min-height: 36px;
 }
+/* Push CTA to bottom of each offer card so they align horizontally */
+.offer-cta {
+  margin-top: auto;
+}
+.offer-features {
+  margin-bottom: 16px;
+}
 .offer-perday {
   font-size: 12px;
   color: var(--muted);
