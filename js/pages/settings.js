@@ -538,6 +538,108 @@
     render(FIRM_ORDER.find(k => firms[k]) || 'apex');
   }
 
+  // v0.9.191 — Onglet Crypto : référentiel des 2 plateformes supportées + paires + frais types
+  function renderCryptoSettings() {
+    const el = $('settingsCrypto');
+    if (!el) return;
+
+    const PLATFORMS = {
+      binance: {
+        name:    'Binance Futures',
+        url:     'https://www.binance.com/en/futures/',
+        color:   '#f0b90b',
+        bgGlow:  'rgba(240,185,11,0.08)',
+        mode:    'Perpetuals USDT-M',
+        feeMaker: 0.02,
+        feeTaker: 0.05,
+        feeNote: 'Tarif Regular (sans BNB discount, sans niveau VIP)',
+        leverage: '1× à 125× selon la paire',
+        liquidation: 'Auto à -100% margin maintenance',
+        pairs:    ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','AVAXUSDT','DOGEUSDT','LINKUSDT','DOTUSDT'],
+        payouts:  'Withdrawal direct, frais réseau selon coin',
+        kyc:      'KYC niveau 1 minimum (passport + selfie)',
+      },
+      coinbase: {
+        name:    'Coinbase',
+        url:     'https://www.coinbase.com/',
+        color:   '#0052ff',
+        bgGlow:  'rgba(0,82,255,0.08)',
+        mode:    'Spot USD (Advanced Trade)',
+        feeMaker: 0.40,
+        feeTaker: 0.60,
+        feeNote: 'Tarif Coinbase Advanced (Coinbase One = 0%/0.6%)',
+        leverage: '1× (spot uniquement — pas de leverage)',
+        liquidation: 'N/A (spot)',
+        pairs:    ['BTC-USD','ETH-USD','SOL-USD','XRP-USD','AVAX-USD'],
+        payouts:  'Withdrawal SEPA (gratuit) ou wire ($25), 1-3j',
+        kyc:      'KYC complet obligatoire (ID + adresse + selfie)',
+      },
+    };
+
+    function renderPlatformCard(key, p) {
+      return `
+        <div class="account-card" style="background:${p.bgGlow};border-color:${p.color}40;margin-bottom:18px">
+          <div class="ac-header" style="margin-bottom:14px">
+            <div>
+              <div class="ac-name" style="font-weight:700;font-size:15px;color:${p.color}">${p.name}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">${p.mode}</div>
+            </div>
+            <a href="${p.url}" target="_blank" rel="noopener" class="ac-badge" style="background:${p.color}1f;color:${p.color};text-decoration:none">Site officiel ↗</a>
+          </div>
+          <div class="ac-field">
+            <span class="ac-label">Fee maker</span>
+            <span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--green)">${p.feeMaker.toFixed(3)}%</span>
+          </div>
+          <div class="ac-field">
+            <span class="ac-label">Fee taker</span>
+            <span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--amber)">${p.feeTaker.toFixed(3)}%</span>
+          </div>
+          <div class="ac-field" style="align-items:flex-start">
+            <span class="ac-label" style="padding-top:2px">Tarification</span>
+            <span style="font-size:10px;color:var(--muted2);text-align:right;max-width:60%;line-height:1.4">${p.feeNote}</span>
+          </div>
+          <div class="ac-field">
+            <span class="ac-label">Leverage</span>
+            <span style="font-size:11px;color:var(--text)">${p.leverage}</span>
+          </div>
+          <div class="ac-field">
+            <span class="ac-label">Liquidation</span>
+            <span style="font-size:11px;color:var(--text)">${p.liquidation}</span>
+          </div>
+          <div class="ac-field" style="align-items:flex-start">
+            <span class="ac-label" style="padding-top:2px">Payouts</span>
+            <span style="font-size:10px;color:var(--muted2);text-align:right;max-width:60%;line-height:1.4">${p.payouts}</span>
+          </div>
+          <div class="ac-field" style="align-items:flex-start">
+            <span class="ac-label" style="padding-top:2px">KYC</span>
+            <span style="font-size:10px;color:var(--muted2);text-align:right;max-width:60%;line-height:1.4">${p.kyc}</span>
+          </div>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);font-weight:600;margin-bottom:8px">Paires supportées (${p.pairs.length})</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${p.pairs.map(pair => `<span style="font-family:'Geist Mono',monospace;font-size:10.5px;padding:3px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text)">${pair}</span>`).join('')}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    el.innerHTML = `
+      <div class="settings-section settings-section--wide">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <h3 style="margin:0">Référentiel Crypto</h3>
+          <span style="font-size:10px;background:var(--bg3);padding:3px 10px;border-radius:6px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">🔒 Paramètres officiels — verrouillés</span>
+        </div>
+        <p style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:18px">Plateformes crypto supportées et leurs frais types. Ces valeurs sont indicatives — ajuste les fees maker/taker dans tes comptes selon ton niveau VIP / Coinbase One / discounts BNB.</p>
+        ${Object.entries(PLATFORMS).map(([k, p]) => renderPlatformCard(k, p)).join('')}
+        <div style="background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);border-radius:8px;padding:14px 16px;margin-top:6px">
+          <div style="font-size:11px;color:var(--accent-l);font-weight:600;letter-spacing:0.4px;margin-bottom:6px">🚀 ROADMAP</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.55">
+            Plateformes prévues : Bybit, Hyperliquid, OKX. Mode marge croisée pour Binance. Suivi des positions multi-paires depuis l'API exchange (autoimport).
+          </div>
+        </div>
+      </div>`;
+  }
+
   function renderSpreadsSettings() {
     const el         = $('settingsSpreads');
     if (!el) return;
@@ -1043,6 +1145,7 @@
     try { renderGroupsSettings(); }    catch(e) { console.error('[Settings] groups error:', e); }
     try { renderMyAccountsSettings(); } catch(e) { console.error('[Settings] accounts error:', e); }
     try { renderPropFirmsSettings(); }  catch(e) { console.error('[Settings] propfirms error:', e); }
+    try { renderCryptoSettings(); }     catch(e) { console.error('[Settings] crypto error:', e); }
     try { renderSpreadsSettings(); }    catch(e) { console.error('[Settings] spreads error:', e); }
 
     // v0.9.133 : refresh visibilité du bouton Export PDF à CHAQUE render (pas
