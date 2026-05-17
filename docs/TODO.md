@@ -330,7 +330,7 @@ Audit complet du projet par Explore agent — 46 nouveaux items identifiés, cla
 **Description** : "ZeldTrade vX.Y.Z" peu lisible sur <600px.
 **Effort** : 15 min
 
-### U41 — 🟠 HAUT — Unifier les couleurs entre l'app et la landing page
+### ~~U41~~ — ✅ FAIT 2026-05-17 (v0.9.180) — Unifier les couleurs entre l'app et la landing page
 **Fichiers** : `src/css/style.css` (variables --accent, --blue, --green, --red, etc.), `src/index.html` (CSS inline avec son propre système de couleurs --accent violet/rose, --accent-l, --pink), `src/admin.html` (CSS inline, mix violet/bleu)
 **Description** : Incohérence de marque entre la landing et l'app.
 - **Landing** : palette violet/rose (--accent #7c3aed violet, --accent-l rose clair, --pink #f472b6) — moderne, branding fort
