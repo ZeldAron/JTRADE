@@ -70,7 +70,15 @@
     const isPro = Store.isPro();
 
     if (!all.length) {
-      el.innerHTML = `<div class="page-title">${t('page.analytics')}</div><p style="color:var(--muted)">${t('analytics.no.data')}</p>`;
+      // v0.9.181 : empty state propre (au lieu d'un simple paragraphe gris)
+      el.innerHTML = `
+        <div class="page-title">${t('page.analytics')}</div>
+        <div class="dash-empty">
+          <div class="dash-empty-icon">📈</div>
+          <h2 class="dash-empty-title">${t('analytics.empty.title') || 'Pas encore de stats'}</h2>
+          <p class="dash-empty-text">${t('analytics.empty.text') || 'Enregistre quelques trades et reviens — tu verras ici win rate, R:R, breakdown par setup/instrument, performance par session, etc.'}</p>
+          <a class="dash-empty-cta" href="#" onclick="event.preventDefault();document.getElementById('btnNewTrade')?.click();">+ ${t('btn.new.trade') || 'Nouveau trade'}</a>
+        </div>`;
       return;
     }
 
