@@ -330,6 +330,20 @@ Audit complet du projet par Explore agent — 46 nouveaux items identifiés, cla
 **Description** : "ZeldTrade vX.Y.Z" peu lisible sur <600px.
 **Effort** : 15 min
 
+### U41 — 🟠 HAUT — Unifier les couleurs entre l'app et la landing page
+**Fichiers** : `src/css/style.css` (variables --accent, --blue, --green, --red, etc.), `src/index.html` (CSS inline avec son propre système de couleurs --accent violet/rose, --accent-l, --pink), `src/admin.html` (CSS inline, mix violet/bleu)
+**Description** : Incohérence de marque entre la landing et l'app.
+- **Landing** : palette violet/rose (--accent #7c3aed violet, --accent-l rose clair, --pink #f472b6) — moderne, branding fort
+- **App** : palette bleu Apple (--blue #0a84ff) mélangée à du violet hérité (--accent #7c3aed) sur les boutons primaires, badges, focus rings → user passe de violet/rose (landing) à bleu (app) = perte de cohérence visuelle
+- **Admin** : violet majoritaire mais quelques bleus persistent
+**Impact** : perception "branding non terminé" / "deux produits cousus". Important avant ouverture commerciale.
+**À décider** :
+1. Direction : tout aligner sur le **violet/rose** de la landing (recommandé — branding plus distinctif que le bleu Apple générique) OU tout aligner sur le bleu existant (moins de travail mais plus banal)
+2. Liste exhaustive : recenser tous les usages `--blue` dans l'app (probablement ~50+ occurrences) et les remplacer/déprécier
+3. Garder bleu pour le sémantique "info" si nécessaire, violet pour primaire/CTA/branding
+**Effort** : 2-4h (audit + remplacement + tests visuels sur toutes les pages)
+**Note** : faire APRÈS la refonte règles prop firms (priorité fonctionnelle d'abord) sauf si l'utilisateur veut le contraire.
+
 ## 🔒 Sécurité (compléments audit récent)
 
 ### S41 — 🟡 MOYEN — Pas de CSRF protection complémentaire (X-Request-ID)
