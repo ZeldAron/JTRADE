@@ -6,12 +6,30 @@
   <meta name="description" content="ZeldTrade — Un journal de trading complet fait par un trader pour les traders. Spécialisé prop firms (Apex, FTMO, Topstep, Lucid, Funding Pips). Analyse IA, calculs précis, multi-comptes.">
   <meta name="theme-color" content="#0d1117">
 
+  <!-- Canonical -->
+  <link rel="canonical" href="https://zeldtrade.com/">
+
   <!-- Open Graph -->
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ZeldTrade">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:locale:alternate" content="en_US">
   <meta property="og:title" content="ZeldTrade — Journal de trading prop firm">
-  <meta property="og:description" content="Un journal de trading complet fait par un trader pour les traders.">
+  <meta property="og:description" content="Journal de trading français spécialisé prop firms (Apex, FTMO, Topstep, Lucid, Funding Pips). Analyse IA, calculs précis, multi-comptes, conforme RGPD.">
   <meta property="og:url" content="https://zeldtrade.com/">
+  <meta property="og:image" content="https://zeldtrade.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="ZeldTrade — Journal de trading prop firm">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ZeldTrade — Journal de trading prop firm">
+  <meta name="twitter:description" content="Journal de trading français spécialisé prop firms. Analyse IA, multi-comptes, RGPD.">
+  <meta name="twitter:image" content="https://zeldtrade.com/og-image.png">
+
+  <!-- SEO -->
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="ZeldTrade">
+  <meta name="keywords" content="journal trading, prop firm, Apex, FTMO, Topstep, Lucid Trading, Funding Pips, trading journal français, calcul trading, analyse IA trading">
 
   <!-- Sécurité : CSP server-side dans firebase.json (plus stricte que cette meta).
        v0.9.172 : autoriser Firebase SDK pour le contact form anonyme depuis la landing. -->
@@ -33,6 +51,96 @@
   <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=(), midi=(), serial=(), hid=(), idle-detection=(), screen-wake-lock=(), display-capture=(), picture-in-picture=(), autoplay=(), encrypted-media=(), interest-cohort=(), browsing-topics=(), join-ad-interest-group=(), run-ad-auction=()">
 
   <title>ZeldTrade — Journal de trading prop firm</title>
+
+  <!-- Structured data (JSON-LD) — aide Google à comprendre le site -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://zeldtrade.com/#organization",
+        "name": "ZeldTrade",
+        "url": "https://zeldtrade.com/",
+        "logo": "https://zeldtrade.com/og-image.png",
+        "description": "Journal de trading français spécialisé prop firms.",
+        "foundingDate": "2026",
+        "areaServed": "FR"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://zeldtrade.com/#website",
+        "url": "https://zeldtrade.com/",
+        "name": "ZeldTrade",
+        "description": "Journal de trading prop firm",
+        "inLanguage": "fr-FR",
+        "publisher": { "@id": "https://zeldtrade.com/#organization" }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "ZeldTrade",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web",
+        "url": "https://zeldtrade.com/app",
+        "description": "Journal de trading complet fait par un trader pour les traders. Spécialisé prop firms (Apex, FTMO, Topstep, Lucid, Funding Pips). Analyse IA, calculs précis, multi-comptes.",
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Basic",
+            "price": "0",
+            "priceCurrency": "EUR"
+          },
+          {
+            "@type": "Offer",
+            "name": "Pro",
+            "price": "0",
+            "priceCurrency": "EUR",
+            "description": "Gratuit pendant la beta"
+          }
+        ],
+        "featureList": [
+          "Suivi multi-comptes prop firm",
+          "Analyse IA des trades",
+          "Calculs précis (drawdown, R-multiple, MFE/MAE)",
+          "Support Apex, FTMO, Topstep, Lucid Trading, Funding Pips",
+          "Mode fonds propres et crypto (Binance, Coinbase)",
+          "Export PDF / JSON",
+          "Conforme RGPD"
+        ],
+        "publisher": { "@id": "https://zeldtrade.com/#organization" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Combien de comptes je peux gérer ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "1 compte sur le plan Basic. Jusqu'à 100 comptes sur Pro, avec groupes pour répliquer un trade sur plusieurs comptes en 1 sauvegarde."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Je peux récupérer mes données si je quitte ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Oui — droit à la portabilité RGPD. Export JSON complet (trades + comptes + groupes + settings) disponible dans les Réglages. Tu peux aussi supprimer ton compte à tout moment."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Qui est derrière ZeldTrade ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "L'équipe ZeldTrade — projet français spécialisé prop firms, conçu par des traders pour des traders. Née du manque de bons outils français adaptés aux règles spécifiques des prop firms."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1854,7 +1962,7 @@
       <a href="#contact" class="footer-link">Contact</a>
     </div>
     <div>
-      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.192</span>
+      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.193</span>
     </div>
   </footer>
 

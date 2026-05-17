@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.193',
+      date: '2026-05-17',
+      time: '19:00',
+      tags: ['seo', 'feature'],
+      title: 'SEO : sitemap + structured data + meta tags complets',
+      titleEn: 'SEO: sitemap + structured data + full meta tags',
+      items: [
+        { type: 'feature', text: 'Ajout `sitemap.xml` listant les pages principales du site + référencement dans `robots.txt`. Permet à Google et Bing de découvrir toutes les pages rapidement.', textEn: 'Added `sitemap.xml` listing main pages + referenced in `robots.txt`. Helps Google and Bing discover all pages quickly.' },
+        { type: 'feature', text: 'Données structurées **JSON-LD** ajoutées (Organization, WebSite, SoftwareApplication, FAQPage) : Google comprend mieux que ZeldTrade est un SaaS de trading français spécialisé prop firms.', textEn: 'Structured data JSON-LD added (Organization, WebSite, SoftwareApplication, FAQPage): Google better understands ZeldTrade as a French trading SaaS specialized in prop firms.' },
+        { type: 'feature', text: 'Open Graph et Twitter Cards complets : `og:locale`, `og:image`, `twitter:title`, `twitter:description` — meilleur rendu lors du partage du lien sur Discord/X/LinkedIn.', textEn: 'Full Open Graph and Twitter Cards: `og:locale`, `og:image`, `twitter:title`, `twitter:description` — better link previews on Discord/X/LinkedIn.' },
+        { type: 'feature', text: 'Tag `<link rel="canonical">` ajouté pour éviter le contenu dupliqué entre `zeldtrade.com` et `zeldtrade.web.app`.', textEn: 'Added `<link rel="canonical">` tag to avoid duplicate content between zeldtrade.com and zeldtrade.web.app.' },
+      ],
+    },
+    {
       version: '0.9.192',
       date: '2026-05-17',
       time: '18:30',
