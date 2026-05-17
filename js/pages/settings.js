@@ -354,7 +354,7 @@
             <span class="ac-label">${t('set.pf.daily')}</span>
             ${a.dailyLossLimit
               ? mono('-$' + Number(a.dailyLossLimit).toLocaleString('fr-FR'), 'var(--red)')
-              : mono('—', 'var(--muted)')}
+              : `<span style="font-size:11px;color:var(--muted);font-style:italic">${i18n.getLang() === 'en' ? 'None' : 'Aucune'}</span>`}
           </div>
           <div class="ac-field">
             <span class="ac-label">${t('set.pf.dd.type')}</span>
