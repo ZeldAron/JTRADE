@@ -331,6 +331,46 @@ Audit complet du projet par Explore agent — 46 nouveaux items identifiés, cla
 **Effort** : 15 min
 
 ### ~~U41~~ — ✅ FAIT 2026-05-17 (v0.9.180) — Unifier les couleurs entre l'app et la landing page
+
+### U42 — 🟠 HAUT — Audit complet expérience mobile (téléphone)
+**Demandé par user 2026-05-17.**
+**Description** : vérifier que TOUTE l'app fonctionne et est utilisable sur téléphone (iPhone 12 mini 375px, iPhone 14 Pro 393px, Android Pixel 393px, jusqu'à iPhone Plus 428px) + landscape.
+
+**Pages/zones à vérifier** :
+- Landing page (zeldtrade.com) — déjà bien mais re-vérifier après changements récents
+- Login / Signup / Forgot password
+- Sidebar mobile (hamburger)
+- Journal (liste trades + detail panel + swipe back ?)
+- Dashboard (4 KPI cards + equity chart + trailing floor + recent trades)
+- Analytics (sessions chart, breakdown tables)
+- Calendar (grille mensuelle 7 cols cramped < 480px ?)
+- Goals (cards evaluation + funded, multi-cols → 1-col)
+- Outils (calculateurs, tabs)
+- Réglages (Mes Comptes, Prop Firms, Spreads, Général — toutes les sections)
+- Offers (cards Basic/Pro/Lifetime)
+- Wizard nouveau trade (3 étapes, drop zone, levels grid 3 cols → 2/1 col ?)
+- Bulle contact + modal contact
+- Modal export PDF + progress
+- Modal délétion compte
+- Console admin
+
+**Points spécifiques à tester** :
+- Touch targets ≥ 44×44px (a11y WCAG)
+- Inputs : `font-size: 16px` minimum (anti-zoom iOS)
+- Scrollbars qui ne mangent pas du contenu
+- Modales : pas de débordement, croix fermeture accessible
+- Wizard step 2 : drop zone fonctionnelle au tap (pas juste drag/paste)
+- Screenshot : capture depuis l'app caméra mobile possible ?
+- Performance (rendering smooth sur device mid-range)
+- Landscape : tout reste fonctionnel ou layout cassé ?
+
+**Tests pratiques** :
+- Vrai téléphone (pas juste DevTools responsive) — iPhone + Android idéalement
+- Tester en mode privé (anti-cache)
+- Tester création compte → 1er trade → export PDF complet sur mobile uniquement
+
+**Effort** : 2-4h (audit + fixes des points trouvés)
+**Priorité** : 🟠 HAUT — beaucoup de traders consultent leur journal sur mobile en pleine session
 **Fichiers** : `src/css/style.css` (variables --accent, --blue, --green, --red, etc.), `src/index.html` (CSS inline avec son propre système de couleurs --accent violet/rose, --accent-l, --pink), `src/admin.html` (CSS inline, mix violet/bleu)
 **Description** : Incohérence de marque entre la landing et l'app.
 - **Landing** : palette violet/rose (--accent #7c3aed violet, --accent-l rose clair, --pink #f472b6) — moderne, branding fort
