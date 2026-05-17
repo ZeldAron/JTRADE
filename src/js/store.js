@@ -226,6 +226,15 @@ const Store = (() => {
           }
         });
       }
+      // 1bis. v0.9.189 : migration accountType (par défaut 'prop' si absent)
+      if (Array.isArray(myAccounts)) {
+        myAccounts.forEach(a => {
+          if (a && !a.accountType) {
+            a.accountType = 'prop';
+            migrated = true;
+          }
+        });
+      }
       // 2. capital + feePerSide manquants sur les trades : hydrater depuis le compte
       if (Array.isArray(trades) && Array.isArray(myAccounts)) {
         const accByName = Object.fromEntries(myAccounts.filter(a => a && a.name).map(a => [a.name, a]));
@@ -683,9 +692,15 @@ const Store = (() => {
     // anti-formule CSV, anti-bidi Unicode).
     return String(name || '').replace(/[^A-Za-z0-9._\- ]/g, '').trim().slice(0, 50);
   }
+  // v0.9.189 (Phase 1) : ajout des champs pour Personal + Crypto
+  const VALID_ACCOUNT_TYPES = new Set(['prop', 'personal', 'crypto']);
+  const VALID_CRYPTO_PLATFORMS = new Set(['binance', 'coinbase']);
+  const VALID_CRYPTO_MODES = new Set(['spot', 'perpetual']);
+
   function _sanitizeAccount(data) {
     const s = {};
     if (data.name        !== undefined) s.name           = _sanitizeAccountName(data.name);
+    if (data.accountType !== undefined) s.accountType    = VALID_ACCOUNT_TYPES.has(data.accountType) ? data.accountType : 'prop';
     if (data.firmKey     !== undefined) s.firmKey        = String(data.firmKey || '').replace(/[^a-z0-9_-]/g, '').slice(0, 20);
     if (data.status      !== undefined) s.status         = ['evaluation','funded'].includes(data.status) ? data.status : 'evaluation';
     if (data.capital     !== undefined) s.capital        = _safeNum(data.capital,       0, 1e9, 0);
@@ -695,6 +710,12 @@ const Store = (() => {
     if (data.maxContracts!== undefined) s.maxContracts   = _safeNum(data.maxContracts,  1, 999, 1);
     if (data.feePerSide  !== undefined) s.feePerSide     = _safeNum(data.feePerSide,    0, 100, 0);
     if (data.pnlOffset   !== undefined) s.pnlOffset      = _safeNum(data.pnlOffset,    -1e7, 1e7, 0);
+    // Crypto-specific fields (v0.9.189)
+    if (data.cryptoPlatform !== undefined) s.cryptoPlatform = VALID_CRYPTO_PLATFORMS.has(data.cryptoPlatform) ? data.cryptoPlatform : '';
+    if (data.cryptoMode     !== undefined) s.cryptoMode     = VALID_CRYPTO_MODES.has(data.cryptoMode) ? data.cryptoMode : 'spot';
+    if (data.leverage       !== undefined) s.leverage       = _safeNum(data.leverage,       1, 125, 1);
+    if (data.feeMakerPct    !== undefined) s.feeMakerPct    = _safeNum(data.feeMakerPct,    0,   5, 0.02);  // % en valeur (0.02 = 0.02%)
+    if (data.feeTakerPct    !== undefined) s.feeTakerPct    = _safeNum(data.feeTakerPct,    0,   5, 0.05);
     return s;
   }
   function _isAccountNameTaken(name, excludeId) {
