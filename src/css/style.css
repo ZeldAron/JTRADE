@@ -2995,25 +2995,30 @@ textarea.form-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 }
 .offer-cta-pro:hover { opacity: .88; }
 .offer-cta-link { text-decoration: none; display: block; }
-.offer-cta-lifetime {
+.offer-cta-elite {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: #fff;
   transition: opacity .15s;
   box-shadow: 0 2px 12px rgba(245,158,11,0.35);
 }
-.offer-cta-lifetime:hover { opacity: .88; }
+.offer-cta-elite:hover { opacity: .88; }
 
-/* Lifetime card */
-.offer-card.offer-lifetime {
+/* Elite card */
+.offer-card.offer-elite {
   border-color: #d97706;
   box-shadow: 0 0 0 1px #d9770655, 0 0 24px rgba(245,158,11,0.08);
 }
-.offer-badge-lifetime {
+.offer-badge-elite {
   position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: #fff; font-size: 10px; font-weight: 900; letter-spacing: 0.1em;
   padding: 3px 14px; border-radius: 20px;
   box-shadow: 0 2px 8px rgba(245,158,11,0.4);
+}
+/* "soon" feature row (Elite upcoming features) */
+.offer-features li.soon {
+  color: var(--muted);
+  font-style: italic;
 }
 .offer-badge-basic {
   position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
