@@ -5,6 +5,26 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.179',
+      date: '2026-05-17',
+      time: '11:00',
+      tags: ['ux', 'fix', 'a11y'],
+      title: 'Wizard polish + landing 480px + admin Codes unifié + a11y',
+      titleEn: 'Wizard polish + landing 480px + admin Codes unified + a11y',
+      items: [
+        { type: 'fix', text: 'Wizard étape 2 → 1 : si tu cliques « Retour » par erreur après avoir uploadé un screenshot ou lancé l\'IA, une confirmation t\'évite de tout perdre par accident.', textEn: 'Wizard step 2 → 1: confirmation before losing your uploaded screenshot or AI analysis.' },
+        { type: 'fix', text: 'Wizard : Save bloqué si tu sélectionnes un groupe vide (au lieu d\'un échec silencieux). Toast clair t\'invitant à ajouter au moins un compte au groupe.', textEn: 'Wizard: Save blocked if you select an empty group (instead of silent fail).' },
+        { type: 'ux', text: 'Wizard : recalcul live (R:R, risk, P&L) debounced 80ms pendant que tu tapes — moins de scintillement sur les inputs rapides.', textEn: 'Wizard: live recalc debounced 80ms while typing — less flickering on fast inputs.' },
+        { type: 'ux', text: 'Wizard : les raccourcis « ⌘V » s\'adaptent automatiquement à ton OS (« Ctrl+V » sur Windows/Linux, « ⌘V » sur Mac). Plus de confusion.', textEn: 'Wizard: keyboard shortcuts ⌘V auto-adapt to OS (Ctrl+V on Windows/Linux, ⌘V on Mac).' },
+        { type: 'ux', text: 'Wizard : champ Notes avec maxlength 2000 visible (le navigateur t\'empêche de taper plus), et hint timezone corrigé sur l\'heure du trade (local au lieu de UTC).', textEn: 'Wizard: Notes maxlength 2000 visible; trade time hint now says local instead of UTC.' },
+        { type: 'ui', text: 'Landing page : breakpoint 480px ajouté pour rendre les stats, les étapes « Comment ça marche », les pricing cards et la firms strip plus compactes et lisibles sur petit mobile.', textEn: 'Landing: 480px breakpoint added for compact mobile rendering of stats, how-it-works, pricing, and firms strip.' },
+        { type: 'ui', text: 'Landing pricing : la carte Pro est désormais bien plus distincte (border 2px violet + ombre violette + gradient renforcé) — plus de confusion entre Basic et Pro.', textEn: 'Landing pricing: Pro card now clearly distinct (2px purple border + glow + reinforced gradient).' },
+        { type: 'ui', text: 'Landing CTA « Voir les fonctionnalités » : border avec teinte violette par défaut + élévation au hover. Plus inviting que l\'ancien transparent.', textEn: 'Landing CTA "View features": purple-tinted border by default + hover lift.' },
+        { type: 'feature', text: 'Console admin → onglet « Codes générés » : refonte alignée sur l\'onglet Utilisateurs (stats du nombre de codes / actifs / non activés / users uniques + barre de recherche live + action icône 🚫 au lieu de bouton texte).', textEn: 'Admin Codes tab: redesigned to match Users tab (4 stats chips + live search + icon action).' },
+        { type: 'a11y', text: 'Tous les boutons (Ghost, Primary, Danger, Direction wizard, etc.) ont désormais un focus ring violet visible quand tu navigues au clavier (Tab). Accessibilité clavier WCAG 2.1.', textEn: 'All buttons now have a visible purple focus ring for keyboard navigation (WCAG 2.1).' },
+      ],
+    },
+    {
       version: '0.9.176',
       date: '2026-05-17',
       time: '01:00',

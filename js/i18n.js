@@ -1290,6 +1290,22 @@ const i18n = (() => {
         el.textContent = t(key);
       }
     });
+    // v0.9.179 (M10 fix) : adapter les raccourcis clavier à l'OS de l'user.
+    // ⌘ (Mac) → Ctrl (Windows/Linux). Re-exécute après chaque apply pour
+    // couvrir les contenus rendus par data-i18n + ceux du HTML statique.
+    _adaptKbdToOS();
+  }
+
+  function _adaptKbdToOS() {
+    const isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent || '');
+    if (isMac) return;
+    document.querySelectorAll('kbd').forEach(kbd => {
+      const txt = kbd.textContent || '';
+      if (txt.indexOf('⌘') !== -1) {
+        // "⌘V" → "Ctrl+V", "⌘ + V" → "Ctrl + V"
+        kbd.textContent = txt.replace(/⌘\s*\+?\s*/g, 'Ctrl+');
+      }
+    });
   }
 
   return { t, getLang, setLang, locale, apply };
