@@ -9,6 +9,7 @@ const Modal = (() => {
   let parsedTrade   = null;    // { entry, sl, tp1, tp2, tp3, instrument }
   let capital       = 50000;
   let feePerSide    = 2.14;
+  let feeTakerPct   = null;  // v0.9.190 : null = trade non-crypto, sinon % (ex: 0.05)
   let spreadCost    = 0;
   let firmKey       = 'apex';
 
@@ -451,9 +452,29 @@ const Modal = (() => {
     MCL1:'Énergie', CL1:'Énergie', ZN1:'Taux',
     US500:'Indices CFD', US100:'Indices CFD', US30:'Indices CFD', GER40:'Indices CFD', UK100:'Indices CFD',
     XAUUSD:'Métaux CFD', EURUSD:'Forex', GBPUSD:'Forex', USDJPY:'Forex', USOIL:'Énergie CFD',
+    // Crypto (v0.9.190)
+    BTCUSDT:'Crypto perp', ETHUSDT:'Crypto perp', SOLUSDT:'Crypto perp', BNBUSDT:'Crypto perp', XRPUSDT:'Crypto perp',
+    ADAUSDT:'Crypto perp', AVAXUSDT:'Crypto perp', DOGEUSDT:'Crypto perp', LINKUSDT:'Crypto perp', DOTUSDT:'Crypto perp',
+    'BTC-USD':'Crypto spot', 'ETH-USD':'Crypto spot', 'SOL-USD':'Crypto spot', 'XRP-USD':'Crypto spot', 'AVAX-USD':'Crypto spot',
   };
 
+  // v0.9.190 — Whitelists d'instruments par type de compte crypto
+  const CRYPTO_INSTRS_BINANCE = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','AVAXUSDT','DOGEUSDT','LINKUSDT','DOTUSDT'];
+  const CRYPTO_INSTRS_COINBASE = ['BTC-USD','ETH-USD','SOL-USD','XRP-USD','AVAX-USD'];
+
   function populateInstrumentSelect(fk, keepVal) {
+    // v0.9.190 : si compte crypto sélectionné, lister les paires crypto
+    const apexValue = $('wApex') ? $('wApex').value : '';
+    const account = apexValue && Store.getAccountByName ? Store.getAccountByName(apexValue) : null;
+    if (account && account.accountType === 'crypto') {
+      const sel = $('wInstr');
+      const cur = keepVal || sel.value || 'BTCUSDT';
+      const list = account.cryptoPlatform === 'coinbase' ? CRYPTO_INSTRS_COINBASE : CRYPTO_INSTRS_BINANCE;
+      sel.innerHTML = list.map(i => `<option value="${i}">${i}</option>`).join('');
+      sel.value = list.includes(cur) ? cur : list[0];
+      return;
+    }
+
     const sp     = Store.getSpreadsByFirm(fk || 'apex');
     const instrs = Object.keys(sp).filter(i => VALID_INSTRS.has(i));
     const sel    = $('wInstr');
@@ -569,7 +590,7 @@ const Modal = (() => {
     const c = Calc.trade({
       direction, entry, sl, tp1,
       instrument, contracts, capital,
-      feePerSide, spreadCost,
+      feePerSide, feeTakerPct, spreadCost,
       exitPrice, manualPnl,
       partialPercent, partialPrice,
     });
@@ -878,9 +899,13 @@ const Modal = (() => {
         : (defaultAcc ? defaultAcc.name : '');
       populateApexSelect(preferredApexValue);
       if (defaultAcc) {
-        capital    = defaultAcc.capital;
-        feePerSide = (defaultAcc.feePerSide != null) ? defaultAcc.feePerSide : 2.14;
-        firmKey    = defaultAcc.firmKey || 'apex';
+        capital     = defaultAcc.capital;
+        feePerSide  = (defaultAcc.feePerSide != null) ? defaultAcc.feePerSide : 2.14;
+        firmKey     = defaultAcc.firmKey || 'apex';
+        // v0.9.190 : si compte crypto, charger feeTakerPct pour le calc
+        feeTakerPct = defaultAcc.accountType === 'crypto'
+          ? (defaultAcc.feeTakerPct != null ? defaultAcc.feeTakerPct : 0.05)
+          : null;
       }
       // Mémorise aussi l'instrument préféré pour pré-sélection plus tard
       // (au moment où populateInstrumentSelect sera appelé après step 2)
@@ -908,7 +933,10 @@ const Modal = (() => {
   // ── Save ────────────────────────────────────────────────────────────────────
   const VALID_OUTCOMES  = new Set(['win', 'loss', 'be', 'open']);
   const VALID_INSTRS    = new Set(['MES1','ES1','MNQ1','NQ1','MYM1','YM1','M2K1','RTY1','MGC1','GC1','QO1','MCL1','CL1','ZN1',
-                                    'US500','US100','US30','GER40','UK100','XAUUSD','EURUSD','GBPUSD','USDJPY','USOIL']);
+                                    'US500','US100','US30','GER40','UK100','XAUUSD','EURUSD','GBPUSD','USDJPY','USOIL',
+                                    // Crypto (v0.9.190)
+                                    'BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','AVAXUSDT','DOGEUSDT','LINKUSDT','DOTUSDT',
+                                    'BTC-USD','ETH-USD','SOL-USD','XRP-USD','AVAX-USD']);
 
   let _saveInFlight = false;
   async function save() {
@@ -955,6 +983,7 @@ const Modal = (() => {
       capital,
       apex:       $('wApex').value,
       feePerSide,
+      feeTakerPct,  // v0.9.190 : pour crypto, sinon null
       spreadCost,
       entry, sl, tp1,
       tp2:        parseFloat($('wTP2').value)  || null,
@@ -1258,9 +1287,12 @@ const Modal = (() => {
         const grp     = Store.getGroupById(val.slice(4));
         const firstAcc = grp && grp.accountIds && grp.accountIds.length
           ? Store.getMyAccountById(grp.accountIds[0]) : null;
-        capital    = firstAcc ? firstAcc.capital + (firstAcc.pnlOffset || 0) : (Store.getSettings().capital || 50000);
-        feePerSide = (firstAcc && firstAcc.feePerSide != null) ? firstAcc.feePerSide : 2.14;
-        firmKey    = firstAcc?.firmKey || 'apex';
+        capital     = firstAcc ? firstAcc.capital + (firstAcc.pnlOffset || 0) : (Store.getSettings().capital || 50000);
+        feePerSide  = (firstAcc && firstAcc.feePerSide != null) ? firstAcc.feePerSide : 2.14;
+        firmKey     = firstAcc?.firmKey || 'apex';
+        feeTakerPct = firstAcc && firstAcc.accountType === 'crypto'
+          ? (firstAcc.feeTakerPct != null ? firstAcc.feeTakerPct : 0.05)
+          : null;
         if (firstAcc) $('wContracts').max = firstAcc.maxContracts;
       } else {
         const acc = Store.getMyAccountByName(val);
@@ -1268,11 +1300,19 @@ const Modal = (() => {
           capital              = acc.capital + (acc.pnlOffset || 0);
           feePerSide           = (acc.feePerSide != null ? acc.feePerSide : 2.14);
           firmKey              = acc.firmKey || 'apex';
+          feeTakerPct          = acc.accountType === 'crypto'
+            ? (acc.feeTakerPct != null ? acc.feeTakerPct : 0.05)
+            : null;
           $('wContracts').max  = acc.maxContracts;
+          // v0.9.190 : refresh instruments select pour montrer paires crypto si compte crypto
+          if (acc.accountType === 'crypto') {
+            populateInstrumentSelect(firmKey, $('wInstr').value);
+          }
         } else {
-          capital    = Store.getSettings().capital || 50000;
-          feePerSide = 2.14;
-          firmKey    = 'apex';
+          capital     = Store.getSettings().capital || 50000;
+          feePerSide  = 2.14;
+          firmKey     = 'apex';
+          feeTakerPct = null;
         }
       }
       populateInstrumentSelect(firmKey);

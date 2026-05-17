@@ -17,11 +17,20 @@ const Calc = (() => {
     EURUSD: 100000, GBPUSD: 100000, USDJPY: 650,
     // Énergie CFD (USOIL : 1000 barils/lot, $0.01 move = $10/lot)
     USOIL: 1000,
+    // Crypto (v0.9.190) — multiplier = 1 (qty × delta = P&L direct en USDT/USD)
+    BTCUSDT: 1, ETHUSDT: 1, SOLUSDT: 1, BNBUSDT: 1, XRPUSDT: 1,
+    ADAUSDT: 1, AVAXUSDT: 1, DOGEUSDT: 1, LINKUSDT: 1, DOTUSDT: 1,
+    'BTC-USD': 1, 'ETH-USD': 1, 'SOL-USD': 1, 'XRP-USD': 1, 'AVAX-USD': 1,
   };
   const TICK_SIZE = 0.25;
 
   const CFD_INSTRS = new Set(['US30','US100','US500','GER40','UK100','XAUUSD','EURUSD','GBPUSD','USDJPY','USOIL']);
-  function isCFD(instrument) { return CFD_INSTRS.has(instrument); }
+  const CRYPTO_INSTRS = new Set([
+    'BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','AVAXUSDT','DOGEUSDT','LINKUSDT','DOTUSDT',
+    'BTC-USD','ETH-USD','SOL-USD','XRP-USD','AVAX-USD',
+  ]);
+  function isCFD(instrument)    { return CFD_INSTRS.has(instrument); }
+  function isCrypto(instrument) { return CRYPTO_INSTRS.has(instrument); }
 
   // Règles Apex par taille de compte (EOD)
   const ACCOUNT_RULES = {
@@ -71,10 +80,18 @@ const Calc = (() => {
     const rewardTicks = isCFD(t.instrument) ? 0 : Math.round(rewardPts / TICK_SIZE);
 
     // Commissions aller-retour (entry + exit)
+    // v0.9.190 : pour crypto, fees = % du notional (qty × prix moyen × feeTakerPct% × 2 sides)
     const feePerSide = t.feePerSide != null ? t.feePerSide : 2.14;
-    const commFees   = feePerSide * t.contracts * 2;
+    let commFees;
+    if (isCrypto(t.instrument) && t.feeTakerPct != null && t.feeTakerPct > 0) {
+      // Approximation : fee = avg_price × qty × feePct% × 2 (entry + exit, pessimiste taker)
+      const avgPrice = tp1P ? (ent + tp1P) / 2 : ent;
+      commFees = avgPrice * t.contracts * (t.feeTakerPct / 100) * 2;
+    } else {
+      commFees = feePerSide * t.contracts * 2;
+    }
 
-    // Spread bid/ask à l'entrée
+    // Spread bid/ask à l'entrée (négligeable sur crypto liquide)
     const spreadPerContract = t.spreadCost != null ? t.spreadCost : 0;
     const spreadFees        = spreadPerContract * t.contracts;
 
@@ -272,6 +289,6 @@ const Calc = (() => {
   return {
     trade, fromForm, trailingFloor,
     rrColor, rrLabel, riskColor, pnlColor, formatPnL,
-    pointValue, isCFD, ACCOUNT_RULES,
+    pointValue, isCFD, isCrypto, ACCOUNT_RULES,
   };
 })();

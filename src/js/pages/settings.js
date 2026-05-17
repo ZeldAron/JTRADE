@@ -79,14 +79,50 @@
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted2);margin-bottom:14px" id="maFormTitle">${t('set.acc.new')}</div>
             <input type="hidden" id="maEditId">
 
-            <!-- v0.9.189 (Phase 1) : sélecteur type de compte -->
+            <!-- v0.9.189 (Phase 1) + v0.9.190 (Phase 3 : crypto activé) -->
             <div class="form-field" style="margin-bottom:12px">
               <label class="form-label">Type de compte</label>
               <select class="form-input" id="maAccountType">
                 <option value="prop">🏛️ Prop firm (Apex, Topstep, FTMO, Lucid, Funding Pips)</option>
                 <option value="personal">💰 Personnel (fonds propres, pas de règles prop firm)</option>
-                <option value="crypto" disabled>🪙 Crypto (Binance / Coinbase — bientôt)</option>
+                <option value="crypto">🪙 Crypto (Binance / Coinbase)</option>
               </select>
+            </div>
+
+            <!-- v0.9.190 : champs crypto spécifiques (visible uniquement si accountType === 'crypto') -->
+            <div class="maCryptoOnly" style="display:none;background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent-l);margin-bottom:10px;font-weight:600">🪙 Paramètres crypto</div>
+              <div class="form-grid" style="grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">
+                <div class="form-field">
+                  <label class="form-label">Plateforme</label>
+                  <select class="form-input" id="maCryptoPlatform">
+                    <option value="binance">Binance</option>
+                    <option value="coinbase">Coinbase</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Mode</label>
+                  <select class="form-input" id="maCryptoMode">
+                    <option value="spot">Spot</option>
+                    <option value="perpetual">Perpetual (futures)</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Leverage</label>
+                  <input class="form-input mono" type="number" id="maLeverage" placeholder="1" min="1" max="125">
+                </div>
+              </div>
+              <div class="form-grid form-grid-2" style="gap:10px">
+                <div class="form-field">
+                  <label class="form-label">Fee maker (%)</label>
+                  <input class="form-input mono" type="number" step="0.001" id="maFeeMakerPct" placeholder="0.02">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Fee taker (%)</label>
+                  <input class="form-input mono" type="number" step="0.001" id="maFeeTakerPct" placeholder="0.05">
+                </div>
+              </div>
+              <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4">💡 Defaults : Binance Futures 0.02/0.05%, Coinbase 0.40/0.60%. Saisis tes vraies fees selon ton niveau VIP / abonnement.</p>
             </div>
 
             <div class="form-grid form-grid-2" style="margin-bottom:10px">
@@ -210,19 +246,45 @@
         $('maName').focus();
       });
 
-      // v0.9.189 (Phase 1) : show/hide des champs prop firm selon accountType
+      // v0.9.189 (Phase 1) + v0.9.190 (Phase 3) : show/hide des champs selon accountType
       function _applyAccountTypeVisibility() {
         const at = $('maAccountType') ? $('maAccountType').value : 'prop';
-        const isProp = at === 'prop';
+        const isProp   = at === 'prop';
+        const isCrypto = at === 'crypto';
         // Champs prop-only : hide si Personnel/Crypto
         document.querySelectorAll('.maPropOnly').forEach(el => {
           el.style.display = isProp ? '' : 'none';
+        });
+        // Champs crypto-only : visible uniquement si crypto
+        document.querySelectorAll('.maCryptoOnly').forEach(el => {
+          el.style.display = isCrypto ? '' : 'none';
         });
         // Preset selector + status (eval/funded) : prop only
         const typeIdWrap = $('maTypeIdWrap');
         if (typeIdWrap) typeIdWrap.style.display = isProp ? '' : 'none';
         const statusWrap = $('maStatusWrap');
         if (statusWrap) statusWrap.style.display = isProp ? '' : 'none';
+        // Crypto : pré-remplir defaults si vides
+        if (isCrypto) {
+          const platform = $('maCryptoPlatform') ? $('maCryptoPlatform').value : 'binance';
+          if ($('maFeeMakerPct') && !$('maFeeMakerPct').value) {
+            $('maFeeMakerPct').value = platform === 'coinbase' ? '0.40' : '0.02';
+          }
+          if ($('maFeeTakerPct') && !$('maFeeTakerPct').value) {
+            $('maFeeTakerPct').value = platform === 'coinbase' ? '0.60' : '0.05';
+          }
+          if ($('maLeverage') && !$('maLeverage').value) {
+            $('maLeverage').value = '1';
+          }
+        }
+      }
+      // Sync defaults fees quand l'user change de plateforme
+      if ($('maCryptoPlatform')) {
+        $('maCryptoPlatform').addEventListener('change', () => {
+          const platform = $('maCryptoPlatform').value;
+          $('maFeeMakerPct').value = platform === 'coinbase' ? '0.40' : '0.02';
+          $('maFeeTakerPct').value = platform === 'coinbase' ? '0.60' : '0.05';
+        });
       }
       if ($('maAccountType')) {
         $('maAccountType').addEventListener('change', _applyAccountTypeVisibility);
@@ -257,14 +319,13 @@
         if (name.length > 50) { UI.toast(t('err.name.invalid'), true); return; }
 
         const accountType = $('maAccountType') ? $('maAccountType').value : 'prop';
-        const isProp = accountType === 'prop';
+        const isProp   = accountType === 'prop';
+        const isCrypto = accountType === 'crypto';
         const selType = isProp ? types.find(tp => tp.id === $('maTypeId').value) : null;
         const pnlOffsetRaw = $('maPnlOffset').value.trim();
         const data = {
           name,
           accountType,
-          // Pour Personnel/Crypto : status par défaut 'funded' (pas d'éval), firmKey vide,
-          // pas de profitTarget/maxDrawdown/dailyLoss/maxContracts (champs cachés → restent 0)
           status:         isProp ? $('maStatus').value : 'funded',
           typeId:         isProp ? $('maTypeId').value : '',
           firmKey:        isProp ? (selType?.firmKey || ($('maTypeId').value.split('-')[0] || '')) : '',
@@ -276,6 +337,14 @@
           feePerSide:     parseFloat($('maFeePerSide').value)   || 2.14,
           pnlOffset:      pnlOffsetRaw !== '' ? (parseFloat(pnlOffsetRaw) || 0) : 0,
         };
+        // v0.9.190 : champs crypto (Phase 3)
+        if (isCrypto) {
+          data.cryptoPlatform = $('maCryptoPlatform') ? $('maCryptoPlatform').value : 'binance';
+          data.cryptoMode     = $('maCryptoMode')     ? $('maCryptoMode').value     : 'spot';
+          data.leverage       = parseFloat($('maLeverage').value)     || 1;
+          data.feeMakerPct    = parseFloat($('maFeeMakerPct').value)  || 0.02;
+          data.feeTakerPct    = parseFloat($('maFeeTakerPct').value)  || 0.05;
+        }
 
         const editId = $('maEditId').value;
         try {
@@ -310,6 +379,14 @@
           $('maPnlOffset').value    = acc.pnlOffset || 0;
           // v0.9.189 : charger accountType (default 'prop' pour compatibilité comptes existants)
           if ($('maAccountType')) $('maAccountType').value = acc.accountType || 'prop';
+          // v0.9.190 : charger les champs crypto si compte crypto
+          if (acc.accountType === 'crypto') {
+            if ($('maCryptoPlatform')) $('maCryptoPlatform').value = acc.cryptoPlatform || 'binance';
+            if ($('maCryptoMode'))     $('maCryptoMode').value     = acc.cryptoMode || 'spot';
+            if ($('maLeverage'))       $('maLeverage').value       = acc.leverage || 1;
+            if ($('maFeeMakerPct'))    $('maFeeMakerPct').value    = acc.feeMakerPct != null ? acc.feeMakerPct : '';
+            if ($('maFeeTakerPct'))    $('maFeeTakerPct').value    = acc.feeTakerPct != null ? acc.feeTakerPct : '';
+          }
           _applyAccountTypeVisibility();
           $('maForm').style.display = 'block';
           $('maName').focus();
