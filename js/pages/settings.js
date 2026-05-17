@@ -50,7 +50,7 @@
              ${t('set.acc.empty')}
            </p>`;
 
-      const FIRM_LABELS = { apex: 'Apex', topstep: 'Topstep', ftmo: 'FTMO', ftmo1step: 'FTMO 1-Step', lucid: 'Lucid', fpips: 'Funding Pips' };
+      const FIRM_LABELS = { apex: 'Apex Trader Funding', topstep: 'Topstep', ftmo: 'FTMO (2-Step)', ftmo1step: 'FTMO 1-Step', lucid: 'Lucid Trading (Flex / Pro / Direct)', fpips: 'Funding Pips' };
       const byFirm = {};
       types.forEach(tp => {
         const fk = tp.firmKey || tp.id.split('-')[0] || 'other';

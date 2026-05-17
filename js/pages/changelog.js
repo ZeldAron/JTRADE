@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.182',
+      date: '2026-05-17',
+      time: '13:00',
+      tags: ['feature'],
+      title: 'Règles Lucid Trading 2026 : 3 produits actifs (Flex / Pro / Direct)',
+      titleEn: 'Lucid Trading 2026 rules: 3 active products (Flex / Pro / Direct)',
+      items: [
+        { type: 'feature', text: 'Refonte complète des règles **Lucid Trading 2026**. 12 presets disponibles (4 tailles × 3 produits) au lieu des 4 anciens : **LucidFlex** (éval 1-phase soft, pas de daily loss, consistency 50% éval only), **LucidPro** (éval 2-phase strict, daily loss, consistency 40% funded, one-day pass potential), **LucidDirect** (instant funded, consistency 20%, pas d\'éval).', textEn: 'Full overhaul of Lucid Trading 2026 rules. 12 presets available (4 sizes × 3 products): LucidFlex (1-phase soft), LucidPro (2-phase strict, one-day pass), LucidDirect (instant funded).' },
+        { type: 'feature', text: 'Profit split universel passé à **90/10** sur tous les comptes Lucid (au lieu de 80/20). Les premiers $10K de payouts restent à 100% pour le trader. End-of-day drawdown sur tous les produits. News trading autorisé.', textEn: 'Universal 90/10 profit split (up from 80/20). First $10K payouts at 100% to trader. EOD drawdown across all products. News trading allowed.' },
+        { type: 'feature', text: 'Tailles disponibles par produit : 25K / 50K / 100K / 150K. Frais d\'évaluation, max contracts, daily loss limit et profit target tous mis à jour selon les barèmes officiels mars 2026.', textEn: 'Sizes per product: 25K/50K/100K/150K. Eval fees, max contracts, daily loss, profit target all updated to March 2026 official tables.' },
+        { type: 'feature', text: 'Note : LucidBlack a été retiré (discontinued en février 2026). LucidMaxx (daily payout premium) annoncé mais pas encore stabilisé — ajouté quand les règles officielles seront publiées.', textEn: 'Note: LucidBlack discontinued Feb 2026. LucidMaxx (daily payout premium) announced but not yet stabilized.' },
+      ],
+    },
+    {
       version: '0.9.181',
       date: '2026-05-17',
       time: '12:15',
