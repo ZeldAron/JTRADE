@@ -79,12 +79,22 @@
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted2);margin-bottom:14px" id="maFormTitle">${t('set.acc.new')}</div>
             <input type="hidden" id="maEditId">
 
+            <!-- v0.9.189 (Phase 1) : sélecteur type de compte -->
+            <div class="form-field" style="margin-bottom:12px">
+              <label class="form-label">Type de compte</label>
+              <select class="form-input" id="maAccountType">
+                <option value="prop">🏛️ Prop firm (Apex, Topstep, FTMO, Lucid, Funding Pips)</option>
+                <option value="personal">💰 Personnel (fonds propres, pas de règles prop firm)</option>
+                <option value="crypto" disabled>🪙 Crypto (Binance / Coinbase — bientôt)</option>
+              </select>
+            </div>
+
             <div class="form-grid form-grid-2" style="margin-bottom:10px">
               <div class="form-field">
                 <label class="form-label">${t('set.acc.name')}</label>
-                <input class="form-input" type="text" id="maName" placeholder="ex: APEX-001">
+                <input class="form-input" type="text" id="maName" placeholder="ex: APEX-001 ou Mon compte perso">
               </div>
-              <div class="form-field">
+              <div class="form-field" id="maStatusWrap">
                 <label class="form-label">${t('set.acc.status')}</label>
                 <select class="form-input" id="maStatus">
                   <option value="evaluation">${t('set.acc.eval')}</option>
@@ -94,7 +104,7 @@
             </div>
 
             ${Store.isPro()
-              ? `<div class="form-field" style="margin-bottom:12px">
+              ? `<div class="form-field" id="maTypeIdWrap" style="margin-bottom:12px">
                   <label class="form-label">${t('set.acc.type')}</label>
                   <select class="form-input" id="maTypeId">
                     <option value="">${t('set.acc.type.ph')}</option>
@@ -123,19 +133,20 @@
                 <label class="form-label">${t('set.acc.capital')}</label>
                 <input class="form-input mono" type="number" id="maCapital" placeholder="50000">
               </div>
-              <div class="form-field">
+              <!-- v0.9.189 : champs prop firm wrapped, hidden si Personnel/Crypto -->
+              <div class="form-field maPropOnly">
                 <label class="form-label">${t('set.acc.target')}</label>
                 <input class="form-input mono" type="number" id="maProfitTarget">
               </div>
-              <div class="form-field">
+              <div class="form-field maPropOnly">
                 <label class="form-label">${t('set.acc.drawdown')}</label>
                 <input class="form-input mono" type="number" id="maMaxDrawdown">
               </div>
-              <div class="form-field">
+              <div class="form-field maPropOnly">
                 <label class="form-label">${t('set.acc.daily')}</label>
                 <input class="form-input mono" type="number" id="maDailyLoss">
               </div>
-              <div class="form-field">
+              <div class="form-field maPropOnly">
                 <label class="form-label">${t('set.acc.contracts')}</label>
                 <input class="form-input mono" type="number" id="maMaxContracts">
               </div>
@@ -193,9 +204,29 @@
         $('maMaxDrawdown').value = ''; $('maDailyLoss').value = '';
         $('maMaxContracts').value = ''; $('maFeePerSide').value = '2.14';
         $('maPnlOffset').value = '';
+        if ($('maAccountType')) $('maAccountType').value = 'prop';
+        _applyAccountTypeVisibility();
         $('maForm').style.display = 'block';
         $('maName').focus();
       });
+
+      // v0.9.189 (Phase 1) : show/hide des champs prop firm selon accountType
+      function _applyAccountTypeVisibility() {
+        const at = $('maAccountType') ? $('maAccountType').value : 'prop';
+        const isProp = at === 'prop';
+        // Champs prop-only : hide si Personnel/Crypto
+        document.querySelectorAll('.maPropOnly').forEach(el => {
+          el.style.display = isProp ? '' : 'none';
+        });
+        // Preset selector + status (eval/funded) : prop only
+        const typeIdWrap = $('maTypeIdWrap');
+        if (typeIdWrap) typeIdWrap.style.display = isProp ? '' : 'none';
+        const statusWrap = $('maStatusWrap');
+        if (statusWrap) statusWrap.style.display = isProp ? '' : 'none';
+      }
+      if ($('maAccountType')) {
+        $('maAccountType').addEventListener('change', _applyAccountTypeVisibility);
+      }
 
       // Preset auto-fill — Pro only (Basic has a hidden input, not a select)
       if (Store.isPro()) {
@@ -225,18 +256,23 @@
         if (!name) { UI.toast(t('err.name.required'), true); return; }
         if (name.length > 50) { UI.toast(t('err.name.invalid'), true); return; }
 
-        const selType = types.find(tp => tp.id === $('maTypeId').value);
+        const accountType = $('maAccountType') ? $('maAccountType').value : 'prop';
+        const isProp = accountType === 'prop';
+        const selType = isProp ? types.find(tp => tp.id === $('maTypeId').value) : null;
         const pnlOffsetRaw = $('maPnlOffset').value.trim();
         const data = {
           name,
-          status:         $('maStatus').value,
-          typeId:         $('maTypeId').value,
-          firmKey:        selType?.firmKey || ($('maTypeId').value.split('-')[0] || ''),
+          accountType,
+          // Pour Personnel/Crypto : status par défaut 'funded' (pas d'éval), firmKey vide,
+          // pas de profitTarget/maxDrawdown/dailyLoss/maxContracts (champs cachés → restent 0)
+          status:         isProp ? $('maStatus').value : 'funded',
+          typeId:         isProp ? $('maTypeId').value : '',
+          firmKey:        isProp ? (selType?.firmKey || ($('maTypeId').value.split('-')[0] || '')) : '',
           capital:        parseFloat($('maCapital').value)      || 50000,
-          profitTarget:   parseFloat($('maProfitTarget').value) || 0,
-          maxDrawdown:    parseFloat($('maMaxDrawdown').value)  || 0,
-          dailyLossLimit: parseFloat($('maDailyLoss').value)    || 0,
-          maxContracts:   parseInt($('maMaxContracts').value)   || 1,
+          profitTarget:   isProp ? (parseFloat($('maProfitTarget').value) || 0) : 0,
+          maxDrawdown:    isProp ? (parseFloat($('maMaxDrawdown').value)  || 0) : 0,
+          dailyLossLimit: isProp ? (parseFloat($('maDailyLoss').value)    || 0) : 0,
+          maxContracts:   isProp ? (parseInt($('maMaxContracts').value)   || 1) : 999,
           feePerSide:     parseFloat($('maFeePerSide').value)   || 2.14,
           pnlOffset:      pnlOffsetRaw !== '' ? (parseFloat(pnlOffsetRaw) || 0) : 0,
         };
@@ -272,6 +308,9 @@
           $('maMaxContracts').value = acc.maxContracts;
           $('maFeePerSide').value   = (acc.feePerSide || 2.14).toFixed(2);
           $('maPnlOffset').value    = acc.pnlOffset || 0;
+          // v0.9.189 : charger accountType (default 'prop' pour compatibilité comptes existants)
+          if ($('maAccountType')) $('maAccountType').value = acc.accountType || 'prop';
+          _applyAccountTypeVisibility();
           $('maForm').style.display = 'block';
           $('maName').focus();
         });

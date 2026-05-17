@@ -84,6 +84,27 @@
     const s  = UI.statsForTrades(accTrades);
     const fl = Calc.trailingFloor(acc, accTrades);
 
+    // v0.9.189 (Phase 1) : compte Personal/Crypto → carte simplifiée (pas de drawdown/safety)
+    if (fl && fl.notApplicable) {
+      const totalPnl = s.totalPnl || 0;
+      const isProf = totalPnl >= 0;
+      return `<div class="goal-card" style="position:relative">
+        <div class="goal-card-header">
+          <div class="goal-card-name">${UI.escHtml(acc.name)}</div>
+          <span class="status-badge" style="background:rgba(124,58,237,0.15);color:var(--accent-l)">${acc.accountType === 'crypto' ? 'CRYPTO' : 'PERSONNEL'}</span>
+        </div>
+        <div class="goal-card-balance">
+          <div class="gcb-label">Solde actuel</div>
+          <div class="gcb-value" style="color:${isProf ? 'var(--green)' : 'var(--red)'}">${fl.balance >= 0 ? '+' : '−'}$${Math.abs(fl.balance).toLocaleString('fr-FR', { maximumFractionDigits: 0 })}</div>
+          <div class="gcb-sub">Capital départ : $${(acc.capital || 0).toLocaleString('fr-FR')}</div>
+        </div>
+        <div style="padding:14px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-top:14px">
+          <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px">Mode libre</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">Pas de règles prop firm sur ce compte. Pas de drawdown imposé, pas de profit target, pas de daily loss limit. Trade librement avec ton propre capital.</div>
+        </div>
+      </div>`;
+    }
+
     const { startBalance, currentBalance, hwm, floor, drawdown,
             safetyNet, safetyReached, distanceToFloor, drawdownUsedPct, profit } = fl;
 

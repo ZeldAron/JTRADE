@@ -179,7 +179,23 @@ const Calc = (() => {
   // Calcul du plancher trailing (EOD) pour un compte funded
   // Trailing : Apex, Topstep, FTMO 1-Step, Lucid → max des soldes EOD - drawdown
   // Statique : FTMO 2-Step (classique), Funding Pips → solde initial - drawdown figé
+  // v0.9.189 : retourne null pour les comptes Personal/Crypto (pas de notion de drawdown prop firm)
   function trailingFloor(acc, accTrades) {
+    // Comptes hors prop firm : pas de trailing/safety net applicable
+    if (acc.accountType && acc.accountType !== 'prop') {
+      const cumPnL = (acc.pnlOffset || 0) + accTrades.reduce((s, t) => {
+        const c = trade(t);
+        return c.estimated ? s : s + (c.netPnl || 0);
+      }, 0);
+      return {
+        floor:             null,
+        balance:           (acc.capital || 0) + cumPnL,
+        drawdownConsumed:  null,
+        safetyNetReached:  null,
+        isStatic:          false,
+        notApplicable:     true,  // flag pour l'UI : skip cette section
+      };
+    }
     const startBalance = acc.capital || 50000;
     const rules        = ACCOUNT_RULES[startBalance] || {};
     const drawdown     = acc.maxDrawdown || rules.drawdown || 2000;
