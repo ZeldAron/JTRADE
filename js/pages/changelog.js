@@ -5,6 +5,20 @@ const Changelog = (() => {
 
   const ENTRIES = [
     {
+      version: '0.9.189',
+      date: '2026-05-17',
+      time: '15:00',
+      tags: ['feature'],
+      title: 'Phase 1 — Comptes Personnel (fonds propres) + base Crypto',
+      titleEn: 'Phase 1 — Personal accounts + Crypto base',
+      items: [
+        { type: 'feature', text: 'Nouveau **type de compte « Personnel »** : pour trader avec tes fonds propres sans aucune règle prop firm. Pas de profit target, pas de drawdown imposé, pas de daily loss limit, pas de max contracts. Trade libre. Choix au moment de créer un compte dans Réglages → Mes Comptes.', textEn: 'New "Personal" account type: trade with your own funds with no prop firm rules. No profit target, no drawdown imposed, no daily loss limit. Free trading.' },
+        { type: 'feature', text: 'Base technique posée pour les comptes **Crypto** (Binance et Coinbase). L\'option apparaît dans le sélecteur de type mais sera activée à la prochaine release (Phase 3).', textEn: 'Technical foundation laid for Crypto accounts (Binance + Coinbase). Option visible but activated in Phase 3 release.' },
+        { type: 'ux', text: 'Page Objectifs : les comptes Personnel ont une carte simplifiée (juste solde courant + capital de départ + mention « Mode libre »), pas de trailing floor/safety net/consistency.', textEn: 'Goals page: Personal accounts get simplified card (current balance + start capital + "Free mode" note).' },
+        { type: 'security', text: 'Migration automatique des comptes existants : tous reçoivent `accountType: prop` par défaut. Aucune action requise.', textEn: 'Auto migration of existing accounts: all receive accountType: prop by default. No action required.' },
+      ],
+    },
+    {
       version: '0.9.182',
       date: '2026-05-17',
       time: '13:00',
