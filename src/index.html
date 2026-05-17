@@ -1046,10 +1046,13 @@
       height: 3px;
       background: linear-gradient(90deg, transparent, var(--accent-l), var(--pink), transparent);
     }
+    /* Badge row — reserves vertical space on all 3 cards so titles align */
+    .pricing-badge-row {
+      min-height: 26px;
+      margin-bottom: 14px;
+    }
     .pricing-badge {
-      position: absolute;
-      top: 16px;
-      right: 16px;
+      display: inline-block;
       padding: 4px 10px;
       background: linear-gradient(135deg, var(--accent), var(--pink));
       color: #fff;
@@ -1159,9 +1162,7 @@
       box-shadow: 0 14px 32px rgba(245,158,11,0.15);
     }
     .pricing-badge-elite {
-      position: absolute;
-      top: 16px;
-      right: 16px;
+      display: inline-block;
       padding: 4px 10px;
       background: linear-gradient(135deg, #f59e0b, #d97706);
       color: #fff;
@@ -2041,6 +2042,7 @@
     <div class="pricing-cards">
       <!-- Trader (gratuit) -->
       <div class="pricing-card">
+        <div class="pricing-badge-row"></div>
         <div class="pricing-card-name">Trader</div>
         <p class="pricing-card-tagline">Pour découvrir sans engagement.</p>
         <div class="pricing-card-price">0 €<span class="price-suffix">/ pour toujours</span></div>
@@ -2059,7 +2061,7 @@
 
       <!-- Funded (14.99 €/mois — featured) -->
       <div class="pricing-card featured">
-        <span class="pricing-badge">✦ Le plus populaire</span>
+        <div class="pricing-badge-row"><span class="pricing-badge">✦ Le plus populaire</span></div>
         <div class="pricing-card-name">Funded</div>
         <p class="pricing-card-tagline">Pour le trader qui pilote 2-10 funded accounts.</p>
         <div class="pricing-card-price">
@@ -2084,7 +2086,7 @@
 
       <!-- Elite (29.99 €/mois) -->
       <div class="pricing-card elite">
-        <span class="pricing-badge-elite">✦ Premium</span>
+        <div class="pricing-badge-row"><span class="pricing-badge-elite">✦ Premium</span></div>
         <div class="pricing-card-name">Elite</div>
         <p class="pricing-card-tagline">Pour les power users multi-comptes ou les coachs.</p>
         <div class="pricing-card-price">
@@ -2195,7 +2197,7 @@
       </a>
     </div>
     <div>
-      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.200</span>
+      © 2026 ZeldTrade — <span style="color: var(--accent-l)">v0.9.201</span>
     </div>
   </footer>
 
